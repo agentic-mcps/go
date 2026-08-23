@@ -1664,6 +1664,7 @@ func AuditErrorsHandler(ctx context.Context, req *mcp.CallToolRequest, in AuditE
 	if err != nil {
 		return nil, AuditErrorsOutput{}, fmt.Errorf("running errors audit: %w", err)
 	}
+	result = finding.Filter(result, in.MinSeverity, in.MaxFindings)
 
 	return nil, AuditErrorsOutput{Result: result}, nil
 }
@@ -1681,13 +1682,22 @@ func RegisterAuditErrors(server *mcp.Server) {
 	}, AuditErrorsHandler)
 }
 func normalizeAuditErrorsInput(in *AuditErrorsInput) error {
+	if in.Package == "" {
+		return fmt.Errorf("package is required")
+	}
+	if in.MaxFindings < 0 {
+		return fmt.Errorf("max_findings must not be negative")
+	}
 	if in.MaxFindings == 0 {
 		in.MaxFindings = 200
 	}
 	if in.MaxFindings > 1000 {
 		in.MaxFindings = 1000
 	}
-	return nil
+	if in.MinSeverity == "" {
+		in.MinSeverity = finding.SeverityInfo
+	}
+	return finding.ValidateSeverity(in.MinSeverity)
 }
 ```
 

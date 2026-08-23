@@ -196,6 +196,9 @@ type AuditResult struct {
     FilesScanned     int              `json:"files_scanned"`
     DurationMS       int64            `json:"duration_ms"`
 }
+
+func ValidateSeverity(value Severity) error
+func Filter(result AuditResult, min Severity, max int) AuditResult
 ```
 
 `AuditResult.Findings` is never nil on success — always `[]Finding{}` for a
@@ -206,6 +209,9 @@ requirement from the user's own error-handling doctrine. `Total` and
 `Total: 340, Truncated: true, len(Findings): 200` must never let a caller
 believe only 200 problems exist — computing these fields from the
 already-truncated slice would silently reintroduce exactly that failure mode.
+`Filter` applies `MinSeverity` first, then computes `Total` and
+`CountsBySeverity`, and only then clamps the visible `Findings` slice to
+`MaxFindings`.
 
 ### `Location.File` rule
 
@@ -761,6 +767,7 @@ func Audit<Domain>Handler(ctx context.Context, req *mcp.CallToolRequest, in Audi
     if err != nil {
         return nil, Audit<Domain>Output{}, fmt.Errorf("running <domain> audit: %w", err)
     }
+	result = finding.Filter(result, in.MinSeverity, in.MaxFindings)
     return nil, Audit<Domain>Output{Result: result}, nil
 }
 
@@ -778,6 +785,12 @@ func RegisterAudit<Domain>(server *mcp.Server) {
 }
 
 func normalizeAudit<Domain>Input(in *Audit<Domain>Input) error {
+	if in.Package == "" {
+		return fmt.Errorf("package is required")
+	}
+	if in.MaxFindings < 0 {
+		return fmt.Errorf("max_findings must not be negative")
+	}
     if in.MaxFindings == 0 {
         in.MaxFindings = 200
     }
@@ -787,7 +800,7 @@ func normalizeAudit<Domain>Input(in *Audit<Domain>Input) error {
     if in.MinSeverity == "" {
         in.MinSeverity = finding.SeverityInfo
     }
-    return nil // extend per-domain only if a field needs real validation beyond defaulting
+	return finding.ValidateSeverity(in.MinSeverity)
 }
 ```
 
