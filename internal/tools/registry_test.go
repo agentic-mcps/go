@@ -34,12 +34,15 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 1 || listed.Tools[0].Name != "go_test_structured" {
-		t.Fatalf("tools/list = %+v, want only go_test_structured", listed.Tools)
+	if len(listed.Tools) != 2 {
+		t.Fatalf("len(tools/list) = %d, want 2", len(listed.Tools))
 	}
-	annotations := listed.Tools[0].Annotations
-	if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || !*annotations.DestructiveHint || annotations.OpenWorldHint == nil || !*annotations.OpenWorldHint {
-		t.Fatalf("unexpected tool annotations: %+v", annotations)
+	for _, name := range []string{"go_test_structured", "go_race_report"} {
+		tool := listedTool(t, listed.Tools, name)
+		annotations := tool.Annotations
+		if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || !*annotations.DestructiveHint || annotations.OpenWorldHint == nil || !*annotations.OpenWorldHint {
+			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
+		}
 	}
 
 	called, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
@@ -63,4 +66,37 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if output.Passed != 1 || output.Failed != 1 || output.Skipped != 1 {
 		t.Fatalf("structured content counts = %d/%d/%d, want 1/1/1", output.Passed, output.Failed, output.Skipped)
 	}
+
+	called, err = clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "go_race_report",
+		Arguments: map[string]any{"package": "."},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if called.IsError {
+		t.Fatalf("race tools/call returned an MCP tool error: %+v", called.Content)
+	}
+	encoded, err = json.Marshal(called.StructuredContent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var raceOutput RaceReportOutput
+	if err := json.Unmarshal(encoded, &raceOutput); err != nil {
+		t.Fatal(err)
+	}
+	if raceOutput.RawBlocksFound == 0 || len(raceOutput.Conflicts) == 0 {
+		t.Fatalf("race structured content = %+v, want a conflict", raceOutput)
+	}
+}
+
+func listedTool(t *testing.T, tools []*mcp.Tool, name string) *mcp.Tool {
+	t.Helper()
+	for _, tool := range tools {
+		if tool.Name == name {
+			return tool
+		}
+	}
+	t.Fatalf("tool %q not found in %+v", name, tools)
+	return nil
 }

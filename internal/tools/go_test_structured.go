@@ -1,16 +1,13 @@
 package tools
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/parser"
 	"github.com/ashwingopalsamy/agentic-go/internal/progress"
 	"github.com/ashwingopalsamy/agentic-go/internal/trace"
@@ -93,35 +90,11 @@ func (r *Runtime) testStructured(ctx context.Context, request *mcp.CallToolReque
 	arguments = append(arguments, pattern)
 
 	collector := newTestCollector(input.Verbose)
-	reader, writer := io.Pipe()
-	parsed := make(chan error, 1)
-	go func() {
-		defer reader.Close()
-		_, parseErr := parser.DecodeTestJSON(reader, collector.consume)
-		parsed <- parseErr
-	}()
-
 	progress.Report(ctx, request, 1, 2, "running tests")
-	var stderr bytes.Buffer
-	result, runErr := r.runner.Run(ctx, execution.Command{
-		Name: "go",
-		Args: arguments,
-		Env:  map[string]string{"GOWORK": "auto"},
-	}, execution.Streams{Stdout: writer, Stderr: &stderr})
-	_ = writer.CloseWithError(runErr)
-	parseErr := <-parsed
-
-	if runErr != nil {
-		r.recordTestTrace(input, started, TestStructuredOutput{}, classifyTraceError(runErr))
-		return nil, TestStructuredOutput{}, fmt.Errorf("running go test -json: %w", runErr)
-	}
-	if parseErr != nil {
-		r.recordTestTrace(input, started, TestStructuredOutput{}, trace.ErrorSubprocess)
-		message := boundedMessage(stderr.String())
-		if message == "" {
-			message = parseErr.Error()
-		}
-		return nil, TestStructuredOutput{}, fmt.Errorf("parsing go test -json output (exit %d): %s", result.ExitCode, message)
+	result, err := r.runTestJSON(ctx, arguments, collector.consume)
+	if err != nil {
+		r.recordTestTrace(input, started, TestStructuredOutput{}, classifyTraceError(err))
+		return nil, TestStructuredOutput{}, err
 	}
 
 	output := collector.result(result.Duration)

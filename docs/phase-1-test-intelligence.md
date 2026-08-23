@@ -179,7 +179,7 @@ type RaceAccess struct {
     Address     string          `json:"address"`
     GoroutineID int             `json:"goroutine_id"`
     Function    string          `json:"function"`
-    Location    tools.Location  `json:"location"`
+    Location    finding.Location `json:"location"` // workspace-relative
     State       string          `json:"state,omitempty"` // "running" | "finished" — only on creation-site entries
 }
 type RaceConflict struct {
@@ -205,8 +205,8 @@ parsing, not per-event parsing, is required.
 
 ## `internal/parser/race.go`
 
-Go's race detector text format (stable since Go 1.1, unaffected by the
-1.25-1.27 toolchain range):
+The parser targets Go's current race detector text format and keeps a visible
+format-drift signal instead of silently losing an unfamiliar block:
 
 ```
 WARNING: DATA RACE
@@ -246,12 +246,18 @@ Goroutine 6 (running) created at:
    `GoroutineCreation`, matched to `Current`/`Previous` by goroutine ID.
 5. If a block's regexes don't all match (format drift in a future Go version),
    do not panic and do not silently drop the block — emit one `RaceConflict`
-   with only the fields successfully extracted and the raw block text in
-   `Current.Function` prefixed `"UNPARSED: "`, so the caller still sees
-   *something* rather than a silently short `Conflicts` slice. Increment
-   `RawBlocksFound` regardless of parse success, so a mismatch between
-   `RawBlocksFound` and `len(Conflicts)` with fully-populated fields is itself
-   the signal that the parser needs a version-format update.
+   with only the fields successfully extracted and the bounded marker
+   `"UNPARSED: race detector block did not match the supported format"` in
+   `Current.Function`. Do not return the raw block because it contains absolute
+   workspace paths. Increment
+   `RawBlocksFound` regardless of parse success. It must equal
+   `len(Conflicts)`, proving no block was silently dropped; the marker identifies
+   a block that needs a parser-format update.
+
+After parsing, the handler converts every contained source file to a
+slash-separated workspace-relative path. Locations outside the configured
+workspace are cleared, and external goroutine-creation entries are omitted;
+absolute paths are never returned.
 
 ## `internal/trace/trace.go`
 
@@ -277,6 +283,8 @@ One package, `package testingfixture`, these files:
 - `panic.go` + `panic_test.go`: a function that indexes a slice out of bounds
   under a specific input; test calls it with that input. `// VIOLATION: panic_test`.
 - `stable_test.go`: one unconditionally-passing test, one `t.Skip()` test.
+- `race_test.go`: included only under the `race` build tag and contains one
+  deterministic happens-before violation for parser integration coverage.
 - `bench_test.go`: one `func BenchmarkX(b *testing.B)` doing trivial work
   (needed by Phase 2's `go_benchmark_diff` self-check, specified there).
 

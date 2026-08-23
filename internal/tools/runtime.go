@@ -39,6 +39,7 @@ func NewRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace
 // RegisterAll is the single deterministic v0.1 tool registration list.
 func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterTestStructured(server, runtime)
+	RegisterRaceReport(server, runtime)
 }
 
 func (r *Runtime) resolvePackage(ctx context.Context, pattern string) (string, error) {
