@@ -10,6 +10,10 @@ func Compliant(items []int) { // COMPLIANT: concurrency-20
 	for range 8 {
 		defer cleanupCompliant()
 	}
+	bounded := []int{1, 2}
+	for range bounded {
+		defer cleanupCompliant()
+	}
 }
 
 func cleanupCompliant() {}

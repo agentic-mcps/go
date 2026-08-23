@@ -26,7 +26,7 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func init() {
-	astutil.RegisterRule("errors-01", "error_last_return", finding.SeverityWarning)
+	astutil.RegisterDisabledRule("errors-01", "error_last_return", finding.SeverityWarning, "external calibration classified non-final error results as intentional API ordering rather than correctness defects")
 	astutil.RegisterDisabledRule("errors-02", "exported_concrete_error", finding.SeverityError, "external calibration found intentional typed error APIs")
 	astutil.RegisterDisabledRule("errors-03", "happy_path_in_else", finding.SeverityInfo, "external calibration classified the rule as a style preference")
 	astutil.RegisterRule("errors-04", "log_and_return", finding.SeverityError)
@@ -35,9 +35,9 @@ func init() {
 	astutil.RegisterDisabledRule("errors-10", "library_panic", finding.SeverityError, "external calibration found documented invariant and configuration panics")
 	astutil.RegisterDisabledRule("errors-11", "must_outside_startup", finding.SeverityError, "external calibration found non-panicking Must APIs and setup calls")
 	astutil.RegisterDisabledRule("errors-12", "error_string_boundary", finding.SeverityWarning, "external calibration found tests and documented compatibility fallbacks")
-	astutil.RegisterRule("errors-13", "multiple_wrap_verbs", finding.SeverityWarning)
-	astutil.RegisterRule("errors-17", "error_string_retry", finding.SeverityWarning)
-	astutil.RegisterRule("errors-14", "wrapper_without_unwrap", finding.SeverityWarning)
+	astutil.RegisterDisabledRule("errors-13", "multiple_wrap_verbs", finding.SeverityWarning, "Go supports multiple %w verbs and external calibration found legitimate multi-cause wrapping")
+	astutil.RegisterDisabledRule("errors-17", "error_string_retry", finding.SeverityWarning, "external calibration found tests and compatibility protocols where no typed error contract is available")
+	astutil.RegisterDisabledRule("errors-14", "wrapper_without_unwrap", finding.SeverityWarning, "external calibration found intentional opaque error types whose error-valued fields do not imply wrapping")
 	astutil.RegisterDisabledRule("errors-16", "deferred_close_error", finding.SeverityError, "external calibration found read-only closers whose close errors are not actionable")
 	astutil.RegisterDisabledRule("errors-15", "goroutine_recover", finding.SeverityError, "external calibration found ordinary scoped goroutines rather than recovery boundaries")
 	astutil.RegisterRule("errors-19", "fatal_exit", finding.SeverityError)
@@ -62,7 +62,7 @@ func run(pass *analysis.Pass) (any, error) {
 					astutil.Report(pass, x.Else.Pos(), "errors-03", "error check at %s nests the happy path inside an else block — leave the happy path unindented after the if", pass.Fset.Position(x.Pos()))
 				}
 			}
-			if name, ok := errorCheckIdent(pass, x); ok {
+			if name, ok := errorCheckIdent(pass, x); ok && pass.Pkg.Name() != "main" && !isGoTestPosition(pass, x.Pos()) {
 				if logCall, ret, matched := logThenReturn(x.Body, name); matched {
 					sel := logCall.Fun.(*ast.SelectorExpr)
 					astutil.Report(pass, x.Pos(), "errors-04", "%s is logged via %s and then returned at %s — pick one: log, or wrap and return, never both", name.Name, sel.Sel.Name, pass.Fset.Position(ret.Pos()))
@@ -73,7 +73,7 @@ func run(pass *analysis.Pass) (any, error) {
 		case *ast.CallExpr:
 			checkMessage(pass, x)
 			checkStringMatch(pass, x)
-			if name, ok := exitFatal(pass, x); ok && !allowedExit(pass, enclosingFunc(pass, x.Pos())) {
+			if name, ok := exitFatal(pass, x); ok && !allowedExit(pass, x.Pos(), enclosingFunc(pass, x.Pos())) {
 				astutil.Report(pass, x.Pos(), "errors-19", "%s called at %s outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully", name, pass.Fset.Position(x.Pos()))
 			}
 		case *ast.TypeSpec:
@@ -383,11 +383,14 @@ func exitFatal(pass *analysis.Pass, c *ast.CallExpr) (string, bool) {
 	return "", false
 }
 
-func allowedExit(pass *analysis.Pass, fn *ast.FuncDecl) bool {
+func allowedExit(pass *analysis.Pass, pos token.Pos, fn *ast.FuncDecl) bool {
+	if pass.Pkg.Name() == "main" || pass.Pkg.Name() == "cmd" || isGoTestPosition(pass, pos) {
+		return true
+	}
 	if fn == nil {
 		return false
 	}
-	if pass.Pkg.Name() == "main" && fn.Name.Name == "main" {
+	if fn.Name != nil && strings.HasPrefix(fn.Name.Name, "Fatal") {
 		return true
 	}
 	if fn.Name.Name != "TestMain" || fn.Type.Params == nil || len(fn.Type.Params.List) != 1 {
@@ -395,6 +398,10 @@ func allowedExit(pass *analysis.Pass, fn *ast.FuncDecl) bool {
 	}
 	param := fn.Type.Params.List[0]
 	return len(param.Names) == 1 && astutil.TypeString(pass, param.Type) == "*testing.M"
+}
+
+func isGoTestPosition(pass *analysis.Pass, pos token.Pos) bool {
+	return strings.HasSuffix(pass.Fset.Position(pos).Filename, "_test.go")
 }
 
 func checkReturns(pass *analysis.Pass, fn *ast.FuncDecl) {

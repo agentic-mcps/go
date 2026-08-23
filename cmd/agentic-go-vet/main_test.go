@@ -36,7 +36,7 @@ func TestVetBinarySmoke(t *testing.T) {
 	if !errors.As(err, &exitErr) || exitErr.ExitCode() != 3 {
 		t.Fatalf("plain diagnostic exit = %v, want 3\n%s", err, output)
 	}
-	if !strings.Contains(string(output), "struct embeds") {
+	if !strings.Contains(string(output), "embeds sync.Mutex") {
 		t.Fatalf("plain output missing expected diagnostic:\n%s", output)
 	}
 

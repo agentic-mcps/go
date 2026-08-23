@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"go/types"
 	"go/version"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -21,21 +22,21 @@ import (
 func init() {
 	astutil.RegisterDisabledRule("concurrency-03", "unjustified_channel_buffer", finding.SeverityWarning, "external calibration found justified multi-producer buffers without adjacent comments")
 	astutil.RegisterDisabledRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError, "external calibration found joined goroutines coordinated through result channels")
-	astutil.RegisterRule("concurrency-06", "background_context_in_goroutine", finding.SeverityError)
+	astutil.RegisterDisabledRule("concurrency-06", "background_context_in_goroutine", finding.SeverityError, "external calibration found standalone benchmark workers with intentional root contexts")
 	astutil.RegisterDisabledRule("concurrency-07", "lock_defer_gap", finding.SeverityError, "external calibration found intentional straight-line unlocks on hot paths")
 	astutil.RegisterRule("concurrency-08", "embedded_sync_primitive", finding.SeverityError)
 	astutil.RegisterRule("concurrency-10", "undocumented_concurrency_safety", finding.SeverityInfo)
 	astutil.RegisterRule("concurrency-12", "manual_waitgroup_error_channel", finding.SeverityWarning)
 	astutil.RegisterDisabledRule("concurrency-14", "pool_put_without_reset", finding.SeverityError, "external calibration found safe reset-on-get pool lifecycles")
-	astutil.RegisterRule("concurrency-15", "compound_state_multiple_atomics", finding.SeverityWarning)
-	astutil.RegisterRule("concurrency-17", "undocumented_multi_lock_order", finding.SeverityWarning)
+	astutil.RegisterDisabledRule("concurrency-15", "compound_state_multiple_atomics", finding.SeverityWarning, "external calibration found independent metrics, snapshots, counters, and flags rather than one compound invariant")
+	astutil.RegisterDisabledRule("concurrency-17", "undocumented_multi_lock_order", finding.SeverityWarning, "external calibration found sequential lock acquisitions without simultaneous ownership")
 	astutil.RegisterRule("concurrency-18", "timer_ticker_lifecycle", finding.SeverityWarning)
-	astutil.RegisterRule("concurrency-02", "missing_stop_close_shutdown", finding.SeverityError)
+	astutil.RegisterDisabledRule("concurrency-02", "missing_stop_close_shutdown", finding.SeverityError, "external calibration found operation-scoped goroutines whose ownership is expressed by contexts, channels, streams, handles, or enclosing locks")
 	astutil.RegisterRule("concurrency-19", "loop_variable_capture", finding.SeverityError)
 	astutil.RegisterRule("concurrency-04", "undirected_channel_signature", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-05", "async_goroutine_wrapper", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-09", "goroutine_in_init", finding.SeverityWarning)
-	astutil.RegisterRule("concurrency-20", "defer_in_loop", finding.SeverityWarning)
+	astutil.RegisterDisabledRule("concurrency-20", "defer_in_loop", finding.SeverityWarning, "external calibration found bounded and intentional function-lifetime defers that syntax alone cannot distinguish")
 }
 
 // Analyzer audits selected goroutine and channel conventions.
@@ -51,6 +52,7 @@ func run(pass *analysis.Pass) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("inspect result has type %T", pass.ResultOf[inspect.Analyzer])
 	}
+	smallBoundedRanges := smallBoundedRangeVariables(pass)
 	atomicByType := make(map[string][]*ast.Field)
 	for _, file := range pass.Files {
 		comments := ast.NewCommentMap(pass.Fset, file, file.Comments)
@@ -90,7 +92,7 @@ func run(pass *analysis.Pass) (any, error) {
 		})
 		ast.Inspect(file, func(n ast.Node) bool {
 			as, ok := n.(*ast.AssignStmt)
-			if !ok {
+			if !ok || isGoTestFile(pass, as) {
 				return true
 			}
 			body := enclosingFuncBody(file, as)
@@ -105,6 +107,9 @@ func run(pass *analysis.Pass) (any, error) {
 	ins.WithStack(nil, func(n ast.Node, _ bool, stack []ast.Node) bool {
 		sel, ok := n.(*ast.SelectStmt)
 		if !ok {
+			return true
+		}
+		if isGoTestFile(pass, sel) {
 			return true
 		}
 		inLoop := false
@@ -135,8 +140,10 @@ func run(pass *analysis.Pass) (any, error) {
 		})
 		ast.Inspect(file, func(n ast.Node) bool {
 			if b, ok := n.(*ast.BlockStmt); ok {
-				if found, count := manualWaitGroupErrChanPattern(pass, b); found {
-					astutil.Report(pass, b.Pos(), "concurrency-12", "function at %s hand-rolls WaitGroup + error-channel coordination across %d goroutines — use errgroup.Group to propagate the first error and cancel the rest", pass.Fset.Position(b.Pos()), count)
+				if !isGoTestFile(pass, b) {
+					if found, count := manualWaitGroupErrChanPattern(pass, b); found {
+						astutil.Report(pass, b.Pos(), "concurrency-12", "function at %s hand-rolls WaitGroup + error-channel coordination across %d goroutines — use errgroup.Group to propagate the first error and cancel the rest", pass.Fset.Position(b.Pos()), count)
+					}
 				}
 				for _, call := range putWithoutReset(pass, b) {
 					astutil.Report(pass, call.Pos(), "concurrency-14", "sync.Pool.Put(%s) at %s has no preceding Reset() call — a pooled item may leak stale data or caller-owned references to the next Get()", types.ExprString(call.Args[0]), pass.Fset.Position(call.Pos()))
@@ -158,13 +165,13 @@ func run(pass *analysis.Pass) (any, error) {
 				for _, stmt := range lockDeferGapViolations(pass, n) {
 					astutil.Report(pass, stmt.Pos(), "concurrency-07", "%s() at %s is not immediately followed by defer %s() — code between lock and defer is a panic window", lockMethodName(stmt), pass.Fset.Position(stmt.Pos()), unlockMethodName(stmt))
 				}
-			case *ast.StructType:
-				for _, field := range embeddedSyncPrimitive(pass, n) {
-					astutil.Report(pass, field.Pos(), "concurrency-08", "struct embeds %s anonymously at %s, promoting Lock/Unlock (or Add/Done/Wait) to the public API — use a named field instead", astutil.TypeString(pass, field.Type), pass.Fset.Position(field.Pos()))
-				}
 			}
 			return true
 		})
+		reportEmbeddedSyncForExportedTypes(pass, file)
+		if isTestSupportFile(pass, file) {
+			continue
+		}
 		for _, decl := range file.Decls {
 			gd, ok := decl.(*ast.GenDecl)
 			if !ok || gd.Tok != token.TYPE {
@@ -185,12 +192,16 @@ func run(pass *analysis.Pass) (any, error) {
 			if isInitWithGoroutine(n) {
 				astutil.Report(pass, n.Pos(), "concurrency-09", "init() at %s spawns a goroutine — startup ordering becomes implicit and fragile", pass.Fset.Position(n.Pos()))
 			}
-			if isAsyncWrapper(n) {
-				astutil.Report(pass, n.Pos(), "concurrency-05", "%s fires a goroutine internally instead of letting the caller add concurrency via errgroup or a worker pool", n.Name.Name)
+			if !isGoTestFile(pass, n) {
+				if isAsyncWrapper(n) {
+					astutil.Report(pass, n.Pos(), "concurrency-05", "%s fires a goroutine internally instead of letting the caller add concurrency via errgroup or a worker pool", n.Name.Name)
+				}
+				reportSignatureChannels(pass, n.Type)
 			}
-			reportSignatureChannels(pass, n.Type)
 		case *ast.FuncLit:
-			reportSignatureChannels(pass, n.Type)
+			if !isGoTestFile(pass, n) {
+				reportSignatureChannels(pass, n.Type)
+			}
 		}
 		return true
 	})
@@ -222,7 +233,7 @@ func run(pass *analysis.Pass) (any, error) {
 		deferStmt, ok := stack[len(stack)-1].(*ast.DeferStmt)
 		if ok {
 			if loop, found := deferEnclosingLoop(stack); found {
-				if isSmallBoundedLoop(pass, loop) {
+				if isSmallBoundedLoop(pass, loop, smallBoundedRanges) {
 					return true
 				}
 				kind := "for"
@@ -294,20 +305,71 @@ func run(pass *analysis.Pass) (any, error) {
 
 const maxSmallLoopDefers = 8
 
-func isSmallBoundedLoop(pass *analysis.Pass, loop ast.Node) bool {
+func isSmallBoundedLoop(pass *analysis.Pass, loop ast.Node, boundedVariables map[types.Object]bool) bool {
 	rangeStmt, ok := loop.(*ast.RangeStmt)
 	if !ok {
 		return false
 	}
-	if literal, ok := rangeStmt.X.(*ast.CompositeLit); ok {
+	if id, ok := rangeStmt.X.(*ast.Ident); ok && boundedVariables[pass.TypesInfo.Uses[id]] {
+		return true
+	}
+	return isSmallBoundedRangeExpr(pass, rangeStmt.X)
+}
+
+func isSmallBoundedRangeExpr(pass *analysis.Pass, expr ast.Expr) bool {
+	if literal, ok := expr.(*ast.CompositeLit); ok {
 		return len(literal.Elts) <= maxSmallLoopDefers
 	}
-	value := pass.TypesInfo.Types[rangeStmt.X].Value
+	value := pass.TypesInfo.Types[expr].Value
 	if value == nil || value.Kind() != constant.Int {
 		return false
 	}
 	iterations, exact := constant.Int64Val(value)
 	return exact && iterations >= 0 && iterations <= maxSmallLoopDefers
+}
+
+func smallBoundedRangeVariables(pass *analysis.Pass) map[types.Object]bool {
+	candidates := make(map[types.Object]bool)
+	reassigned := make(map[types.Object]bool)
+	for _, file := range pass.Files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			switch n := node.(type) {
+			case *ast.AssignStmt:
+				if n.Tok == token.DEFINE {
+					for i := 0; i < len(n.Lhs) && i < len(n.Rhs); i++ {
+						id, ok := n.Lhs[i].(*ast.Ident)
+						if ok && isSmallBoundedRangeExpr(pass, n.Rhs[i]) {
+							object := pass.TypesInfo.Defs[id]
+							if object != nil && object.Parent() != pass.Pkg.Scope() {
+								candidates[object] = true
+							}
+						}
+					}
+					return true
+				}
+				for _, lhs := range n.Lhs {
+					if id, ok := lhs.(*ast.Ident); ok {
+						reassigned[pass.TypesInfo.Uses[id]] = true
+					}
+				}
+			case *ast.ValueSpec:
+				for i := 0; i < len(n.Names) && i < len(n.Values); i++ {
+					if isSmallBoundedRangeExpr(pass, n.Values[i]) {
+						object := pass.TypesInfo.Defs[n.Names[i]]
+						if object != nil && object.Parent() != pass.Pkg.Scope() {
+							candidates[object] = true
+						}
+					}
+				}
+			}
+			return true
+		})
+	}
+	for object := range reassigned {
+		delete(candidates, object)
+	}
+	delete(candidates, nil)
+	return candidates
 }
 
 func receiverTypeName(e ast.Expr) string {
@@ -497,8 +559,11 @@ func tickerOrTimerNeverStopped(pass *analysis.Pass, as *ast.AssignStmt, body *as
 	if len(as.Rhs) != 1 || len(as.Lhs) != 1 {
 		return false
 	}
+	if _, ok := as.Lhs[0].(*ast.Ident); !ok {
+		return false
+	}
 	c, ok := as.Rhs[0].(*ast.CallExpr)
-	if !ok || (!astutil.IsPkgFunc(pass, c, "time", "NewTicker") && !astutil.IsPkgFunc(pass, c, "time", "NewTimer")) {
+	if !ok || !astutil.IsPkgFunc(pass, c, "time", "NewTicker") {
 		return false
 	}
 	name := types.ExprString(as.Lhs[0])
@@ -725,6 +790,32 @@ func embeddedSyncPrimitive(pass *analysis.Pass, st *ast.StructType) []*ast.Field
 	return bad
 }
 
+func reportEmbeddedSyncForExportedTypes(pass *analysis.Pass, file *ast.File) {
+	for _, decl := range file.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok || gd.Tok != token.TYPE {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			ts, ok := spec.(*ast.TypeSpec)
+			if !ok || !ts.Name.IsExported() {
+				continue
+			}
+			st, ok := ts.Type.(*ast.StructType)
+			if !ok {
+				continue
+			}
+			fields := embeddedSyncPrimitive(pass, st)
+			if len(st.Fields.List) == 1 && len(fields) == 1 {
+				continue
+			}
+			for _, field := range fields {
+				astutil.Report(pass, field.Pos(), "concurrency-08", "exported struct %s embeds %s anonymously at %s, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead", ts.Name.Name, astutil.TypeString(pass, field.Type), pass.Fset.Position(field.Pos()))
+			}
+		}
+	}
+}
+
 func docNeedsSafety(pass *analysis.Pass, gd *ast.GenDecl, ts *ast.TypeSpec) bool {
 	st, ok := ts.Type.(*ast.StructType)
 	if !ok {
@@ -744,11 +835,34 @@ func docNeedsSafety(pass *analysis.Pass, gd *ast.GenDecl, ts *ast.TypeSpec) bool
 				return true
 			}
 			text := strings.ToLower(doc.Text())
-			for _, kw := range []string{"safe for concurrent", "not safe for concurrent", "goroutine-safe", "concurrency-safe", "thread-safe"} {
+			for _, kw := range []string{
+				"safe for concurrent", "safe to use concurrent", "safe to call concurrent",
+				"not safe for concurrent", "cannot be called concurrent", "must not be called concurrent",
+				"goroutine-safe", "goroutine safe", "concurrency-safe", "concurrency safe",
+				"thread-safe", "thread safe",
+			} {
 				if strings.Contains(text, kw) {
 					return false
 				}
 			}
+			return true
+		}
+	}
+	return false
+}
+
+func isGoTestFile(pass *analysis.Pass, node ast.Node) bool {
+	return strings.HasSuffix(pass.Fset.Position(node.Pos()).Filename, "_test.go")
+}
+
+func isTestSupportFile(pass *analysis.Pass, node ast.Node) bool {
+	name := filepath.ToSlash(pass.Fset.Position(node.Pos()).Filename)
+	if strings.HasSuffix(name, "_test.go") || strings.HasSuffix(name, "_testing.go") {
+		return true
+	}
+	for _, segment := range strings.Split(name, "/") {
+		switch segment {
+		case "test", "testing", "testutil", "testutils":
 			return true
 		}
 	}

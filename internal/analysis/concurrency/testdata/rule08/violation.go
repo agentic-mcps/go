@@ -4,4 +4,5 @@ import "sync"
 
 type Violation struct {
 	sync.Mutex // VIOLATION: concurrency-08
+	Value      int
 }

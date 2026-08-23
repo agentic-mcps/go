@@ -17,14 +17,16 @@ import (
 
 func TestRuleSet(t *testing.T) {
 	want := []string{
-		"concurrency-02", "concurrency-04", "concurrency-05", "concurrency-06", "concurrency-08",
-		"concurrency-09", "concurrency-10", "concurrency-12", "concurrency-15", "concurrency-17", "concurrency-18",
-		"concurrency-19", "concurrency-20",
+		"concurrency-04", "concurrency-05", "concurrency-08", "concurrency-09",
+		"concurrency-10", "concurrency-12", "concurrency-18", "concurrency-19",
 	}
 	if got := astutil.RulesInDomain("concurrency"); !slices.Equal(got, want) {
 		t.Fatalf("registered rules = %v, want %v", got, want)
 	}
-	disabled := []string{"concurrency-01", "concurrency-03", "concurrency-07", "concurrency-14"}
+	disabled := []string{
+		"concurrency-01", "concurrency-02", "concurrency-03", "concurrency-06", "concurrency-07",
+		"concurrency-14", "concurrency-15", "concurrency-17", "concurrency-20",
+	}
 	if got := astutil.DisabledRulesInDomain("concurrency"); !slices.Equal(got, disabled) {
 		t.Fatalf("disabled rules = %v, want %v", got, disabled)
 	}
@@ -35,21 +37,16 @@ func TestFixtureRules(t *testing.T) {
 		rule string
 		dir  string
 	}{
-		{"concurrency-06", "rule06"},
 		{"concurrency-08", "rule08"},
 		{"concurrency-10", "rule10"},
 		{"concurrency-12", "rule12"},
-		{"concurrency-15", "rule15"},
-		{"concurrency-17", "rule17"},
 		{"concurrency-18", "rule18"},
-		{"concurrency-02", "rule02"},
 		{"concurrency-19", "rule19"},
 		{"concurrency-19", "rule19defer"},
 		{"concurrency-18", "rule18ticker"},
 		{"concurrency-04", "rule04"},
 		{"concurrency-05", "rule05"},
 		{"concurrency-09", "rule09"},
-		{"concurrency-20", "rule20"},
 	} {
 		t.Run(tc.dir, func(t *testing.T) {
 			dir := filepath.Join("testdata", tc.dir)
@@ -63,13 +60,14 @@ func TestFixtureRules(t *testing.T) {
 					target = append(target, item)
 				}
 			}
-			if len(target) != 1 {
-				t.Fatalf("got %d target findings (total %d): %#v", len(target), result.Total, result.Findings)
+			wantCount := 1
+			if len(target) != wantCount {
+				t.Fatalf("got %d target findings, want %d (total %d): %#v", len(target), wantCount, result.Total, result.Findings)
 			}
 			got := target[0]
 			wantSeverity := finding.SeverityWarning
 			switch tc.rule {
-			case "concurrency-01", "concurrency-06", "concurrency-07", "concurrency-08":
+			case "concurrency-01", "concurrency-07", "concurrency-08":
 				wantSeverity = finding.SeverityError
 			case "concurrency-10":
 				wantSeverity = finding.SeverityInfo
