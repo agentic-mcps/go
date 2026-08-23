@@ -28,16 +28,25 @@ const (
 type ErrorKind string
 
 const (
-	ErrorNone         ErrorKind = ""
+	// ErrorNone indicates that an operation completed without an error.
+	ErrorNone ErrorKind = ""
+	// ErrorInvalidInput indicates invalid caller input.
 	ErrorInvalidInput ErrorKind = "invalid_input"
-	ErrorCancelled    ErrorKind = "cancelled"
-	ErrorDeadline     ErrorKind = "deadline"
-	ErrorSubprocess   ErrorKind = "subprocess"
-	ErrorAnalysis     ErrorKind = "analysis"
-	ErrorInternal     ErrorKind = "internal"
+	// ErrorCancelled indicates caller cancellation.
+	ErrorCancelled ErrorKind = "cancelled"
+	// ErrorDeadline indicates an operation deadline.
+	ErrorDeadline ErrorKind = "deadline"
+	// ErrorSubprocess indicates a subprocess failure.
+	ErrorSubprocess ErrorKind = "subprocess"
+	// ErrorAnalysis indicates an analyzer failure.
+	ErrorAnalysis ErrorKind = "analysis"
+	// ErrorInternal indicates an unexpected internal failure.
+	ErrorInternal ErrorKind = "internal"
 )
 
 // Event is the caller-facing trace interface. Args are hashed and never stored.
+//
+//nolint:govet // event field order mirrors the trace contract.
 type Event struct {
 	Tool               string
 	Args               any
@@ -51,6 +60,8 @@ type Event struct {
 }
 
 // Record is the deliberately bounded on-disk representation.
+//
+//nolint:govet // record field order mirrors the trace JSON contract.
 type Record struct {
 	Timestamp           time.Time        `json:"ts"`
 	Tool                string           `json:"tool"`
@@ -66,6 +77,8 @@ type Record struct {
 }
 
 // Tracer is safe for concurrent use. A zero Tracer is disabled.
+//
+//nolint:govet // mutex/encoder/file order reflects lifecycle ownership.
 type Tracer struct {
 	mu      sync.Mutex
 	file    *os.File

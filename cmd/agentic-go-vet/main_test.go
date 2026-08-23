@@ -24,8 +24,8 @@ func TestVetBinarySmoke(t *testing.T) {
 	binPath := filepath.Join(t.TempDir(), "agentic-go-vet")
 	build := exec.CommandContext(ctx, "go", "build", "-o", binPath, "./cmd/agentic-go-vet")
 	build.Dir = repoRoot
-	if output, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("build agentic-go-vet: %v\n%s", err, output)
+	if output, buildErr := build.CombinedOutput(); buildErr != nil {
+		t.Fatalf("build agentic-go-vet: %v\n%s", buildErr, output)
 	}
 	fixtureRoot := filepath.Join(repoRoot, "internal", "analysis", "concurrency", "testdata")
 
@@ -59,7 +59,8 @@ func TestVetBinarySmoke(t *testing.T) {
 
 func hasCategory(report map[string]map[string][]struct {
 	Category string `json:"category"`
-}, analyzer, category string) bool {
+}, analyzer, category string,
+) bool {
 	for _, analyzers := range report {
 		for _, diagnostic := range analyzers[analyzer] {
 			if diagnostic.Category == category {

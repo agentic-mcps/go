@@ -14,16 +14,19 @@ import (
 
 const maxBenchmarkLine = 1 << 20
 
+// BenchmarkSample is one parsed benchmark measurement.
 type BenchmarkSample struct {
 	NsOp float64
 }
 
+// BenchmarkResult groups measurements for one benchmark name.
 type BenchmarkResult struct {
 	Name    string
 	Samples []BenchmarkSample
 	Median  float64
 }
 
+// BenchmarkReport contains all parsed benchmark results.
 type BenchmarkReport struct {
 	Benchmarks []BenchmarkResult
 }

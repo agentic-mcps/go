@@ -34,6 +34,8 @@ type CoverageGap struct {
 }
 
 // FileCoverage contains statement coverage and gaps for one source file.
+//
+//nolint:govet // field order is the public JSON schema order.
 type FileCoverage struct {
 	File    string        `json:"file"`
 	Percent float64       `json:"percent"`

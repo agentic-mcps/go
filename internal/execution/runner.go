@@ -33,6 +33,8 @@ type Config struct {
 }
 
 // Command describes one subprocess invocation.
+//
+//nolint:govet // Keep invocation fields in their natural call-site reading order.
 type Command struct {
 	Name string
 	Args []string
@@ -226,6 +228,7 @@ func mergedEnv(overrides map[string]string) []string {
 	return env
 }
 
+//nolint:govet // Writer state is kept grouped by ownership and synchronization.
 type cappedWriter struct {
 	name      string
 	dst       io.Writer

@@ -122,7 +122,7 @@ func (r *Runtime) packagesResource(ctx context.Context, req *mcp.ReadResourceReq
 	return jsonResource(req.Params.URI, packages)
 }
 
-func (r *Runtime) analysisRulesResource(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+func (r *Runtime) analysisRulesResource(_ context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
 	if err := resourceURI(req, "agentic-go://analysis-rules"); err != nil {
 		return nil, err
 	}

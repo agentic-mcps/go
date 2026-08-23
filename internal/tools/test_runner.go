@@ -13,7 +13,7 @@ func (r *Runtime) runTestJSON(ctx context.Context, arguments []string, consume f
 	reader, writer := io.Pipe()
 	parsed := make(chan error, 1)
 	go func() {
-		defer reader.Close()
+		defer func() { _ = reader.Close() }()
 		_, parseErr := parser.DecodeTestJSON(reader, consume)
 		parsed <- parseErr
 	}()

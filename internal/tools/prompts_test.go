@@ -51,6 +51,7 @@ func TestPromptArgumentsRejectMissingAndBlank(t *testing.T) {
 			t.Errorf("%s accepted missing arguments", name)
 		}
 	}
+	//nolint:govet // table order keeps the test cases readable by input shape.
 	invalid := []struct {
 		name string
 		args map[string]string
@@ -76,12 +77,12 @@ func promptHandlerForTest(server *mcp.Server, name string, args map[string]strin
 	if err != nil {
 		return nil, err
 	}
-	defer serverSession.Close()
+	defer func() { _ = serverSession.Close() }()
 	client := mcp.NewClient(&mcp.Implementation{Name: "prompts-client", Version: "1"}, nil)
 	clientSession, err := client.Connect(ctx, clientTransport, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer clientSession.Close()
+	defer func() { _ = clientSession.Close() }()
 	return clientSession.GetPrompt(ctx, &mcp.GetPromptParams{Name: name, Arguments: args})
 }

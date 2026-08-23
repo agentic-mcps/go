@@ -151,9 +151,10 @@ func (c *flakeCollector) consume(event parser.TestEvent) error {
 		counts = &flakeCounts{test: event.Test, pkg: event.Package}
 		c.results[key] = counts
 	}
-	if event.Action == "pass" {
+	switch event.Action {
+	case "pass":
 		counts.passes++
-	} else if event.Action == "fail" {
+	case "fail":
 		counts.failed++
 	}
 	return nil

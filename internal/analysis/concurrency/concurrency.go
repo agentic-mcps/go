@@ -37,6 +37,7 @@ func init() {
 	astutil.RegisterRule("concurrency-20", "defer_in_loop", finding.SeverityWarning)
 }
 
+// Analyzer audits selected goroutine and channel conventions.
 var Analyzer = &analysis.Analyzer{
 	Name:     "concurrency",
 	Doc:      "Audits selected goroutine and channel conventions.",
@@ -144,7 +145,7 @@ func run(pass *analysis.Pass) (any, error) {
 		})
 		ast.Inspect(file, func(n ast.Node) bool {
 			if fd, ok := n.(*ast.FuncDecl); ok && fd.Recv != nil && len(fd.Recv.List) > 0 {
-				if name := receiverName(fd); len(atomicByType[name]) >= 2 && methodMutatesMultipleAtomicsWithoutMutex(pass, fd, atomicByType[name]) {
+				if name := receiverName(fd); len(atomicByType[name]) >= 2 && methodMutatesMultipleAtomicsWithoutMutex(fd, atomicByType[name]) {
 					astutil.Report(pass, fd.Pos(), "concurrency-15", "method %s at %s mutates %d independent atomic fields with no mutex — compound state needs a mutex, not multiple atomics", fd.Name.Name, pass.Fset.Position(fd.Pos()), len(atomicByType[name]))
 				}
 			}
@@ -304,6 +305,7 @@ func receiverTypeName(e ast.Expr) string {
 		}
 	}
 }
+
 func loopDefinedVars(p *analysis.Pass, l ast.Node) []types.Object {
 	var ids []*ast.Ident
 	switch x := l.(type) {
@@ -336,6 +338,7 @@ func loopDefinedVars(p *analysis.Pass, l ast.Node) []types.Object {
 	}
 	return out
 }
+
 func loopVarCaptureViolations(p *analysis.Pass, vars []types.Object, b *ast.BlockStmt) map[ast.Stmt][]*ast.Ident {
 	out := map[ast.Stmt][]*ast.Ident{}
 	shadowed := make(map[types.Object]bool)
@@ -365,6 +368,7 @@ func loopVarCaptureViolations(p *analysis.Pass, vars []types.Object, b *ast.Bloc
 	}
 	return out
 }
+
 func shadowedLoopVars(p *analysis.Pass, st ast.Stmt, vars []types.Object) []types.Object {
 	a, ok := st.(*ast.AssignStmt)
 	if !ok || a.Tok != token.DEFINE {
@@ -385,6 +389,7 @@ func shadowedLoopVars(p *analysis.Pass, st ast.Stmt, vars []types.Object) []type
 	}
 	return shadowed
 }
+
 func capturedLoopVars(p *analysis.Pass, l *ast.FuncLit, vars []types.Object) []*ast.Ident {
 	var out []*ast.Ident
 	ast.Inspect(l.Body, func(n ast.Node) bool {
@@ -436,6 +441,7 @@ func undocumentedMultiLock(pass *analysis.Pass, cmap ast.CommentMap, body *ast.B
 	}
 	return first, recvs
 }
+
 func selectTimeAfterInLoop(pass *analysis.Pass, sel *ast.SelectStmt) []*ast.CallExpr {
 	var out []*ast.CallExpr
 	for _, s := range sel.Body.List {
@@ -446,6 +452,7 @@ func selectTimeAfterInLoop(pass *analysis.Pass, sel *ast.SelectStmt) []*ast.Call
 	}
 	return out
 }
+
 func recvCallFromComm(n ast.Stmt) *ast.CallExpr {
 	switch x := n.(type) {
 	case *ast.ExprStmt:
@@ -463,6 +470,7 @@ func recvCallFromComm(n ast.Stmt) *ast.CallExpr {
 	}
 	return nil
 }
+
 func tickerOrTimerNeverStopped(pass *analysis.Pass, as *ast.AssignStmt, body *ast.BlockStmt) bool {
 	if len(as.Rhs) != 1 || len(as.Lhs) != 1 {
 		return false
@@ -486,6 +494,7 @@ func tickerOrTimerNeverStopped(pass *analysis.Pass, as *ast.AssignStmt, body *as
 	})
 	return !stopped
 }
+
 func enclosingFuncBody(file *ast.File, target ast.Node) *ast.BlockStmt {
 	var found *ast.BlockStmt
 	ast.Inspect(file, func(n ast.Node) bool {
@@ -531,6 +540,7 @@ func manualWaitGroupErrChanPattern(pass *analysis.Pass, body *ast.BlockStmt) (bo
 	})
 	return hasWG && hasErr && count >= 2, count
 }
+
 func putWithoutReset(pass *analysis.Pass, block *ast.BlockStmt) []*ast.CallExpr {
 	var out []*ast.CallExpr
 	for i, stmt := range block.List {
@@ -552,6 +562,7 @@ func putWithoutReset(pass *analysis.Pass, block *ast.BlockStmt) []*ast.CallExpr 
 	}
 	return out
 }
+
 func hasResetMethod(t types.Type) bool {
 	ms := types.NewMethodSet(t)
 	for i := 0; i < ms.Len(); i++ {
@@ -561,6 +572,7 @@ func hasResetMethod(t types.Type) bool {
 	}
 	return false
 }
+
 func precedingCallIsReset(stmt ast.Stmt, arg string) bool {
 	c, ok := astutil.ExprStmtCall(stmt)
 	if !ok {
@@ -569,6 +581,7 @@ func precedingCallIsReset(stmt ast.Stmt, arg string) bool {
 	s, ok := c.Fun.(*ast.SelectorExpr)
 	return ok && s.Sel.Name == "Reset" && types.ExprString(s.X) == arg
 }
+
 func atomicFields(pass *analysis.Pass, st *ast.StructType) []*ast.Field {
 	var out []*ast.Field
 	for _, f := range st.Fields.List {
@@ -578,7 +591,8 @@ func atomicFields(pass *analysis.Pass, st *ast.StructType) []*ast.Field {
 	}
 	return out
 }
-func methodMutatesMultipleAtomicsWithoutMutex(pass *analysis.Pass, fd *ast.FuncDecl, fields []*ast.Field) bool {
+
+func methodMutatesMultipleAtomicsWithoutMutex(fd *ast.FuncDecl, fields []*ast.Field) bool {
 	touched := map[string]bool{}
 	locked := false
 	ast.Inspect(fd.Body, func(n ast.Node) bool {
@@ -606,6 +620,7 @@ func methodMutatesMultipleAtomicsWithoutMutex(pass *analysis.Pass, fd *ast.FuncD
 	})
 	return !locked && len(touched) >= 2
 }
+
 func receiverName(fd *ast.FuncDecl) string {
 	t := fd.Recv.List[0].Type
 	if p, ok := t.(*ast.StarExpr); ok {
@@ -616,6 +631,7 @@ func receiverName(fd *ast.FuncDecl) string {
 	}
 	return ""
 }
+
 func lockDeferGapViolations(pass *analysis.Pass, block *ast.BlockStmt) []ast.Stmt {
 	var bad []ast.Stmt
 	for i, stmt := range block.List {
@@ -642,6 +658,7 @@ func lockDeferGapViolations(pass *analysis.Pass, block *ast.BlockStmt) []ast.Stm
 	}
 	return bad
 }
+
 func lockCall(stmt ast.Stmt) (string, string, bool) {
 	c, ok := astutil.ExprStmtCall(stmt)
 	if !ok {
@@ -653,6 +670,7 @@ func lockCall(stmt ast.Stmt) (string, string, bool) {
 	}
 	return types.ExprString(s.X), s.Sel.Name, true
 }
+
 func receiverExpr(stmt ast.Stmt) ast.Expr {
 	c, _ := astutil.ExprStmtCall(stmt)
 	return c.Fun.(*ast.SelectorExpr).X
@@ -665,10 +683,12 @@ func unlockMethodName(stmt ast.Stmt) string {
 	}
 	return "Unlock"
 }
+
 func isUnlockCallOn(call *ast.CallExpr, recv, method string) bool {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	return ok && sel.Sel.Name == method && types.ExprString(sel.X) == recv
 }
+
 func embeddedSyncPrimitive(pass *analysis.Pass, st *ast.StructType) []*ast.Field {
 	var bad []*ast.Field
 	for _, f := range st.Fields.List {
@@ -682,6 +702,7 @@ func embeddedSyncPrimitive(pass *analysis.Pass, st *ast.StructType) []*ast.Field
 	}
 	return bad
 }
+
 func docNeedsSafety(pass *analysis.Pass, gd *ast.GenDecl, ts *ast.TypeSpec) bool {
 	st, ok := ts.Type.(*ast.StructType)
 	if !ok {
@@ -739,6 +760,7 @@ func isFireAndForget(pass *analysis.Pass, gs *ast.GoStmt, enclosing *ast.BlockSt
 	}
 	return true
 }
+
 func hasDoneSelect(body ast.Node) bool {
 	found := false
 	ast.Inspect(body, func(n ast.Node) bool {
@@ -768,6 +790,7 @@ func hasDoneSelect(body ast.Node) bool {
 	})
 	return found
 }
+
 func hasBackgroundInGoroutine(pass *analysis.Pass, lit *ast.FuncLit) bool {
 	found := false
 	ast.Inspect(lit.Body, func(n ast.Node) bool {
@@ -785,7 +808,7 @@ func unjustifiedBuffer(call *ast.CallExpr, cmap ast.CommentMap, stmt ast.Node) b
 	if !ok || id.Name != "make" || len(call.Args) < 2 {
 		return false
 	}
-	if _, ok := call.Args[0].(*ast.ChanType); !ok {
+	if _, chanType := call.Args[0].(*ast.ChanType); !chanType {
 		return false
 	}
 	lit, ok := call.Args[1].(*ast.BasicLit)
@@ -826,6 +849,7 @@ func containsGoStmt(n ast.Node) bool {
 	})
 	return found
 }
+
 func isAsyncWrapper(fd *ast.FuncDecl) bool {
 	if fd.Name == nil || !strings.HasSuffix(fd.Name.Name, "Async") || fd.Body == nil || !containsGoStmt(fd.Body) {
 		return false
@@ -839,9 +863,11 @@ func isAsyncWrapper(fd *ast.FuncDecl) bool {
 	}
 	return true
 }
+
 func isInitWithGoroutine(fd *ast.FuncDecl) bool {
 	return fd.Recv == nil && fd.Name != nil && fd.Name.Name == "init" && fd.Body != nil && containsGoStmt(fd.Body)
 }
+
 func deferEnclosingLoop(stack []ast.Node) (ast.Node, bool) {
 	for i := len(stack) - 2; i >= 0; i-- {
 		switch n := stack[i].(type) {

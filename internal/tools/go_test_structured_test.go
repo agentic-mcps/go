@@ -88,8 +88,8 @@ func newTestRuntime(t *testing.T) *Runtime {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		if err := tracer.Close(); err != nil {
-			t.Errorf("Close() error = %v", err)
+		if closeErr := tracer.Close(); closeErr != nil {
+			t.Errorf("Close() error = %v", closeErr)
 		}
 	})
 	runtime, err := NewRuntime(ws, runner, tracer)

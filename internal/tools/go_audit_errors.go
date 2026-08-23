@@ -14,23 +14,26 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// AuditErrorsInput configures the error audit.
 type AuditErrorsInput struct {
 	Package     string           `json:"package" jsonschema:"Go package import path or ./relative/path"`
 	MinSeverity finding.Severity `json:"min_severity,omitempty" jsonschema:"lowest severity to include; default info"`
 	MaxFindings int              `json:"max_findings,omitempty" jsonschema:"maximum findings to return; default 200, maximum 1000"`
 }
 
+// AuditErrorsOutput is the structured error audit result.
 type AuditErrorsOutput struct {
 	Result finding.AuditResult `json:"result"`
 }
 
+// RegisterAuditErrors registers the error audit tool.
 func RegisterAuditErrors(server *mcp.Server, runtime *Runtime) {
 	mcp.AddTool(server, &mcp.Tool{Name: "go_audit_errors", Description: "Audits workspace Go code for precise error-handling hazards.", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, DestructiveHint: boolPtr(false), IdempotentHint: true, OpenWorldHint: boolPtr(false)}}, runtime.auditErrors)
 }
 
 func (r *Runtime) auditErrors(ctx context.Context, request *mcp.CallToolRequest, input AuditErrorsInput) (*mcp.CallToolResult, AuditErrorsOutput, error) {
 	started := time.Now()
-	options := auditOptions{Package: input.Package, MinSeverity: input.MinSeverity, MaxFindings: input.MaxFindings}
+	options := auditOptions(input)
 	if err := normalizeAuditInput(&options); err != nil {
 		r.recordAuditTrace("go_audit_errors", input, started, finding.AuditResult{}, trace.ErrorInvalidInput)
 		return nil, AuditErrorsOutput{}, fmt.Errorf("validating input: %w", err)

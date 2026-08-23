@@ -156,7 +156,7 @@ func TestPermitSharesConcurrencyLimitWithRun(t *testing.T) {
 	}
 }
 
-func TestHelperProcess(t *testing.T) {
+func TestHelperProcess(_ *testing.T) {
 	if os.Getenv("AGENTIC_GO_HELPER_PROCESS") != "1" {
 		return
 	}
@@ -166,10 +166,10 @@ func TestHelperProcess(t *testing.T) {
 		fmt.Fprintln(os.Stderr, "expected failure")
 		os.Exit(3)
 	case "output":
-		fmt.Fprint(os.Stdout, strings.Repeat("x", 128))
+		_, _ = fmt.Fprint(os.Stdout, strings.Repeat("x", 128))
 		os.Exit(0)
 	case "sleep":
-		fmt.Fprintln(os.Stdout, "ready")
+		_, _ = fmt.Fprintln(os.Stdout, "ready")
 		time.Sleep(time.Second)
 		os.Exit(0)
 	default:

@@ -14,23 +14,26 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// AuditConcurrencyInput configures the concurrency audit.
 type AuditConcurrencyInput struct {
 	Package     string           `json:"package" jsonschema:"Go package import path or ./relative/path"`
 	MinSeverity finding.Severity `json:"min_severity,omitempty" jsonschema:"lowest severity to include; default info"`
 	MaxFindings int              `json:"max_findings,omitempty" jsonschema:"maximum findings to return; default 200, maximum 1000"`
 }
 
+// AuditConcurrencyOutput is the structured concurrency audit result.
 type AuditConcurrencyOutput struct {
 	Result finding.AuditResult `json:"result"`
 }
 
+// RegisterAuditConcurrency registers the concurrency audit tool.
 func RegisterAuditConcurrency(server *mcp.Server, runtime *Runtime) {
 	mcp.AddTool(server, &mcp.Tool{Name: "go_audit_concurrency", Description: "Audits workspace Go code for precise concurrency hazards.", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, DestructiveHint: boolPtr(false), IdempotentHint: true, OpenWorldHint: boolPtr(false)}}, runtime.auditConcurrency)
 }
 
 func (r *Runtime) auditConcurrency(ctx context.Context, request *mcp.CallToolRequest, input AuditConcurrencyInput) (*mcp.CallToolResult, AuditConcurrencyOutput, error) {
 	started := time.Now()
-	options := auditOptions{Package: input.Package, MinSeverity: input.MinSeverity, MaxFindings: input.MaxFindings}
+	options := auditOptions(input)
 	if err := normalizeAuditInput(&options); err != nil {
 		r.recordAuditTrace("go_audit_concurrency", input, started, finding.AuditResult{}, trace.ErrorInvalidInput)
 		return nil, AuditConcurrencyOutput{}, fmt.Errorf("validating input: %w", err)

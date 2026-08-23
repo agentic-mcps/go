@@ -12,8 +12,8 @@ func createRunTempDir(prefix string) (string, error) {
 		return "", fmt.Errorf("locating user cache: %w", err)
 	}
 	runs := filepath.Join(cache, "agentic-go", "runs")
-	if err := os.MkdirAll(runs, 0o700); err != nil {
-		return "", fmt.Errorf("creating run cache: %w", err)
+	if mkdirErr := os.MkdirAll(runs, 0o700); mkdirErr != nil {
+		return "", fmt.Errorf("creating run cache: %w", mkdirErr)
 	}
 	dir, err := os.MkdirTemp(runs, prefix+"-")
 	if err != nil {

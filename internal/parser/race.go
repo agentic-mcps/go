@@ -10,6 +10,9 @@ import (
 
 const unparsedRaceMarker = "UNPARSED: race detector block did not match the supported format"
 
+// RaceAccess describes one access reported by the race detector.
+//
+//nolint:govet // Keep the stable race-report field order.
 type RaceAccess struct {
 	Kind        string           `json:"kind"`
 	Address     string           `json:"address"`
@@ -19,12 +22,14 @@ type RaceAccess struct {
 	State       string           `json:"state,omitempty"`
 }
 
+// RaceConflict contains both conflicting accesses and their creation stacks.
 type RaceConflict struct {
 	Current           RaceAccess   `json:"current"`
 	Previous          RaceAccess   `json:"previous"`
 	GoroutineCreation []RaceAccess `json:"goroutine_creation"`
 }
 
+// RaceReportOutput contains parsed race conflicts and block counts.
 type RaceReportOutput struct {
 	Conflicts      []RaceConflict `json:"conflicts"`
 	RawBlocksFound int            `json:"raw_blocks_found"`

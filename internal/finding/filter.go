@@ -14,12 +14,12 @@ func ValidateSeverity(value Severity) error {
 
 // Filter returns findings at or above min and clamps the visible findings to max.
 // Total and CountsBySeverity describe the severity-filtered set before truncation.
-func Filter(result AuditResult, min Severity, max int) AuditResult {
+func Filter(result AuditResult, minimum Severity, limit int) AuditResult {
 	filtered := make([]Finding, 0, len(result.Findings))
 	counts := make(map[Severity]int)
-	minimum := severityRank(min)
+	minimumRank := severityRank(minimum)
 	for _, item := range result.Findings {
-		if severityRank(item.Severity) > minimum {
+		if severityRank(item.Severity) > minimumRank {
 			continue
 		}
 		filtered = append(filtered, item)
@@ -28,9 +28,9 @@ func Filter(result AuditResult, min Severity, max int) AuditResult {
 
 	result.Total = len(filtered)
 	result.CountsBySeverity = counts
-	result.Truncated = len(filtered) > max
+	result.Truncated = len(filtered) > limit
 	if result.Truncated {
-		filtered = filtered[:max]
+		filtered = filtered[:limit]
 	}
 	result.Findings = filtered
 	return result

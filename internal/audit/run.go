@@ -17,6 +17,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+// Run loads and executes analyzers against a contained workspace pattern.
 func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer) (result finding.AuditResult, err error) {
 	started := time.Now()
 	defer func() {

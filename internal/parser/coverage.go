@@ -12,6 +12,7 @@ import (
 
 const maxCoverageLine = 1 << 20
 
+// CoverageBlock describes one source span from a Go coverage profile.
 type CoverageBlock struct {
 	File                string
 	StartLine, StartCol int
@@ -19,6 +20,7 @@ type CoverageBlock struct {
 	Statements, Count   uint64
 }
 
+// CoverageGap describes an uncovered source span.
 type CoverageGap struct {
 	File                string
 	StartLine, StartCol int
@@ -26,12 +28,16 @@ type CoverageGap struct {
 	Statements          uint64
 }
 
+// CoverageFile contains coverage and gaps for one source file.
+//
+//nolint:govet // Keep the stable output field order.
 type CoverageFile struct {
 	File    string
 	Percent float64
 	Gaps    []CoverageGap
 }
 
+// CoverageReport contains the parsed coverage profile.
 type CoverageReport struct {
 	Files          []CoverageFile
 	OverallPercent float64

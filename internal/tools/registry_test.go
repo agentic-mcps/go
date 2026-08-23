@@ -90,9 +90,9 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		if annotations == nil || !annotations.ReadOnlyHint || !annotations.IdempotentHint || annotations.DestructiveHint == nil || *annotations.DestructiveHint || annotations.OpenWorldHint == nil || *annotations.OpenWorldHint {
 			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
 		}
-		schema, err := json.Marshal(tool.InputSchema)
-		if err != nil {
-			t.Fatal(err)
+		schema, marshalErr := json.Marshal(tool.InputSchema)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
 		}
 		for _, field := range []string{`"package"`, `"min_severity"`, `"max_findings"`} {
 			if !strings.Contains(string(schema), field) {
@@ -123,8 +123,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	var output TestStructuredOutput
-	if err := json.Unmarshal(encoded, &output); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal(encoded, &output); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if output.Passed != 2 || output.Failed != 1 || output.Skipped != 1 {
 		t.Fatalf("structured content counts = %d/%d/%d, want 2/1/1", output.Passed, output.Failed, output.Skipped)
@@ -145,8 +145,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	var raceOutput RaceReportOutput
-	if err := json.Unmarshal(encoded, &raceOutput); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal(encoded, &raceOutput); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if raceOutput.RawBlocksFound == 0 || len(raceOutput.Conflicts) == 0 {
 		t.Fatalf("race structured content = %+v, want a conflict", raceOutput)
@@ -167,8 +167,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	var coverageOutput CoverageGapsOutput
-	if err := json.Unmarshal(encoded, &coverageOutput); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal(encoded, &coverageOutput); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if coverageOutput.OverallPercent >= 100 || len(coverageOutput.Files) == 0 {
 		t.Fatalf("coverage structured content = %+v, want incomplete coverage", coverageOutput)
@@ -189,13 +189,14 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	var flakeOutput FlakeFinderOutput
-	if err := json.Unmarshal(encoded, &flakeOutput); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal(encoded, &flakeOutput); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if len(flakeOutput.Flaky) != 1 || flakeOutput.Flaky[0].FlakeRate != 0.5 {
 		t.Fatalf("flake structured content = %+v, want deterministic mixed result", flakeOutput)
 	}
 
+	//nolint:govet // table order mirrors the protocol cases under test.
 	for _, tc := range []struct {
 		name   string
 		decode func([]byte) error

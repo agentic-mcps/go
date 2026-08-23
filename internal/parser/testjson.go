@@ -13,6 +13,8 @@ import (
 const maxTestJSONEvent = 8 << 20
 
 // TestEvent is one event emitted by go test -json.
+//
+//nolint:govet // JSON field order mirrors the upstream go test event shape.
 type TestEvent struct {
 	Time    time.Time `json:"Time"`
 	Action  string    `json:"Action"`

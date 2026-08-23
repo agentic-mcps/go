@@ -23,6 +23,8 @@ type TestStructuredInput struct {
 }
 
 // TestCase is one terminal test result.
+//
+//nolint:govet // field order is the public JSON schema order.
 type TestCase struct {
 	Name     string  `json:"name"`
 	Package  string  `json:"package"`
@@ -32,6 +34,8 @@ type TestCase struct {
 }
 
 // PackageSummary aggregates test results for one package.
+//
+//nolint:govet // field order is the public JSON schema order.
 type PackageSummary struct {
 	Status  string `json:"status"`
 	Passed  int    `json:"passed"`
@@ -144,6 +148,7 @@ func classifyTraceError(err error) trace.ErrorKind {
 	}
 }
 
+//nolint:govet // internal collector order follows event processing semantics.
 type testCollector struct {
 	verbose       bool
 	tests         []TestCase

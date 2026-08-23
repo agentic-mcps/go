@@ -71,7 +71,7 @@ func TestRecordRejectsRawErrorShapedState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer tracer.Close()
+	defer func() { _ = tracer.Close() }()
 
 	err = tracer.Record(Event{Tool: "go_test_structured", ErrorKind: ErrorSubprocess, ResultSummary: "raw failure"})
 	if err == nil {

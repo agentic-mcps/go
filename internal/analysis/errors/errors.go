@@ -17,6 +17,7 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
+// Analyzer audits selected error-handling conventions.
 var Analyzer = &analysis.Analyzer{
 	Name:     "errors",
 	Doc:      "finds precise, mechanical error-handling problems",
@@ -93,7 +94,7 @@ func run(pass *analysis.Pass) (any, error) {
 				if isPanicCall(pass, x) && !startupContext(pass, x.Pos()) {
 					astutil.Report(pass, x.Pos(), "errors-10", "panic(...) at %s outside main/init — return an error instead; panic is not control flow in library code", pass.Fset.Position(x.Pos()))
 				}
-				if name, ok := mustCall(x); ok && !allowedMust(pass, x.Pos(), name) {
+				if name, ok := mustCall(x); ok && !allowedMust(pass, x.Pos()) {
 					astutil.Report(pass, x.Pos(), "errors-11", "%s called at %s outside main/init/TestMain/package-init — Must* helpers panic and must not run in request or worker paths", name, pass.Fset.Position(x.Pos()))
 				}
 			case *ast.DeferStmt:
@@ -185,12 +186,14 @@ func isBareErrDiscard(pass *analysis.Pass, a *ast.AssignStmt) bool {
 	id, ok := a.Rhs[0].(*ast.Ident)
 	return ok && isErrorIdent(pass, id)
 }
+
 func errorDiscardName(a *ast.AssignStmt) string {
 	if id, ok := a.Rhs[0].(*ast.Ident); ok {
 		return id.Name
 	}
 	return "error"
 }
+
 func isPanicCall(pass *analysis.Pass, c *ast.CallExpr) bool {
 	id, ok := c.Fun.(*ast.Ident)
 	if !ok || id.Name != "panic" {
@@ -199,6 +202,7 @@ func isPanicCall(pass *analysis.Pass, c *ast.CallExpr) bool {
 	_, ok = pass.TypesInfo.Uses[id].(*types.Builtin)
 	return ok
 }
+
 func enclosingFunc(pass *analysis.Pass, pos token.Pos) *ast.FuncDecl {
 	for _, f := range pass.Files {
 		var found *ast.FuncDecl
@@ -215,10 +219,12 @@ func enclosingFunc(pass *analysis.Pass, pos token.Pos) *ast.FuncDecl {
 	}
 	return nil
 }
+
 func startupContext(pass *analysis.Pass, pos token.Pos) bool {
 	f := enclosingFunc(pass, pos)
 	return f != nil && pass.Pkg.Name() == "main" && (f.Name.Name == "main" || f.Name.Name == "init")
 }
+
 func mustCall(c *ast.CallExpr) (string, bool) {
 	switch f := c.Fun.(type) {
 	case *ast.Ident:
@@ -232,7 +238,8 @@ func mustCall(c *ast.CallExpr) (string, bool) {
 	}
 	return "", false
 }
-func allowedMust(pass *analysis.Pass, pos token.Pos, name string) bool {
+
+func allowedMust(pass *analysis.Pass, pos token.Pos) bool {
 	f := enclosingFunc(pass, pos)
 	if f == nil {
 		return true
@@ -252,6 +259,7 @@ func hasMethodReturning(t types.Type, name, result string) bool {
 	}
 	return false
 }
+
 func wrapperWithoutUnwrap(pass *analysis.Pass, ts *ast.TypeSpec, st *ast.StructType) bool {
 	hasErr := false
 	for _, f := range st.Fields.List {
@@ -269,6 +277,7 @@ func wrapperWithoutUnwrap(pass *analysis.Pass, ts *ast.TypeSpec, st *ast.StructT
 	named, ok := obj.Type().(*types.Named)
 	return ok && hasMethodReturning(named, "Error", "string") && !hasMethodReturning(named, "Unwrap", "error")
 }
+
 func bareDeferClose(pass *analysis.Pass, ds *ast.DeferStmt, results *ast.FieldList) bool {
 	if results == nil {
 		return false
@@ -316,12 +325,14 @@ func enclosingFunctionResults(pass *analysis.Pass, pos token.Pos) *ast.FieldList
 	}
 	return results
 }
+
 func closeReceiver(ds *ast.DeferStmt) string {
 	if s, ok := ds.Call.Fun.(*ast.SelectorExpr); ok {
 		return formatExpr(s.X)
 	}
 	return "resource"
 }
+
 func formatExpr(e ast.Expr) string {
 	if id, ok := e.(*ast.Ident); ok {
 		return id.Name
@@ -359,6 +370,7 @@ func missingRecover(pass *analysis.Pass, gs *ast.GoStmt) bool {
 	}
 	return true
 }
+
 func exitFatal(pass *analysis.Pass, c *ast.CallExpr) (string, bool) {
 	if astutil.IsPkgFunc(pass, c, "os", "Exit") {
 		return "os.Exit", true
@@ -370,6 +382,7 @@ func exitFatal(pass *analysis.Pass, c *ast.CallExpr) (string, bool) {
 	}
 	return "", false
 }
+
 func allowedExit(pass *analysis.Pass, fn *ast.FuncDecl) bool {
 	if fn == nil {
 		return false

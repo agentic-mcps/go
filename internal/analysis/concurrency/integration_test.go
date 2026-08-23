@@ -69,11 +69,12 @@ func TestFixtureRules(t *testing.T) {
 			}
 			got := target[0]
 			wantSeverity := finding.SeverityWarning
-			if tc.rule == "concurrency-01" || tc.rule == "concurrency-06" || tc.rule == "concurrency-07" || tc.rule == "concurrency-08" {
+			switch tc.rule {
+			case "concurrency-01", "concurrency-06", "concurrency-07", "concurrency-08":
 				wantSeverity = finding.SeverityError
-			} else if tc.rule == "concurrency-10" {
+			case "concurrency-10":
 				wantSeverity = finding.SeverityInfo
-			} else if tc.rule == "concurrency-14" || tc.rule == "concurrency-02" || tc.rule == "concurrency-19" {
+			case "concurrency-14", "concurrency-02", "concurrency-19":
 				wantSeverity = finding.SeverityError
 			}
 			if got.Rule != tc.rule || got.Severity != wantSeverity {

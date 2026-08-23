@@ -53,8 +53,8 @@ func TestWorkspaceResourcesReturnReducedFreshJSON(t *testing.T) {
 		t.Fatalf("module contents = %+v", module.Contents)
 	}
 	var got moduleResource
-	if err := json.Unmarshal([]byte(module.Contents[0].Text), &got); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal([]byte(module.Contents[0].Text), &got); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if got.Module != "example.test" || got.GoVersion != "1.25" {
 		t.Fatalf("module = %+v", got)
@@ -64,8 +64,8 @@ func TestWorkspaceResourcesReturnReducedFreshJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 	var listed []packageResource
-	if err := json.Unmarshal([]byte(packages.Contents[0].Text), &listed); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal([]byte(packages.Contents[0].Text), &listed); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if len(listed) != 1 || listed[0].ImportPath != "example.test" || listed[0].GoFiles != 1 {
 		t.Fatalf("packages = %+v", listed)
@@ -75,8 +75,8 @@ func TestWorkspaceResourcesReturnReducedFreshJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 	var manifest []analysisRuleResource
-	if err := json.Unmarshal([]byte(rules.Contents[0].Text), &manifest); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal([]byte(rules.Contents[0].Text), &manifest); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if len(manifest) != 34 {
 		t.Fatalf("rules = %d, want 34", len(manifest))
@@ -91,8 +91,8 @@ func TestWorkspaceResourcesReturnReducedFreshJSON(t *testing.T) {
 			}
 		}
 	}
-	if err := os.WriteFile(filepath.Join(runtime.workspace.Root(), "extra_test.go"), []byte("package example\n"), 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(filepath.Join(runtime.workspace.Root(), "extra_test.go"), []byte("package example\n"), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 	updated, err := runtime.packagesResource(ctx, &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: "agentic-go://packages"}})
 	if err != nil {
@@ -122,13 +122,13 @@ func TestRegisterWorkspaceResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer serverSession.Close()
+	defer func() { _ = serverSession.Close() }()
 	client := mcp.NewClient(&mcp.Implementation{Name: "client", Version: "1"}, nil)
 	clientSession, err := client.Connect(context.Background(), clientTransport, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer clientSession.Close()
+	defer func() { _ = clientSession.Close() }()
 	listed, err := clientSession.ListResources(context.Background(), nil)
 	if err != nil {
 		t.Fatal(err)

@@ -25,6 +25,8 @@ type ToolSummary struct {
 }
 
 // Summary describes a bounded recent window from the current server run.
+//
+//nolint:govet // JSON field order is part of the stable resource output.
 type Summary struct {
 	Enabled           bool          `json:"enabled"`
 	RecordsConsidered int           `json:"records_considered"`
@@ -52,7 +54,7 @@ func (t *Tracer) Summary() (Summary, error) {
 	if err != nil {
 		return Summary{}, fmt.Errorf("opening trace summary source: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	info, err := file.Stat()
 	if err != nil {
@@ -69,9 +71,8 @@ func (t *Tracer) Summary() (Summary, error) {
 	scanner.Buffer(make([]byte, 4096), maxSummaryLineBytes)
 	if truncated {
 		// The bounded tail may begin in the middle of one JSON line.
-		if scanner.Scan() {
-			// Discard the partial record.
-		}
+		// Discard the partial record.
+		_ = scanner.Scan()
 	}
 	records := make([]summaryRecord, 0, maxSummaryRecords)
 	next := 0
@@ -99,6 +100,7 @@ func (t *Tracer) Summary() (Summary, error) {
 		records = ordered
 	}
 
+	//nolint:govet // local aggregation order mirrors the summary fields.
 	type aggregate struct {
 		calls     int
 		errors    int

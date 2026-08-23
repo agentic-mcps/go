@@ -22,6 +22,8 @@ import (
 )
 
 // BenchmarkDiffInput configures a current-versus-baseline benchmark run.
+//
+//nolint:govet // field order is the public JSON schema order.
 type BenchmarkDiffInput struct {
 	Package          string   `json:"package" jsonschema:"Go package import path or ./relative/path"`
 	Baseline         string   `json:"baseline" jsonschema:"git ref to compare against, e.g. HEAD~1 or main"`

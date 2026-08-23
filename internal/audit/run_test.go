@@ -3,6 +3,7 @@ package audit
 import (
 	"context"
 	"fmt"
+	"go/ast"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,7 @@ import (
 
 	"github.com/ashwingopalsamy/agentic-go/internal/analysis/astutil"
 	"github.com/ashwingopalsamy/agentic-go/internal/finding"
-	"go/ast"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"

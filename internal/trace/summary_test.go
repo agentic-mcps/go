@@ -23,8 +23,8 @@ func TestSummaryBoundsRecentRecords(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = tracer.Close() })
 	for i := 0; i < maxSummaryRecords+1; i++ {
-		if err := tracer.Record(Event{Tool: fmt.Sprintf("tool-%d", i%2), Duration: time.Millisecond}); err != nil {
-			t.Fatal(err)
+		if recordErr := tracer.Record(Event{Tool: fmt.Sprintf("tool-%d", i%2), Duration: time.Millisecond}); recordErr != nil {
+			t.Fatal(recordErr)
 		}
 	}
 	got, err := tracer.Summary()
@@ -51,8 +51,8 @@ func TestSummaryAggregatesCurrentRun(t *testing.T) {
 		{Tool: "go_test_structured", Duration: 30 * time.Millisecond},
 		{Tool: "go_audit_errors", Duration: 5 * time.Millisecond},
 	} {
-		if err := tracer.Record(event); err != nil {
-			t.Fatal(err)
+		if recordErr := tracer.Record(event); recordErr != nil {
+			t.Fatal(recordErr)
 		}
 	}
 	got, err := tracer.Summary()

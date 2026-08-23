@@ -42,7 +42,9 @@ func run(args []string) int {
 		return 2
 	}
 	if *showVersion {
-		fmt.Fprintf(os.Stdout, "agentic-go %s\n", version)
+		if _, writeErr := fmt.Fprintf(os.Stdout, "agentic-go %s\n", version); writeErr != nil {
+			return 1
+		}
 		return 0
 	}
 
@@ -83,8 +85,9 @@ func run(args []string) int {
 		return 1
 	}
 	defer func() {
-		if err := tracer.Close(); err != nil {
-			logger.Error("trace shutdown failed", "error", err)
+		closeErr := tracer.Close()
+		if closeErr != nil {
+			logger.Error("trace shutdown failed", "error", closeErr)
 		}
 	}()
 	runtime, err := tools.NewRuntime(ws, runner, tracer)
