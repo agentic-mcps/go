@@ -34,10 +34,10 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 3 {
-		t.Fatalf("len(tools/list) = %d, want 3", len(listed.Tools))
+	if len(listed.Tools) != 4 {
+		t.Fatalf("len(tools/list) = %d, want 4", len(listed.Tools))
 	}
-	for _, name := range []string{"go_test_structured", "go_race_report", "go_coverage_gaps"} {
+	for _, name := range []string{"go_test_structured", "go_race_report", "go_coverage_gaps", "go_benchmark_diff"} {
 		tool := listedTool(t, listed.Tools, name)
 		annotations := tool.Annotations
 		if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || !*annotations.DestructiveHint || annotations.OpenWorldHint == nil || !*annotations.OpenWorldHint {

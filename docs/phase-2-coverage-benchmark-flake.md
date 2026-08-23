@@ -111,7 +111,7 @@ type BenchmarkDiffInput struct {
     Baseline         string  `json:"baseline" jsonschema:"git ref to compare against, e.g. HEAD~1 or main"`
     BenchRegex       string  `json:"bench_regex,omitempty" jsonschema:"regex filter for -bench; default is all benchmarks"`
     Count            int     `json:"count,omitempty" jsonschema:"repetitions per revision; default 6"`
-    ThresholdPercent float64 `json:"threshold_percent,omitempty" jsonschema:"regression threshold in percent; default 10"`
+    ThresholdPercent *float64 `json:"threshold_percent,omitempty" jsonschema:"regression threshold in percent; default 10; explicit zero flags any slowdown"`
 }
 ```
 
@@ -143,14 +143,20 @@ if `remove` fails on a dirty tmp dir) cleans up unconditionally via `defer`.
    `git rev-parse --verify --end-of-options <Baseline>^{commit}` — handler
    error (not empty-result) if it doesn't, this is a caller input mistake, not
    an execution-failure-vs-zero-findings ambiguity (no findings concept here).
-2. Create a unique parent with `os.MkdirTemp("", "agentic-go-bench-")`,
-   set `tmpdir` to a nonexistent child beneath it, and run
+2. Create a unique parent under
+   `os.UserCacheDir()/agentic-go/runs/benchmark-*`, set `tmpdir` to a
+   nonexistent child beneath it, and run
    `git worktree add --detach <tmpdir> <Baseline>`.
-3. Run `go test -run=^$ -bench=<BenchRegex> -benchtime=1s -count=<Count> <Package>`
-   in `tmpdir` — capture stdout, parse (below) → baseline medians per name.
+3. Open the corresponding configured workspace path inside the worktree and
+   derive a child execution runner that shares the original semaphore,
+   deadline, and output cap. Run
+   `go test -run=^$ -bench=<BenchRegex> -benchtime=1s -count=<Count> <Package>`
+   there — capture stdout, parse (below) → baseline medians per name.
 4. Run the identical command in the real workspace dir (current code) →
    current medians per name.
-5. `git worktree remove <tmpdir>` (defer, unconditional).
+5. `git worktree remove --force <tmpdir>` (defer, unconditional). Cleanup gets
+   its own bounded context derived with `context.WithoutCancel` so an inbound
+   cancellation cannot strand Git worktree metadata.
 6. For each benchmark name present in both runs:
    `DeltaPercent = 100 * (current - baseline) / baseline`;
    `Regression = DeltaPercent > ThresholdPercent`.

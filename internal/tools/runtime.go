@@ -41,6 +41,7 @@ func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterTestStructured(server, runtime)
 	RegisterRaceReport(server, runtime)
 	RegisterCoverageGaps(server, runtime)
+	RegisterBenchmarkDiff(server, runtime)
 }
 
 func (r *Runtime) resolvePackage(ctx context.Context, pattern string) (string, error) {
