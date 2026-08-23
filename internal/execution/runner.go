@@ -116,11 +116,7 @@ func (r *Runner) Run(ctx context.Context, command Command, streams Streams) (Res
 		dir = resolved
 	}
 
-	callCtx := ctx
-	cancel := func() {}
-	if r.timeout > 0 {
-		callCtx, cancel = context.WithTimeout(ctx, r.timeout)
-	}
+	callCtx, cancel := r.Deadline(ctx)
 	defer cancel()
 
 	select {
@@ -161,6 +157,15 @@ func (r *Runner) Run(ctx context.Context, command Command, streams Streams) (Res
 		return result, nil
 	}
 	return Result{}, fmt.Errorf("starting %s: %w", command.Name, err)
+}
+
+// Deadline applies the process-wide maximum tool duration to a handler. Tool
+// handlers call it once so package resolution and execution share one budget.
+func (r *Runner) Deadline(ctx context.Context) (context.Context, context.CancelFunc) {
+	if r.timeout <= 0 {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeout(ctx, r.timeout)
 }
 
 func exitCode(state *os.ProcessState) int {

@@ -619,16 +619,16 @@ the exceeded limit; silently truncating parser input could manufacture a
 plausible but incomplete result.
 
 A process-wide counting semaphore — a `chan struct{}` buffered to
-`-max-concurrent-loads` (default 4), acquired before and released after
+`--max-concurrent-loads` (default 4), acquired before and released after
 every `packages.Load` call and every subprocess spawn — bounds concurrent
 work server-wide. Buffer size >1 here is the semaphore pattern itself, not
 unbounded-buffer drift: the capacity IS the concurrency ceiling, and every
 acquire site is documented inline
-(`// sem: bounded by -max-concurrent-loads, see internal/tools/workspace.go`).
+(`// sem: bounded by --max-concurrent-loads, see internal/execution/runner.go`).
 No new dependency — a stdlib `chan struct{}` is sufficient, and the
 production dependency list (go-sdk + x/tools) stays exactly two.
 
-Global `-max-tool-seconds` flag (default 300) wraps every handler in a
+Global `--max-tool-seconds` flag (default 300, accepted range 1–300) wraps every handler in a
 `context.WithTimeout` derived from the inbound `ctx` — belt-and-braces
 against a tool whose own per-call limits (table above) are individually
 sane but whose subprocess hangs anyway (a `go test` that deadlocks instead

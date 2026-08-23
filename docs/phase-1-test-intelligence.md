@@ -37,7 +37,9 @@ Flags (stdlib `flag` package, not a CLI framework — no dependency justifies on
 | Flag | Default | Meaning |
 |---|---|---|
 | `--workspace` | `.` | Go workspace root used to resolve relative package paths in tool arguments |
-| `--log-level` | `info` | Trace verbosity when `AGENTIC_GO_TRACE=true`: `info` logs tool+duration+summary; `debug` also logs full args (still hashed per trace contract — `debug` widens which fields get hashed-and-included, never unhashes) |
+| `--log-level` | `info` | Stderr lifecycle log level: `debug` or `info`; tool arguments are never logged |
+| `--max-concurrent-loads` | `4` | Process-wide ceiling for Go subprocesses and package loads |
+| `--max-tool-seconds` | `300` | Global tool subprocess deadline; accepted range 1–300 seconds |
 | `--version` | (none) | Print the server version and exit |
 
 Startup sequence:
@@ -60,7 +62,8 @@ Startup sequence:
    long-lived server is a footgun the moment any tool call is concurrent.)
 6. Construct the server with deprecated MCP logging disabled:
    `server := mcp.NewServer(&mcp.Implementation{Name: "agentic-go", Version: "0.1.0"}, &mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}})`.
-7. Call every `Register<Name>(server)` function in one explicit flat list,
+7. Call every `Register<Name>(server, runtime)` function through one explicit
+   flat `tools.RegisterAll` list,
    ordered by phase/tier (Tier 1 first). This list is the single place that
    proves which tools exist — each new tool adds one line here and never
    touches this file for anything else.
@@ -76,8 +79,8 @@ Startup sequence:
 type TestStructuredInput struct {
     Package string `json:"package" jsonschema:"Go package import path or ./relative/path"`
     Race    bool   `json:"race,omitempty" jsonschema:"enable the race detector; default false"`
-    Verbose bool   `json:"verbose,omitempty" jsonschema:"include per-test stdout in output; default false"`
-    TimeoutSeconds int `json:"timeout_seconds,omitempty" jsonschema:"test timeout in seconds; default 60"`
+    Verbose bool   `json:"verbose,omitempty" jsonschema:"include passing and skipped test output; default false"`
+    TimeoutSeconds int `json:"timeout_seconds,omitempty" jsonschema:"test timeout in seconds; default 60, maximum 300"`
 }
 ```
 
@@ -89,13 +92,14 @@ type TestCase struct {
     Package  string  `json:"package"`
     Status   string  `json:"status"`      // "pass" | "fail" | "skip"
     ElapsedS float64 `json:"elapsed_s"`
-    Output   string  `json:"output,omitempty"` // populated only when Status == "fail"
+    Output   string  `json:"output,omitempty"` // failures always; passing/skipped only when Verbose
 }
 type PackageSummary struct {
     Status  string `json:"status"` // "ok" | "FAIL"
     Passed  int    `json:"passed"`
     Failed  int    `json:"failed"`
     Skipped int    `json:"skipped"`
+    Output  string `json:"output,omitempty"` // package-level build/test output on failure
 }
 type TestStructuredOutput struct {
     Packages   map[string]PackageSummary `json:"packages"`
@@ -108,17 +112,20 @@ type TestStructuredOutput struct {
 ```
 
 **Handler algorithm:**
-1. Build `exec.CommandContext(ctx, "go", "test", "-json", ...)`. Append `-race`
+1. Resolve the package with bounded `go list -json -mod=readonly`; reject every
+   matched package whose directory is outside the configured workspace.
+2. Submit `go test -json` to the shared execution runner. Append `-race`
    if `Race`, `-v` if `Verbose`, `-timeout`, `fmt.Sprintf("%ds", TimeoutSeconds)`,
-   then the resolved package path. `Dir` = resolved workspace.
-2. `cmd.StdoutPipe()`, run parser (below) reading the pipe directly — do not
+   then the validated package pattern. `Dir` = resolved workspace.
+3. Connect the runner's bounded stdout writer to the parser through an
+   `io.Pipe`; do not
    buffer the whole output into memory first, packages can produce megabytes
    of `-v` output.
-3. `cmd.Run()`'s own error is expected and NOT the handler's error when tests
+4. A non-zero process exit is expected and NOT the handler's error when tests
    simply failed (`go test` exits non-zero on test failure) — only surface it
    as a handler error if the parser found zero valid JSON events at all
    (indicates `go test` failed to even start, e.g. bad package path).
-4. Return the accumulated `TestStructuredOutput`.
+5. Return the accumulated `TestStructuredOutput`.
 
 ## `internal/parser/testjson.go`
 
@@ -135,27 +142,29 @@ type testEvent struct {
 ```
 
 **Algorithm:**
-1. `json.NewDecoder(stdoutPipe)`, loop `Decode(&ev)` until `io.EOF`.
+1. Scan one bounded line at a time (8 MiB maximum event) and `json.Unmarshal`
+   each complete line. A stream-level `json.Decoder` cannot recover after a
+   malformed line, so it does not satisfy the skip-and-continue contract.
 2. Maintain `map[string]*strings.Builder` keyed by `Package+"\x00"+Test` for
    accumulating `output` action lines per test (only test-level events, i.e.
    `Test != ""`).
 3. On `Action == "pass"|"fail"|"skip"` with `Test != ""`: finalize a `TestCase`
-   using the accumulated builder content, but only keep `Output` if
-   `Action == "fail"` — discard the buffer otherwise (memory + token discipline,
-   passing-test stdout has zero diagnostic value to a caller).
+   using the accumulated builder content. Keep failures always; keep passing
+   and skipped output only when `Verbose` is true.
 4. On `Action == "pass"|"fail"` with `Test == ""`: this is the package-level
-   terminal event — set `PackageSummary.Status = "ok"` or `"FAIL"` for that package.
+   terminal event — set `PackageSummary.Status = "ok"` or `"FAIL"` for that
+   package and retain package-level output only for failure diagnostics.
 5. Increment top-level `Passed`/`Failed`/`Skipped` counters as each test-level
    terminal event is seen.
 6. Malformed/non-JSON lines on stdout (shouldn't happen with `-json`, but a
    corrupted toolchain or a test that writes raw bytes to stdout via `os.Stdout`
-   directly can produce one) are skipped, not fatal — log via trace at debug
-   level, continue decoding.
+   directly can produce one) are counted and skipped, not fatal. If no valid
+   events exist, return a parser error.
 
-This exact parser (state machine, buffer-per-test, discard-on-pass) is reused
+This exact streaming decoder is reused
 unchanged by `go_flake_finder` (Phase 2) and `go_panic_trace` (Phase 4) — do
-not fork a second implementation, both take the same `testEvent` stream and
-apply a different reduction on top.
+not fork a second implementation. Each tool applies its own reduction to the
+same `TestEvent` stream.
 
 ## `go_race_report`
 

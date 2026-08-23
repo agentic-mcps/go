@@ -10,7 +10,11 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/execution"
+	"github.com/ashwingopalsamy/agentic-go/internal/tools"
+	"github.com/ashwingopalsamy/agentic-go/internal/trace"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -26,6 +30,8 @@ func run(args []string) int {
 	flags.SetOutput(os.Stderr)
 	workspacePath := flags.String("workspace", ".", "Go workspace root")
 	logLevel := flags.String("log-level", "info", "lifecycle log level: debug or info")
+	maxConcurrent := flags.Int("max-concurrent-loads", 4, "maximum concurrent Go subprocesses")
+	maxToolSeconds := flags.Int("max-tool-seconds", 300, "maximum duration of a tool subprocess in seconds")
 	showVersion := flags.Bool("version", false, "print version and exit")
 
 	if err := flags.Parse(args); err != nil {
@@ -46,12 +52,44 @@ func run(args []string) int {
 		return 2
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level}))
+	if *maxConcurrent < 1 {
+		logger.Error("invalid process limit", "max_concurrent_loads", *maxConcurrent)
+		return 2
+	}
+	if *maxToolSeconds < 1 || *maxToolSeconds > 300 {
+		logger.Error("invalid tool deadline", "max_tool_seconds", *maxToolSeconds, "allowed", "1..300")
+		return 2
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if _, err := workspace.Open(ctx, *workspacePath); err != nil {
+	ws, err := workspace.Open(ctx, *workspacePath)
+	if err != nil {
 		logger.Error("workspace preflight failed", "error", err)
+		return 1
+	}
+	runner, err := execution.New(ws, execution.Config{
+		MaxConcurrent: *maxConcurrent,
+		Timeout:       time.Duration(*maxToolSeconds) * time.Second,
+	})
+	if err != nil {
+		logger.Error("execution setup failed", "error", err)
+		return 1
+	}
+	tracer, err := trace.Init()
+	if err != nil {
+		logger.Error("trace setup failed", "error", err)
+		return 1
+	}
+	defer func() {
+		if err := tracer.Close(); err != nil {
+			logger.Error("trace shutdown failed", "error", err)
+		}
+	}()
+	runtime, err := tools.NewRuntime(ws, runner, tracer)
+	if err != nil {
+		logger.Error("tool runtime setup failed", "error", err)
 		return 1
 	}
 
@@ -59,6 +97,7 @@ func run(args []string) int {
 		&mcp.Implementation{Name: "agentic-go", Version: version},
 		&mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}},
 	)
+	tools.RegisterAll(server, runtime)
 
 	if err := server.Run(ctx, &mcp.StdioTransport{}); err != nil && !errors.Is(err, context.Canceled) {
 		logger.Error("server stopped", "error", err)
