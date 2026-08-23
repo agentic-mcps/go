@@ -33,6 +33,9 @@ func init() {
 	astutil.RegisterRule("errors-09", "discarded_error", finding.SeverityError)
 	astutil.RegisterRule("errors-10", "library_panic", finding.SeverityError)
 	astutil.RegisterRule("errors-11", "must_outside_startup", finding.SeverityError)
+	astutil.RegisterRule("errors-12", "error_string_boundary", finding.SeverityWarning)
+	astutil.RegisterRule("errors-13", "multiple_wrap_verbs", finding.SeverityWarning)
+	astutil.RegisterRule("errors-17", "error_string_retry", finding.SeverityWarning)
 	astutil.RegisterRule("errors-06", "failed_to_prefix", finding.SeverityInfo)
 	astutil.RegisterRule("errors-07", "error_string_style", finding.SeverityInfo)
 }
@@ -64,6 +67,7 @@ func run(pass *analysis.Pass) (any, error) {
 			}
 		case *ast.CallExpr:
 			checkMessage(pass, x)
+			checkStringMatch(pass, x)
 		}
 	})
 	for _, file := range pass.Files {
@@ -86,6 +90,69 @@ func run(pass *analysis.Pass) (any, error) {
 		})
 	}
 	return nil, nil
+}
+
+func checkStringMatch(pass *analysis.Pass, call *ast.CallExpr) {
+	if !astutil.IsPkgFunc(pass, call, "strings", "Contains") || len(call.Args) != 2 {
+		return
+	}
+	inner, ok := call.Args[0].(*ast.CallExpr)
+	if !ok || len(inner.Args) != 0 {
+		return
+	}
+	sel, ok := inner.Fun.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "Error" || pass.TypesInfo.TypeOf(sel.X) == nil || !types.Implements(pass.TypesInfo.TypeOf(sel.X), types.Universe.Lookup("error").Type().Underlying().(*types.Interface)) {
+		return
+	}
+	if _, ok := astutil.StringLit(call.Args[1]); !ok {
+		return
+	}
+	fn := enclosingFunc(pass, call.Pos())
+	rule := "errors-12"
+	if fn != nil && fn.Type.Results != nil && len(fn.Type.Results.List) == 1 && astutil.TypeString(pass, fn.Type.Results.List[0].Type) == "bool" {
+		rule = "errors-17"
+	}
+	if rule == "errors-17" {
+		astutil.Report(pass, call.Pos(), rule, "retry decision at %s classifies by strings.Contains(err.Error(), ...) — use errors.Is(err, ...) or a typed RetryableError/Temporary() method", pass.Fset.Position(call.Pos()))
+	} else {
+		astutil.Report(pass, call.Pos(), rule, "error classified by strings.Contains(err.Error(), ...) at %s — use errors.Is/As against a sentinel or typed error for canonical code mapping", pass.Fset.Position(call.Pos()))
+	}
+}
+
+func checkMultipleWrap(pass *analysis.Pass, call *ast.CallExpr) {
+	if !astutil.IsPkgFunc(pass, call, "fmt", "Errorf") || len(call.Args) == 0 {
+		return
+	}
+	s, ok := astutil.StringLit(call.Args[0])
+	if !ok {
+		return
+	}
+	if n := countWrapVerbs(s); n > 1 {
+		astutil.Report(pass, call.Pos(), "errors-13", "fmt.Errorf at %s carries %d %%w verbs — %%w wraps one cause per call; use errors.Join for independent parallel failures", pass.Fset.Position(call.Pos()), n)
+	}
+}
+
+func countWrapVerbs(format string) int {
+	count := 0
+	for i := 0; i < len(format); i++ {
+		if format[i] != '%' || i+1 >= len(format) {
+			continue
+		}
+		i++
+		if format[i] == '%' {
+			continue
+		}
+		for ; i < len(format); i++ {
+			if format[i] == 'w' {
+				count++
+				break
+			}
+			if (format[i] >= 'a' && format[i] <= 'z') || (format[i] >= 'A' && format[i] <= 'Z') {
+				break
+			}
+		}
+	}
+	return count
 }
 
 func isBareErrDiscard(pass *analysis.Pass, a *ast.AssignStmt) bool {
@@ -262,6 +329,7 @@ func bareReturn(block *ast.BlockStmt, name *ast.Ident) bool {
 }
 
 func checkMessage(pass *analysis.Pass, call *ast.CallExpr) {
+	checkMultipleWrap(pass, call)
 	if len(call.Args) == 0 || (!astutil.IsPkgFunc(pass, call, "fmt", "Errorf") && !astutil.IsPkgFunc(pass, call, "errors", "New")) {
 		return
 	}
