@@ -1,0 +1,87 @@
+name: Verify
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go ${{ matrix.go }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.25.x", "1.26.x", "1.27.x"]
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Build
+        run: go build -mod=readonly ./...
+      - name: Race tests
+        run: go test -mod=readonly -race ./...
+      - name: Vet
+        run: go vet -mod=readonly ./...
+
+  staticcheck:
+    name: Staticcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+        with:
+          go-version: "1.26.x"
+          cache: true
+      - name: Install Staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
+      - name: Staticcheck
+        run: '"$(go env GOPATH)/bin/staticcheck" ./...'
+
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+        with:
+          go-version: "1.27.x"
+          cache: true
+      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 (# v9)
+        with:
+          version: v2.12.2
+
+  cross-build:
+    name: Cross-build ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [darwin, linux]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+        with:
+          go-version: "1.27.x"
+          cache: true
+      - name: Build server
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: go build -mod=readonly -o /tmp/agentic-go-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/agentic-go
+      - name: Build analyzer CLI
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: go build -mod=readonly -o /tmp/agentic-go-vet-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/agentic-go-vet
