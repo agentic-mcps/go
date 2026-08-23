@@ -92,6 +92,20 @@ func New(ws *workspace.Workspace, config Config) (*Runner, error) {
 	}, nil
 }
 
+// ForWorkspace returns a runner contained to another validated workspace while
+// sharing this runner's process budget. It is used for server-created worktrees.
+func (r *Runner) ForWorkspace(ws *workspace.Workspace) (*Runner, error) {
+	if ws == nil {
+		return nil, fmt.Errorf("workspace is nil")
+	}
+	return &Runner{
+		workspace:   ws,
+		semaphore:   r.semaphore,
+		timeout:     r.timeout,
+		outputLimit: r.outputLimit,
+	}, nil
+}
+
 // Run executes command inside the workspace. A normal non-zero process exit is
 // returned in Result; containment, cancellation, spawn, and output failures are
 // returned as errors.

@@ -93,6 +93,49 @@ func TestRunnerRejectsDirectoryEscape(t *testing.T) {
 	}
 }
 
+func TestForWorkspaceSharesConcurrencyLimit(t *testing.T) {
+	primary := newTestRunner(t, Config{MaxConcurrent: 1, Timeout: time.Second})
+	secondaryRoot := t.TempDir()
+	if err := os.WriteFile(filepath.Join(secondaryRoot, "go.mod"), []byte("module example.com/secondary\n\ngo 1.25.0\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	secondaryWorkspace, err := workspace.Open(context.Background(), secondaryRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondary, err := primary.ForWorkspace(secondaryWorkspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ready := make(chan struct{})
+	firstCtx, cancelFirst := context.WithCancel(context.Background())
+	firstDone := make(chan error, 1)
+	var once sync.Once
+	go func() {
+		_, err := primary.Run(firstCtx, helperCommand("sleep"), Streams{Stdout: writerFunc(func(p []byte) (int, error) {
+			once.Do(func() { close(ready) })
+			return len(p), nil
+		})})
+		firstDone <- err
+	}()
+	select {
+	case <-ready:
+	case <-time.After(time.Second):
+		t.Fatal("primary subprocess did not start")
+	}
+
+	secondCtx, cancelSecond := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancelSecond()
+	if _, err := secondary.Run(secondCtx, helperCommand("exit"), Streams{}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("child Run() error = %v, want shared-semaphore deadline", err)
+	}
+	cancelFirst()
+	if err := <-firstDone; !errors.Is(err, context.Canceled) {
+		t.Fatalf("primary Run() error = %v, want cancellation", err)
+	}
+}
+
 func TestHelperProcess(t *testing.T) {
 	if os.Getenv("AGENTIC_GO_HELPER_PROCESS") != "1" {
 		return
