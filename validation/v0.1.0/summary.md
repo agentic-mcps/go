@@ -59,7 +59,7 @@ externally validated.
 | testify | 29,694 | 3 | 0.101 |
 | chi | 12,082 | 0 | 0.000 |
 | grpc-go | 338,320 | 37 | 0.109 |
-| client_golang | 44,401 | 1 | 0.023 |
+| client-golang | 44,401 | 1 | 0.023 |
 | etcd | 218,937 | 0 | 0.000 |
 | vault | 734,445 | 383 | 0.522 |
 | client-go | 344,145 | 38 | 0.110 |

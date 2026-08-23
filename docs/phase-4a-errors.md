@@ -91,7 +91,7 @@ by that one rule and adding them here would force readers to cross-reference).
 
 | Rule ID | Source rule (paraphrased) | Status | Severity |
 |---|---|---|---|
-| `errors-01` | error is always the last return value | Implemented | Warning |
+| `errors-01` | error is always the last return value | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-02` | exported functions return `error`, never a concrete type | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-03` | happy path unindented after `if err != nil`, not nested in `else` | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-04` | handle each error exactly once: log OR return, never both | Implemented | Error |
@@ -103,15 +103,15 @@ by that one rule and adding them here would force readers to cross-reference).
 | `errors-10` | no `panic` in library code | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-11` | `MustXYZ` only at startup/package-init, never in request/worker paths | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-12` | translate errors to canonical codes at system boundaries, not by string match | **Disabled (v0.1.0; calibrated)** | — |
-| `errors-13` | `errors.Join` for parallel failures; don't fake a linear chain with multiple `%w` | Implemented | Warning |
-| `errors-14` | custom wrapper types implement `Unwrap`/`Is`/`As` as needed by callers | Implemented | Warning |
+| `errors-13` | `errors.Join` for parallel failures; don't fake a linear chain with multiple `%w` | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-14` | custom wrapper types implement `Unwrap`/`Is`/`As` as needed by callers | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-15` | recover panics at goroutine/request boundaries | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-16` | capture deferred close errors with named returns | **Disabled (v0.1.0; calibrated)** | — |
-| `errors-17` | classify retryable vs. terminal errors with data, not string matching | Implemented | Warning |
+| `errors-17` | classify retryable vs. terminal errors with data, not string matching | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-18` | label error metrics by a stable code bucket, not the raw error string | **Excluded** | — |
 | `errors-19` | `os.Exit`/`log.Fatal*` outside `main` | Implemented | Error |
 
-7 active, 10 disabled after external calibration, 2 excluded. Disabled rules
+3 active, 14 disabled after external calibration, 2 excluded. Disabled rules
 retain their predicates and detailed fixture/design material below for future
 redesign, but emit no findings and are excluded from the active rule resource.
 Rule numbering preserves the source file's own 1–18 ordering
@@ -126,6 +126,11 @@ space rather than reusing either gap.
 
 <a id="errors-01"></a>
 ### errors-01 — error last return value
+
+**v0.1.0 status:** Disabled after external calibration. Non-final error results
+were intentional API ordering, including APIs with more than one error result;
+the convention is not a correctness predicate. The retained predicate emits
+no finding.
 
 **Source:** "`error` is always the last return value. A function returning `(User, error)` is
 idiomatic; `(error, User)` is not."
@@ -322,7 +327,8 @@ func isLogThenReturn(block *ast.BlockStmt, errName string) (logStmt, retStmt ast
 `Error()` on a non-logger receiver (e.g. the `error` interface's own `Error() string`) never has
 side-effect-shaped args referencing `err` as a logging field, so false positives are structurally
 unlikely; this is a documented, accepted narrowing (closed whitelist over open-ended "looks like a
-logger" inference).
+logger" inference). `_test.go` and package `main` are excluded after calibration found test assertions
+and terminal CLI diagnostics where returning after logging is intentional.
 
 **Finding.Message:** `"err is logged via %s and then returned at %s — pick one: log, or wrap and return, never both"`
 
@@ -673,6 +679,11 @@ severity like `errors-09`/`errors-15`.
 <a id="errors-13"></a>
 ### errors-13 — multiple `%w` verbs faking a linear chain
 
+**v0.1.0 status:** Disabled after external calibration. Go supports multiple
+`%w` verbs in one `fmt.Errorf` call, and the corpus contained legitimate
+multi-cause wrapping. The original diagnostic was factually wrong and emits
+no finding.
+
 **Source:** "`errors.Join`... folds independent errors into one... a single `fmt.Errorf` may carry
 multiple `%w` verbs. Use `Join` for parallel failures, not to fake a linear chain."
 
@@ -701,6 +712,10 @@ causal chain) and confuses incident responders reading the message.
 
 <a id="errors-14"></a>
 ### errors-14 — custom wrapper missing `Unwrap`
+
+**v0.1.0 status:** Disabled after external calibration. An error-valued field
+does not prove that the enclosing type intends transparent wrapping; deliberate
+opacity is a valid API contract. The retained predicate emits no finding.
 
 **Source:** "Implement `Unwrap() error` so a wrapper joins the chain... a single `fmt.Errorf` may
 carry..." / Common Mistakes: "Custom wrapper type missing `Unwrap` | Implement `Unwrap() error`, or
@@ -896,6 +911,10 @@ silently ignored errors.
 <a id="errors-17"></a>
 ### errors-17 — retry classification by string match
 
+**v0.1.0 status:** Disabled after external calibration. Tests and compatibility
+protocols repeatedly had no typed or sentinel error contract available. The
+retained predicate emits no finding.
+
 **Source:** "Classify retryable versus terminal errors with data, not string matching... A
 `RetryableError` type or a `Temporary() bool` method lets retry loops branch on type;
 `strings.Contains(err.Error(), \"timeout\")` breaks the moment wording changes and misses wrapped
@@ -978,42 +997,30 @@ func isExitOrFatalCall(pass *analysis.Pass, call *ast.CallExpr) (name string, ok
 	return "", false
 }
 
-// isMainEntrypoint mirrors errors-10's isStartupContext: the one legitimate
-// call site is literally func main() inside package main, not any function
-// merely named "main" in some other package.
-func isMainEntrypoint(pass *analysis.Pass, fn *ast.FuncDecl) bool {
-	return fn != nil && fn.Name.Name == "main" && pass.Pkg.Name() == "main"
-}
-
-// isTestMainEntrypoint matches the testing package's own documented
-// entrypoint shape, independent of package name — TestMain is never
-// required to live in package main.
-func isTestMainEntrypoint(pass *analysis.Pass, fn *ast.FuncDecl) bool {
-	if fn == nil || fn.Name.Name != "TestMain" {
+func isAllowedExitCallSite(pass *analysis.Pass, pos token.Pos, fn *ast.FuncDecl) bool {
+	if pass.Pkg.Name() == "main" || pass.Pkg.Name() == "cmd" ||
+		strings.HasSuffix(pass.Fset.Position(pos).Filename, "_test.go") {
+		return true
+	}
+	if fn == nil {
 		return false
 	}
-	params := fn.Type.Params
-	if params == nil || len(params.List) != 1 || len(params.List[0].Names) != 1 {
+	if strings.HasPrefix(fn.Name.Name, "Fatal") {
+		return true
+	}
+	if fn.Name.Name != "TestMain" || fn.Type.Params == nil || len(fn.Type.Params.List) != 1 {
 		return false
 	}
-	return astutil.TypeString(pass, params.List[0].Type) == "*testing.M"
-}
-
-func isAllowedExitCallSite(pass *analysis.Pass, fn *ast.FuncDecl) bool {
-	return isMainEntrypoint(pass, fn) || isTestMainEntrypoint(pass, fn)
+	param := fn.Type.Params.List[0]
+	return len(param.Names) == 1 && astutil.TypeString(pass, param.Type) == "*testing.M"
 }
 ```
 
-**Exclusions:** Calls inside `func main()` in `package main` — that's the one legitimate call
-site; this is the exact carve-out `go.md`'s own rule text grants ("only in `main()`"), and
-flagging it would make the rule fire on the only place the pattern is correct by construction.
-Calls inside `func TestMain(m *testing.M)` — matched by function name `TestMain` plus a single
-`*testing.M`-typed parameter (`isTestMainEntrypoint`), regardless of package name, since `TestMain`
-is never required to live in `package main`. `TestMain` is the test binary's own equivalent
-entrypoint, and `os.Exit(m.Run())` there is the documented, idiomatic pattern per the `testing`
-package's own docs; this exact signature only appears in `_test.go` files in practice (nothing
-else legitimately declares a function with this name and parameter shape), so no additional
-filename check is needed on top of the signature match.
+**Exclusions:** all calls in package `main`, package `cmd`, and `_test.go` are excluded: calibration
+found terminal command dispatch and test scaffolding rather than reusable library behavior. A valid
+`TestMain(m *testing.M)` is also accepted. Functions whose names begin with `Fatal` are excluded
+because they intentionally implement a fatal-logger contract. The retained findings are calls from
+ordinary reusable package functions where callers cannot recover or run deferred cleanup.
 
 **Finding.Message:** `"%s called at %s outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"`
 
@@ -1589,7 +1596,7 @@ documented gap, not a silent one.
 ### Analysis subpackage — `internal/analysis/errors/errors.go`
 
 Pasted verbatim from `contracts.md`'s conformance block, substituting `errors` for `<domain>`.
-The 17 registrations comprise seven active `RegisterRule` calls and ten calibrated-off
+The 17 registrations comprise three active `RegisterRule` calls and fourteen calibrated-off
 `RegisterDisabledRule` calls. The full dispatch across all 17 predicates from section 2 is the per-rule elaboration of the single
 representative `astutil.Report` call shown below — this is the shape, not a re-enumeration of
 section 2.
@@ -1610,9 +1617,9 @@ import (
 )
 
 func init() {
-	astutil.RegisterRule("errors-01", "error_last_return", finding.SeverityWarning)
-	// one RegisterRule call per active rule in this domain (errors-01, -04, -09, -13, -14, -17,
-	// -19 — matching section 1's active inventory), plus one RegisterDisabledRule call per
+	astutil.RegisterRule("errors-04", "log_and_return", finding.SeverityError)
+	// one RegisterRule call per active rule in this domain (errors-04, -09, -19 — matching
+	// section 1's active inventory), plus one RegisterDisabledRule call per
 	// calibrated-off rule. Excluded rules are never registered. astutil.Report suppresses disabled
 	// rules and panics at analyzer-init/test time on an unregistered
 	// rule ID, by design: a typo'd rule ID must fail loud in `go test ./...`, never ship
@@ -1621,7 +1628,7 @@ func init() {
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "errors",
-	Doc:      "Audits active error-handling conventions (error-handling.md rules errors-01, -04, -09, -13, -14, -17; errors-19 from go.md).",
+	Doc:      "finds precise, mechanical error-handling problems",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
@@ -1700,7 +1707,7 @@ func AuditErrorsHandler(ctx context.Context, req *mcp.CallToolRequest, in AuditE
 func RegisterAuditErrors(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "go_audit_errors",
-		Description: "Runs the active errors-01, -04, -09, -13, -14, -17, -19 go/analysis passes (error-handling.md + go.md) over a package and returns findings.",
+		Description: "Runs the active errors-04, -09, and -19 go/analysis passes over a package and returns findings.",
 		Annotations: &mcp.ToolAnnotations{
 			ReadOnlyHint:    true,
 			DestructiveHint: boolPtr(false),
@@ -1731,28 +1738,26 @@ func normalizeAuditErrorsInput(in *AuditErrorsInput) error {
 
 `resolveInWorkspace` is the single project-wide input-containment helper (`contracts.md`'s
 Input containment and resource limits) — not redeclared here. Every `Finding.Rule` value this tool
-can emit is one of the 7 active IDs in section 1. Calibrated-off IDs
-`errors-02`, `errors-03`, `errors-05`, `errors-06`, `errors-07`, `errors-10`, `errors-11`,
-`errors-12`, `errors-15`, and `errors-16` are registered as disabled metadata and suppressed by
+can emit is one of the 3 active IDs in section 1. Calibrated-off IDs
+`errors-01`, `errors-02`, `errors-03`, `errors-05`, `errors-06`, `errors-07`, `errors-10`,
+`errors-11`, `errors-12`, `errors-13`, `errors-14`, `errors-15`, `errors-16`, and `errors-17`
+are registered as disabled metadata and suppressed by
 `astutil.Report`. Excluded IDs `errors-08` and `errors-18` are never registered or computed.
 
 ---
 
 ## 5. Verification
 
-The v0.1.0 suite runs positive and near-miss fixtures for the seven active rules, asserts the ten
-calibrated-off IDs separately, and keeps a standing exclusion guard in
-`internal/analysis/errors/errors_test.go` (package `errors_test`) — these exercise `errors.Analyzer`
-directly via `astutil.RunFixture`, so they live beside the analyzer, not behind the MCP tool
-handler in `internal/tools/`. Every fixture reference below uses the one canonical path form from
-`contracts.md`'s Testdata fixture layout — `internal/tools/testdata/fixtures/audit-errors/rule<NN>/`,
-one Go package per rule — via `astutil.RunFixture(t, errors.Analyzer, "audit-errors/rule<NN>")`.
-Every `Location.File` assertion below checks the real workspace-relative path, never
-`filepath.Base` and never "at that line" prose; this file previously mixed a long form
-(`internal/tools/testdata/fixtures/audit-errors`) and a short form (`./testdata/fixtures/audit-errors`)
-across 2 call sites — both are gone.
+The v0.1.0 suite runs positive and near-miss fixtures for the three active
+rules, asserts the fourteen calibrated-off IDs separately, and keeps a standing
+exclusion guard in `internal/analysis/errors/audit_test.go`. Isolated packages
+live under `internal/analysis/errors/testdata/audit/rule<NN>/` and are loaded
+through `audit.Run`. Dedicated `audit-main` and `audit-cmd` modules plus
+`_test.go` and fatal-logger fixtures lock in the calibrated `errors-04` and
+`errors-19` exclusions. The older code sketches below illustrate the intended
+assertion shape; the paths and helpers in the executable test are canonical.
 
-Fully worked example (`errors-01`):
+Future-redesign example (`errors-01`, disabled in v0.1.0):
 
 ```go
 func TestAuditErrors_Rule01(t *testing.T) {
@@ -1774,8 +1779,7 @@ func TestAuditErrors_Rule01_CompliantIsSilent(t *testing.T) {
 }
 ```
 
-The active rules `errors-01`, `errors-04`, `errors-09`, `errors-13`, `errors-14`, `errors-17`, and
-`errors-19` apply the same positive/near-miss expectations: each asserts a `Finding` with that
+The active rules `errors-04`, `errors-09`, and `errors-19` apply the positive/near-miss expectations: each asserts a `Finding` with that
 rule ID, located in
 `fixtures/audit-errors/rule<NN>/violation.go` at the real violating line, and verifies that
 `compliant.go`'s near-miss never contributes a finding for that rule.
@@ -1798,7 +1802,7 @@ Domain-wide rule count:
 
 ```go
 func TestAuditErrors_TotalRuleCount(t *testing.T) {
-	assert.Len(t, astutil.RulesInDomain("errors"), 7) // catches an active rule silently dropped or added
+	assert.Len(t, astutil.RulesInDomain("errors"), 3) // catches an active rule silently dropped or added
 }
 ```
 

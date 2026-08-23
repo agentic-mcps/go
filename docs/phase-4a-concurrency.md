@@ -78,7 +78,7 @@ by that one rule and adding them here would force readers to cross-reference).
 | Rule ID | Source rule (paraphrased) | Status |
 |---|---|---|
 | concurrency-01 | Never fire-and-forget a goroutine | **Disabled (v0.1.0; calibrated)** |
-| concurrency-02 | Provide Stop/Close/Shutdown for a type that spawns goroutines | Implemented |
+| concurrency-02 | Provide Stop/Close/Shutdown for a type that spawns goroutines | **Disabled (v0.1.0; calibrated)** |
 | concurrency-03 | Channel buffer size must be 0 or 1, else a justifying comment | **Disabled (v0.1.0; calibrated)** |
 | concurrency-04 | Declare channel direction (`chan<-`/`<-chan`) in signatures | Implemented |
 | concurrency-05 | No `XxxAsync` functions that fire an internal goroutine | Implemented |
@@ -91,14 +91,14 @@ by that one rule and adding them here would force readers to cross-reference).
 | concurrency-12 | Use `errgroup.Group` for coordinated goroutines that must all succeed | Implemented (detects the hand-rolled anti-pattern) |
 | concurrency-13 | Run `go test -race` in CI; never merge a race | **Excluded** |
 | concurrency-14 | `sync.Pool`/`sync.Once` usage discipline; reset pooled items before `Put` | **Disabled (v0.1.0; calibrated)** |
-| concurrency-15 | `sync.Map`/`sync/atomic` niches; compound state still needs a mutex | Implemented (narrowed — see below) |
+| concurrency-15 | `sync.Map`/`sync/atomic` niches; compound state still needs a mutex | **Disabled (v0.1.0; calibrated)** |
 | concurrency-16 | Prefer `sync.Mutex` over `sync.RWMutex` unless reads dominate + long sections | **Excluded** |
-| concurrency-17 | Multi-lock acquisition: consistent global order, documented in a comment | Implemented (narrowed — see below) |
-| concurrency-18 | Stop every `Ticker`/`Timer`; never `time.After` in a `select` loop | Implemented (two predicates, one rule ID) |
+| concurrency-17 | Multi-lock acquisition: consistent global order, documented in a comment | **Disabled (v0.1.0; calibrated)** |
+| concurrency-18 | Stop local `Ticker`s; never `time.After` in a `select` loop | Implemented (narrowed — see below) |
 | concurrency-19 | Loop variable captured by reference in a go/defer closure | Implemented (pass-added, not in source's 18 — version-gated, pre-1.22 targets only) |
-| concurrency-20 | `defer` directly inside a loop, unscoped | Implemented (pass-added, not in source's 18) |
+| concurrency-20 | `defer` directly inside a loop, unscoped | **Disabled (v0.1.0; calibrated)** |
 
-12 active, 5 disabled after external calibration, 3 excluded. Disabled rules
+8 active, 9 disabled after external calibration, 3 excluded. Disabled rules
 retain their predicates and detailed fixture/design material below for future
 redesign, but emit no findings and are excluded from the active rule resource.
 Excluded rules get no `Finding.Rule` value, no fixture, no test — see each
@@ -192,6 +192,12 @@ func hasDoneSelect(body ast.Node) bool {
 
 <a id="concurrency-02"></a>
 ### concurrency-02 — missing Stop/Close/Shutdown
+
+**v0.1.0 status:** Disabled after external calibration. Operation-scoped
+goroutines commonly express ownership through contexts, result channels,
+streams, returned handles, or enclosing locks; the receiver method set is not
+a reliable lifecycle boundary. The retained predicate is redesign material and
+emits no finding.
 
 **Source sentence:** "Provide `Stop`/`Close`/`Shutdown` for any type that spawns background goroutines. Callers must be able to shut it down."
 
@@ -306,7 +312,7 @@ func isUndirectedSignatureChan(field *ast.Field) bool {
 ```
 Applied only to `fd.Type.Params.List` and `fd.Type.Results.List` for every `*ast.FuncDecl`/`*ast.FuncLit` — never to local `var`/`make` declarations, which legitimately need a bidirectional channel before handing off a restricted view.
 
-**Exclusions:** channel fields inside a `struct` type or local variable declarations are out of scope — the source rule is specifically about signatures.
+**Exclusions:** channel fields inside a `struct` type or local variable declarations are out of scope — the source rule is specifically about signatures. Declarations in `_test.go` are excluded after calibration found ordinary test coordination rather than public API contracts.
 
 **Finding.Message:** `"parameter/return channel at %s has no direction (chan T) — declare chan<- T or <-chan T"`
 
@@ -343,7 +349,7 @@ func isAsyncWrapper(fd *ast.FuncDecl) bool {
 }
 ```
 
-**Exclusions:** functions returning a channel type (caller-awaitable) are exempt — they hand the caller a waiter, satisfying the rule's actual intent even though the name matches.
+**Exclusions:** functions returning a channel type (caller-awaitable) are exempt — they hand the caller a waiter, satisfying the rule's actual intent even though the name matches. `_test.go` functions are excluded because test helper names commonly use an `Async` suffix without defining a production API.
 
 **Finding.Message:** `"%s fires a goroutine internally instead of letting the caller add concurrency via errgroup or a worker pool"`
 
@@ -447,7 +453,7 @@ func isUnlockCallOn(call *ast.CallExpr, recv, method string) bool {
 
 **Source sentence:** "Never embed `sync.Mutex` or `sync.WaitGroup` in a struct. Embedding promotes `Lock`/`Unlock` to the public API. Use a named field: `mu sync.Mutex`."
 
-**Why checkable:** Embedded fields are syntactically distinguished by `ast.Field.Names == nil`; the field's static type is directly resolvable.
+**Why checkable (narrowed):** Embedded fields are syntactically distinguished by `ast.Field.Names == nil`; the field's static type is directly resolvable. v0.1.0 reports only exported named struct types, because only those types promote the synchronization methods into a public API.
 
 **Node type(s):** `*ast.StructType`, `*ast.Field`.
 
@@ -469,9 +475,9 @@ func embeddedSyncPrimitive(pass *analysis.Pass, st *ast.StructType) []*ast.Field
 }
 ```
 
-**Exclusions:** none — the qualified type-string match is exact and covers all three named primitives from the source rule plus `RWMutex` (same promoted-API hazard).
+**Exclusions:** unexported and anonymous structs are excluded. An exported struct whose only field is the embedded synchronization primitive is also excluded: that exact one-field shape is an intentional lock-wrapper API, not accidental promotion.
 
-**Finding.Message:** `"struct embeds %s anonymously at %s, promoting Lock/Unlock (or Add/Done/Wait) to the public API — use a named field instead"`
+**Finding.Message:** `"exported struct %s embeds %s anonymously at %s, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"`
 
 **Finding.Severity:** `SeverityError` — an irreversible API-contract leak once published; removing the promoted methods later is a breaking change for every caller.
 
@@ -530,7 +536,12 @@ func docMentionsSafety(doc *ast.CommentGroup) bool {
         return false
     }
     text := strings.ToLower(doc.Text())
-    for _, kw := range []string{"safe for concurrent", "not safe for concurrent", "goroutine-safe", "concurrency-safe", "thread-safe"} {
+    for _, kw := range []string{
+        "safe for concurrent", "safe to use concurrent", "safe to call concurrent",
+        "not safe for concurrent", "cannot be called concurrent", "must not be called concurrent",
+        "goroutine-safe", "goroutine safe", "concurrency-safe", "concurrency safe",
+        "thread-safe", "thread safe",
+    } {
         if strings.Contains(text, kw) {
             return true
         }
@@ -540,7 +551,7 @@ func docMentionsSafety(doc *ast.CommentGroup) bool {
 ```
 Flag when: `typeSpec.Name.IsExported()`, `structHasNamedSyncField` is true, and `!docMentionsSafety(genDecl.Doc)`.
 
-**Exclusions:** unexported types, and exported types with no sync field at all (that broader case is the excluded judgment call — see above).
+**Exclusions:** unexported types, exported types with no sync field, `_test.go`, files ending `_testing.go`, and support code under `test`, `testing`, `testutil`, or `testutils` path segments. External calibration found those support APIs to be style noise rather than production concurrency contracts.
 
 **Finding.Message:** `"exported type %s at %s has synchronization fields but its doc comment does not state whether it is safe for concurrent use"`
 
@@ -594,7 +605,7 @@ func manualWaitGroupErrChanPattern(pass *analysis.Pass, body *ast.BlockStmt) (fo
 }
 ```
 
-**Exclusions:** requires *both* a `sync.WaitGroup` local **and** a `chan error` in the *same* block — a `WaitGroup` used alone (no error propagation attempted) or an error channel fed by a single goroutine (no coordination problem to speak of) do not match.
+**Exclusions:** requires *both* a `sync.WaitGroup` local **and** a `chan error` in the *same* block — a `WaitGroup` used alone (no error propagation attempted) or an error channel fed by a single goroutine (no coordination problem to speak of) do not match. `_test.go` is excluded after calibration found ordinary test concurrency rather than a production coordination design.
 
 **Finding.Message:** `"function at %s hand-rolls WaitGroup + error-channel coordination across %d goroutines — use errgroup.Group to propagate the first error and cancel the rest"`
 
@@ -683,6 +694,11 @@ private payloads to the wrong caller; not a style issue.
 <a id="concurrency-15"></a>
 ### concurrency-15 — compound state mutated via multiple independent atomics (narrowed)
 
+**v0.1.0 status:** Disabled after external calibration. Multiple atomic fields
+were repeatedly independent counters, metrics, snapshots, and flags rather
+than one compound invariant. Syntax cannot establish the missing invariant, so
+the retained predicate emits no finding.
+
 **Source sentence:** "Reach for `sync.Map` and `sync/atomic` only in their niches... Use `atomic.Int64`, `atomic.Bool`, and `atomic.Pointer`... for a single hot counter, flag, or pointer without a mutex; compound state still needs a mutex."
 
 **Why checkable (narrowed):** Whether a given `sync.Map` use case is truly "append-only" or "disjoint key sets" (the source's carve-out) is a runtime-access-pattern judgment call, not a syntactic property — excluded. The other half — "compound state still needs a mutex" — has a concrete syntactic signature: a struct with ≥2 independent `atomic.*`-typed fields, and a single method that mutates ≥2 of them with no mutex anywhere in that method.
@@ -749,6 +765,11 @@ func methodMutatesMultipleAtomicsWithoutMutex(pass *analysis.Pass, fd *ast.FuncD
 <a id="concurrency-17"></a>
 ### concurrency-17 — multi-lock acquisition without an ordering comment (narrowed)
 
+**v0.1.0 status:** Disabled after external calibration. The predicate treated
+locks acquired at different times in one function as a simultaneous lockset;
+sequential acquisitions were a repeatable systemic false-positive pattern.
+The retained predicate emits no finding.
+
 **Source sentence:** "When a path acquires multiple locks, acquire them in a consistent global order and document that order in a comment. Two goroutines that each hold one lock and reach for the other in opposite order deadlock under load."
 
 **Why checkable (narrowed):** Proving *global* order consistency across the whole call graph is a whole-program lock-order-graph analysis — genuinely out of reach for a single `go/analysis` pass without unacceptable engineering cost, and exactly the kind of fragile heuristic the rigor requirement warns against. The rule is narrowed to what a single-function pass **can** honestly claim: "does this function, which acquires ≥2 distinct locks, have a comment documenting the order at the first acquisition." This is a reminder check, not a deadlock proof, and is documented as such.
@@ -794,11 +815,11 @@ func undocumentedMultiLock(cmap ast.CommentMap, body *ast.BlockStmt) (firstLock 
 ---
 
 <a id="concurrency-18"></a>
-### concurrency-18 — `time.After` in a `select` loop, and `Ticker`/`Timer` never `Stop`ped
+### concurrency-18 — `time.After` in a `select` loop, and a local `Ticker` never `Stop`ped
 
 **Source sentence:** "Stop every `time.Ticker` and `time.Timer`. Do not call `time.After` in a select loop: it allocates a new timer each iteration that the runtime cannot collect until the duration fires. Reuse one `time.Timer` with `Reset`, or use a `time.Ticker` you `Stop`."
 
-**Why checkable:** Two independent, fully syntactic signatures share one rule ID because the source bundles them as one bullet: (a) a `time.After(...)` call used as a `select` receive inside an enclosing loop, (b) a `time.NewTicker`/`time.NewTimer` result never passed to `.Stop()` anywhere in its owning function.
+**Why checkable (narrowed):** Two syntactic signatures share one rule ID: (a) a `time.After(...)` call used as a `select` receive inside an enclosing loop, and (b) a local identifier assigned from `time.NewTicker` that is never passed to `.Stop()` in its owning function. `time.NewTimer` and tickers assigned into fields were removed after calibration: a timer may be consumed normally, while field-owned tickers are commonly stopped by another lifecycle method.
 
 **Node type(s) — predicate (a):** `*ast.SelectStmt` inside `*ast.ForStmt`/`*ast.RangeStmt`, `*ast.CommClause`.
 ```go
@@ -819,7 +840,7 @@ func selectTimeAfterInLoop(pass *analysis.Pass, sel *ast.SelectStmt, inLoop bool
 ```
 `inLoop` is computed by the pass tracking an ancestor stack (via `insp.WithStack` or a manual parent map) and testing for the nearest enclosing `*ast.ForStmt`/`*ast.RangeStmt` without crossing a `*ast.FuncLit` boundary.
 
-**Node type(s) — predicate (b):** `*ast.AssignStmt`, `*ast.CallExpr` (`time.NewTicker`/`time.NewTimer`).
+**Node type(s) — predicate (b):** `*ast.AssignStmt` with a single identifier on the left, `*ast.CallExpr` (`time.NewTicker`).
 ```go
 func tickerOrTimerNeverStopped(pass *analysis.Pass, assign *ast.AssignStmt, fnBody *ast.BlockStmt) bool {
     if len(assign.Rhs) != 1 {
@@ -829,10 +850,13 @@ func tickerOrTimerNeverStopped(pass *analysis.Pass, assign *ast.AssignStmt, fnBo
     if !ok {
         return false
     }
-    if !astutil.IsPkgFunc(pass, call, "time", "NewTicker") && !astutil.IsPkgFunc(pass, call, "time", "NewTimer") {
+    if !astutil.IsPkgFunc(pass, call, "time", "NewTicker") {
         return false
     }
     if len(assign.Lhs) != 1 {
+        return false
+    }
+    if _, ok := assign.Lhs[0].(*ast.Ident); !ok {
         return false
     }
     varName := types.ExprString(assign.Lhs[0])
@@ -852,7 +876,7 @@ func tickerOrTimerNeverStopped(pass *analysis.Pass, assign *ast.AssignStmt, fnBo
 }
 ```
 
-**Exclusions:** predicate (a) only fires when the `select` is lexically inside a loop in the *same* function — a one-shot `time.After` in a non-looping `select` (a legitimate single bounded wait) is correct and must not be flagged. Predicate (b) only scans the declaring function's body — a ticker/timer stored in a struct field and stopped by a different method (e.g. `Stop()` on that type) is a cross-function case out of reach for this narrow check and is accepted as a known gap, not silently claimed as covered.
+**Exclusions:** both predicates skip `_test.go`. Predicate (a) only fires when the `select` is lexically inside a loop in the same function. Predicate (b) excludes `time.NewTimer`, selector/field assignments, and any local ticker stopped in the declaring function. Cross-method lifecycle ownership is deliberately out of scope.
 
 **Finding.Message:**
 - (a): `"select at %s calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"`
@@ -1051,6 +1075,11 @@ hard-to-detect production defects, not a style nit.
 
 <a id="concurrency-20"></a>
 ### concurrency-20 — `defer` directly inside a loop, unscoped
+
+**v0.1.0 status:** Disabled after external calibration. Real projects use this
+shape for bounded retries, deliberate function-lifetime lock ownership, and
+other bounded cleanup. The AST predicate cannot prove harmful accumulation,
+so the retained predicate emits no finding.
 
 **Source sentence (pass-added — not one of concurrency.md's 18 numbered rules; quoted from this
 remediation's own dispatching rationale, disclosed per the file header):** "a resource-accumulation
@@ -1549,7 +1578,7 @@ func (p *Pair) TransferGood() {
 }
 ```
 
-**`rule18/violation.go`** (concurrency-18 — two predicates, both live here)
+**Illustrative combined `rule18/violation.go`** (the executable fixtures split these predicates between `rule18/` and `rule18ticker/`)
 ```go
 package rule18
 
@@ -1606,10 +1635,10 @@ func NewStoppedTicker() *time.Ticker {
 	return t
 }
 ```
-Two independent violations/compliants live in each of `rule18`'s files because concurrency-18
-bundles two predicates under one rule ID (per §2): predicate (a) fires on `LoopBad`'s
-`select`/`time.After` (reported at the `select` statement), predicate (b) fires on
-`NewUnstoppedTicker`'s never-`Stop`ped ticker (reported at the `time.NewTicker` assignment).
+The executable fixture layout keeps the predicates isolated: `rule18/` covers
+`select`/`time.After`, while `rule18ticker/` covers a local never-stopped
+ticker. Each package has its own compliant counterpart and yields exactly one
+finding.
 
 **`rule19/go.mod`** — the one deliberate exception noted above: this fixture needs its own
 pre-1.22 `go` directive so the version gate in §2 actually evaluates the predicate.
@@ -1703,9 +1732,8 @@ func ProcessAllFixed(paths []string) error {
 ### Analysis subpackage — `internal/analysis/concurrency/concurrency.go`
 
 Pasted verbatim from `contracts.md`'s conformance block, substituting `concurrency` for
-`<domain>`. The 17 registrations comprise 12 active `RegisterRule` calls and five calibrated-off
-`RegisterDisabledRule` calls. The full dispatch across all 17 rules' predicates (18 arms, since
-concurrency-18 has two) from section 2 are the per-rule elaboration of the single representative
+`<domain>`. The 17 registrations comprise 8 active `RegisterRule` calls and 9 calibrated-off
+`RegisterDisabledRule` calls. The retained dispatch from section 2 is the per-rule elaboration of the single representative
 `astutil.Report` call shown below — this is the shape, not a re-enumeration of section 2.
 
 ```go
@@ -1725,8 +1753,8 @@ import (
 func init() {
 	// Calibrated-off rules retain metadata but emit no v0.1.0 findings.
 	astutil.RegisterDisabledRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError, "external calibration found joined goroutines coordinated through result channels")
-	// one RegisterRule call per active rule in this domain (concurrency-02, -04, -05,
-	// -08, -09, -10, -12, -15, -17, -18, -19, -20 — matching section 1's
+	// one RegisterRule call per active rule in this domain (concurrency-04, -05,
+	// -08, -09, -10, -12, -18, -19 — matching section 1's
 	// active inventory), plus one RegisterDisabledRule call per calibrated-off rule.
 	// Excluded rules are never registered. astutil.Report suppresses calibrated-off rules and panics at
 	// analyzer-init/test time on an unregistered
@@ -1736,7 +1764,7 @@ func init() {
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "concurrency",
-	Doc:      "Audits active goroutine-lifecycle, context-propagation, and lock/channel-safety conventions (concurrency.md rules concurrency-02, -04, -05, -08, -09, -10, -12, -15, -17, -18, -19, -20).",
+	Doc:      "Audits selected goroutine and channel conventions.",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
@@ -1817,7 +1845,7 @@ func AuditConcurrencyHandler(ctx context.Context, req *mcp.CallToolRequest, in A
 func RegisterAuditConcurrency(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "go_audit_concurrency",
-		Description: "Runs the active concurrency-02, -04, -05, -08, -09, -10, -12, -15, -17, -18, -19, -20 go/analysis passes (concurrency.md) over a package and returns findings.",
+		Description: "Runs the active concurrency-04, -05, -08, -09, -10, -12, -18, -19 go/analysis passes over a package and returns findings.",
 		Annotations: &mcp.ToolAnnotations{
 			ReadOnlyHint:    true,
 			DestructiveHint: boolPtr(false),
@@ -1848,8 +1876,9 @@ func normalizeAuditConcurrencyInput(in *AuditConcurrencyInput) error {
 
 `resolveInWorkspace` is the single project-wide input-containment helper (`contracts.md`'s
 Input containment and resource limits) — not redeclared here. Every `Finding.Rule` value this tool
-can emit is one of the 12 active IDs in section 1: calibrated-off IDs
-`concurrency-01`, `concurrency-03`, `concurrency-06`, `concurrency-07`, and `concurrency-14` are registered as
+can emit is one of the 8 active IDs in section 1: calibrated-off IDs
+`concurrency-01`, `concurrency-02`, `concurrency-03`, `concurrency-06`, `concurrency-07`,
+`concurrency-14`, `concurrency-15`, `concurrency-17`, and `concurrency-20` are registered as
 disabled metadata and suppressed by `astutil.Report`. Excluded IDs `concurrency-11`,
 `concurrency-13`, and `concurrency-16` are never registered or computed.
 
@@ -1857,16 +1886,15 @@ disabled metadata and suppressed by `astutil.Report`. Excluded IDs `concurrency-
 
 ## 5. Verification
 
-The v0.1.0 suite runs positive and near-miss fixtures for the 12 active rules, asserts the five
-calibrated-off IDs separately, and keeps a standing exclusion guard. These checks live in
-`internal/analysis/concurrency/concurrency_test.go` (package `concurrency_test`) — these exercise
-`concurrency.Analyzer` directly via `astutil.RunFixture`, so they live beside the analyzer, not
-behind the MCP tool handler in `internal/tools/`. Every fixture reference below uses the one
-canonical path form from `contracts.md`'s Testdata fixture layout —
-`internal/tools/testdata/fixtures/audit-concurrency/rule<NN>/`, one Go package per rule — via
-`astutil.RunFixture(t, concurrency.Analyzer, "audit-concurrency/rule<NN>")`. Every `Location.File`
-assertion below checks the real workspace-relative path, never `filepath.Base` and never "at that
-line" prose.
+The v0.1.0 suite runs positive and near-miss fixtures for the 8 active rules,
+asserts the 9 calibrated-off IDs separately, and keeps a standing exclusion
+guard. The executable checks live in
+`internal/analysis/concurrency/integration_test.go`; isolated packages live
+under `internal/analysis/concurrency/testdata/rule<NN>/` and are loaded through
+`audit.Run`. Additional `_test.go`, test-support-path, pure-wrapper, field-owned
+ticker, and one-shot timer fixtures lock in the corpus-driven exclusions. The
+older code sketches below illustrate the intended assertion shape; the paths
+and helpers in the executable test are canonical.
 
 Future-redesign test shape for calibrated-off `concurrency-01` (not run in v0.1.0):
 
@@ -1904,13 +1932,13 @@ line in `fixtures/audit-concurrency/rule<NN>/violation.go`:
 
 | Rule | Violation line | Rule | Violation line | Rule | Violation line |
 |---|---|---|---|---|---|
-| concurrency-02 | 8 | concurrency-08 | 7 | concurrency-12 | 5 |
-| concurrency-04 | 4 | concurrency-09 | 5 | concurrency-15 | 11 |
-| concurrency-05 | 4 | concurrency-10 | 6 | concurrency-17 | 11 |
+| concurrency-04 | 4 | concurrency-08 | 7 | concurrency-12 | 5 |
+| concurrency-05 | 4 | concurrency-09 | 5 | concurrency-10 | 6 |
 
-`TestAuditConcurrency_Rule18` is the one exception, with two `Finding`s under one rule ID
-(matches the two predicates in section 2 — `time.After` inside a `select` in a loop, and a
-`time.NewTicker`/`time.NewTimer` never `Stop`ped):
+`concurrency-18` is exercised by two fixture packages under one rule ID:
+`rule18` for `time.After` inside a `select` loop and `rule18ticker` for a local
+`time.NewTicker` never `Stop`ped. The following is an illustrative combined
+assertion; `integration_test.go` iterates the two directories separately:
 
 ```go
 func TestAuditConcurrency_Rule18(t *testing.T) {
@@ -1985,7 +2013,7 @@ Domain-wide rule count:
 
 ```go
 func TestAuditConcurrency_TotalRuleCount(t *testing.T) {
-	assert.Len(t, astutil.RulesInDomain("concurrency"), 12) // catches an active rule silently dropped or added
+	assert.Len(t, astutil.RulesInDomain("concurrency"), 8) // catches an active rule silently dropped or added
 }
 ```
 

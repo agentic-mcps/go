@@ -168,14 +168,26 @@ dependency.
 
 ## Validation status
 
-Local positive and near-miss fixtures are part of the implementation gate.
-Before tagging v0.1.0, the analyzers will also be evaluated against at least
-ten diverse, user-cloned and locally pinned Go repositories. Every sampled
-finding will be human-reviewed. A rule with more than 5% observed false
-positives or a repeatable systemic false-positive pattern will be disabled or
-fixed before release. Rules without meaningful external hits will not be
-marketed as externally validated. No external validation metrics are claimed
-yet.
+Local positive and near-miss fixtures are part of the implementation gate. The
+v0.1.0 analyzers were also evaluated offline against ten user-cloned Go
+repositories pinned by commit SHA. The final complete scan covered 1,804,320
+lines of Go and produced 467 unique findings; every finding was reviewed
+against its pinned source and classified as a true positive.
+
+| Metric | Result |
+| --- | ---: |
+| Repositories | 10 |
+| Reviewed findings | 467 |
+| Findings per 1,000 Go LOC | 0.259 |
+| Observed false-positive rate | 0% |
+
+Six active rules had meaningful external hits and individually observed zero
+false positives. Five active rules had no external hits and are described only
+as fixture-tested, not externally validated. Rules with excessive or systemic
+false positives were narrowed or disabled before the final rerun. The pinned
+corpus, row-level classifications, raw sanitized reports, limitations, and
+reproduction command are in
+[`validation/v0.1.0/summary.md`](validation/v0.1.0/summary.md).
 
 ## Development
 
