@@ -38,6 +38,8 @@ func init() {
 	astutil.RegisterRule("errors-17", "error_string_retry", finding.SeverityWarning)
 	astutil.RegisterRule("errors-14", "wrapper_without_unwrap", finding.SeverityWarning)
 	astutil.RegisterRule("errors-16", "deferred_close_error", finding.SeverityError)
+	astutil.RegisterRule("errors-15", "goroutine_recover", finding.SeverityError)
+	astutil.RegisterRule("errors-19", "fatal_exit", finding.SeverityError)
 	astutil.RegisterRule("errors-06", "failed_to_prefix", finding.SeverityInfo)
 	astutil.RegisterRule("errors-07", "error_string_style", finding.SeverityInfo)
 }
@@ -70,6 +72,9 @@ func run(pass *analysis.Pass) (any, error) {
 		case *ast.CallExpr:
 			checkMessage(pass, x)
 			checkStringMatch(pass, x)
+			if name, ok := exitFatal(pass, x); ok && !allowedExit(pass, enclosingFunc(pass, x.Pos())) {
+				astutil.Report(pass, x.Pos(), "errors-19", "%s called at %s outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully", name, pass.Fset.Position(x.Pos()))
+			}
 		case *ast.TypeSpec:
 			if st, ok := x.Type.(*ast.StructType); ok && wrapperWithoutUnwrap(pass, x, st) {
 				astutil.Report(pass, x.Pos(), "errors-14", "%s wraps an error field but has no Unwrap() error method at %s — errors.Is/As stop at this type", x.Name.Name, pass.Fset.Position(x.Pos()))
@@ -94,6 +99,10 @@ func run(pass *analysis.Pass) (any, error) {
 			case *ast.DeferStmt:
 				if bareDeferClose(pass, x, enclosingFunctionResults(pass, x.Pos())) {
 					astutil.Report(pass, x.Pos(), "errors-16", "defer %s.Close() at %s drops the close error — use a named return and assign it in the deferred func when err == nil", closeReceiver(x), pass.Fset.Position(x.Pos()))
+				}
+			case *ast.GoStmt:
+				if missingRecover(pass, x) {
+					astutil.Report(pass, x.Pos(), "errors-15", "goroutine spawned at %s has no deferred recover — an unrecovered panic here kills the whole process", pass.Fset.Position(x.Pos()))
 				}
 			}
 			return true
@@ -318,6 +327,61 @@ func formatExpr(e ast.Expr) string {
 		return id.Name
 	}
 	return "resource"
+}
+
+func missingRecover(pass *analysis.Pass, gs *ast.GoStmt) bool {
+	lit, ok := gs.Call.Fun.(*ast.FuncLit)
+	if !ok {
+		return false
+	}
+	for _, stmt := range lit.Body.List {
+		ds, ok := stmt.(*ast.DeferStmt)
+		if !ok {
+			continue
+		}
+		if _, ok := ds.Call.Fun.(*ast.FuncLit); !ok {
+			continue
+		}
+		found := false
+		ast.Inspect(ds.Call, func(n ast.Node) bool {
+			if c, ok := n.(*ast.CallExpr); ok {
+				if id, ok := c.Fun.(*ast.Ident); ok && id.Name == "recover" {
+					if _, builtin := pass.TypesInfo.Uses[id].(*types.Builtin); builtin {
+						found = true
+					}
+				}
+			}
+			return true
+		})
+		if found {
+			return false
+		}
+	}
+	return true
+}
+func exitFatal(pass *analysis.Pass, c *ast.CallExpr) (string, bool) {
+	if astutil.IsPkgFunc(pass, c, "os", "Exit") {
+		return "os.Exit", true
+	}
+	for _, n := range []string{"Fatal", "Fatalf", "Fatalln"} {
+		if astutil.IsPkgFunc(pass, c, "log", n) {
+			return "log." + n, true
+		}
+	}
+	return "", false
+}
+func allowedExit(pass *analysis.Pass, fn *ast.FuncDecl) bool {
+	if fn == nil {
+		return false
+	}
+	if pass.Pkg.Name() == "main" && fn.Name.Name == "main" {
+		return true
+	}
+	if fn.Name.Name != "TestMain" || fn.Type.Params == nil || len(fn.Type.Params.List) != 1 {
+		return false
+	}
+	param := fn.Type.Params.List[0]
+	return len(param.Names) == 1 && astutil.TypeString(pass, param.Type) == "*testing.M"
 }
 
 func checkReturns(pass *analysis.Pass, fn *ast.FuncDecl) {

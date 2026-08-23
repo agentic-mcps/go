@@ -4,14 +4,27 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/analysis/astutil"
 	"github.com/ashwingopalsamy/agentic-go/internal/analysis/errors"
 	"github.com/ashwingopalsamy/agentic-go/internal/audit"
 	"github.com/ashwingopalsamy/agentic-go/internal/finding"
 	"golang.org/x/tools/go/analysis"
 )
+
+func TestRuleSet(t *testing.T) {
+	want := []string{
+		"errors-01", "errors-02", "errors-03", "errors-04", "errors-05", "errors-06", "errors-07",
+		"errors-09", "errors-10", "errors-11", "errors-12", "errors-13", "errors-14", "errors-15",
+		"errors-16", "errors-17", "errors-19",
+	}
+	if got := astutil.RulesInDomain("errors"); !slices.Equal(got, want) {
+		t.Fatalf("registered rules = %v, want %v", got, want)
+	}
+}
 
 func TestAuditFixtures(t *testing.T) {
 	root := filepath.Join("testdata", "audit")
@@ -32,6 +45,8 @@ func TestAuditFixtures(t *testing.T) {
 		{"errors-17", finding.SeverityWarning},
 		{"errors-14", finding.SeverityWarning},
 		{"errors-16", finding.SeverityError},
+		{"errors-15", finding.SeverityError},
+		{"errors-19", finding.SeverityError},
 		{"errors-06", finding.SeverityInfo},
 		{"errors-07", finding.SeverityInfo},
 	}
@@ -97,5 +112,18 @@ func TestAuditFixtures(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestExitEntrypointsAreSilent(t *testing.T) {
+	root := filepath.Join("testdata", "audit-main")
+	result, err := audit.Run(context.Background(), root, "./...", []*analysis.Analyzer{errors.Analyzer})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, item := range result.Findings {
+		if item.Rule == "errors-19" {
+			t.Fatalf("entrypoint exit reported: %#v", item)
+		}
 	}
 }
