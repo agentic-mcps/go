@@ -3,6 +3,8 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -34,8 +36,24 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 5 {
-		t.Fatalf("len(tools/list) = %d, want 5", len(listed.Tools))
+	if len(listed.Tools) != 7 {
+		t.Fatalf("len(tools/list) = %d, want 7", len(listed.Tools))
+	}
+	for _, name := range []string{"go_audit_concurrency", "go_audit_errors"} {
+		tool := listedTool(t, listed.Tools, name)
+		annotations := tool.Annotations
+		if annotations == nil || !annotations.ReadOnlyHint || !annotations.IdempotentHint || annotations.DestructiveHint == nil || *annotations.DestructiveHint || annotations.OpenWorldHint == nil || *annotations.OpenWorldHint {
+			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
+		}
+		schema, err := json.Marshal(tool.InputSchema)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, field := range []string{`"package"`, `"min_severity"`, `"max_findings"`} {
+			if !strings.Contains(string(schema), field) {
+				t.Fatalf("%s input schema %s missing %s", name, schema, field)
+			}
+		}
 	}
 	for _, name := range []string{"go_test_structured", "go_race_report", "go_coverage_gaps", "go_benchmark_diff", "go_flake_finder"} {
 		tool := listedTool(t, listed.Tools, name)
@@ -131,6 +149,47 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	}
 	if len(flakeOutput.Flaky) != 1 || flakeOutput.Flaky[0].FlakeRate != 0.5 {
 		t.Fatalf("flake structured content = %+v, want deterministic mixed result", flakeOutput)
+	}
+
+	for _, tc := range []struct {
+		name   string
+		decode func([]byte) error
+	}{
+		{name: "go_audit_concurrency", decode: func(data []byte) error {
+			var output AuditConcurrencyOutput
+			if err := json.Unmarshal(data, &output); err != nil {
+				return err
+			}
+			if output.Result.Findings == nil || output.Result.CountsBySeverity == nil {
+				return fmt.Errorf("uninitialized result: %+v", output.Result)
+			}
+			return nil
+		}},
+		{name: "go_audit_errors", decode: func(data []byte) error {
+			var output AuditErrorsOutput
+			if err := json.Unmarshal(data, &output); err != nil {
+				return err
+			}
+			if output.Result.Findings == nil || output.Result.CountsBySeverity == nil {
+				return fmt.Errorf("uninitialized result: %+v", output.Result)
+			}
+			return nil
+		}},
+	} {
+		called, err = clientSession.CallTool(ctx, &mcp.CallToolParams{Name: tc.name, Arguments: map[string]any{"package": "."}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if called.IsError {
+			t.Fatalf("%s tools/call returned an MCP tool error: %+v", tc.name, called.Content)
+		}
+		encoded, err = json.Marshal(called.StructuredContent)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := tc.decode(encoded); err != nil {
+			t.Fatalf("%s structured content: %v", tc.name, err)
+		}
 	}
 }
 

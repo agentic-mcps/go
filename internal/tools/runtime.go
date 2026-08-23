@@ -43,6 +43,8 @@ func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterCoverageGaps(server, runtime)
 	RegisterBenchmarkDiff(server, runtime)
 	RegisterFlakeFinder(server, runtime)
+	RegisterAuditConcurrency(server, runtime)
+	RegisterAuditErrors(server, runtime)
 }
 
 func (r *Runtime) resolvePackage(ctx context.Context, pattern string) (string, error) {
