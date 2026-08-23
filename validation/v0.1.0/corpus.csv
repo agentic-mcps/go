@@ -1,0 +1,11 @@
+project,repository,scan_root,patterns,commit
+cobra,cobra,.,./...,adbc8813901bba65827259daa8e22ff94ec1f30e
+gin,gin,.,./...,dcaa4296d111981ffb31ac3eba90bb63e1eb5ab9
+echo,echo,.,./...,4ec116dc9b5bff1da7513c0dc86095d0e8ce9654
+testify,testify,.,./...,c627960a7323bfc7a58835e9ef5540f306fc7fac
+chi,chi,.,./...,735ae2b87f8c733d616e809ae86e0985c1bc3350
+grpc-go,grpc-go,.,./...,4793ad0474669eafbd5346c8a3d098fdfa542498
+client-golang,client_golang,.,./...,89c60c0554699c74fa3d4eec472b98a3108905e3
+go,go,src,"cmd/... net/http sync",c97cfcb37fced87a43a3dbab8983d6f76b8b84d1
+vault,vault,.,./...,c3d72646cd3f88d6e573c7b8586f101561bfcd4b
+client-go,client-go,.,./...,3fcdd4c72588c077802ae4c6a3fec8375665080b
