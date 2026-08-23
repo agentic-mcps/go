@@ -1,0 +1,40 @@
+version: 2
+
+builds:
+  - id: agentic-go
+    main: ./cmd/agentic-go
+    binary: agentic-go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+  - id: agentic-go-vet
+    main: ./cmd/agentic-go-vet
+    binary: agentic-go-vet
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  github:
+    owner: ashwingopalsamy
+    name: agentic-go
