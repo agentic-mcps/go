@@ -1,0 +1,12 @@
+# checkout HEAD: c34dc7ee0048fd2bcc44d50beff002e5e8069b69
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{}

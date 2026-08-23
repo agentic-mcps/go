@@ -1,0 +1,33 @@
+# checkout HEAD: 89c60c0554699c74fa3d4eec472b98a3108905e3
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{
+	"github.com/prometheus/client_golang/prometheus": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "prometheus/registry.go:273:6",
+				"end": "prometheus/registry.go:273:6",
+				"message": "exported type Registry at prometheus/registry.go:273:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"github.com/prometheus/client_golang/prometheus [github.com/prometheus/client_golang/prometheus.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "prometheus/registry.go:273:6",
+				"end": "prometheus/registry.go:273:6",
+				"message": "exported type Registry at prometheus/registry.go:273:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	}
+}

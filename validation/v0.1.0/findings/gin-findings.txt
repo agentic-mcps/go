@@ -1,0 +1,33 @@
+# checkout HEAD: dcaa4296d111981ffb31ac3eba90bb63e1eb5ab9
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{
+	"github.com/gin-gonic/gin": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "context.go:61:6",
+				"end": "context.go:61:6",
+				"message": "exported type Context at context.go:61:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"github.com/gin-gonic/gin [github.com/gin-gonic/gin.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "context.go:61:6",
+				"end": "context.go:61:6",
+				"message": "exported type Context at context.go:61:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	}
+}

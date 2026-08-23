@@ -1,0 +1,53 @@
+# checkout HEAD: adbc8813901bba65827259daa8e22ff94ec1f30e
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{
+	"github.com/spf13/cobra": {
+		"errors": [
+			{
+				"category": "errors-19",
+				"posn": "cobra.go:238:3",
+				"end": "cobra.go:238:3",
+				"message": "os.Exit called at cobra.go:238:3 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			}
+		]
+	},
+	"github.com/spf13/cobra [github.com/spf13/cobra.test]": {
+		"errors": [
+			{
+				"category": "errors-19",
+				"posn": "cobra.go:238:3",
+				"end": "cobra.go:238:3",
+				"message": "os.Exit called at cobra.go:238:3 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			}
+		]
+	},
+	"github.com/spf13/cobra/doc": {
+		"errors": [
+			{
+				"category": "errors-19",
+				"posn": "doc/yaml_docs.go:140:3",
+				"end": "doc/yaml_docs.go:140:3",
+				"message": "os.Exit called at doc/yaml_docs.go:140:3 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			}
+		]
+	},
+	"github.com/spf13/cobra/doc [github.com/spf13/cobra/doc.test]": {
+		"errors": [
+			{
+				"category": "errors-19",
+				"posn": "doc/yaml_docs.go:140:3",
+				"end": "doc/yaml_docs.go:140:3",
+				"message": "os.Exit called at doc/yaml_docs.go:140:3 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			}
+		]
+	}
+}

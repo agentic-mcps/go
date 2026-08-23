@@ -1,0 +1,649 @@
+# checkout HEAD: 4793ad0474669eafbd5346c8a3d098fdfa542498
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{
+	"google.golang.org/grpc": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "clientconn.go:668:6",
+				"end": "clientconn.go:668:6",
+				"message": "exported type ClientConn at clientconn.go:668:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "server.go:126:6",
+				"end": "server.go:126:6",
+				"message": "exported type Server at server.go:126:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc [google.golang.org/grpc.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "clientconn.go:668:6",
+				"end": "clientconn.go:668:6",
+				"message": "exported type ClientConn at clientconn.go:668:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "server.go:126:6",
+				"end": "server.go:126:6",
+				"message": "exported type Server at server.go:126:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/balancer/rls": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "balancer/rls/balancer.go:277:45",
+				"end": "balancer/rls/balancer.go:277:45",
+				"message": "parameter/return channel at balancer/rls/balancer.go:277:45 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "balancer/rls/balancer.go:277:45",
+				"end": "balancer/rls/balancer.go:277:45",
+				"message": "parameter/return channel at balancer/rls/balancer.go:277:45 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/balancer/rls [google.golang.org/grpc/balancer/rls.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "balancer/rls/balancer.go:277:45",
+				"end": "balancer/rls/balancer.go:277:45",
+				"message": "parameter/return channel at balancer/rls/balancer.go:277:45 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "balancer/rls/balancer.go:277:45",
+				"end": "balancer/rls/balancer.go:277:45",
+				"message": "parameter/return channel at balancer/rls/balancer.go:277:45 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/balancer/weightedtarget/weightedaggregator": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "balancer/weightedtarget/weightedaggregator/aggregator.go:56:6",
+				"end": "balancer/weightedtarget/weightedaggregator/aggregator.go:56:6",
+				"message": "exported type Aggregator at balancer/weightedtarget/weightedaggregator/aggregator.go:56:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/benchmark": {
+		"errors": [
+			{
+				"category": "errors-19",
+				"posn": "benchmark/benchmark.go:182:5",
+				"end": "benchmark/benchmark.go:182:5",
+				"message": "log.Fatalf called at benchmark/benchmark.go:182:5 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			},
+			{
+				"category": "errors-19",
+				"posn": "benchmark/benchmark.go:203:5",
+				"end": "benchmark/benchmark.go:203:5",
+				"message": "log.Fatalf called at benchmark/benchmark.go:203:5 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			}
+		]
+	},
+	"google.golang.org/grpc/benchmark/stats": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "benchmark/stats/stats.go:309:6",
+				"end": "benchmark/stats/stats.go:309:6",
+				"message": "exported type Stats at benchmark/stats/stats.go:309:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		],
+		"errors": [
+			{
+				"category": "errors-19",
+				"posn": "benchmark/stats/histogram.go:207:3",
+				"end": "benchmark/stats/histogram.go:207:3",
+				"message": "log.Fatalf called at benchmark/stats/histogram.go:207:3 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			},
+			{
+				"category": "errors-19",
+				"posn": "benchmark/stats/stats.go:239:5",
+				"end": "benchmark/stats/stats.go:239:5",
+				"message": "log.Fatalf called at benchmark/stats/stats.go:239:5 outside func main in package main (or TestMain) — os.Exit/log.Fatal* skip deferred cleanup up the call stack and make the call untestable by any caller who wanted to handle the failure gracefully"
+			}
+		]
+	},
+	"google.golang.org/grpc/credentials/tls/certprovider": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "credentials/tls/certprovider/distributor.go:39:6",
+				"end": "credentials/tls/certprovider/distributor.go:39:6",
+				"message": "exported type Distributor at credentials/tls/certprovider/distributor.go:39:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/credentials/tls/certprovider [google.golang.org/grpc/credentials/tls/certprovider.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "credentials/tls/certprovider/distributor.go:39:6",
+				"end": "credentials/tls/certprovider/distributor.go:39:6",
+				"message": "exported type Distributor at credentials/tls/certprovider/distributor.go:39:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/health": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "health/server.go:41:6",
+				"end": "health/server.go:41:6",
+				"message": "exported type Server at health/server.go:41:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/health [google.golang.org/grpc/health.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "health/server.go:41:6",
+				"end": "health/server.go:41:6",
+				"message": "exported type Server at health/server.go:41:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/balancer/gracefulswitch": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/balancer/gracefulswitch/gracefulswitch.go:46:6",
+				"end": "internal/balancer/gracefulswitch/gracefulswitch.go:46:6",
+				"message": "exported type Balancer at internal/balancer/gracefulswitch/gracefulswitch.go:46:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/balancer/gracefulswitch [google.golang.org/grpc/internal/balancer/gracefulswitch.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/balancer/gracefulswitch/gracefulswitch.go:46:6",
+				"end": "internal/balancer/gracefulswitch/gracefulswitch.go:46:6",
+				"message": "exported type Balancer at internal/balancer/gracefulswitch/gracefulswitch.go:46:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/balancergroup": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/balancergroup/balancergroup.go:179:6",
+				"end": "internal/balancergroup/balancergroup.go:179:6",
+				"message": "exported type BalancerGroup at internal/balancergroup/balancergroup.go:179:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/binarylog": {
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "internal/binarylog/sink.go:71:2",
+				"end": "internal/binarylog/sink.go:71:2",
+				"message": "err is logged via Errorf and then returned at internal/binarylog/sink.go:73:3 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/binarylog [google.golang.org/grpc/internal/binarylog.test]": {
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "internal/binarylog/sink.go:71:2",
+				"end": "internal/binarylog/sink.go:71:2",
+				"message": "err is logged via Errorf and then returned at internal/binarylog/sink.go:73:3 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/cache": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/cache/timeoutCache.go:38:6",
+				"end": "internal/cache/timeoutCache.go:38:6",
+				"message": "exported type TimeoutCache at internal/cache/timeoutCache.go:38:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/cache [google.golang.org/grpc/internal/cache.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/cache/timeoutCache.go:38:6",
+				"end": "internal/cache/timeoutCache.go:38:6",
+				"message": "exported type TimeoutCache at internal/cache/timeoutCache.go:38:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/channelz": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/channelz/trace.go:85:6",
+				"end": "internal/channelz/trace.go:85:6",
+				"message": "exported type ChannelTrace at internal/channelz/trace.go:85:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/grpcsync": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/grpcsync/pubsub.go:46:6",
+				"end": "internal/grpcsync/pubsub.go:46:6",
+				"message": "exported type PubSub at internal/grpcsync/pubsub.go:46:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/grpcsync [google.golang.org/grpc/internal/grpcsync.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/grpcsync/pubsub.go:46:6",
+				"end": "internal/grpcsync/pubsub.go:46:6",
+				"message": "exported type PubSub at internal/grpcsync/pubsub.go:46:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/idle": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/idle/idle.go:44:6",
+				"end": "internal/idle/idle.go:44:6",
+				"message": "exported type Manager at internal/idle/idle.go:44:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/idle [google.golang.org/grpc/internal/idle.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/idle/idle.go:44:6",
+				"end": "internal/idle/idle.go:44:6",
+				"message": "exported type Manager at internal/idle/idle.go:44:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/profiling": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/profiling/profiling.go:123:6",
+				"end": "internal/profiling/profiling.go:123:6",
+				"message": "exported type Stat at internal/profiling/profiling.go:123:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/profiling [google.golang.org/grpc/internal/profiling.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/profiling/profiling.go:123:6",
+				"end": "internal/profiling/profiling.go:123:6",
+				"message": "exported type Stat at internal/profiling/profiling.go:123:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/profiling/buffer": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/profiling/buffer/buffer.go:129:6",
+				"end": "internal/profiling/buffer/buffer.go:129:6",
+				"message": "exported type CircularBuffer at internal/profiling/buffer/buffer.go:129:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/profiling/buffer [google.golang.org/grpc/internal/profiling/buffer.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/profiling/buffer/buffer.go:129:6",
+				"end": "internal/profiling/buffer/buffer.go:129:6",
+				"message": "exported type CircularBuffer at internal/profiling/buffer/buffer.go:129:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/resolver": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/resolver/config_selector.go:93:6",
+				"end": "internal/resolver/config_selector.go:93:6",
+				"message": "exported type SafeConfigSelector at internal/resolver/config_selector.go:93:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/resolver [google.golang.org/grpc/internal/resolver.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/resolver/config_selector.go:93:6",
+				"end": "internal/resolver/config_selector.go:93:6",
+				"message": "exported type SafeConfigSelector at internal/resolver/config_selector.go:93:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/testutils/fakegrpclb": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "internal/testutils/fakegrpclb/server.go:242:10",
+				"end": "internal/testutils/fakegrpclb/server.go:242:10",
+				"message": "select at internal/testutils/fakegrpclb/server.go:237:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "internal/testutils/fakegrpclb/server.go:242:10",
+				"end": "internal/testutils/fakegrpclb/server.go:242:10",
+				"message": "select at internal/testutils/fakegrpclb/server.go:237:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/testutils/rls": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "internal/testutils/rls/fake_rls_server.go:51:109",
+				"end": "internal/testutils/rls/fake_rls_server.go:51:109",
+				"message": "parameter/return channel at internal/testutils/rls/fake_rls_server.go:51:109 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/testutils/rls/fake_rls_server.go:51:109",
+				"end": "internal/testutils/rls/fake_rls_server.go:51:109",
+				"message": "parameter/return channel at internal/testutils/rls/fake_rls_server.go:51:109 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/transport": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/transport/server_stream.go:34:6",
+				"end": "internal/transport/server_stream.go:34:6",
+				"message": "exported type ServerStream at internal/transport/server_stream.go:34:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		],
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "internal/transport/controlbuf.go:995:3",
+				"end": "internal/transport/controlbuf.go:995:3",
+				"message": "err is logged via Errorf and then returned at internal/transport/controlbuf.go:1000:4 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/transport [google.golang.org/grpc/internal/transport.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/transport/server_stream.go:34:6",
+				"end": "internal/transport/server_stream.go:34:6",
+				"message": "exported type ServerStream at internal/transport/server_stream.go:34:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		],
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "internal/transport/controlbuf.go:995:3",
+				"end": "internal/transport/controlbuf.go:995:3",
+				"message": "err is logged via Errorf and then returned at internal/transport/controlbuf.go:1000:4 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/balancer/loadstore": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/balancer/loadstore/load_store_wrapper.go:50:6",
+				"end": "internal/xds/balancer/loadstore/load_store_wrapper.go:50:6",
+				"message": "exported type Wrapper at internal/xds/balancer/loadstore/load_store_wrapper.go:50:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/grpctransport": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/clients/grpctransport/grpc_transport.go:53:6",
+				"end": "internal/xds/clients/grpctransport/grpc_transport.go:53:6",
+				"message": "exported type Builder at internal/xds/clients/grpctransport/grpc_transport.go:53:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/grpctransport [google.golang.org/grpc/internal/xds/clients/grpctransport.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/clients/grpctransport/grpc_transport.go:53:6",
+				"end": "internal/xds/clients/grpctransport/grpc_transport.go:53:6",
+				"message": "exported type Builder at internal/xds/clients/grpctransport/grpc_transport.go:53:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/internal/testutils/faketransport": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/clients/internal/testutils/faketransport/xds_fake_transport.go:120:31",
+				"end": "internal/xds/clients/internal/testutils/faketransport/xds_fake_transport.go:120:31",
+				"message": "parameter/return channel at internal/xds/clients/internal/testutils/faketransport/xds_fake_transport.go:120:31 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/clients/internal/testutils/faketransport/xds_fake_transport.go:120:31",
+				"end": "internal/xds/clients/internal/testutils/faketransport/xds_fake_transport.go:120:31",
+				"message": "parameter/return channel at internal/xds/clients/internal/testutils/faketransport/xds_fake_transport.go:120:31 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/lrsclient": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/clients/lrsclient/lrsclient.go:47:6",
+				"end": "internal/xds/clients/lrsclient/lrsclient.go:47:6",
+				"message": "exported type LRSClient at internal/xds/clients/lrsclient/lrsclient.go:47:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/lrsclient [google.golang.org/grpc/internal/xds/clients/lrsclient.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/clients/lrsclient/lrsclient.go:47:6",
+				"end": "internal/xds/clients/lrsclient/lrsclient.go:47:6",
+				"message": "exported type LRSClient at internal/xds/clients/lrsclient/lrsclient.go:47:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/xdsclient": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/clients/xdsclient/xdsclient.go:71:6",
+				"end": "internal/xds/clients/xdsclient/xdsclient.go:71:6",
+				"message": "exported type XDSClient at internal/xds/clients/xdsclient/xdsclient.go:71:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/clients/xdsclient [google.golang.org/grpc/internal/xds/clients/xdsclient.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/clients/xdsclient/xdsclient.go:71:6",
+				"end": "internal/xds/clients/xdsclient/xdsclient.go:71:6",
+				"message": "exported type XDSClient at internal/xds/clients/xdsclient/xdsclient.go:71:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/rbac": {
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "internal/xds/rbac/rbac_engine.go:86:2",
+				"end": "internal/xds/rbac/rbac_engine.go:86:2",
+				"message": "err is logged via Errorf and then returned at internal/xds/rbac/rbac_engine.go:88:3 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/rbac [google.golang.org/grpc/internal/xds/rbac.test]": {
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "internal/xds/rbac/rbac_engine.go:86:2",
+				"end": "internal/xds/rbac/rbac_engine.go:86:2",
+				"message": "err is logged via Errorf and then returned at internal/xds/rbac/rbac_engine.go:88:3 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/test/e2e": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:49 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:84 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:49 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:84 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/test/e2e [google.golang.org/grpc/internal/xds/test/e2e.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:49 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:84 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:49",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:49 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"end": "internal/xds/test/e2e/e2e_utils.go:69:84",
+				"message": "parameter/return channel at internal/xds/test/e2e/e2e_utils.go:69:84 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/xdsclient": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/xdsclient/pool.go:46:6",
+				"end": "internal/xds/xdsclient/pool.go:46:6",
+				"message": "exported type Pool at internal/xds/xdsclient/pool.go:46:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/xdsclient [google.golang.org/grpc/internal/xds/xdsclient.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/xdsclient/pool.go:46:6",
+				"end": "internal/xds/xdsclient/pool.go:46:6",
+				"message": "exported type Pool at internal/xds/xdsclient/pool.go:46:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/internal/xds/xdsdepmgr": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "internal/xds/xdsdepmgr/xds_dependency_manager.go:98:6",
+				"end": "internal/xds/xdsdepmgr/xds_dependency_manager.go:98:6",
+				"message": "exported type DependencyManager at internal/xds/xdsdepmgr/xds_dependency_manager.go:98:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"google.golang.org/grpc/orca": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "orca/producer.go:172:50",
+				"end": "orca/producer.go:172:50",
+				"message": "parameter/return channel at orca/producer.go:172:50 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "orca/producer.go:172:50",
+				"end": "orca/producer.go:172:50",
+				"message": "parameter/return channel at orca/producer.go:172:50 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/orca [google.golang.org/grpc/orca.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "orca/producer.go:172:50",
+				"end": "orca/producer.go:172:50",
+				"message": "parameter/return channel at orca/producer.go:172:50 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "orca/producer.go:172:50",
+				"end": "orca/producer.go:172:50",
+				"message": "parameter/return channel at orca/producer.go:172:50 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"google.golang.org/grpc/resolver/manual": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "resolver/manual/manual.go:44:6",
+				"end": "resolver/manual/manual.go:44:6",
+				"message": "exported type Resolver at resolver/manual/manual.go:44:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	}
+}

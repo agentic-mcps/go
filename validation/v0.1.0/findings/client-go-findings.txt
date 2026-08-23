@@ -1,0 +1,771 @@
+# checkout HEAD: 3fcdd4c72588c077802ae4c6a3fec8375665080b
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{
+	"k8s.io/client-go/discovery/cached/disk": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "discovery/cached/disk/cached_discovery.go:45:6",
+				"end": "discovery/cached/disk/cached_discovery.go:45:6",
+				"message": "exported type CachedDiscoveryClient at discovery/cached/disk/cached_discovery.go:45:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/discovery/cached/disk [k8s.io/client-go/discovery/cached/disk.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "discovery/cached/disk/cached_discovery.go:45:6",
+				"end": "discovery/cached/disk/cached_discovery.go:45:6",
+				"message": "exported type CachedDiscoveryClient at discovery/cached/disk/cached_discovery.go:45:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/plugin/pkg/client/auth/exec": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "plugin/pkg/client/auth/exec/exec.go:263:6",
+				"end": "plugin/pkg/client/auth/exec/exec.go:263:6",
+				"message": "exported type Authenticator at plugin/pkg/client/auth/exec/exec.go:263:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/plugin/pkg/client/auth/exec [k8s.io/client-go/plugin/pkg/client/auth/exec.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "plugin/pkg/client/auth/exec/exec.go:263:6",
+				"end": "plugin/pkg/client/auth/exec/exec.go:263:6",
+				"message": "exported type Authenticator at plugin/pkg/client/auth/exec/exec.go:263:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/restmapper": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "restmapper/discovery.go:218:6",
+				"end": "restmapper/discovery.go:218:6",
+				"message": "exported type DeferredDiscoveryRESTMapper at restmapper/discovery.go:218:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/restmapper [k8s.io/client-go/restmapper.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "restmapper/discovery.go:218:6",
+				"end": "restmapper/discovery.go:218:6",
+				"message": "exported type DeferredDiscoveryRESTMapper at restmapper/discovery.go:218:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/testing": {
+		"concurrency": [
+			{
+				"category": "concurrency-08",
+				"posn": "testing/fake.go:33:2",
+				"end": "testing/fake.go:33:2",
+				"message": "exported struct Fake embeds sync.RWMutex anonymously at testing/fake.go:33:2, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"
+			}
+		]
+	},
+	"k8s.io/client-go/testing [k8s.io/client-go/testing.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-08",
+				"posn": "testing/fake.go:33:2",
+				"end": "testing/fake.go:33:2",
+				"message": "exported struct Fake embeds sync.RWMutex anonymously at testing/fake.go:33:2, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"
+			}
+		]
+	},
+	"k8s.io/client-go/third_party/forked/httpcache": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "third_party/forked/httpcache/httpcache.go:66:6",
+				"end": "third_party/forked/httpcache/httpcache.go:66:6",
+				"message": "exported type MemoryCache at third_party/forked/httpcache/httpcache.go:66:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/cache": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "tools/cache/mutation_detector.go:114:10",
+				"end": "tools/cache/mutation_detector.go:114:10",
+				"message": "select at tools/cache/mutation_detector.go:111:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "tools/cache/mutation_detector.go:114:10",
+				"end": "tools/cache/mutation_detector.go:114:10",
+				"message": "select at tools/cache/mutation_detector.go:111:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/delta_fifo.go:108:6",
+				"end": "tools/cache/delta_fifo.go:108:6",
+				"message": "exported type DeltaFIFO at tools/cache/delta_fifo.go:108:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/expiration_cache.go:38:6",
+				"end": "tools/cache/expiration_cache.go:38:6",
+				"message": "exported type ExpirationCache at tools/cache/expiration_cache.go:38:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/fifo.go:112:6",
+				"end": "tools/cache/fifo.go:112:6",
+				"message": "exported type FIFO at tools/cache/fifo.go:112:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/identity.go:52:6",
+				"end": "tools/cache/identity.go:52:6",
+				"message": "exported type InformerName at tools/cache/identity.go:52:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/reflector.go:106:6",
+				"end": "tools/cache/reflector.go:106:6",
+				"message": "exported type Reflector at tools/cache/reflector.go:106:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/the_real_fifo.go:93:6",
+				"end": "tools/cache/the_real_fifo.go:93:6",
+				"message": "exported type RealFIFO at tools/cache/the_real_fifo.go:93:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:514:65",
+				"end": "tools/cache/reflector.go:514:65",
+				"message": "parameter/return channel at tools/cache/reflector.go:514:65 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:514:65",
+				"end": "tools/cache/reflector.go:514:65",
+				"message": "parameter/return channel at tools/cache/reflector.go:514:65 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:561:78",
+				"end": "tools/cache/reflector.go:561:78",
+				"message": "parameter/return channel at tools/cache/reflector.go:561:78 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:561:78",
+				"end": "tools/cache/reflector.go:561:78",
+				"message": "parameter/return channel at tools/cache/reflector.go:561:78 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:934:8",
+				"end": "tools/cache/reflector.go:934:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:934:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:934:8",
+				"end": "tools/cache/reflector.go:934:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:934:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:955:8",
+				"end": "tools/cache/reflector.go:955:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:955:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:955:8",
+				"end": "tools/cache/reflector.go:955:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:955:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:984:8",
+				"end": "tools/cache/reflector.go:984:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:984:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:984:8",
+				"end": "tools/cache/reflector.go:984:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:984:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/cache [k8s.io/client-go/tools/cache.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "tools/cache/mutation_detector.go:114:10",
+				"end": "tools/cache/mutation_detector.go:114:10",
+				"message": "select at tools/cache/mutation_detector.go:111:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "tools/cache/mutation_detector.go:114:10",
+				"end": "tools/cache/mutation_detector.go:114:10",
+				"message": "select at tools/cache/mutation_detector.go:111:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/delta_fifo.go:108:6",
+				"end": "tools/cache/delta_fifo.go:108:6",
+				"message": "exported type DeltaFIFO at tools/cache/delta_fifo.go:108:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/expiration_cache.go:38:6",
+				"end": "tools/cache/expiration_cache.go:38:6",
+				"message": "exported type ExpirationCache at tools/cache/expiration_cache.go:38:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/fifo.go:112:6",
+				"end": "tools/cache/fifo.go:112:6",
+				"message": "exported type FIFO at tools/cache/fifo.go:112:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/identity.go:52:6",
+				"end": "tools/cache/identity.go:52:6",
+				"message": "exported type InformerName at tools/cache/identity.go:52:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/reflector.go:106:6",
+				"end": "tools/cache/reflector.go:106:6",
+				"message": "exported type Reflector at tools/cache/reflector.go:106:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/the_real_fifo.go:93:6",
+				"end": "tools/cache/the_real_fifo.go:93:6",
+				"message": "exported type RealFIFO at tools/cache/the_real_fifo.go:93:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:514:65",
+				"end": "tools/cache/reflector.go:514:65",
+				"message": "parameter/return channel at tools/cache/reflector.go:514:65 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:514:65",
+				"end": "tools/cache/reflector.go:514:65",
+				"message": "parameter/return channel at tools/cache/reflector.go:514:65 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:561:78",
+				"end": "tools/cache/reflector.go:561:78",
+				"message": "parameter/return channel at tools/cache/reflector.go:561:78 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:561:78",
+				"end": "tools/cache/reflector.go:561:78",
+				"message": "parameter/return channel at tools/cache/reflector.go:561:78 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:934:8",
+				"end": "tools/cache/reflector.go:934:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:934:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:934:8",
+				"end": "tools/cache/reflector.go:934:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:934:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:955:8",
+				"end": "tools/cache/reflector.go:955:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:955:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:955:8",
+				"end": "tools/cache/reflector.go:955:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:955:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:984:8",
+				"end": "tools/cache/reflector.go:984:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:984:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/cache/reflector.go:984:8",
+				"end": "tools/cache/reflector.go:984:8",
+				"message": "parameter/return channel at tools/cache/reflector.go:984:8 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/cache/synctrack": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/synctrack/synctrack.go:33:6",
+				"end": "tools/cache/synctrack/synctrack.go:33:6",
+				"message": "exported type AsyncTracker at tools/cache/synctrack/synctrack.go:33:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/cache/synctrack [k8s.io/client-go/tools/cache/synctrack.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/cache/synctrack/synctrack.go:33:6",
+				"end": "tools/cache/synctrack/synctrack.go:33:6",
+				"message": "exported type AsyncTracker at tools/cache/synctrack/synctrack.go:33:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/clientcmd": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/clientcmd/merged_client_builder.go:34:6",
+				"end": "tools/clientcmd/merged_client_builder.go:34:6",
+				"message": "exported type DeferredLoadingClientConfig at tools/clientcmd/merged_client_builder.go:34:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/clientcmd [k8s.io/client-go/tools/clientcmd.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/clientcmd/merged_client_builder.go:34:6",
+				"end": "tools/clientcmd/merged_client_builder.go:34:6",
+				"message": "exported type DeferredLoadingClientConfig at tools/clientcmd/merged_client_builder.go:34:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/events": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "tools/events/event_broadcaster.go:225:10",
+				"end": "tools/events/event_broadcaster.go:225:10",
+				"message": "select at tools/events/event_broadcaster.go:222:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "tools/events/event_broadcaster.go:225:10",
+				"end": "tools/events/event_broadcaster.go:225:10",
+				"message": "select at tools/events/event_broadcaster.go:222:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/events [k8s.io/client-go/tools/events.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "tools/events/event_broadcaster.go:225:10",
+				"end": "tools/events/event_broadcaster.go:225:10",
+				"message": "select at tools/events/event_broadcaster.go:222:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "tools/events/event_broadcaster.go:225:10",
+				"end": "tools/events/event_broadcaster.go:225:10",
+				"message": "select at tools/events/event_broadcaster.go:222:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/leaderelection": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/leaderelection/healthzadaptor.go:32:6",
+				"end": "tools/leaderelection/healthzadaptor.go:32:6",
+				"message": "exported type HealthzAdaptor at tools/leaderelection/healthzadaptor.go:32:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/leaderelection/leaderelection.go:188:6",
+				"end": "tools/leaderelection/leaderelection.go:188:6",
+				"message": "exported type LeaderElector at tools/leaderelection/leaderelection.go:188:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/leaderelection [k8s.io/client-go/tools/leaderelection.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/leaderelection/healthzadaptor.go:32:6",
+				"end": "tools/leaderelection/healthzadaptor.go:32:6",
+				"message": "exported type HealthzAdaptor at tools/leaderelection/healthzadaptor.go:32:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "tools/leaderelection/leaderelection.go:188:6",
+				"end": "tools/leaderelection/leaderelection.go:188:6",
+				"message": "exported type LeaderElector at tools/leaderelection/leaderelection.go:188:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/portforward": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/portforward/portforward.go:55:6",
+				"end": "tools/portforward/portforward.go:55:6",
+				"message": "exported type PortForwarder at tools/portforward/portforward.go:55:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:169:88",
+				"end": "tools/portforward/portforward.go:169:88",
+				"message": "parameter/return channel at tools/portforward/portforward.go:169:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:169:88",
+				"end": "tools/portforward/portforward.go:169:88",
+				"message": "parameter/return channel at tools/portforward/portforward.go:169:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:175:100",
+				"end": "tools/portforward/portforward.go:175:100",
+				"message": "parameter/return channel at tools/portforward/portforward.go:175:100 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:175:100",
+				"end": "tools/portforward/portforward.go:175:100",
+				"message": "parameter/return channel at tools/portforward/portforward.go:175:100 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:182:119",
+				"end": "tools/portforward/portforward.go:182:119",
+				"message": "parameter/return channel at tools/portforward/portforward.go:182:119 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:182:119",
+				"end": "tools/portforward/portforward.go:182:119",
+				"message": "parameter/return channel at tools/portforward/portforward.go:182:119 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:187:125",
+				"end": "tools/portforward/portforward.go:187:125",
+				"message": "parameter/return channel at tools/portforward/portforward.go:187:125 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:187:125",
+				"end": "tools/portforward/portforward.go:187:125",
+				"message": "parameter/return channel at tools/portforward/portforward.go:187:125 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:218:131",
+				"end": "tools/portforward/portforward.go:218:131",
+				"message": "parameter/return channel at tools/portforward/portforward.go:218:131 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:218:131",
+				"end": "tools/portforward/portforward.go:218:131",
+				"message": "parameter/return channel at tools/portforward/portforward.go:218:131 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:224:137",
+				"end": "tools/portforward/portforward.go:224:137",
+				"message": "parameter/return channel at tools/portforward/portforward.go:224:137 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:224:137",
+				"end": "tools/portforward/portforward.go:224:137",
+				"message": "parameter/return channel at tools/portforward/portforward.go:224:137 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/portforward [k8s.io/client-go/tools/portforward.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "tools/portforward/portforward.go:55:6",
+				"end": "tools/portforward/portforward.go:55:6",
+				"message": "exported type PortForwarder at tools/portforward/portforward.go:55:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:169:88",
+				"end": "tools/portforward/portforward.go:169:88",
+				"message": "parameter/return channel at tools/portforward/portforward.go:169:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:169:88",
+				"end": "tools/portforward/portforward.go:169:88",
+				"message": "parameter/return channel at tools/portforward/portforward.go:169:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:175:100",
+				"end": "tools/portforward/portforward.go:175:100",
+				"message": "parameter/return channel at tools/portforward/portforward.go:175:100 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:175:100",
+				"end": "tools/portforward/portforward.go:175:100",
+				"message": "parameter/return channel at tools/portforward/portforward.go:175:100 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:182:119",
+				"end": "tools/portforward/portforward.go:182:119",
+				"message": "parameter/return channel at tools/portforward/portforward.go:182:119 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:182:119",
+				"end": "tools/portforward/portforward.go:182:119",
+				"message": "parameter/return channel at tools/portforward/portforward.go:182:119 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:187:125",
+				"end": "tools/portforward/portforward.go:187:125",
+				"message": "parameter/return channel at tools/portforward/portforward.go:187:125 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:187:125",
+				"end": "tools/portforward/portforward.go:187:125",
+				"message": "parameter/return channel at tools/portforward/portforward.go:187:125 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:218:131",
+				"end": "tools/portforward/portforward.go:218:131",
+				"message": "parameter/return channel at tools/portforward/portforward.go:218:131 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:218:131",
+				"end": "tools/portforward/portforward.go:218:131",
+				"message": "parameter/return channel at tools/portforward/portforward.go:218:131 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:224:137",
+				"end": "tools/portforward/portforward.go:224:137",
+				"message": "parameter/return channel at tools/portforward/portforward.go:224:137 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/portforward/portforward.go:224:137",
+				"end": "tools/portforward/portforward.go:224:137",
+				"message": "parameter/return channel at tools/portforward/portforward.go:224:137 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/record": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "tools/record/event.go:327:10",
+				"end": "tools/record/event.go:327:10",
+				"message": "select at tools/record/event.go:323:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "tools/record/event.go:327:10",
+				"end": "tools/record/event.go:327:10",
+				"message": "select at tools/record/event.go:323:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-08",
+				"posn": "tools/record/events_cache.go:190:2",
+				"end": "tools/record/events_cache.go:190:2",
+				"message": "exported struct EventAggregator embeds sync.RWMutex anonymously at tools/record/events_cache.go:190:2, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/record [k8s.io/client-go/tools/record.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-18",
+				"posn": "tools/record/event.go:327:10",
+				"end": "tools/record/event.go:327:10",
+				"message": "select at tools/record/event.go:323:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-18",
+				"posn": "tools/record/event.go:327:10",
+				"end": "tools/record/event.go:327:10",
+				"message": "select at tools/record/event.go:323:3 calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop"
+			},
+			{
+				"category": "concurrency-08",
+				"posn": "tools/record/events_cache.go:190:2",
+				"end": "tools/record/events_cache.go:190:2",
+				"message": "exported struct EventAggregator embeds sync.RWMutex anonymously at tools/record/events_cache.go:190:2, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/remotecommand": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "tools/remotecommand/errorstream.go:36:88",
+				"end": "tools/remotecommand/errorstream.go:36:88",
+				"message": "parameter/return channel at tools/remotecommand/errorstream.go:36:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/remotecommand/errorstream.go:36:88",
+				"end": "tools/remotecommand/errorstream.go:36:88",
+				"message": "parameter/return channel at tools/remotecommand/errorstream.go:36:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		],
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "tools/remotecommand/websocket.go:479:3",
+				"end": "tools/remotecommand/websocket.go:479:3",
+				"message": "err is logged via Error and then returned at tools/remotecommand/websocket.go:481:4 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"k8s.io/client-go/tools/remotecommand [k8s.io/client-go/tools/remotecommand.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-04",
+				"posn": "tools/remotecommand/errorstream.go:36:88",
+				"end": "tools/remotecommand/errorstream.go:36:88",
+				"message": "parameter/return channel at tools/remotecommand/errorstream.go:36:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			},
+			{
+				"category": "concurrency-04",
+				"posn": "tools/remotecommand/errorstream.go:36:88",
+				"end": "tools/remotecommand/errorstream.go:36:88",
+				"message": "parameter/return channel at tools/remotecommand/errorstream.go:36:88 has no direction (chan T) — declare chan\u003c- T or \u003c-chan T"
+			}
+		],
+		"errors": [
+			{
+				"category": "errors-04",
+				"posn": "tools/remotecommand/websocket.go:479:3",
+				"end": "tools/remotecommand/websocket.go:479:3",
+				"message": "err is logged via Error and then returned at tools/remotecommand/websocket.go:481:4 — pick one: log, or wrap and return, never both"
+			}
+		]
+	},
+	"k8s.io/client-go/util/connrotation": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "util/connrotation/connrotation.go:62:6",
+				"end": "util/connrotation/connrotation.go:62:6",
+				"message": "exported type ConnectionTracker at util/connrotation/connrotation.go:62:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/util/connrotation [k8s.io/client-go/util/connrotation.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "util/connrotation/connrotation.go:62:6",
+				"end": "util/connrotation/connrotation.go:62:6",
+				"message": "exported type ConnectionTracker at util/connrotation/connrotation.go:62:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/util/flowcontrol": {
+		"concurrency": [
+			{
+				"category": "concurrency-08",
+				"posn": "util/flowcontrol/backoff.go:33:2",
+				"end": "util/flowcontrol/backoff.go:33:2",
+				"message": "exported struct Backoff embeds sync.RWMutex anonymously at util/flowcontrol/backoff.go:33:2, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"
+			}
+		]
+	},
+	"k8s.io/client-go/util/flowcontrol [k8s.io/client-go/util/flowcontrol.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-08",
+				"posn": "util/flowcontrol/backoff.go:33:2",
+				"end": "util/flowcontrol/backoff.go:33:2",
+				"message": "exported struct Backoff embeds sync.RWMutex anonymously at util/flowcontrol/backoff.go:33:2, promoting Lock/Unlock (or Add/Done/Wait) to its public API — use a named field instead"
+			}
+		]
+	},
+	"k8s.io/client-go/util/workqueue": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "util/workqueue/default_rate_limiters.go:84:6",
+				"end": "util/workqueue/default_rate_limiters.go:84:6",
+				"message": "exported type TypedItemExponentialFailureRateLimiter at util/workqueue/default_rate_limiters.go:84:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "util/workqueue/default_rate_limiters.go:156:6",
+				"end": "util/workqueue/default_rate_limiters.go:156:6",
+				"message": "exported type TypedItemFastSlowRateLimiter at util/workqueue/default_rate_limiters.go:156:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "util/workqueue/queue.go:190:6",
+				"end": "util/workqueue/queue.go:190:6",
+				"message": "exported type Typed at util/workqueue/queue.go:190:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"k8s.io/client-go/util/workqueue [k8s.io/client-go/util/workqueue.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "util/workqueue/default_rate_limiters.go:84:6",
+				"end": "util/workqueue/default_rate_limiters.go:84:6",
+				"message": "exported type TypedItemExponentialFailureRateLimiter at util/workqueue/default_rate_limiters.go:84:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "util/workqueue/default_rate_limiters.go:156:6",
+				"end": "util/workqueue/default_rate_limiters.go:156:6",
+				"message": "exported type TypedItemFastSlowRateLimiter at util/workqueue/default_rate_limiters.go:156:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			},
+			{
+				"category": "concurrency-10",
+				"posn": "util/workqueue/queue.go:190:6",
+				"end": "util/workqueue/queue.go:190:6",
+				"message": "exported type Typed at util/workqueue/queue.go:190:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	}
+}

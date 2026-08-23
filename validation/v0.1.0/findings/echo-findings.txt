@@ -1,0 +1,53 @@
+# checkout HEAD: 4ec116dc9b5bff1da7513c0dc86095d0e8ce9654
+# scan root: .
+# patterns: ./...
+# selected Go: go version go1.26.7 darwin/arm64
+# agentic-go HEAD: 0e60cd3439a88d93e5bcb24cdd20a0aa1d280db7
+# tool version: $AGENTIC_GO_VET version devel comments-go-here buildID=22ccbe9e74a8111ced85fa4789f6cfc15e20323dc70568c7ab05aabc736ed8ce
+# agentic-go-vet: $AGENTIC_GO_VET
+# command: $AGENTIC_GO_VET -json ./...
+# stderr:
+
+# stdout:
+{
+	"github.com/labstack/echo/v5": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "context.go:63:6",
+				"end": "context.go:63:6",
+				"message": "exported type Context at context.go:63:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"github.com/labstack/echo/v5 [github.com/labstack/echo/v5.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "context.go:63:6",
+				"end": "context.go:63:6",
+				"message": "exported type Context at context.go:63:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"github.com/labstack/echo/v5/middleware": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "middleware/rate_limiter.go:170:6",
+				"end": "middleware/rate_limiter.go:170:6",
+				"message": "exported type RateLimiterMemoryStore at middleware/rate_limiter.go:170:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	},
+	"github.com/labstack/echo/v5/middleware [github.com/labstack/echo/v5/middleware.test]": {
+		"concurrency": [
+			{
+				"category": "concurrency-10",
+				"posn": "middleware/rate_limiter.go:170:6",
+				"end": "middleware/rate_limiter.go:170:6",
+				"message": "exported type RateLimiterMemoryStore at middleware/rate_limiter.go:170:6 has synchronization fields but its doc comment does not state whether it is safe for concurrent use"
+			}
+		]
+	}
+}
