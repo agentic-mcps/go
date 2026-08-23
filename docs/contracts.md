@@ -346,7 +346,11 @@ func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer
         return finding.AuditResult{}, fmt.Errorf("loading packages for %s: %w", pattern, err)
     }
     pkgs = dedupeTestVariants(pkgs) // see below
-    graph, err := checker.Analyze(analyzers, pkgs, nil)
+    // Sequential keeps analyzer predicates on this goroutine so the recovery
+    // boundary above can actually intercept a panic. With the default parallel
+    // driver, a predicate panic occurs in a worker goroutine and crashes the
+    // server before Run's defer can observe it.
+    graph, err := checker.Analyze(analyzers, pkgs, &checker.Options{Sequential: true})
     if err != nil {
         return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", pattern, err)
     }
