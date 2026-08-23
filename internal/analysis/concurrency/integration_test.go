@@ -27,12 +27,15 @@ func TestFixtureRules(t *testing.T) {
 		{"concurrency-12", "rule12"},
 		{"concurrency-14", "rule14"},
 		{"concurrency-15", "rule15"},
+		{"concurrency-17", "rule17"},
+		{"concurrency-18", "rule18"},
+		{"concurrency-18", "rule18ticker"},
 		{"concurrency-04", "rule04"},
 		{"concurrency-05", "rule05"},
 		{"concurrency-09", "rule09"},
 		{"concurrency-20", "rule20"},
 	} {
-		t.Run(tc.rule, func(t *testing.T) {
+		t.Run(tc.dir, func(t *testing.T) {
 			dir := filepath.Join("testdata", tc.dir)
 			result, err := audit.Run(context.Background(), dir, "./...", []*analysis.Analyzer{concurrency.Analyzer})
 			if err != nil {

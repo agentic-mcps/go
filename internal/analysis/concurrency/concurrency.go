@@ -25,6 +25,8 @@ func init() {
 	astutil.RegisterRule("concurrency-12", "manual_waitgroup_error_channel", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-14", "pool_put_without_reset", finding.SeverityError)
 	astutil.RegisterRule("concurrency-15", "compound_state_multiple_atomics", finding.SeverityWarning)
+	astutil.RegisterRule("concurrency-17", "undocumented_multi_lock_order", finding.SeverityWarning)
+	astutil.RegisterRule("concurrency-18", "timer_ticker_lifecycle", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-04", "undirected_channel_signature", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-05", "async_goroutine_wrapper", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-09", "goroutine_in_init", finding.SeverityWarning)
@@ -45,6 +47,7 @@ func run(pass *analysis.Pass) (any, error) {
 	}
 	atomicByType := make(map[string][]*ast.Field)
 	for _, file := range pass.Files {
+		comments := ast.NewCommentMap(pass.Fset, file, file.Comments)
 		for _, decl := range file.Decls {
 			gd, ok := decl.(*ast.GenDecl)
 			if !ok || gd.Tok != token.TYPE {
@@ -64,7 +67,56 @@ func run(pass *analysis.Pass) (any, error) {
 				}
 			}
 		}
+		ast.Inspect(file, func(n ast.Node) bool {
+			var body *ast.BlockStmt
+			switch fn := n.(type) {
+			case *ast.FuncDecl:
+				body = fn.Body
+			case *ast.FuncLit:
+				body = fn.Body
+			}
+			if body != nil {
+				if first, recvs := undocumentedMultiLock(pass, comments, body); first != nil {
+					astutil.Report(pass, first.Pos(), "concurrency-17", "function at %s acquires %d distinct locks (%s) with no comment documenting acquisition order — mismatched order across call sites deadlocks under load", pass.Fset.Position(body.Pos()), len(recvs), strings.Join(recvs, ", "))
+				}
+			}
+			return true
+		})
+		ast.Inspect(file, func(n ast.Node) bool {
+			as, ok := n.(*ast.AssignStmt)
+			if !ok {
+				return true
+			}
+			body := enclosingFuncBody(file, as)
+			if body != nil && tickerOrTimerNeverStopped(pass, as, body) {
+				call := as.Rhs[0].(*ast.CallExpr)
+				sel := call.Fun.(*ast.SelectorExpr)
+				astutil.Report(pass, as.Pos(), "concurrency-18", "%s created via time.%s at %s but never Stopped", types.ExprString(as.Lhs[0]), sel.Sel.Name, pass.Fset.Position(as.Pos()))
+			}
+			return true
+		})
 	}
+	ins.WithStack(nil, func(n ast.Node, _ bool, stack []ast.Node) bool {
+		sel, ok := n.(*ast.SelectStmt)
+		if !ok {
+			return true
+		}
+		inLoop := false
+		for i := len(stack) - 2; i >= 0; i-- {
+			switch stack[i].(type) {
+			case *ast.FuncLit, *ast.FuncDecl:
+				i = -1
+			case *ast.ForStmt, *ast.RangeStmt:
+				inLoop = true
+			}
+		}
+		if inLoop {
+			for _, call := range selectTimeAfterInLoop(pass, sel) {
+				astutil.Report(pass, call.Pos(), "concurrency-18", "select at %s calls time.After(...) inside a loop — each iteration allocates a timer the runtime can't collect until it fires; reuse a time.Timer with Reset or a time.Ticker you Stop", pass.Fset.Position(sel.Pos()))
+			}
+		}
+		return true
+	})
 	for _, file := range pass.Files {
 		comments := ast.NewCommentMap(pass.Fset, file, file.Comments)
 		ast.Inspect(file, func(n ast.Node) bool {
@@ -174,6 +226,111 @@ func run(pass *analysis.Pass) (any, error) {
 		return true
 	})
 	return nil, nil
+}
+
+func undocumentedMultiLock(pass *analysis.Pass, cmap ast.CommentMap, body *ast.BlockStmt) (ast.Stmt, []string) {
+	seen := map[string]bool{}
+	var first ast.Stmt
+	var recvs []string
+	ast.Inspect(body, func(n ast.Node) bool {
+		if n != body {
+			if _, nested := n.(*ast.FuncLit); nested {
+				return false
+			}
+		}
+		stmt, ok := n.(ast.Stmt)
+		if !ok {
+			return true
+		}
+		recv, _, ok := lockCall(stmt)
+		if !ok || seen[recv] {
+			return true
+		}
+		typ := astutil.TypeString(pass, receiverExpr(stmt))
+		if !strings.Contains(typ, "sync.Mutex") && !strings.Contains(typ, "sync.RWMutex") {
+			return true
+		}
+		seen[recv] = true
+		recvs = append(recvs, recv)
+		if first == nil {
+			first = stmt
+		}
+		return true
+	})
+	if len(recvs) < 2 || len(cmap[first]) > 0 {
+		return nil, nil
+	}
+	return first, recvs
+}
+func selectTimeAfterInLoop(pass *analysis.Pass, sel *ast.SelectStmt) []*ast.CallExpr {
+	var out []*ast.CallExpr
+	for _, s := range sel.Body.List {
+		cc := s.(*ast.CommClause)
+		if c := recvCallFromComm(cc.Comm); c != nil && astutil.IsPkgFunc(pass, c, "time", "After") {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+func recvCallFromComm(n ast.Stmt) *ast.CallExpr {
+	switch x := n.(type) {
+	case *ast.ExprStmt:
+		if u, ok := x.X.(*ast.UnaryExpr); ok && u.Op == token.ARROW {
+			c, _ := u.X.(*ast.CallExpr)
+			return c
+		}
+	case *ast.AssignStmt:
+		if len(x.Rhs) == 1 {
+			if u, ok := x.Rhs[0].(*ast.UnaryExpr); ok && u.Op == token.ARROW {
+				c, _ := u.X.(*ast.CallExpr)
+				return c
+			}
+		}
+	}
+	return nil
+}
+func tickerOrTimerNeverStopped(pass *analysis.Pass, as *ast.AssignStmt, body *ast.BlockStmt) bool {
+	if len(as.Rhs) != 1 || len(as.Lhs) != 1 {
+		return false
+	}
+	c, ok := as.Rhs[0].(*ast.CallExpr)
+	if !ok || (!astutil.IsPkgFunc(pass, c, "time", "NewTicker") && !astutil.IsPkgFunc(pass, c, "time", "NewTimer")) {
+		return false
+	}
+	name := types.ExprString(as.Lhs[0])
+	stopped := false
+	ast.Inspect(body, func(n ast.Node) bool {
+		c, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		s, ok := c.Fun.(*ast.SelectorExpr)
+		if ok && s.Sel.Name == "Stop" && types.ExprString(s.X) == name {
+			stopped = true
+		}
+		return true
+	})
+	return !stopped
+}
+func enclosingFuncBody(file *ast.File, target ast.Node) *ast.BlockStmt {
+	var found *ast.BlockStmt
+	ast.Inspect(file, func(n ast.Node) bool {
+		if found != nil {
+			return false
+		}
+		if fd, ok := n.(*ast.FuncDecl); ok && fd.Body != nil {
+			ast.Inspect(fd.Body, func(x ast.Node) bool {
+				if x == target {
+					found = fd.Body
+					return false
+				}
+				return true
+			})
+			return found == nil
+		}
+		return true
+	})
+	return found
 }
 
 func manualWaitGroupErrChanPattern(pass *analysis.Pass, body *ast.BlockStmt) (bool, int) {
