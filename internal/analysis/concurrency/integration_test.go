@@ -4,14 +4,28 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/analysis/astutil"
 	"github.com/ashwingopalsamy/agentic-go/internal/analysis/concurrency"
 	"github.com/ashwingopalsamy/agentic-go/internal/audit"
 	"github.com/ashwingopalsamy/agentic-go/internal/finding"
 	"golang.org/x/tools/go/analysis"
 )
+
+func TestRuleSet(t *testing.T) {
+	want := []string{
+		"concurrency-01", "concurrency-02", "concurrency-03", "concurrency-04", "concurrency-05",
+		"concurrency-06", "concurrency-07", "concurrency-08", "concurrency-09", "concurrency-10",
+		"concurrency-12", "concurrency-14", "concurrency-15", "concurrency-17", "concurrency-18",
+		"concurrency-19", "concurrency-20",
+	}
+	if got := astutil.RulesInDomain("concurrency"); !slices.Equal(got, want) {
+		t.Fatalf("registered rules = %v, want %v", got, want)
+	}
+}
 
 func TestFixtureRules(t *testing.T) {
 	for _, tc := range []struct {
@@ -29,6 +43,9 @@ func TestFixtureRules(t *testing.T) {
 		{"concurrency-15", "rule15"},
 		{"concurrency-17", "rule17"},
 		{"concurrency-18", "rule18"},
+		{"concurrency-02", "rule02"},
+		{"concurrency-19", "rule19"},
+		{"concurrency-19", "rule19defer"},
 		{"concurrency-18", "rule18ticker"},
 		{"concurrency-04", "rule04"},
 		{"concurrency-05", "rule05"},
@@ -56,7 +73,7 @@ func TestFixtureRules(t *testing.T) {
 				wantSeverity = finding.SeverityError
 			} else if tc.rule == "concurrency-10" {
 				wantSeverity = finding.SeverityInfo
-			} else if tc.rule == "concurrency-14" {
+			} else if tc.rule == "concurrency-14" || tc.rule == "concurrency-02" || tc.rule == "concurrency-19" {
 				wantSeverity = finding.SeverityError
 			}
 			if got.Rule != tc.rule || got.Severity != wantSeverity {

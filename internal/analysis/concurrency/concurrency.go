@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"go/version"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -27,6 +29,8 @@ func init() {
 	astutil.RegisterRule("concurrency-15", "compound_state_multiple_atomics", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-17", "undocumented_multi_lock_order", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-18", "timer_ticker_lifecycle", finding.SeverityWarning)
+	astutil.RegisterRule("concurrency-02", "missing_stop_close_shutdown", finding.SeverityError)
+	astutil.RegisterRule("concurrency-19", "loop_variable_capture", finding.SeverityError)
 	astutil.RegisterRule("concurrency-04", "undirected_channel_signature", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-05", "async_goroutine_wrapper", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-09", "goroutine_in_init", finding.SeverityWarning)
@@ -225,7 +229,177 @@ func run(pass *analysis.Pass) (any, error) {
 		}
 		return true
 	})
+	methodSet := map[string]map[string]bool{}
+	spawning := map[string]*ast.FuncDecl{}
+	for _, file := range pass.Files {
+		if strings.HasSuffix(pass.Fset.Position(file.Pos()).Filename, "_test.go") {
+			continue
+		}
+		ast.Inspect(file, func(n ast.Node) bool {
+			fd, ok := n.(*ast.FuncDecl)
+			if !ok || fd.Recv == nil || len(fd.Recv.List) == 0 {
+				return true
+			}
+			tn := receiverTypeName(fd.Recv.List[0].Type)
+			if tn == "" {
+				return true
+			}
+			if methodSet[tn] == nil {
+				methodSet[tn] = map[string]bool{}
+			}
+			methodSet[tn][fd.Name.Name] = true
+			if fd.Body != nil && containsGoStmt(fd.Body) && spawning[tn] == nil {
+				spawning[tn] = fd
+			}
+			return true
+		})
+	}
+	for tn, fd := range spawning {
+		m := methodSet[tn]
+		if !m["Stop"] && !m["Close"] && !m["Shutdown"] {
+			astutil.Report(pass, fd.Pos(), "concurrency-02", "type %s spawns a background goroutine in %s but declares no Stop/Close/Shutdown method", tn, fd.Name.Name)
+		}
+	}
+	if version.Compare(pass.Pkg.GoVersion(), "go1.22") < 0 {
+		for _, file := range pass.Files {
+			ast.Inspect(file, func(n ast.Node) bool {
+				var loop ast.Node
+				var body *ast.BlockStmt
+				switch x := n.(type) {
+				case *ast.RangeStmt:
+					loop = x
+					body = x.Body
+				case *ast.ForStmt:
+					loop = x
+					body = x.Body
+				}
+				if body != nil {
+					for stmt, bad := range loopVarCaptureViolations(pass, loopDefinedVars(pass, loop), body) {
+						for _, id := range bad {
+							astutil.Report(pass, stmt.Pos(), "concurrency-19", "%s at %s is captured by reference in a go/defer closure inside a loop — this target's go.mod declares a pre-1.22 Go version, so every iteration's closure can observe the loop's final value instead of its own; pass it as an explicit argument or shadow it with %s := %s before the closure", id.Name, pass.Fset.Position(stmt.Pos()), id.Name, id.Name)
+						}
+					}
+				}
+				return true
+			})
+		}
+	}
 	return nil, nil
+}
+
+func receiverTypeName(e ast.Expr) string {
+	for {
+		switch x := e.(type) {
+		case *ast.StarExpr:
+			e = x.X
+		case *ast.IndexExpr:
+			e = x.X
+		case *ast.IndexListExpr:
+			e = x.X
+		default:
+			if id, ok := e.(*ast.Ident); ok {
+				return id.Name
+			}
+			return ""
+		}
+	}
+}
+func loopDefinedVars(p *analysis.Pass, l ast.Node) []types.Object {
+	var ids []*ast.Ident
+	switch x := l.(type) {
+	case *ast.RangeStmt:
+		if x.Tok != token.DEFINE {
+			return nil
+		}
+		if i, ok := x.Key.(*ast.Ident); ok && i.Name != "_" {
+			ids = append(ids, i)
+		}
+		if i, ok := x.Value.(*ast.Ident); ok && i.Name != "_" {
+			ids = append(ids, i)
+		}
+	case *ast.ForStmt:
+		a, ok := x.Init.(*ast.AssignStmt)
+		if !ok || a.Tok != token.DEFINE {
+			return nil
+		}
+		for _, q := range a.Lhs {
+			if i, ok := q.(*ast.Ident); ok && i.Name != "_" {
+				ids = append(ids, i)
+			}
+		}
+	}
+	var out []types.Object
+	for _, i := range ids {
+		if o := p.TypesInfo.Defs[i]; o != nil {
+			out = append(out, o)
+		}
+	}
+	return out
+}
+func loopVarCaptureViolations(p *analysis.Pass, vars []types.Object, b *ast.BlockStmt) map[ast.Stmt][]*ast.Ident {
+	out := map[ast.Stmt][]*ast.Ident{}
+	shadowed := make(map[types.Object]bool)
+	for _, st := range b.List {
+		for _, variable := range shadowedLoopVars(p, st, vars) {
+			shadowed[variable] = true
+		}
+		if len(shadowed) == len(vars) {
+			continue
+		}
+		var lit *ast.FuncLit
+		switch x := st.(type) {
+		case *ast.GoStmt:
+			lit, _ = x.Call.Fun.(*ast.FuncLit)
+		case *ast.DeferStmt:
+			lit, _ = x.Call.Fun.(*ast.FuncLit)
+		}
+		if lit != nil {
+			bad := capturedLoopVars(p, lit, vars)
+			bad = slices.DeleteFunc(bad, func(id *ast.Ident) bool {
+				return shadowed[p.TypesInfo.Uses[id]]
+			})
+			if len(bad) > 0 {
+				out[st] = bad
+			}
+		}
+	}
+	return out
+}
+func shadowedLoopVars(p *analysis.Pass, st ast.Stmt, vars []types.Object) []types.Object {
+	a, ok := st.(*ast.AssignStmt)
+	if !ok || a.Tok != token.DEFINE {
+		return nil
+	}
+	var shadowed []types.Object
+	for i := 0; i < len(a.Lhs) && i < len(a.Rhs); i++ {
+		lhs, leftOK := a.Lhs[i].(*ast.Ident)
+		rhs, rightOK := a.Rhs[i].(*ast.Ident)
+		if !leftOK || !rightOK || lhs.Name != rhs.Name {
+			continue
+		}
+		for _, variable := range vars {
+			if p.TypesInfo.Uses[rhs] == variable && p.TypesInfo.Defs[lhs] != variable {
+				shadowed = append(shadowed, variable)
+			}
+		}
+	}
+	return shadowed
+}
+func capturedLoopVars(p *analysis.Pass, l *ast.FuncLit, vars []types.Object) []*ast.Ident {
+	var out []*ast.Ident
+	ast.Inspect(l.Body, func(n ast.Node) bool {
+		i, ok := n.(*ast.Ident)
+		if !ok {
+			return true
+		}
+		for _, v := range vars {
+			if p.TypesInfo.Uses[i] == v {
+				out = append(out, i)
+			}
+		}
+		return true
+	})
+	return out
 }
 
 func undocumentedMultiLock(pass *analysis.Pass, cmap ast.CommentMap, body *ast.BlockStmt) (ast.Stmt, []string) {
