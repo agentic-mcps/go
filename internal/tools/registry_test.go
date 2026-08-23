@@ -39,6 +39,51 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if len(listed.Tools) != 7 {
 		t.Fatalf("len(tools/list) = %d, want 7", len(listed.Tools))
 	}
+
+	resources, err := clientSession.ListResources(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resources.Resources) != 4 {
+		t.Fatalf("len(resources/list) = %d, want 4", len(resources.Resources))
+	}
+	wantResources := map[string]bool{
+		"agentic-go://module":         false,
+		"agentic-go://packages":       false,
+		"agentic-go://analysis-rules": false,
+		traceSummaryURI:               false,
+	}
+	for _, resource := range resources.Resources {
+		if _, ok := wantResources[resource.URI]; !ok {
+			t.Fatalf("unexpected resource %q", resource.URI)
+		}
+		wantResources[resource.URI] = true
+	}
+	for uri, found := range wantResources {
+		if !found {
+			t.Errorf("resource %q is not registered", uri)
+		}
+	}
+
+	prompts, err := clientSession.ListPrompts(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(prompts.Prompts) != 4 {
+		t.Fatalf("len(prompts/list) = %d, want 4", len(prompts.Prompts))
+	}
+	wantPrompts := map[string]bool{"audit-package": false, "pre-commit-check": false, "bisect-flake": false, "verify-change": false}
+	for _, prompt := range prompts.Prompts {
+		if _, ok := wantPrompts[prompt.Name]; !ok {
+			t.Fatalf("unexpected prompt %q", prompt.Name)
+		}
+		wantPrompts[prompt.Name] = true
+	}
+	for name, found := range wantPrompts {
+		if !found {
+			t.Errorf("prompt %q is not registered", name)
+		}
+	}
 	for _, name := range []string{"go_audit_concurrency", "go_audit_errors"} {
 		tool := listedTool(t, listed.Tools, name)
 		annotations := tool.Annotations
