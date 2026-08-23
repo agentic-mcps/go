@@ -78,8 +78,8 @@ func TestWorkspaceResourcesReturnReducedFreshJSON(t *testing.T) {
 	if decodeErr := json.Unmarshal([]byte(rules.Contents[0].Text), &manifest); decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
-	if len(manifest) != 34 {
-		t.Fatalf("rules = %d, want 34", len(manifest))
+	if len(manifest) != 20 {
+		t.Fatalf("rules = %d, want 20", len(manifest))
 	}
 	if manifest[0].SourceDoc == "" {
 		t.Fatalf("rules = %+v", manifest)

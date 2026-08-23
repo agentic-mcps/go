@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const smokePackage = "./rule01"
+const smokePackage = "./rule08"
 
 func TestVetBinarySmoke(t *testing.T) {
 	repoRoot, err := filepath.Abs(filepath.Join("..", ".."))
@@ -36,7 +36,7 @@ func TestVetBinarySmoke(t *testing.T) {
 	if !errors.As(err, &exitErr) || exitErr.ExitCode() != 3 {
 		t.Fatalf("plain diagnostic exit = %v, want 3\n%s", err, output)
 	}
-	if !strings.Contains(string(output), "goroutine spawned") {
+	if !strings.Contains(string(output), "struct embeds") {
 		t.Fatalf("plain output missing expected diagnostic:\n%s", output)
 	}
 
@@ -52,8 +52,8 @@ func TestVetBinarySmoke(t *testing.T) {
 	if err := json.Unmarshal(output, &report); err != nil {
 		t.Fatalf("decode JSON diagnostics: %v\n%s", err, output)
 	}
-	if !hasCategory(report, "concurrency", "concurrency-01") {
-		t.Fatalf("JSON output missing concurrency-01 category:\n%s", output)
+	if !hasCategory(report, "concurrency", "concurrency-08") {
+		t.Fatalf("JSON output missing concurrency-08 category:\n%s", output)
 	}
 }
 

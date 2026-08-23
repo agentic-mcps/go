@@ -77,20 +77,20 @@ by that one rule and adding them here would force readers to cross-reference).
 
 | Rule ID | Source rule (paraphrased) | Status |
 |---|---|---|
-| concurrency-01 | Never fire-and-forget a goroutine | Implemented |
+| concurrency-01 | Never fire-and-forget a goroutine | **Disabled (v0.1.0; calibrated)** |
 | concurrency-02 | Provide Stop/Close/Shutdown for a type that spawns goroutines | Implemented |
-| concurrency-03 | Channel buffer size must be 0 or 1, else a justifying comment | Implemented |
+| concurrency-03 | Channel buffer size must be 0 or 1, else a justifying comment | **Disabled (v0.1.0; calibrated)** |
 | concurrency-04 | Declare channel direction (`chan<-`/`<-chan`) in signatures | Implemented |
 | concurrency-05 | No `XxxAsync` functions that fire an internal goroutine | Implemented |
 | concurrency-06 | Never `context.Background()`/`context.TODO()` inside a spawned goroutine | Implemented |
-| concurrency-07 | `defer mu.Unlock()` immediately after `mu.Lock()`, nothing between | Implemented |
+| concurrency-07 | `defer mu.Unlock()` immediately after `mu.Lock()`, nothing between | **Disabled (v0.1.0; calibrated)** |
 | concurrency-08 | Never embed `sync.Mutex`/`sync.RWMutex`/`sync.WaitGroup` in a struct | Implemented |
 | concurrency-09 | Never spawn goroutines in `init()` | Implemented |
 | concurrency-10 | Document whether a type is concurrency-safe | Implemented (narrowed — see below) |
 | concurrency-11 | Prefer context cancellation over `done` channels for stop signalling | **Excluded** |
 | concurrency-12 | Use `errgroup.Group` for coordinated goroutines that must all succeed | Implemented (detects the hand-rolled anti-pattern) |
 | concurrency-13 | Run `go test -race` in CI; never merge a race | **Excluded** |
-| concurrency-14 | `sync.Pool`/`sync.Once` usage discipline; reset pooled items before `Put` | Implemented (narrowed — see below) |
+| concurrency-14 | `sync.Pool`/`sync.Once` usage discipline; reset pooled items before `Put` | **Disabled (v0.1.0; calibrated)** |
 | concurrency-15 | `sync.Map`/`sync/atomic` niches; compound state still needs a mutex | Implemented (narrowed — see below) |
 | concurrency-16 | Prefer `sync.Mutex` over `sync.RWMutex` unless reads dominate + long sections | **Excluded** |
 | concurrency-17 | Multi-lock acquisition: consistent global order, documented in a comment | Implemented (narrowed — see below) |
@@ -98,8 +98,11 @@ by that one rule and adding them here would force readers to cross-reference).
 | concurrency-19 | Loop variable captured by reference in a go/defer closure | Implemented (pass-added, not in source's 18 — version-gated, pre-1.22 targets only) |
 | concurrency-20 | `defer` directly inside a loop, unscoped | Implemented (pass-added, not in source's 18) |
 
-17 implemented, 3 excluded. Excluded rules get no `Finding.Rule` value, no
-fixture, no test — see each rule's "Why excluded" note in section 2.
+13 active, 4 disabled after external calibration, 3 excluded. Disabled rules
+retain their predicates and detailed fixture/design material below for future
+redesign, but emit no findings and are excluded from the active rule resource.
+Excluded rules get no `Finding.Rule` value, no fixture, no test — see each
+rule's "Why excluded" note in section 2.
 
 ---
 
@@ -107,6 +110,10 @@ fixture, no test — see each rule's "Why excluded" note in section 2.
 
 <a id="concurrency-01"></a>
 ### concurrency-01 — fire-and-forget goroutine
+
+**v0.1.0 status:** Disabled after external calibration. The predicate and
+fixture below are retained as future redesign documentation; this rule emits
+no findings and is not part of the active rule resource.
 
 **Source sentence:** "Never fire-and-forget a goroutine. Every goroutine needs a clear owner, a stop signal (context cancellation or done channel), and a waiter that confirms exit."
 
@@ -1047,9 +1054,9 @@ trap (unclosed file handles, unreleased locks, growing defer stack) that becomes
 the loop bound grows unbounded or long-running" — "not always wrong (a defer in a loop with small
 bounded iterations is often fine)."
 
-**Why checkable:** A `*ast.DeferStmt`'s nearest enclosing loop is a pure parent-chain question — no
-type information needed, only ancestor-node classification — so this rule is checkable at every Go
-version, unlike concurrency-19.
+**Why checkable:** A `*ast.DeferStmt`'s nearest enclosing loop is a parent-chain question. A small
+bounded `range` exclusion is also decidable for composite literals and integer constants, so the
+rule remains checkable at every supported Go version, unlike concurrency-19.
 
 **Node type(s):** `*ast.DeferStmt`, walked via an ancestor stack (`inspector.Inspector.WithStack` or
 an equivalent manual parent map — the same mechanism concurrency-18's `inLoop` already uses above).
@@ -1087,10 +1094,16 @@ case: a defer inside a closure that is stored or passed rather than invoked inli
 to that closure's own eventual call, never to the outer loop, so this exclusion is not IIFE-specific
 even though the fixture demonstrates the IIFE form.
 
+A `range` loop that is provably bounded to at most eight iterations is also excluded. The bound is
+provable when the range expression is a composite literal with at most eight elements or an
+integer constant from zero through eight. This calibration guard suppresses harmless small batches
+without guessing at identifiers, calls, or general loop conditions.
+
 **Finding.Message:** `"defer at %s is directly inside a %s loop with no enclosing function-literal scope — it accumulates until the enclosing function returns instead of running per iteration; wrap the loop body in an immediately-invoked closure (func(){ defer ... }()) or move the deferred call outside the loop"`
 
 **Finding.Severity:** `SeverityWarning` — not always wrong: a defer in a loop with a small, bounded
-iteration count is often fine, and this predicate cannot see the bound. It becomes a real leak
+iteration count is often fine, so the predicate suppresses bounds it can prove are at most eight.
+It becomes a real leak
 (unclosed file handles, unreleased locks, growing defer stack) once the loop's bound grows unbounded
 or long-running, so it is flagged as a resource-accumulation trap to review, not asserted as a
 proven defect — same tier as concurrency-03's buffer-size rule (same failure shape: gradual resource
@@ -1100,7 +1113,8 @@ growth, not an instant crash).
 
 ## 3. Fixture file spec
 
-Directory: `internal/tools/testdata/fixtures/audit-concurrency/`. One Go package per implemented
+The fixture material below is retained for future redesign; it is not the v0.1.0 active inventory.
+Directory: `internal/tools/testdata/fixtures/audit-concurrency/`. One Go package per documented
 rule (`rule01/` .. `rule10/`, `rule12/`, `rule14/`, `rule15/`, `rule17/` .. `rule20/` — 17
 directories; no `rule11`/`rule13`/`rule16` since those rules are excluded and never registered,
 so no fixture exists for an unregistered rule ID), per `contracts.md`'s Testdata fixture
@@ -1682,8 +1696,8 @@ func ProcessAllFixed(paths []string) error {
 ### Analysis subpackage — `internal/analysis/concurrency/concurrency.go`
 
 Pasted verbatim from `contracts.md`'s conformance block, substituting `concurrency` for
-`<domain>`. The 17 `RegisterRule` calls (one per implemented rule, matching section 1's table
-exactly) and the full dispatch across all 17 rules' predicates (18 dispatch arms, since
+`<domain>`. The 17 registrations comprise 13 active `RegisterRule` calls and four calibrated-off
+`RegisterDisabledRule` calls. The full dispatch across all 17 rules' predicates (18 arms, since
 concurrency-18 has two) from section 2 are the per-rule elaboration of the single representative
 `astutil.Report` call shown below — this is the shape, not a re-enumeration of section 2.
 
@@ -1702,11 +1716,12 @@ import (
 )
 
 func init() {
-	astutil.RegisterRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError)
-	// one RegisterRule call per rule in this domain (concurrency-01..10, concurrency-12,
-	// concurrency-14, concurrency-15, concurrency-17, concurrency-18, concurrency-19,
-	// concurrency-20 — matching section 1's table exactly; concurrency-11, concurrency-13,
-	// concurrency-16 are excluded and never registered). astutil.Report (below) panics at
+	// Calibrated-off rules retain metadata but emit no v0.1.0 findings.
+	astutil.RegisterDisabledRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError, "external calibration found joined goroutines coordinated through result channels")
+	// one RegisterRule call per active rule in this domain (concurrency-02, -04, -05,
+	// -06, -08, -09, -10, -12, -15, -17, -18, -19, -20 — matching section 1's
+	// active inventory), plus one RegisterDisabledRule call per calibrated-off rule.
+	// Excluded rules are never registered. astutil.Report suppresses calibrated-off rules and panics at
 	// analyzer-init/test time on an unregistered
 	// rule ID, by design: a typo'd rule ID must fail loud in `go test ./...`, never ship
 	// silently with an empty Severity.
@@ -1714,7 +1729,7 @@ func init() {
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "concurrency",
-	Doc:      "Audits goroutine-lifecycle, context-propagation, and lock/channel-safety conventions (concurrency.md rules concurrency-01..10, -12, -14, -15, -17, -18, -19, -20).",
+	Doc:      "Audits active goroutine-lifecycle, context-propagation, and lock/channel-safety conventions (concurrency.md rules concurrency-02, -04, -05, -06, -08, -09, -10, -12, -15, -17, -18, -19, -20).",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
@@ -1795,7 +1810,7 @@ func AuditConcurrencyHandler(ctx context.Context, req *mcp.CallToolRequest, in A
 func RegisterAuditConcurrency(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "go_audit_concurrency",
-		Description: "Runs the concurrency-01..10, -12, -14, -15, -17, -18, -19, -20 go/analysis passes (concurrency.md) over a package and returns findings.",
+		Description: "Runs the active concurrency-02, -04, -05, -06, -08, -09, -10, -12, -15, -17, -18, -19, -20 go/analysis passes (concurrency.md) over a package and returns findings.",
 		Annotations: &mcp.ToolAnnotations{
 			ReadOnlyHint:    true,
 			DestructiveHint: boolPtr(false),
@@ -1826,16 +1841,17 @@ func normalizeAuditConcurrencyInput(in *AuditConcurrencyInput) error {
 
 `resolveInWorkspace` is the single project-wide input-containment helper (`contracts.md`'s
 Input containment and resource limits) — not redeclared here. Every `Finding.Rule` value this tool
-can emit is one of the 17 implemented IDs in section 1: `concurrency-11`, `concurrency-13`, and
-`concurrency-16` never appear in output since `init()` above never registers them and no predicate
-in `run()` computes them.
+can emit is one of the 13 active IDs in section 1: calibrated-off IDs
+`concurrency-01`, `concurrency-03`, `concurrency-07`, and `concurrency-14` are registered as
+disabled metadata and suppressed by `astutil.Report`. Excluded IDs `concurrency-11`,
+`concurrency-13`, and `concurrency-16` are never registered or computed.
 
 ---
 
 ## 5. Verification
 
-One `TestAuditConcurrency_Rule<NN>` + one `TestAuditConcurrency_Rule<NN>_CompliantIsSilent` per
-implemented rule (17 pairs), a domain-wide rule-count test, and a standing exclusion guard, in
+The v0.1.0 suite runs positive and near-miss fixtures for the 13 active rules, asserts the four
+calibrated-off IDs separately, and keeps a standing exclusion guard. These checks live in
 `internal/analysis/concurrency/concurrency_test.go` (package `concurrency_test`) — these exercise
 `concurrency.Analyzer` directly via `astutil.RunFixture`, so they live beside the analyzer, not
 behind the MCP tool handler in `internal/tools/`. Every fixture reference below uses the one
@@ -1845,7 +1861,7 @@ canonical path form from `contracts.md`'s Testdata fixture layout —
 assertion below checks the real workspace-relative path, never `filepath.Base` and never "at that
 line" prose.
 
-Fully worked example (`concurrency-01`):
+Future-redesign test shape for calibrated-off `concurrency-01` (not run in v0.1.0):
 
 ```go
 func TestAuditConcurrency_Rule01(t *testing.T) {
@@ -1875,14 +1891,13 @@ func TestAuditConcurrency_Rule01_CompliantIsSilent(t *testing.T) {
 }
 ```
 
-Applied identically (same two-test shape, same scoped `_CompliantIsSilent` guard) for the
-remaining single-predicate rules, each asserting its one `Finding` at the documented violating
+The active single-predicate fixtures apply the same positive/near-miss expectations, each asserting
+its one `Finding` at the documented violating
 line in `fixtures/audit-concurrency/rule<NN>/violation.go`:
 
 | Rule | Violation line | Rule | Violation line | Rule | Violation line |
 |---|---|---|---|---|---|
-| concurrency-02 | 8 | concurrency-07 | 12 | concurrency-12 | 5 |
-| concurrency-03 | 5 | concurrency-08 | 7 | concurrency-14 | 14 |
+| concurrency-02 | 8 | concurrency-08 | 7 | concurrency-12 | 5 |
 | concurrency-04 | 4 | concurrency-09 | 5 | concurrency-15 | 11 |
 | concurrency-05 | 4 | concurrency-10 | 6 | concurrency-17 | 11 |
 | concurrency-06 | 9 | | | | |
@@ -1964,7 +1979,7 @@ Domain-wide rule count:
 
 ```go
 func TestAuditConcurrency_TotalRuleCount(t *testing.T) {
-	assert.Len(t, astutil.RulesInDomain("concurrency"), 17) // catches a rule silently dropped or added
+	assert.Len(t, astutil.RulesInDomain("concurrency"), 13) // catches an active rule silently dropped or added
 }
 ```
 

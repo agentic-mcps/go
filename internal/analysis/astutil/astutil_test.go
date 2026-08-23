@@ -11,10 +11,14 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-const testRule = "astutil-test-01"
+const (
+	testRule         = "astutil-test-01"
+	disabledTestRule = "astutil-test-02"
+)
 
 func init() {
 	RegisterRule(testRule, "test_rule", finding.SeverityWarning)
+	RegisterDisabledRule(disabledTestRule, "disabled_test_rule", finding.SeverityInfo, "calibration failure")
 }
 
 func TestRuleRegistryAndReport(t *testing.T) {
@@ -24,17 +28,32 @@ func TestRuleRegistryAndReport(t *testing.T) {
 	if got := RulesInDomain("astutil-test"); len(got) != 1 || got[0] != testRule {
 		t.Fatalf("RulesInDomain() = %v", got)
 	}
+	if got := DisabledRulesInDomain("astutil-test"); len(got) != 1 || got[0] != disabledTestRule {
+		t.Fatalf("DisabledRulesInDomain() = %v", got)
+	}
 	var diagnostic analysis.Diagnostic
-	pass := &analysis.Pass{Report: func(got analysis.Diagnostic) { diagnostic = got }}
+	emitted := false
+	pass := &analysis.Pass{Report: func(got analysis.Diagnostic) {
+		diagnostic = got
+		emitted = true
+	}}
 	Report(pass, token.Pos(1), testRule, "problem %d", 7)
 	if diagnostic.Category != testRule || diagnostic.Message != "problem 7" {
 		t.Fatalf("diagnostic = %+v", diagnostic)
 	}
+	emitted = false
+	Report(pass, token.Pos(1), disabledTestRule, "suppressed")
+	if emitted {
+		t.Fatal("disabled rule emitted a diagnostic")
+	}
 	assertPanics(t, func() { RegisterRule(testRule, "test_rule", finding.SeverityWarning) })
 	assertPanics(t, func() { RegisterRule("bad", "test_rule", finding.SeverityWarning) })
-	assertPanics(t, func() { RegisterRule("astutil-test-02", "Bad Name", finding.SeverityWarning) })
+	assertPanics(t, func() { RegisterRule("astutil-test-03", "Bad Name", finding.SeverityWarning) })
 	assertPanics(t, func() { RegisterRule("astutil-test-03", "bad_severity", finding.Severity("critical")) })
+	assertPanics(t, func() { RegisterDisabledRule("astutil-test-04", "disabled", finding.SeverityInfo, "") })
+	assertPanics(t, func() { RegisterRule(disabledTestRule, "disabled_test_rule", finding.SeverityInfo) })
 	assertPanics(t, func() { RuleSeverity("astutil-test-unknown") })
+	assertPanics(t, func() { Report(pass, token.Pos(1), "astutil-test-unknown", "unknown") })
 }
 
 func TestCallIdentityHelpers(t *testing.T) {

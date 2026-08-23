@@ -17,13 +17,16 @@ import (
 
 func TestRuleSet(t *testing.T) {
 	want := []string{
-		"concurrency-01", "concurrency-02", "concurrency-03", "concurrency-04", "concurrency-05",
-		"concurrency-06", "concurrency-07", "concurrency-08", "concurrency-09", "concurrency-10",
-		"concurrency-12", "concurrency-14", "concurrency-15", "concurrency-17", "concurrency-18",
+		"concurrency-02", "concurrency-04", "concurrency-05", "concurrency-06", "concurrency-08",
+		"concurrency-09", "concurrency-10", "concurrency-12", "concurrency-15", "concurrency-17", "concurrency-18",
 		"concurrency-19", "concurrency-20",
 	}
 	if got := astutil.RulesInDomain("concurrency"); !slices.Equal(got, want) {
 		t.Fatalf("registered rules = %v, want %v", got, want)
+	}
+	disabled := []string{"concurrency-01", "concurrency-03", "concurrency-07", "concurrency-14"}
+	if got := astutil.DisabledRulesInDomain("concurrency"); !slices.Equal(got, disabled) {
+		t.Fatalf("disabled rules = %v, want %v", got, disabled)
 	}
 }
 
@@ -32,14 +35,10 @@ func TestFixtureRules(t *testing.T) {
 		rule string
 		dir  string
 	}{
-		{"concurrency-03", "rule03"},
-		{"concurrency-01", "rule01"},
 		{"concurrency-06", "rule06"},
-		{"concurrency-07", "rule07"},
 		{"concurrency-08", "rule08"},
 		{"concurrency-10", "rule10"},
 		{"concurrency-12", "rule12"},
-		{"concurrency-14", "rule14"},
 		{"concurrency-15", "rule15"},
 		{"concurrency-17", "rule17"},
 		{"concurrency-18", "rule18"},

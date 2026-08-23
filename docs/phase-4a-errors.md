@@ -92,26 +92,29 @@ by that one rule and adding them here would force readers to cross-reference).
 | Rule ID | Source rule (paraphrased) | Status | Severity |
 |---|---|---|---|
 | `errors-01` | error is always the last return value | Implemented | Warning |
-| `errors-02` | exported functions return `error`, never a concrete type | Implemented | Error |
-| `errors-03` | happy path unindented after `if err != nil`, not nested in `else` | Implemented | Info |
+| `errors-02` | exported functions return `error`, never a concrete type | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-03` | happy path unindented after `if err != nil`, not nested in `else` | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-04` | handle each error exactly once: log OR return, never both | Implemented | Error |
-| `errors-05` | wrap errors with context at each call boundary | Implemented | Warning |
-| `errors-06` | noun phrases for context, not "failed to" prefixes | Implemented | Info |
-| `errors-07` | error strings: lowercase, no trailing punctuation, no capitalized acronyms | Implemented | Info |
+| `errors-05` | wrap errors with context at each call boundary | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-06` | noun phrases for context, not "failed to" prefixes | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-07` | error strings: lowercase, no trailing punctuation, no capitalized acronyms | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-08` | use `%w` only when callers need `errors.Is`/`As`; `%v` to hide internals | **Excluded** | — |
 | `errors-09` | never discard an error with `_` without an explanatory comment | Implemented | Error |
-| `errors-10` | no `panic` in library code | Implemented | Error |
-| `errors-11` | `MustXYZ` only at startup/package-init, never in request/worker paths | Implemented | Error |
-| `errors-12` | translate errors to canonical codes at system boundaries, not by string match | Implemented | Warning |
+| `errors-10` | no `panic` in library code | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-11` | `MustXYZ` only at startup/package-init, never in request/worker paths | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-12` | translate errors to canonical codes at system boundaries, not by string match | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-13` | `errors.Join` for parallel failures; don't fake a linear chain with multiple `%w` | Implemented | Warning |
 | `errors-14` | custom wrapper types implement `Unwrap`/`Is`/`As` as needed by callers | Implemented | Warning |
-| `errors-15` | recover panics at goroutine/request boundaries | Implemented | Error |
-| `errors-16` | capture deferred close errors with named returns | Implemented | Error |
+| `errors-15` | recover panics at goroutine/request boundaries | **Disabled (v0.1.0; calibrated)** | — |
+| `errors-16` | capture deferred close errors with named returns | **Disabled (v0.1.0; calibrated)** | — |
 | `errors-17` | classify retryable vs. terminal errors with data, not string matching | Implemented | Warning |
 | `errors-18` | label error metrics by a stable code bucket, not the raw error string | **Excluded** | — |
 | `errors-19` | `os.Exit`/`log.Fatal*` outside `main` | Implemented | Error |
 
-17 implemented, 2 excluded. Rule numbering preserves the source file's own 1–18 ordering
+7 active, 10 disabled after external calibration, 2 excluded. Disabled rules
+retain their predicates and detailed fixture/design material below for future
+redesign, but emit no findings and are excluded from the active rule resource.
+Rule numbering preserves the source file's own 1–18 ordering
 (`errors-01` through `errors-18`); gaps at 08 and 18 are intentional, not renumbered.
 `errors-19` is a new rule appended beyond the source file's 18 — sourced from this project's
 documented Go convention (not `error-handling.md`), continuing the sequential ID
@@ -165,6 +168,10 @@ functions correctly; not `Info` because it breaks every caller's `if err != nil`
 
 <a id="errors-02"></a>
 ### errors-02 — exported concrete error type
+
+**v0.1.0 status:** Disabled after external calibration. The predicate and
+fixture below are retained as future redesign documentation; this rule emits
+no findings and is not part of the active rule resource.
 
 **Source:** "Exported functions return the `error` interface, never a concrete error type.
 Concrete types create accidental API contracts and couple callers to your implementation."
@@ -1021,7 +1028,8 @@ process crash for every concurrent request being served, not just the one that f
 
 ## 3. Fixture file spec
 
-Directory: `internal/tools/testdata/fixtures/audit-errors/`. One Go package per implemented rule
+The fixture material below is retained for future redesign; it is not the v0.1.0 active inventory.
+Directory: `internal/tools/testdata/fixtures/audit-errors/`. One Go package per documented rule
 (`rule01/` .. `rule07/`, `rule09/` .. `rule17/`, `rule19/` — 17 directories; no `rule08`/`rule18`
 since those rules are excluded and never registered, so no fixture exists for an unregistered
 rule ID), per
@@ -1581,8 +1589,8 @@ documented gap, not a silent one.
 ### Analysis subpackage — `internal/analysis/errors/errors.go`
 
 Pasted verbatim from `contracts.md`'s conformance block, substituting `errors` for `<domain>`.
-The 17 `RegisterRule` calls (one per implemented rule, matching section 1's table exactly) and the
-full dispatch across all 17 predicates from section 2 are the per-rule elaboration of the single
+The 17 registrations comprise seven active `RegisterRule` calls and ten calibrated-off
+`RegisterDisabledRule` calls. The full dispatch across all 17 predicates from section 2 is the per-rule elaboration of the single
 representative `astutil.Report` call shown below — this is the shape, not a re-enumeration of
 section 2.
 
@@ -1603,16 +1611,17 @@ import (
 
 func init() {
 	astutil.RegisterRule("errors-01", "error_last_return", finding.SeverityWarning)
-	// one RegisterRule call per rule in this domain (errors-01..07, errors-09..17, errors-19 —
-	// matching section 1's table exactly; errors-08 and errors-18 are excluded and never
-	// registered). astutil.Report (below) panics at analyzer-init/test time on an unregistered
+	// one RegisterRule call per active rule in this domain (errors-01, -04, -09, -13, -14, -17,
+	// -19 — matching section 1's active inventory), plus one RegisterDisabledRule call per
+	// calibrated-off rule. Excluded rules are never registered. astutil.Report suppresses disabled
+	// rules and panics at analyzer-init/test time on an unregistered
 	// rule ID, by design: a typo'd rule ID must fail loud in `go test ./...`, never ship
 	// silently with an empty Severity.
 }
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "errors",
-	Doc:      "Audits error-handling conventions (error-handling.md rules errors-01..07, errors-09..17; errors-19 from go.md).",
+	Doc:      "Audits active error-handling conventions (error-handling.md rules errors-01, -04, -09, -13, -14, -17; errors-19 from go.md).",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
@@ -1691,7 +1700,7 @@ func AuditErrorsHandler(ctx context.Context, req *mcp.CallToolRequest, in AuditE
 func RegisterAuditErrors(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "go_audit_errors",
-		Description: "Runs the errors-01..07, errors-09..17, errors-19 go/analysis passes (error-handling.md + go.md) over a package and returns findings.",
+		Description: "Runs the active errors-01, -04, -09, -13, -14, -17, -19 go/analysis passes (error-handling.md + go.md) over a package and returns findings.",
 		Annotations: &mcp.ToolAnnotations{
 			ReadOnlyHint:    true,
 			DestructiveHint: boolPtr(false),
@@ -1722,15 +1731,17 @@ func normalizeAuditErrorsInput(in *AuditErrorsInput) error {
 
 `resolveInWorkspace` is the single project-wide input-containment helper (`contracts.md`'s
 Input containment and resource limits) — not redeclared here. Every `Finding.Rule` value this tool
-can emit is one of the 17 implemented IDs in section 1: `errors-08` and `errors-18` never appear in
-output since `init()` above never registers them and no predicate in `run()` computes them.
+can emit is one of the 7 active IDs in section 1. Calibrated-off IDs
+`errors-02`, `errors-03`, `errors-05`, `errors-06`, `errors-07`, `errors-10`, `errors-11`,
+`errors-12`, `errors-15`, and `errors-16` are registered as disabled metadata and suppressed by
+`astutil.Report`. Excluded IDs `errors-08` and `errors-18` are never registered or computed.
 
 ---
 
 ## 5. Verification
 
-One `TestAuditErrors_Rule<NN>` + one `TestAuditErrors_Rule<NN>_CompliantIsSilent` per implemented
-rule (34 tests), a domain-wide rule-count test, and a standing exclusion guard, in
+The v0.1.0 suite runs positive and near-miss fixtures for the seven active rules, asserts the ten
+calibrated-off IDs separately, and keeps a standing exclusion guard in
 `internal/analysis/errors/errors_test.go` (package `errors_test`) — these exercise `errors.Analyzer`
 directly via `astutil.RunFixture`, so they live beside the analyzer, not behind the MCP tool
 handler in `internal/tools/`. Every fixture reference below uses the one canonical path form from
@@ -1763,12 +1774,14 @@ func TestAuditErrors_Rule01_CompliantIsSilent(t *testing.T) {
 }
 ```
 
-Applied identically for `errors-02` through `errors-19` (excluding `errors-08`, `errors-18`): each
-pair asserts (a) exactly one `Finding` with that `Rule` ID, located in
-`fixtures/audit-errors/rule<NN>/violation.go` at the real violating line, and (b)
+The active rules `errors-01`, `errors-04`, `errors-09`, `errors-13`, `errors-14`, `errors-17`, and
+`errors-19` apply the same positive/near-miss expectations: each asserts a `Finding` with that
+rule ID, located in
+`fixtures/audit-errors/rule<NN>/violation.go` at the real violating line, and verifies that
 `compliant.go`'s near-miss never contributes a finding for that rule.
 
-Two rules need an extra cross-package assertion beyond the pattern above:
+If the calibrated-off rules below are redesigned and re-enabled, they also require these
+cross-package assertions:
 
 - **`errors-05`**: `rule04/violation.go`'s log-then-return block also contains a bare `return err`,
   which must NOT additionally surface as an `errors-05` finding — this is the exclusion documented
@@ -1785,7 +1798,7 @@ Domain-wide rule count:
 
 ```go
 func TestAuditErrors_TotalRuleCount(t *testing.T) {
-	assert.Len(t, astutil.RulesInDomain("errors"), 17) // catches a rule silently dropped or added
+	assert.Len(t, astutil.RulesInDomain("errors"), 7) // catches an active rule silently dropped or added
 }
 ```
 

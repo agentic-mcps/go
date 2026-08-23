@@ -27,22 +27,22 @@ var Analyzer = &analysis.Analyzer{
 
 func init() {
 	astutil.RegisterRule("errors-01", "error_last_return", finding.SeverityWarning)
-	astutil.RegisterRule("errors-02", "exported_concrete_error", finding.SeverityError)
-	astutil.RegisterRule("errors-03", "happy_path_in_else", finding.SeverityInfo)
+	astutil.RegisterDisabledRule("errors-02", "exported_concrete_error", finding.SeverityError, "external calibration found intentional typed error APIs")
+	astutil.RegisterDisabledRule("errors-03", "happy_path_in_else", finding.SeverityInfo, "external calibration classified the rule as a style preference")
 	astutil.RegisterRule("errors-04", "log_and_return", finding.SeverityError)
-	astutil.RegisterRule("errors-05", "bare_return_error", finding.SeverityWarning)
+	astutil.RegisterDisabledRule("errors-05", "bare_return_error", finding.SeverityWarning, "external calibration found contextualized callees and transparent adapters")
 	astutil.RegisterRule("errors-09", "discarded_error", finding.SeverityError)
-	astutil.RegisterRule("errors-10", "library_panic", finding.SeverityError)
-	astutil.RegisterRule("errors-11", "must_outside_startup", finding.SeverityError)
-	astutil.RegisterRule("errors-12", "error_string_boundary", finding.SeverityWarning)
+	astutil.RegisterDisabledRule("errors-10", "library_panic", finding.SeverityError, "external calibration found documented invariant and configuration panics")
+	astutil.RegisterDisabledRule("errors-11", "must_outside_startup", finding.SeverityError, "external calibration found non-panicking Must APIs and setup calls")
+	astutil.RegisterDisabledRule("errors-12", "error_string_boundary", finding.SeverityWarning, "external calibration found tests and documented compatibility fallbacks")
 	astutil.RegisterRule("errors-13", "multiple_wrap_verbs", finding.SeverityWarning)
 	astutil.RegisterRule("errors-17", "error_string_retry", finding.SeverityWarning)
 	astutil.RegisterRule("errors-14", "wrapper_without_unwrap", finding.SeverityWarning)
-	astutil.RegisterRule("errors-16", "deferred_close_error", finding.SeverityError)
-	astutil.RegisterRule("errors-15", "goroutine_recover", finding.SeverityError)
+	astutil.RegisterDisabledRule("errors-16", "deferred_close_error", finding.SeverityError, "external calibration found read-only closers whose close errors are not actionable")
+	astutil.RegisterDisabledRule("errors-15", "goroutine_recover", finding.SeverityError, "external calibration found ordinary scoped goroutines rather than recovery boundaries")
 	astutil.RegisterRule("errors-19", "fatal_exit", finding.SeverityError)
-	astutil.RegisterRule("errors-06", "failed_to_prefix", finding.SeverityInfo)
-	astutil.RegisterRule("errors-07", "error_string_style", finding.SeverityInfo)
+	astutil.RegisterDisabledRule("errors-06", "failed_to_prefix", finding.SeverityInfo, "external calibration classified the rule as a style preference")
+	astutil.RegisterDisabledRule("errors-07", "error_string_style", finding.SeverityInfo, "external calibration classified the rule as a style preference")
 }
 
 func run(pass *analysis.Pass) (any, error) {

@@ -8,7 +8,7 @@ import (
 
 func TestAnalyzer(t *testing.T) {
 	t.Parallel()
-	tests := []string{"rule01", "rule02", "rule03", "rule06", "rule07"}
+	tests := []string{"rule01"}
 	for _, test := range tests {
 		t.Run(test, func(t *testing.T) {
 			analysistest.Run(t, testdata(), Analyzer, test)

@@ -3,6 +3,7 @@ package concurrency
 import (
 	"fmt"
 	"go/ast"
+	"go/constant"
 	"go/token"
 	"go/types"
 	"go/version"
@@ -18,14 +19,14 @@ import (
 )
 
 func init() {
-	astutil.RegisterRule("concurrency-03", "unjustified_channel_buffer", finding.SeverityWarning)
-	astutil.RegisterRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError)
+	astutil.RegisterDisabledRule("concurrency-03", "unjustified_channel_buffer", finding.SeverityWarning, "external calibration found justified multi-producer buffers without adjacent comments")
+	astutil.RegisterDisabledRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError, "external calibration found joined goroutines coordinated through result channels")
 	astutil.RegisterRule("concurrency-06", "background_context_in_goroutine", finding.SeverityError)
-	astutil.RegisterRule("concurrency-07", "lock_defer_gap", finding.SeverityError)
+	astutil.RegisterDisabledRule("concurrency-07", "lock_defer_gap", finding.SeverityError, "external calibration found intentional straight-line unlocks on hot paths")
 	astutil.RegisterRule("concurrency-08", "embedded_sync_primitive", finding.SeverityError)
 	astutil.RegisterRule("concurrency-10", "undocumented_concurrency_safety", finding.SeverityInfo)
 	astutil.RegisterRule("concurrency-12", "manual_waitgroup_error_channel", finding.SeverityWarning)
-	astutil.RegisterRule("concurrency-14", "pool_put_without_reset", finding.SeverityError)
+	astutil.RegisterDisabledRule("concurrency-14", "pool_put_without_reset", finding.SeverityError, "external calibration found safe reset-on-get pool lifecycles")
 	astutil.RegisterRule("concurrency-15", "compound_state_multiple_atomics", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-17", "undocumented_multi_lock_order", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-18", "timer_ticker_lifecycle", finding.SeverityWarning)
@@ -221,6 +222,9 @@ func run(pass *analysis.Pass) (any, error) {
 		deferStmt, ok := stack[len(stack)-1].(*ast.DeferStmt)
 		if ok {
 			if loop, found := deferEnclosingLoop(stack); found {
+				if isSmallBoundedLoop(pass, loop) {
+					return true
+				}
 				kind := "for"
 				if _, ok := loop.(*ast.RangeStmt); ok {
 					kind = "range"
@@ -286,6 +290,24 @@ func run(pass *analysis.Pass) (any, error) {
 		}
 	}
 	return nil, nil
+}
+
+const maxSmallLoopDefers = 8
+
+func isSmallBoundedLoop(pass *analysis.Pass, loop ast.Node) bool {
+	rangeStmt, ok := loop.(*ast.RangeStmt)
+	if !ok {
+		return false
+	}
+	if literal, ok := rangeStmt.X.(*ast.CompositeLit); ok {
+		return len(literal.Elts) <= maxSmallLoopDefers
+	}
+	value := pass.TypesInfo.Types[rangeStmt.X].Value
+	if value == nil || value.Kind() != constant.Int {
+		return false
+	}
+	iterations, exact := constant.Int64Val(value)
+	return exact && iterations >= 0 && iterations <= maxSmallLoopDefers
 }
 
 func receiverTypeName(e ast.Expr) string {

@@ -18,8 +18,9 @@ import (
 )
 
 type ruleInfo struct {
-	name     string
-	severity finding.Severity
+	name           string
+	severity       finding.Severity
+	disabledReason string
 }
 
 var rules = struct {
@@ -34,6 +35,18 @@ var (
 
 // RegisterRule registers one domain rule and panics on conflicting metadata.
 func RegisterRule(rule, name string, severity finding.Severity) {
+	registerRule(rule, name, severity, "")
+}
+
+// RegisterDisabledRule records a calibrated rule without exposing or emitting it.
+func RegisterDisabledRule(rule, name string, severity finding.Severity, reason string) {
+	if strings.TrimSpace(reason) == "" {
+		panic("disabled rule reason is empty: " + rule)
+	}
+	registerRule(rule, name, severity, reason)
+}
+
+func registerRule(rule, name string, severity finding.Severity, disabledReason string) {
 	if !ruleIDPattern.MatchString(rule) {
 		panic("invalid rule ID: " + rule)
 	}
@@ -46,12 +59,12 @@ func RegisterRule(rule, name string, severity finding.Severity) {
 	rules.Lock()
 	defer rules.Unlock()
 	if old, ok := rules.m[rule]; ok {
-		if old.name != name || old.severity != severity {
+		if old.name != name || old.severity != severity || old.disabledReason != disabledReason {
 			panic(fmt.Sprintf("conflicting rule registration: %s", rule))
 		}
 		panic(fmt.Sprintf("duplicate rule registration: %s", rule))
 	}
-	rules.m[rule] = ruleInfo{name: name, severity: severity}
+	rules.m[rule] = ruleInfo{name: name, severity: severity, disabledReason: disabledReason}
 }
 
 // RuleSeverity returns the registered severity for rule.
@@ -81,8 +94,22 @@ func RulesInDomain(domain string) []string {
 	rules.RLock()
 	defer rules.RUnlock()
 	var out []string
-	for rule := range rules.m {
-		if strings.HasPrefix(rule, domain+"-") {
+	for rule, info := range rules.m {
+		if strings.HasPrefix(rule, domain+"-") && info.disabledReason == "" {
+			out = append(out, rule)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// DisabledRulesInDomain returns calibrated-off rule IDs in domain order.
+func DisabledRulesInDomain(domain string) []string {
+	rules.RLock()
+	defer rules.RUnlock()
+	var out []string
+	for rule, info := range rules.m {
+		if strings.HasPrefix(rule, domain+"-") && info.disabledReason != "" {
 			out = append(out, rule)
 		}
 	}
@@ -92,9 +119,15 @@ func RulesInDomain(domain string) []string {
 
 // Report emits a diagnostic with validated rule metadata.
 func Report(pass *analysis.Pass, pos token.Pos, rule, tmpl string, args ...any) {
-	// Resolve both registry fields here so a typo cannot emit an untyped diagnostic.
-	_ = RuleName(rule)
-	_ = RuleSeverity(rule)
+	rules.RLock()
+	info, ok := rules.m[rule]
+	rules.RUnlock()
+	if !ok {
+		panic("unknown rule: " + rule)
+	}
+	if info.disabledReason != "" {
+		return
+	}
 	pass.Report(analysis.Diagnostic{Pos: pos, Message: fmt.Sprintf(tmpl, args...), Category: rule})
 }
 
