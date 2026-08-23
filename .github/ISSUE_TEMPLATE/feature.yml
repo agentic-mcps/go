@@ -1,0 +1,26 @@
+name: Feature proposal
+description: Propose a focused addition within agentic-go's product boundary.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What decision can a local coding agent not make well today?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and expected output
+      description: Describe the mechanical signal, likely false positives, and a structured result shape.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Product boundary
+      options:
+        - label: This improves an external agent's judgment without embedding an LLM or agent framework.
+          required: true

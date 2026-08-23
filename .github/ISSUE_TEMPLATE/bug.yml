@@ -1,0 +1,42 @@
+name: Bug report
+description: Report incorrect behavior in an MCP tool, resource, prompt, or CLI.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please remove credentials, private source, and sensitive trace data before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: Agentic-go version
+      description: Output of `agentic-go --version` or the commit SHA.
+    validations:
+      required: true
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      description: Output of `go version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS arm64, macOS amd64, Linux arm64, Linux amd64, Other]
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: MCP client or CLI invocation
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed and expected behavior
+      description: Include a minimal reproduction and sanitized output.
+    validations:
+      required: true
