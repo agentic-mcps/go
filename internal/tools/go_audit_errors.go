@@ -45,6 +45,12 @@ func (r *Runtime) auditErrors(ctx context.Context, request *mcp.CallToolRequest,
 		return nil, AuditErrorsOutput{}, fmt.Errorf("resolving package: %w", err)
 	}
 	progress.Report(ctx, request, 1, 2, "running error audit")
+	release, err := r.runner.Permit(ctx)
+	if err != nil {
+		r.recordAuditTrace("go_audit_errors", input, started, finding.AuditResult{}, classifyAuditError(err))
+		return nil, AuditErrorsOutput{}, fmt.Errorf("waiting for analysis capacity: %w", err)
+	}
+	defer release()
 	result, err := audit.Run(ctx, r.workspace.Root(), selection.Pattern, []*analysis.Analyzer{errors.Analyzer})
 	if err != nil {
 		r.recordAuditTrace("go_audit_errors", input, started, finding.AuditResult{}, classifyAuditError(err))

@@ -182,6 +182,18 @@ func (r *Runner) Deadline(ctx context.Context) (context.Context, context.CancelF
 	return context.WithTimeout(ctx, r.timeout)
 }
 
+// Permit reserves one slot from the process-wide load budget for expensive
+// in-process work such as package loading and static analysis.
+func (r *Runner) Permit(ctx context.Context) (func(), error) {
+	select {
+	case r.semaphore <- struct{}{}:
+		var once sync.Once
+		return func() { once.Do(func() { <-r.semaphore }) }, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
 func exitCode(state *os.ProcessState) int {
 	if state == nil {
 		return -1

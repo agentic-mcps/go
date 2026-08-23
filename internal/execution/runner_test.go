@@ -136,6 +136,26 @@ func TestForWorkspaceSharesConcurrencyLimit(t *testing.T) {
 	}
 }
 
+func TestPermitSharesConcurrencyLimitWithRun(t *testing.T) {
+	runner := newTestRunner(t, Config{MaxConcurrent: 1, Timeout: time.Second})
+	release, err := runner.Permit(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	waitCtx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+	if _, err := runner.Run(waitCtx, helperCommand("exit"), Streams{}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Run() error = %v, want deadline while permit is held", err)
+	}
+
+	release()
+	release()
+	if _, err := runner.Run(context.Background(), helperCommand("exit"), Streams{}); err != nil {
+		t.Fatalf("Run() after release error = %v", err)
+	}
+}
+
 func TestHelperProcess(t *testing.T) {
 	if os.Getenv("AGENTIC_GO_HELPER_PROCESS") != "1" {
 		return

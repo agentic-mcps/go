@@ -45,6 +45,12 @@ func (r *Runtime) auditConcurrency(ctx context.Context, request *mcp.CallToolReq
 		return nil, AuditConcurrencyOutput{}, fmt.Errorf("resolving package: %w", err)
 	}
 	progress.Report(ctx, request, 1, 2, "running concurrency audit")
+	release, err := r.runner.Permit(ctx)
+	if err != nil {
+		r.recordAuditTrace("go_audit_concurrency", input, started, finding.AuditResult{}, classifyAuditError(err))
+		return nil, AuditConcurrencyOutput{}, fmt.Errorf("waiting for analysis capacity: %w", err)
+	}
+	defer release()
 	result, err := audit.Run(ctx, r.workspace.Root(), selection.Pattern, []*analysis.Analyzer{concurrency.Analyzer})
 	if err != nil {
 		r.recordAuditTrace("go_audit_concurrency", input, started, finding.AuditResult{}, classifyAuditError(err))
