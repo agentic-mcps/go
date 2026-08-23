@@ -24,6 +24,9 @@ func TestFixtureRules(t *testing.T) {
 		{"concurrency-07", "rule07"},
 		{"concurrency-08", "rule08"},
 		{"concurrency-10", "rule10"},
+		{"concurrency-12", "rule12"},
+		{"concurrency-14", "rule14"},
+		{"concurrency-15", "rule15"},
 		{"concurrency-04", "rule04"},
 		{"concurrency-05", "rule05"},
 		{"concurrency-09", "rule09"},
@@ -50,6 +53,8 @@ func TestFixtureRules(t *testing.T) {
 				wantSeverity = finding.SeverityError
 			} else if tc.rule == "concurrency-10" {
 				wantSeverity = finding.SeverityInfo
+			} else if tc.rule == "concurrency-14" {
+				wantSeverity = finding.SeverityError
 			}
 			if got.Rule != tc.rule || got.Severity != wantSeverity {
 				t.Fatalf("got rule/severity %s/%s", got.Rule, got.Severity)
