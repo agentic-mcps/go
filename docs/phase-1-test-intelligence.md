@@ -95,7 +95,7 @@ type TestCase struct {
     Output   string  `json:"output,omitempty"` // failures always; passing/skipped only when Verbose
 }
 type PackageSummary struct {
-    Status  string `json:"status"` // "ok" | "FAIL"
+    Status  string `json:"status"` // "ok" | "skip" | "FAIL"
     Passed  int    `json:"passed"`
     Failed  int    `json:"failed"`
     Skipped int    `json:"skipped"`
@@ -151,9 +151,11 @@ type testEvent struct {
 3. On `Action == "pass"|"fail"|"skip"` with `Test != ""`: finalize a `TestCase`
    using the accumulated builder content. Keep failures always; keep passing
    and skipped output only when `Verbose` is true.
-4. On `Action == "pass"|"fail"` with `Test == ""`: this is the package-level
-   terminal event — set `PackageSummary.Status = "ok"` or `"FAIL"` for that
-   package and retain package-level output only for failure diagnostics.
+4. On `Action == "pass"|"skip"|"fail"` with `Test == ""`: this is the
+   package-level terminal event — set `PackageSummary.Status = "ok"`,
+   `"skip"`, or `"FAIL"` for that package and retain package-level output only
+   for failure diagnostics. Package-level `skip` means the package had no
+   runnable tests; it does not increment the test-level `Skipped` aggregate.
 5. Increment top-level `Passed`/`Failed`/`Skipped` counters as each test-level
    terminal event is seen.
 6. Malformed/non-JSON lines on stdout (shouldn't happen with `-json`, but a

@@ -7,9 +7,36 @@ import (
 	"testing"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
+	"github.com/ashwingopalsamy/agentic-go/internal/parser"
 	"github.com/ashwingopalsamy/agentic-go/internal/trace"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 )
+
+func TestCollectorMapsPackageTerminalStatus(t *testing.T) {
+	for _, test := range []struct {
+		action string
+		want   string
+	}{
+		{action: "pass", want: "ok"},
+		{action: "skip", want: "skip"},
+		{action: "fail", want: "FAIL"},
+	} {
+		t.Run(test.action, func(t *testing.T) {
+			collector := newTestCollector(false)
+			if err := collector.consume(parser.TestEvent{Action: test.action, Package: "example.com/package"}); err != nil {
+				t.Fatal(err)
+			}
+
+			result := collector.result(0)
+			if got := result.Packages["example.com/package"].Status; got != test.want {
+				t.Fatalf("package status = %q, want %q", got, test.want)
+			}
+			if result.Passed != 0 || result.Failed != 0 || result.Skipped != 0 {
+				t.Fatalf("test counts = %d/%d/%d, want 0/0/0", result.Passed, result.Failed, result.Skipped)
+			}
+		})
+	}
+}
 
 func TestTestStructuredReturnsFailedRunsAsData(t *testing.T) {
 	runtime := newTestRuntime(t)
@@ -26,6 +53,9 @@ func TestTestStructuredReturnsFailedRunsAsData(t *testing.T) {
 	}
 	if output.Packages["example.com/testingfixture/failing"].Status != "FAIL" {
 		t.Fatalf("package summary = %+v, want FAIL", output.Packages["example.com/testingfixture/failing"])
+	}
+	if output.Packages["example.com/testingfixture/notests"].Status != "skip" {
+		t.Fatalf("no-test package summary = %+v, want skip", output.Packages["example.com/testingfixture/notests"])
 	}
 
 	failed := findTest(t, output.Tests, "TestFail")

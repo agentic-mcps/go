@@ -202,9 +202,12 @@ func (c *testCollector) consume(event parser.TestEvent) error {
 	}
 	if event.Test == "" {
 		summary := c.packages[event.Package]
-		if event.Action == "pass" {
+		switch event.Action {
+		case "pass":
 			summary.Status = "ok"
-		} else {
+		case "skip":
+			summary.Status = "skip"
+		case "fail":
 			summary.Status = "FAIL"
 		}
 		if event.Action == "fail" && c.packageOutput[event.Package] != nil {
