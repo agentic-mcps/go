@@ -2,6 +2,7 @@ package audit
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,7 +74,7 @@ func TestRunCollectsAndNormalizesDiagnostics(t *testing.T) {
 		Run: func(pass *analysis.Pass) (any, error) {
 			in := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 			in.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(n ast.Node) {
-				pass.Report(analysis.Diagnostic{Pos: n.Pos(), Category: "audit-test-01", Message: "test diagnostic"})
+				pass.Report(analysis.Diagnostic{Pos: n.Pos(), Category: "audit-test-01", Message: fmt.Sprintf("test diagnostic at %s", pass.Fset.Position(n.Pos()))})
 			})
 			return nil, nil
 		},
@@ -90,6 +91,9 @@ func TestRunCollectsAndNormalizesDiagnostics(t *testing.T) {
 	}
 	if got.Findings[0].Location.File != "main.go" {
 		t.Fatalf("location = %#v", got.Findings[0].Location)
+	}
+	if strings.Contains(got.Findings[0].Message, dir) || !strings.Contains(got.Findings[0].Message, "main.go:") {
+		t.Fatalf("message leaked or lost location: %q", got.Findings[0].Message)
 	}
 	if got.CountsBySeverity[finding.SeverityWarning] != 2 {
 		t.Fatalf("counts = %#v", got.CountsBySeverity)

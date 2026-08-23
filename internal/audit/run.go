@@ -125,11 +125,11 @@ func collect(graph *checker.Graph, ws string, pkgs []*packages.Package) finding.
 			severity := astutil.RuleSeverity(diagnostic.Category)
 			suggestion := ""
 			if len(diagnostic.SuggestedFixes) > 0 {
-				suggestion = diagnostic.SuggestedFixes[0].Message
+				suggestion = workspaceRelativeText(diagnostic.SuggestedFixes[0].Message, ws)
 			}
 			result.Findings = append(result.Findings, finding.Finding{
 				Rule: diagnostic.Category, RuleName: astutil.RuleName(diagnostic.Category), Severity: severity,
-				Location: location, Message: diagnostic.Message, Suggestion: suggestion,
+				Location: location, Message: workspaceRelativeText(diagnostic.Message, ws), Suggestion: suggestion,
 			})
 		}
 	}
@@ -155,6 +155,21 @@ func collect(graph *checker.Graph, ws string, pkgs []*packages.Package) finding.
 	}
 	result.FilesScanned = astutil.FilesScanned(pkgs)
 	return result
+}
+
+func workspaceRelativeText(value, ws string) string {
+	root, err := filepath.Abs(ws)
+	if err != nil {
+		return value
+	}
+	roots := []string{root}
+	if resolved, err := filepath.EvalSymlinks(root); err == nil && resolved != root {
+		roots = append(roots, resolved)
+	}
+	for _, candidate := range roots {
+		value = strings.ReplaceAll(value, candidate+string(filepath.Separator), "")
+	}
+	return value
 }
 
 func isAugmentedTestVariant(pkg *packages.Package) bool {
