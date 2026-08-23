@@ -70,6 +70,23 @@ func TestResolveRejectsEscapingSymlink(t *testing.T) {
 	}
 }
 
+func TestRelativeReturnsWorkspacePath(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "go.mod"), "module example.com/workspace\n\ngo 1.25.0\n")
+
+	ws, err := Open(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := ws.Relative(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "go.mod" {
+		t.Fatalf("Relative(go.mod) = %q, want go.mod", got)
+	}
+}
+
 func TestOpenRejectsNonWorkspace(t *testing.T) {
 	if _, err := Open(context.Background(), t.TempDir()); err == nil {
 		t.Fatal("Open() succeeded without go.mod or go.work")

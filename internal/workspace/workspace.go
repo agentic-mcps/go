@@ -108,6 +108,19 @@ func (w *Workspace) Resolve(path string) (string, error) {
 	return resolved, nil
 }
 
+// Relative returns an existing contained path relative to the workspace root.
+func (w *Workspace) Relative(path string) (string, error) {
+	resolved, err := w.Resolve(path)
+	if err != nil {
+		return "", err
+	}
+	relative, err := filepath.Rel(w.root, resolved)
+	if err != nil {
+		return "", fmt.Errorf("making path workspace-relative: %w", err)
+	}
+	return filepath.ToSlash(relative), nil
+}
+
 func withEnv(env []string, key, value string) []string {
 	prefix := key + "="
 	result := make([]string, 0, len(env)+1)
