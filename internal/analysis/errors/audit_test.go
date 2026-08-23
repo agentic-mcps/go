@@ -30,6 +30,8 @@ func TestAuditFixtures(t *testing.T) {
 		{"errors-12", finding.SeverityWarning},
 		{"errors-13", finding.SeverityWarning},
 		{"errors-17", finding.SeverityWarning},
+		{"errors-14", finding.SeverityWarning},
+		{"errors-16", finding.SeverityError},
 		{"errors-06", finding.SeverityInfo},
 		{"errors-07", finding.SeverityInfo},
 	}

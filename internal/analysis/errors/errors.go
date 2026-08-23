@@ -36,6 +36,8 @@ func init() {
 	astutil.RegisterRule("errors-12", "error_string_boundary", finding.SeverityWarning)
 	astutil.RegisterRule("errors-13", "multiple_wrap_verbs", finding.SeverityWarning)
 	astutil.RegisterRule("errors-17", "error_string_retry", finding.SeverityWarning)
+	astutil.RegisterRule("errors-14", "wrapper_without_unwrap", finding.SeverityWarning)
+	astutil.RegisterRule("errors-16", "deferred_close_error", finding.SeverityError)
 	astutil.RegisterRule("errors-06", "failed_to_prefix", finding.SeverityInfo)
 	astutil.RegisterRule("errors-07", "error_string_style", finding.SeverityInfo)
 }
@@ -45,7 +47,7 @@ func run(pass *analysis.Pass) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("inspect result has type %T", pass.ResultOf[inspect.Analyzer])
 	}
-	n.Preorder([]ast.Node{(*ast.FuncDecl)(nil), (*ast.FuncLit)(nil), (*ast.IfStmt)(nil), (*ast.CallExpr)(nil)}, func(node ast.Node) {
+	n.Preorder([]ast.Node{(*ast.FuncDecl)(nil), (*ast.FuncLit)(nil), (*ast.IfStmt)(nil), (*ast.CallExpr)(nil), (*ast.TypeSpec)(nil)}, func(node ast.Node) {
 		switch x := node.(type) {
 		case *ast.FuncDecl:
 			checkReturns(pass, x)
@@ -68,6 +70,10 @@ func run(pass *analysis.Pass) (any, error) {
 		case *ast.CallExpr:
 			checkMessage(pass, x)
 			checkStringMatch(pass, x)
+		case *ast.TypeSpec:
+			if st, ok := x.Type.(*ast.StructType); ok && wrapperWithoutUnwrap(pass, x, st) {
+				astutil.Report(pass, x.Pos(), "errors-14", "%s wraps an error field but has no Unwrap() error method at %s — errors.Is/As stop at this type", x.Name.Name, pass.Fset.Position(x.Pos()))
+			}
 		}
 	})
 	for _, file := range pass.Files {
@@ -84,6 +90,10 @@ func run(pass *analysis.Pass) (any, error) {
 				}
 				if name, ok := mustCall(x); ok && !allowedMust(pass, x.Pos(), name) {
 					astutil.Report(pass, x.Pos(), "errors-11", "%s called at %s outside main/init/TestMain/package-init — Must* helpers panic and must not run in request or worker paths", name, pass.Fset.Position(x.Pos()))
+				}
+			case *ast.DeferStmt:
+				if bareDeferClose(pass, x, enclosingFunctionResults(pass, x.Pos())) {
+					astutil.Report(pass, x.Pos(), "errors-16", "defer %s.Close() at %s drops the close error — use a named return and assign it in the deferred func when err == nil", closeReceiver(x), pass.Fset.Position(x.Pos()))
 				}
 			}
 			return true
@@ -219,6 +229,95 @@ func allowedMust(pass *analysis.Pass, pos token.Pos, name string) bool {
 		return true
 	}
 	return f.Name.Name == "main" || f.Name.Name == "init" || f.Name.Name == "TestMain" || strings.HasPrefix(f.Name.Name, "Must")
+}
+
+func hasMethodReturning(t types.Type, name, result string) bool {
+	ms := types.NewMethodSet(types.NewPointer(t))
+	for i := 0; i < ms.Len(); i++ {
+		method := ms.At(i).Obj()
+		if method.Name() != name {
+			continue
+		}
+		sig, ok := method.Type().(*types.Signature)
+		return ok && sig.Params().Len() == 0 && sig.Results().Len() == 1 && types.TypeString(sig.Results().At(0).Type(), nil) == result
+	}
+	return false
+}
+func wrapperWithoutUnwrap(pass *analysis.Pass, ts *ast.TypeSpec, st *ast.StructType) bool {
+	hasErr := false
+	for _, f := range st.Fields.List {
+		if len(f.Names) > 0 && astutil.TypeString(pass, f.Type) == "error" {
+			hasErr = true
+		}
+	}
+	if !hasErr {
+		return false
+	}
+	obj, ok := pass.TypesInfo.Defs[ts.Name]
+	if !ok {
+		return false
+	}
+	named, ok := obj.Type().(*types.Named)
+	return ok && hasMethodReturning(named, "Error", "string") && !hasMethodReturning(named, "Unwrap", "error")
+}
+func bareDeferClose(pass *analysis.Pass, ds *ast.DeferStmt, results *ast.FieldList) bool {
+	if results == nil {
+		return false
+	}
+	hasErr := false
+	for _, f := range results.List {
+		if astutil.TypeString(pass, f.Type) == "error" {
+			hasErr = true
+		}
+	}
+	if !hasErr || len(ds.Call.Args) != 0 {
+		return false
+	}
+	sel, ok := ds.Call.Fun.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "Close" {
+		return false
+	}
+	method, ok := pass.TypesInfo.ObjectOf(sel.Sel).(*types.Func)
+	if !ok {
+		return false
+	}
+	sig, ok := method.Type().(*types.Signature)
+	return ok && sig.Params().Len() == 0 && sig.Results().Len() == 1 && types.TypeString(sig.Results().At(0).Type(), nil) == "error"
+}
+
+func enclosingFunctionResults(pass *analysis.Pass, pos token.Pos) *ast.FieldList {
+	var results *ast.FieldList
+	for _, file := range pass.Files {
+		if pos < file.Pos() || pos > file.End() {
+			continue
+		}
+		ast.Inspect(file, func(n ast.Node) bool {
+			switch fn := n.(type) {
+			case *ast.FuncDecl:
+				if fn.Pos() <= pos && pos <= fn.End() {
+					results = fn.Type.Results
+				}
+			case *ast.FuncLit:
+				if fn.Pos() <= pos && pos <= fn.End() {
+					results = fn.Type.Results
+				}
+			}
+			return true
+		})
+	}
+	return results
+}
+func closeReceiver(ds *ast.DeferStmt) string {
+	if s, ok := ds.Call.Fun.(*ast.SelectorExpr); ok {
+		return formatExpr(s.X)
+	}
+	return "resource"
+}
+func formatExpr(e ast.Expr) string {
+	if id, ok := e.(*ast.Ident); ok {
+		return id.Name
+	}
+	return "resource"
 }
 
 func checkReturns(pass *analysis.Pass, fn *ast.FuncDecl) {
