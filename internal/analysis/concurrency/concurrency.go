@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,9 @@ func init() {
 	astutil.RegisterRule("concurrency-03", "unjustified_channel_buffer", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError)
 	astutil.RegisterRule("concurrency-06", "background_context_in_goroutine", finding.SeverityError)
+	astutil.RegisterRule("concurrency-07", "lock_defer_gap", finding.SeverityError)
+	astutil.RegisterRule("concurrency-08", "embedded_sync_primitive", finding.SeverityError)
+	astutil.RegisterRule("concurrency-10", "undocumented_concurrency_safety", finding.SeverityInfo)
 	astutil.RegisterRule("concurrency-04", "undirected_channel_signature", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-05", "async_goroutine_wrapper", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-09", "goroutine_in_init", finding.SeverityWarning)
@@ -46,6 +50,32 @@ func run(pass *analysis.Pass) (any, error) {
 			}
 			return true
 		})
+		ast.Inspect(file, func(n ast.Node) bool {
+			switch n := n.(type) {
+			case *ast.BlockStmt:
+				for _, stmt := range lockDeferGapViolations(pass, n) {
+					astutil.Report(pass, stmt.Pos(), "concurrency-07", "%s() at %s is not immediately followed by defer %s() — code between lock and defer is a panic window", lockMethodName(stmt), pass.Fset.Position(stmt.Pos()), unlockMethodName(stmt))
+				}
+			case *ast.StructType:
+				for _, field := range embeddedSyncPrimitive(pass, n) {
+					astutil.Report(pass, field.Pos(), "concurrency-08", "struct embeds %s anonymously at %s, promoting Lock/Unlock (or Add/Done/Wait) to the public API — use a named field instead", astutil.TypeString(pass, field.Type), pass.Fset.Position(field.Pos()))
+				}
+			}
+			return true
+		})
+		for _, decl := range file.Decls {
+			gd, ok := decl.(*ast.GenDecl)
+			if !ok || gd.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range gd.Specs {
+				ts, ok := spec.(*ast.TypeSpec)
+				if !ok || !ts.Name.IsExported() || !docNeedsSafety(pass, gd, ts) {
+					continue
+				}
+				astutil.Report(pass, ts.Pos(), "concurrency-10", "exported type %s at %s has synchronization fields but its doc comment does not state whether it is safe for concurrent use", ts.Name.Name, pass.Fset.Position(ts.Pos()))
+			}
+		}
 	}
 	ins.Nodes(nil, func(n ast.Node, _ bool) bool {
 		switch n := n.(type) {
@@ -100,6 +130,102 @@ func run(pass *analysis.Pass) (any, error) {
 		return true
 	})
 	return nil, nil
+}
+
+func lockDeferGapViolations(pass *analysis.Pass, block *ast.BlockStmt) []ast.Stmt {
+	var bad []ast.Stmt
+	for i, stmt := range block.List {
+		recv, method, ok := lockCall(stmt)
+		if !ok {
+			continue
+		}
+		typ := astutil.TypeString(pass, receiverExpr(stmt))
+		if !strings.Contains(typ, "sync.Mutex") && !strings.Contains(typ, "sync.RWMutex") {
+			continue
+		}
+		want := "Unlock"
+		if method == "RLock" {
+			want = "RUnlock"
+		}
+		if i+1 >= len(block.List) {
+			bad = append(bad, stmt)
+			continue
+		}
+		def, ok := block.List[i+1].(*ast.DeferStmt)
+		if !ok || !isUnlockCallOn(def.Call, recv, want) {
+			bad = append(bad, stmt)
+		}
+	}
+	return bad
+}
+func lockCall(stmt ast.Stmt) (string, string, bool) {
+	c, ok := astutil.ExprStmtCall(stmt)
+	if !ok {
+		return "", "", false
+	}
+	s, ok := c.Fun.(*ast.SelectorExpr)
+	if !ok || (s.Sel.Name != "Lock" && s.Sel.Name != "RLock") {
+		return "", "", false
+	}
+	return types.ExprString(s.X), s.Sel.Name, true
+}
+func receiverExpr(stmt ast.Stmt) ast.Expr {
+	c, _ := astutil.ExprStmtCall(stmt)
+	return c.Fun.(*ast.SelectorExpr).X
+}
+func lockMethodName(stmt ast.Stmt) string { _, method, _ := lockCall(stmt); return method }
+func unlockMethodName(stmt ast.Stmt) string {
+	_, method, _ := lockCall(stmt)
+	if method == "RLock" {
+		return "RUnlock"
+	}
+	return "Unlock"
+}
+func isUnlockCallOn(call *ast.CallExpr, recv, method string) bool {
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && sel.Sel.Name == method && types.ExprString(sel.X) == recv
+}
+func embeddedSyncPrimitive(pass *analysis.Pass, st *ast.StructType) []*ast.Field {
+	var bad []*ast.Field
+	for _, f := range st.Fields.List {
+		if len(f.Names) != 0 {
+			continue
+		}
+		switch astutil.TypeString(pass, f.Type) {
+		case "sync.Mutex", "sync.RWMutex", "sync.WaitGroup", "*sync.Mutex", "*sync.RWMutex", "*sync.WaitGroup":
+			bad = append(bad, f)
+		}
+	}
+	return bad
+}
+func docNeedsSafety(pass *analysis.Pass, gd *ast.GenDecl, ts *ast.TypeSpec) bool {
+	st, ok := ts.Type.(*ast.StructType)
+	if !ok {
+		return false
+	}
+	for _, f := range st.Fields.List {
+		if len(f.Names) == 0 {
+			continue
+		}
+		s := astutil.TypeString(pass, f.Type)
+		if strings.Contains(s, "sync.Mutex") || strings.Contains(s, "sync.RWMutex") || strings.Contains(s, "sync.WaitGroup") {
+			doc := ts.Doc
+			if doc == nil {
+				doc = gd.Doc
+			}
+			if doc == nil {
+				return true
+			}
+			text := strings.ToLower(doc.Text())
+			for _, kw := range []string{"safe for concurrent", "not safe for concurrent", "goroutine-safe", "concurrency-safe", "thread-safe"} {
+				if strings.Contains(text, kw) {
+					return false
+				}
+			}
+			return true
+		}
+	}
+	return false
 }
 
 func isFireAndForget(pass *analysis.Pass, gs *ast.GoStmt, enclosing *ast.BlockStmt) bool {
