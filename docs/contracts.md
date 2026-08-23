@@ -340,8 +340,10 @@ func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer
         }
     }()
     cfg := &packages.Config{
-        Context: ctx,
-        Dir:     ws,
+		Context:    ctx,
+		Dir:        ws,
+		Env:        closedWorldEnv(os.Environ()), // GOPROXY=off, GOSUMDB=off, GOTOOLCHAIN=local
+		BuildFlags: []string{"-mod=readonly"},
         Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles |
             packages.NeedImports | packages.NeedDeps | packages.NeedTypes |
             packages.NeedTypesSizes | packages.NeedTypesInfo | packages.NeedSyntax,
@@ -363,6 +365,12 @@ func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer
     return collect(graph, ws, pkgs), nil
 }
 ```
+
+Audit package loading is operationally closed-world, not merely annotated
+that way: it may use the configured workspace, standard library, and the
+existing local module cache, but it never downloads a module, checksum entry,
+or Go toolchain. A missing local dependency fails the audit with a clear load
+error.
 
 The deferred `recover()` above is this project's analog of `go-security.md`'s
 "every function that touches bitmap iteration, binary decoding, or field
@@ -637,6 +645,9 @@ acquire site is documented inline
 (`// sem: bounded by --max-concurrent-loads, see internal/execution/runner.go`).
 No new dependency — a stdlib `chan struct{}` is sufficient, and the
 production dependency list (go-sdk + x/tools) stays exactly two.
+Audit handlers reserve the same runner semaphore with `Runner.Permit` around
+`audit.Run`; this prevents in-process package loading from bypassing the
+server-wide ceiling.
 
 Global `--max-tool-seconds` flag (default 300, accepted range 1–300) wraps every handler in a
 `context.WithTimeout` derived from the inbound `ctx` — belt-and-braces
