@@ -28,13 +28,15 @@ func TestCoverageGapsReturnsUncoveredBranch(t *testing.T) {
 			if gap.File != file.File || filepath.IsAbs(gap.File) {
 				t.Fatalf("gap path = %q, file path = %q", gap.File, file.File)
 			}
-			if gap.File == "panic.go" && gap.StartLine == 4 {
+			// Coverage block boundaries changed in Go 1.27. Assert that the
+			// uncovered range contains the unexecuted return on line 5.
+			if gap.File == "panic.go" && gap.StartLine <= 5 && gap.EndLine >= 5 {
 				found = true
 			}
 		}
 	}
 	if !found {
-		t.Fatalf("coverage output did not contain panic.go:4 gap: %+v", output)
+		t.Fatalf("coverage output did not contain the uncovered panic.go return: %+v", output)
 	}
 }
 
