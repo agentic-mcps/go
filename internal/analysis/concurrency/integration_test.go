@@ -1,0 +1,67 @@
+package concurrency_test
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/ashwingopalsamy/agentic-go/internal/analysis/concurrency"
+	"github.com/ashwingopalsamy/agentic-go/internal/audit"
+	"github.com/ashwingopalsamy/agentic-go/internal/finding"
+	"golang.org/x/tools/go/analysis"
+)
+
+func TestFixtureRules(t *testing.T) {
+	for _, tc := range []struct {
+		rule string
+		dir  string
+	}{
+		{"concurrency-03", "rule03"},
+		{"concurrency-04", "rule04"},
+		{"concurrency-05", "rule05"},
+		{"concurrency-09", "rule09"},
+		{"concurrency-20", "rule20"},
+	} {
+		t.Run(tc.rule, func(t *testing.T) {
+			dir := filepath.Join("testdata", tc.dir)
+			result, err := audit.Run(context.Background(), dir, "./...", []*analysis.Analyzer{concurrency.Analyzer})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.Total != 1 || len(result.Findings) != 1 {
+				t.Fatalf("got %d findings: %#v", result.Total, result.Findings)
+			}
+			got := result.Findings[0]
+			if got.Rule != tc.rule || got.Severity != finding.SeverityWarning {
+				t.Fatalf("got rule/severity %s/%s", got.Rule, got.Severity)
+			}
+			if got.Location.File != "violation.go" {
+				t.Fatalf("got file %q", got.Location.File)
+			}
+			markerLine := markerLine(t, filepath.Join(dir, "violation.go"), "VIOLATION: "+tc.rule)
+			if got.Location.Line != markerLine {
+				t.Fatalf("got line %d, marker line %d", got.Location.Line, markerLine)
+			}
+			if strings.Contains(got.Location.File, "compliant.go") {
+				t.Fatal("reported compliant fixture")
+			}
+		})
+	}
+}
+
+func markerLine(t *testing.T, path, marker string) int {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, line := range strings.Split(string(b), "\n") {
+		if strings.Contains(line, marker) {
+			return i + 1
+		}
+	}
+	t.Fatalf("missing marker %q", marker)
+	return 0
+}
