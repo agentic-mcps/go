@@ -278,9 +278,10 @@ aggregate fields and an `ErrorKind` enum; it has no raw-error field.
 
 One fixture module with a root `testingfixture` package and a small
 `testingfixture/failing` subpackage:
-- `flaky.go` + `flaky_test.go`: a function whose behavior depends on
-  `time.Now().UnixNano()%2`, test asserts a fixed outcome — fails
-  non-deterministically. `// VIOLATION: flaky_test_time_seeded`.
+- `flaky_test.go`: a process-local atomic counter makes alternating repetitions
+  pass and fail deterministically. A normal one-run suite always passes; a
+  `-count=N` flake sample gets reproducible mixed outcomes without clock-based
+  randomness.
 - `panic.go` + `panic_test.go`: a function that indexes a slice out of bounds
   under a specific input; test calls it with that input. `// VIOLATION: panic_test`.
 - `stable_test.go`: one unconditionally-passing test, one `t.Skip()` test.

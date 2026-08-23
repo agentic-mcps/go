@@ -228,6 +228,11 @@ ALL terminal events seen (there will be up to `Runs` terminal events per test
 name, not one). After the stream ends, filter to names with `Passes > 0 &&
 Failures > 0` → `Flaky`.
 
+Non-zero exits with valid test terminal events are sampled outcomes, not
+handler errors. A package-level failure before that package produces any test
+result is a build/setup failure and is returned as a tool-execution error,
+never an empty flake report.
+
 ## Fixture: `bench_test.go` (completes Phase 1's fixture package)
 ```go
 func BenchmarkTrivial(b *testing.B) {
@@ -256,10 +261,8 @@ without inventing a second fixture file just for this tool.
   measurement noise happening to land near zero).
 
 `internal/tools/go_flake_finder_test.go`:
-- Running against `flaky.go`/`flaky_test.go` (Phase 1 fixture, `%2`-seeded)
-  with `Runs: 20` returns `len(Flaky) >= 1` containing that test name, with
-  `0 < FlakeRate < 1` (would fail if the flake logic broke into an
-  always-fails-the-same-way stub — this is the WHY-not-WHAT check `go-testing.md`
-  requires: a stub returning "always flaky" or "never flaky" fails this
-  assertion, a stub returning a fixed `FlakeRate` value fails the exact-fixture
-  cross-check too since the seeded fixture's real rate is ~50%, not fixed).
+- Running against the deterministic alternating `flaky_test.go` fixture with
+  `Runs: 20` returns exactly one result for that test with `Passes == 10`,
+  `Failures == 10`, and `FlakeRate == 0.5`. This fails both an
+  always-flaky/never-flaky stub and a reducer that loses repeated terminal
+  events, without making the repository's own test suite probabilistic.

@@ -34,10 +34,10 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 4 {
-		t.Fatalf("len(tools/list) = %d, want 4", len(listed.Tools))
+	if len(listed.Tools) != 5 {
+		t.Fatalf("len(tools/list) = %d, want 5", len(listed.Tools))
 	}
-	for _, name := range []string{"go_test_structured", "go_race_report", "go_coverage_gaps", "go_benchmark_diff"} {
+	for _, name := range []string{"go_test_structured", "go_race_report", "go_coverage_gaps", "go_benchmark_diff", "go_flake_finder"} {
 		tool := listedTool(t, listed.Tools, name)
 		annotations := tool.Annotations
 		if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || !*annotations.DestructiveHint || annotations.OpenWorldHint == nil || !*annotations.OpenWorldHint {
@@ -63,8 +63,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err := json.Unmarshal(encoded, &output); err != nil {
 		t.Fatal(err)
 	}
-	if output.Passed != 1 || output.Failed != 1 || output.Skipped != 1 {
-		t.Fatalf("structured content counts = %d/%d/%d, want 1/1/1", output.Passed, output.Failed, output.Skipped)
+	if output.Passed != 2 || output.Failed != 1 || output.Skipped != 1 {
+		t.Fatalf("structured content counts = %d/%d/%d, want 2/1/1", output.Passed, output.Failed, output.Skipped)
 	}
 
 	called, err = clientSession.CallTool(ctx, &mcp.CallToolParams{
@@ -109,6 +109,28 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	}
 	if coverageOutput.OverallPercent >= 100 || len(coverageOutput.Files) == 0 {
 		t.Fatalf("coverage structured content = %+v, want incomplete coverage", coverageOutput)
+	}
+
+	called, err = clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "go_flake_finder",
+		Arguments: map[string]any{"package": ".", "runs": 4},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if called.IsError {
+		t.Fatalf("flake tools/call returned an MCP tool error: %+v", called.Content)
+	}
+	encoded, err = json.Marshal(called.StructuredContent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var flakeOutput FlakeFinderOutput
+	if err := json.Unmarshal(encoded, &flakeOutput); err != nil {
+		t.Fatal(err)
+	}
+	if len(flakeOutput.Flaky) != 1 || flakeOutput.Flaky[0].FlakeRate != 0.5 {
+		t.Fatalf("flake structured content = %+v, want deterministic mixed result", flakeOutput)
 	}
 }
 

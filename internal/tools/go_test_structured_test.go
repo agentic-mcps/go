@@ -18,11 +18,11 @@ func TestTestStructuredReturnsFailedRunsAsData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("testStructured() error = %v", err)
 	}
-	if output.Passed != 1 || output.Failed != 1 || output.Skipped != 1 {
-		t.Fatalf("test counts = %d/%d/%d, want 1/1/1", output.Passed, output.Failed, output.Skipped)
+	if output.Passed != 2 || output.Failed != 1 || output.Skipped != 1 {
+		t.Fatalf("test counts = %d/%d/%d, want 2/1/1", output.Passed, output.Failed, output.Skipped)
 	}
-	if len(output.Tests) != 3 {
-		t.Fatalf("len(Tests) = %d, want 3", len(output.Tests))
+	if len(output.Tests) != 4 {
+		t.Fatalf("len(Tests) = %d, want 4", len(output.Tests))
 	}
 	if output.Packages["example.com/testingfixture/failing"].Status != "FAIL" {
 		t.Fatalf("package summary = %+v, want FAIL", output.Packages["example.com/testingfixture/failing"])
