@@ -55,14 +55,21 @@ type CoverageGapsOutput struct {
 ```
 
 **Handler:**
-1. `os.CreateTemp` for the coverage profile path (`*.out`); deferred `os.Remove`.
-2. `go test -coverprofile=<tmp> -covermode=atomic <package>` via `exec.CommandContext(ctx, ...)`.
+1. Create a unique run directory under
+   `os.UserCacheDir()/agentic-go/runs/coverage-*`; remove it on return. The
+   profile is capped at 8 MiB before parsing and never touches the target
+   worktree.
+2. `go test -coverprofile=<tmp> -covermode=atomic <package>` via the shared
+   bounded execution runner. A non-zero test exit is a tool error: coverage
+   from an incomplete suite must not be presented as authoritative.
    `atomic` (not `count`) — matches the SLA-sensitive/concurrent-code context
    this whole project lives in; `atomic` is race-detector-safe if the caller
    also passes `-race` in a future extension, `count` is not. Fixed choice,
    no input field for mode — one correct default beats a knob nobody sets
    correctly.
 3. Parse the profile file (below) into per-file gap lists and percentages.
+   Convert profile import paths to slash-separated paths relative to the
+   configured workspace; fail if any file cannot be contained and mapped.
 4. `OverallPercent` = `sum(covered_statements_all_files) / sum(total_statements_all_files) * 100` —
    computed from the SAME parsed block list as per-file percentages, never by
    shelling out a second `go tool cover -func` call. One source of truth for

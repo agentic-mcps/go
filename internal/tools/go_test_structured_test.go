@@ -24,8 +24,8 @@ func TestTestStructuredReturnsFailedRunsAsData(t *testing.T) {
 	if len(output.Tests) != 3 {
 		t.Fatalf("len(Tests) = %d, want 3", len(output.Tests))
 	}
-	if output.Packages["example.com/testingfixture"].Status != "FAIL" {
-		t.Fatalf("package summary = %+v, want FAIL", output.Packages["example.com/testingfixture"])
+	if output.Packages["example.com/testingfixture/failing"].Status != "FAIL" {
+		t.Fatalf("package summary = %+v, want FAIL", output.Packages["example.com/testingfixture/failing"])
 	}
 
 	failed := findTest(t, output.Tests, "TestFail")

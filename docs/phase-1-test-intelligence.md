@@ -276,13 +276,17 @@ aggregate fields and an `ErrorKind` enum; it has no raw-error field.
 
 ## Fixture: `internal/tools/testdata/fixtures/testing/`
 
-One package, `package testingfixture`, these files:
+One fixture module with a root `testingfixture` package and a small
+`testingfixture/failing` subpackage:
 - `flaky.go` + `flaky_test.go`: a function whose behavior depends on
   `time.Now().UnixNano()%2`, test asserts a fixed outcome — fails
   non-deterministically. `// VIOLATION: flaky_test_time_seeded`.
 - `panic.go` + `panic_test.go`: a function that indexes a slice out of bounds
   under a specific input; test calls it with that input. `// VIOLATION: panic_test`.
 - `stable_test.go`: one unconditionally-passing test, one `t.Skip()` test.
+- `failing/fail_test.go`: one intentional failure, isolated so coverage can
+  require a fully passing root-package run while `go_test_structured ./...`
+  still exercises failure output.
 - `race_test.go`: included only under the `race` build tag and contains one
   deterministic happens-before violation for parser integration coverage.
 - `bench_test.go`: one `func BenchmarkX(b *testing.B)` doing trivial work

@@ -34,10 +34,10 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 2 {
-		t.Fatalf("len(tools/list) = %d, want 2", len(listed.Tools))
+	if len(listed.Tools) != 3 {
+		t.Fatalf("len(tools/list) = %d, want 3", len(listed.Tools))
 	}
-	for _, name := range []string{"go_test_structured", "go_race_report"} {
+	for _, name := range []string{"go_test_structured", "go_race_report", "go_coverage_gaps"} {
 		tool := listedTool(t, listed.Tools, name)
 		annotations := tool.Annotations
 		if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || !*annotations.DestructiveHint || annotations.OpenWorldHint == nil || !*annotations.OpenWorldHint {
@@ -87,6 +87,28 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	}
 	if raceOutput.RawBlocksFound == 0 || len(raceOutput.Conflicts) == 0 {
 		t.Fatalf("race structured content = %+v, want a conflict", raceOutput)
+	}
+
+	called, err = clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "go_coverage_gaps",
+		Arguments: map[string]any{"package": "."},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if called.IsError {
+		t.Fatalf("coverage tools/call returned an MCP tool error: %+v", called.Content)
+	}
+	encoded, err = json.Marshal(called.StructuredContent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var coverageOutput CoverageGapsOutput
+	if err := json.Unmarshal(encoded, &coverageOutput); err != nil {
+		t.Fatal(err)
+	}
+	if coverageOutput.OverallPercent >= 100 || len(coverageOutput.Files) == 0 {
+		t.Fatalf("coverage structured content = %+v, want incomplete coverage", coverageOutput)
 	}
 }
 

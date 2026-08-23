@@ -40,17 +40,36 @@ func NewRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace
 func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterTestStructured(server, runtime)
 	RegisterRaceReport(server, runtime)
+	RegisterCoverageGaps(server, runtime)
 }
 
 func (r *Runtime) resolvePackage(ctx context.Context, pattern string) (string, error) {
+	selection, err := r.resolvePackages(ctx, pattern)
+	if err != nil {
+		return "", err
+	}
+	return selection.Pattern, nil
+}
+
+type packageSelection struct {
+	Pattern  string
+	Packages []packageMatch
+}
+
+type packageMatch struct {
+	ImportPath string
+	Dir        string
+}
+
+func (r *Runtime) resolvePackages(ctx context.Context, pattern string) (packageSelection, error) {
 	if pattern == "" {
-		return "", fmt.Errorf("package is empty")
+		return packageSelection{}, fmt.Errorf("package is empty")
 	}
 	if strings.TrimSpace(pattern) != pattern {
-		return "", fmt.Errorf("package must not have surrounding whitespace")
+		return packageSelection{}, fmt.Errorf("package must not have surrounding whitespace")
 	}
 	if strings.HasPrefix(pattern, "-") || strings.ContainsRune(pattern, '\x00') {
-		return "", fmt.Errorf("package %q is invalid", pattern)
+		return packageSelection{}, fmt.Errorf("package %q is invalid", pattern)
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -60,35 +79,37 @@ func (r *Runtime) resolvePackage(ctx context.Context, pattern string) (string, e
 		Env:  map[string]string{"GOWORK": "auto"},
 	}, execution.Streams{Stdout: &stdout, Stderr: &stderr})
 	if err != nil {
-		return "", fmt.Errorf("listing package: %w", err)
+		return packageSelection{}, fmt.Errorf("listing package: %w", err)
 	}
 	if result.ExitCode != 0 {
-		return "", fmt.Errorf("listing package: go list exited %d: %s", result.ExitCode, boundedMessage(stderr.String()))
+		return packageSelection{}, fmt.Errorf("listing package: go list exited %d: %s", result.ExitCode, boundedMessage(stderr.String()))
 	}
 
 	decoder := json.NewDecoder(&stdout)
-	packages := 0
+	selection := packageSelection{Pattern: pattern, Packages: make([]packageMatch, 0)}
 	for {
 		var listed struct {
-			Dir string
+			ImportPath string
+			Dir        string
 		}
 		if err := decoder.Decode(&listed); errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			return "", fmt.Errorf("decoding go list output: %w", err)
+			return packageSelection{}, fmt.Errorf("decoding go list output: %w", err)
 		}
-		if listed.Dir == "" {
-			return "", fmt.Errorf("go list returned a package without a directory")
+		if listed.ImportPath == "" || listed.Dir == "" {
+			return packageSelection{}, fmt.Errorf("go list returned incomplete package metadata")
 		}
-		if _, err := r.workspace.Resolve(listed.Dir); err != nil {
-			return "", fmt.Errorf("package %q is outside the configured workspace: %w", pattern, err)
+		resolved, err := r.workspace.Resolve(listed.Dir)
+		if err != nil {
+			return packageSelection{}, fmt.Errorf("package %q is outside the configured workspace: %w", pattern, err)
 		}
-		packages++
+		selection.Packages = append(selection.Packages, packageMatch{ImportPath: listed.ImportPath, Dir: resolved})
 	}
-	if packages == 0 {
-		return "", fmt.Errorf("package %q matched no packages", pattern)
+	if len(selection.Packages) == 0 {
+		return packageSelection{}, fmt.Errorf("package %q matched no packages", pattern)
 	}
-	return pattern, nil
+	return selection, nil
 }
 
 func boundedMessage(value string) string {
