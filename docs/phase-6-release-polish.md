@@ -25,36 +25,39 @@ Must enable, at minimum, the linters that enforce this repository's stated
 error-handling, correctness, formatting, naming, and resource-lifecycle
 standards:
 ```yaml
-linters:
-  enable:
-    - errcheck        # zero tolerance for silently ignored errors (go-security.md)
-    - govet
-    - staticcheck
-    - unused
-    - gofumpt         # stricter than gofmt, matches this project's tooling convention
-    - revive          # naming conventions (MixedCaps, no stutter, no Get prefix)
-    - fieldalignment  # struct field ordering (go.md Performance section) — note this
-                       # OVERLAPS with Phase 5's go_field_alignment tool; that's fine,
-                       # CI enforces it on THIS project's own source, the tool audits
-                       # OTHER repos. Not a duplicate concern, two
-                       # different targets.
-    - bodyclose       # http.Response.Body leaks — relevant since this server makes
-                       # outbound calls (go_module_risk's proxy check)
-linters-settings:
-  govet:
-    enable:
-      - shadow
-  revive:
-    rules:
-      - name: exported
-      - name: package-comments
-        disabled: true  # package comments are not required for internal packages
+version: "2"
+
 run:
   timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - bodyclose
+    - errcheck
+    - govet
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    govet:
+      enable:
+        - shadow
+        - fieldalignment
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: package-comments
+          disabled: true
+
+formatters:
+  enable:
+    - gofumpt
 ```
-State explicitly: this list is a floor, not exhaustive — `golangci-lint`
-ships dozens of linters, this spec names only the ones directly traceable to
-an existing repository rule, so every enabled check has a stated purpose.
+This is the golangci-lint v2 schema: `gofumpt` is a formatter and
+`fieldalignment` is a `govet` analyzer. The list is a deliberate floor, not
+an invitation to enable every available linter. `bodyclose` remains useful
+as a general lifecycle guard even though v0.1.0 makes no direct HTTP request.
 
 ## `.goreleaser.yml`
 Cross-compile matrix must match `contracts.md`'s CI contract exactly (no
@@ -65,6 +68,7 @@ untested-or-tested-but-unshipped bug):
 builds:
   - id: agentic-go
     main: ./cmd/agentic-go
+    binary: agentic-go
     env: [CGO_ENABLED=0]
     goos: [linux, darwin]
     goarch: [amd64, arm64]
@@ -76,8 +80,14 @@ builds:
     # by this same file's own stated no-silent-drift rule. Do not add one
     # back without first narrowing contracts.md's matrix — that file is the
     # single source of truth for the release matrix, this file copies it.
+  - id: agentic-go-vet
+    main: ./cmd/agentic-go-vet
+    binary: agentic-go-vet
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 checksum:
   name_template: "checksums.txt"
@@ -125,12 +135,11 @@ applies here too, no marketing filler):
 3. Wire into other MCP clients using stdio only; use `--version` for
    diagnostics and `--workspace` defaults to cwd.
 4. **Comparison table** — summarize the documented product boundary and
-   independently verified competitor behavior
-   (gopls's own `mcp` subcommand, generic shell-exec MCP servers, IDE-native
-   tooling) with columns: structured-output (yes/no), audit-suite (yes/no),
-   caching (yes/no), trace/observability (yes/no). Do not soften this into
-   vague prose — a table is the token-efficient and honest way to make a
-   comparative claim, and it's checkable (a reader can verify each cell).
+   independently verified competitor behavior (gopls's own MCP server and a
+   maintained standalone gopls MCP server) across structured output, custom
+   audit suite, MCP result caching, and trace/observability. Qualify external
+   cells narrowly; absence from public documentation is not proof that a
+   capability cannot exist.
 5. Full tool catalog — one line per tool, grouped by tier, name + one-clause
    purpose (not full input/output schemas, those are in the MCP server's own
    `tools/list` response and don't need duplicating in prose).

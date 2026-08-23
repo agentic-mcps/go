@@ -18,7 +18,7 @@ Module path: `github.com/ashwingopalsamy/agentic-go`
 Go version: 1.25+ (matches official SDK)
 SDK: `github.com/modelcontextprotocol/go-sdk` (official, not mark3labs)
 
-**v0.1.0 ships exactly 7 tools, 4 resources, 4 prompts, and the `agentic-go-vet` binary.** The later roadmap reaches 30 tools, 6 resources, and 6 prompts (the five original roadmap prompts plus `verify-change`). The audit tools are the thesis: no existing Go MCP server or analysis tool turns these production-grade rules into structured, AI-consumable findings.
+**v0.1.0 ships exactly 7 tools, 4 resources, 4 prompts, and the `agentic-go-vet` binary.** The later roadmap reaches 30 tools, 6 resources, and 6 prompts (the five original roadmap prompts plus `verify-change`). The audit tools are the thesis: agentic-go packages narrow concurrency and error-handling rules as structured, AI-consumable findings instead of trying to duplicate gopls navigation.
 
 ## Architecture
 
@@ -97,7 +97,7 @@ The provisional roadmap policy is:
 
 ## Tool catalog
 
-**30 tools total toward v1.0.0** (the inventory in `docs/contracts.md`) + 6 resources + 6 prompts. v0.1.0 is the first seven tools below; later phases add the remaining inventory. The audit tools are the differentiator: no existing Go MCP server turns production-grade rules into structured, AI-consumable findings.
+**30 tools total toward v1.0.0** (the inventory in `docs/contracts.md`) + 6 resources + 6 prompts. v0.1.0 is the first seven tools below; later phases add the remaining inventory. The audit tools are the differentiator: they expose the repository's deliberately narrow analyzer rules as stable structured findings.
 
 ### Skill reference coverage map
 
@@ -217,7 +217,7 @@ The build is staged around the canonical release boundary; dates are intentional
 
 3. **Custom `go/analysis` passes grounded in the skill references.** The v0.1.0 concurrency and error passes are the first thesis slice; later audit tools extend the same model. Every rule is grounded in a production note rather than an invented heuristic.
 
-4. **Structured output on every tool.** Every tool returns typed structured output via the SDK's `CallToolResult` with `StructuredContent`. This is the core thesis and the primary differentiator: AI agents get pre-processed intelligence, not verbose raw output they must parse themselves. Both competitors (hloiseau, gopls MCP) return text. We return structured data. Saves LLM tokens and reduces misinterpretation.
+4. **Structured output on every tool.** Every tool returns typed structured output via the SDK's `CallToolResult` with `StructuredContent`. AI agents receive bounded, domain-specific data rather than raw command output. Competing gopls MCP servers also expose structured tool results, so the differentiator is the shape and precision of agentic-go's test evidence and custom audits, not structured output by itself.
 
 5. **Resources and prompts, not just tools.** Both AgenticGoKit and mcp-navigator-go are tools-only. The MCP spec defines resources and prompts as first-class primitives. We expose the scoped v0.1.0 surfaces first, then complete the six-resource/six-prompt roadmap without tool-call overhead.
 
@@ -280,6 +280,6 @@ No other runtime dependencies. Everything else uses Go stdlib (`go test`, `go ve
 | gopls LSP client complexity | Start with the 7 navigation tools only. Use hloiseau's `pkg/lsp/client` as reference (not copy, learn the pattern). gopls's own MCP server is also reference. |
 | `go/analysis` custom passes are non-trivial (7 passes) | Phase 4 is the hardest and largest. Ship in order: concurrency + errors first (highest incident value), then security + observability, then naming + type-design + performance. If passes take too long, ship Tier 1-3 first (they don't need custom analysis), then add audit tools incrementally. Each pass is independent, so partial delivery is fine. |
 | Race report parsing is fragile (format changes between Go versions) | Pin the parser to the current race detector format (Go 1.22+). Document the Go version assumption. Add a version check at startup. |
-| Adoption is slow (competing with gopls built-in MCP) | The unique tools (race report, benchmark diff, coverage gaps, concurrency audit, error audit, fuzz orchestration) are the differentiator. gopls MCP has none of these. Market on the gap, not the overlap. |
+| Adoption is slow (competing with gopls-based MCP servers) | Lead with the narrow concurrency/error audits and bounded test evidence. Some competitors already expose tests or coverage, while the built-in gopls MCP concentrates on editor intelligence. Describe the verified gap, not the overlap. |
 | Name collision with future official tools | `agentic-go` is distinctive. If Google ships an official `go-mcp`, the differentiation (test intelligence, custom analysis, resources/prompts) still holds. |
 | Scope creep into agent framework territory | AgenticGoKit is an agent framework. We are not. Resist adding agent orchestration, memory, RAG, or LLM provider adapters. Stay focused on Go intelligence. |

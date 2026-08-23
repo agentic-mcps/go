@@ -105,6 +105,7 @@ fixture, no test — see each rule's "Why excluded" note in section 2.
 
 ## 2. Per-rule AST pattern
 
+<a id="concurrency-01"></a>
 ### concurrency-01 — fire-and-forget goroutine
 
 **Source sentence:** "Never fire-and-forget a goroutine. Every goroutine needs a clear owner, a stop signal (context cancellation or done channel), and a waiter that confirms exit."
@@ -182,6 +183,7 @@ func hasDoneSelect(body ast.Node) bool {
 
 ---
 
+<a id="concurrency-02"></a>
 ### concurrency-02 — missing Stop/Close/Shutdown
 
 **Source sentence:** "Provide `Stop`/`Close`/`Shutdown` for any type that spawns background goroutines. Callers must be able to shut it down."
@@ -237,6 +239,7 @@ for tn, fd := range spawningMethods {
 
 ---
 
+<a id="concurrency-03"></a>
 ### concurrency-03 — unjustified channel buffer size
 
 **Source sentence:** "Channel buffer size must be 0 or 1. Any other size requires a comment justifying why."
@@ -275,6 +278,7 @@ func unjustifiedBuffer(call *ast.CallExpr, cmap ast.CommentMap, stmt ast.Node) b
 
 ---
 
+<a id="concurrency-04"></a>
 ### concurrency-04 — undirected channel in a signature
 
 **Source sentence:** "Declare channel direction in signatures: `chan<- T` for send-only, `<-chan T` for receive-only. Direction turns runtime panics into compile-time errors."
@@ -303,6 +307,7 @@ Applied only to `fd.Type.Params.List` and `fd.Type.Results.List` for every `*ast
 
 ---
 
+<a id="concurrency-05"></a>
 ### concurrency-05 — `XxxAsync` internal-goroutine wrapper
 
 **Source sentence:** "Prefer synchronous functions. No `ProcessAsync` that fires a goroutine internally. Let the caller add concurrency with `errgroup` or a worker pool."
@@ -339,6 +344,7 @@ func isAsyncWrapper(fd *ast.FuncDecl) bool {
 
 ---
 
+<a id="concurrency-06"></a>
 ### concurrency-06 — `context.Background()`/`context.TODO()` inside a spawned goroutine
 
 **Source sentence:** "Propagate `context.Context` across goroutine boundaries. Never create `context.Background()` inside a spawned goroutine; use the parent context or a derived one."
@@ -373,6 +379,7 @@ func hasBackgroundInGoroutine(pass *analysis.Pass, lit *ast.FuncLit) bool {
 
 ---
 
+<a id="concurrency-07"></a>
 ### concurrency-07 — gap between `Lock()` and `defer Unlock()`
 
 **Source sentence:** "`defer mu.Unlock()` immediately after `mu.Lock()`, with nothing between. Code between lock and defer is a panic window that leaves the mutex locked."
@@ -424,6 +431,7 @@ func isUnlockCallOn(call *ast.CallExpr, recv, method string) bool {
 
 ---
 
+<a id="concurrency-08"></a>
 ### concurrency-08 — embedded `sync.Mutex`/`sync.RWMutex`/`sync.WaitGroup`
 
 **Source sentence:** "Never embed `sync.Mutex` or `sync.WaitGroup` in a struct. Embedding promotes `Lock`/`Unlock` to the public API. Use a named field: `mu sync.Mutex`."
@@ -458,6 +466,7 @@ func embeddedSyncPrimitive(pass *analysis.Pass, st *ast.StructType) []*ast.Field
 
 ---
 
+<a id="concurrency-09"></a>
 ### concurrency-09 — goroutine in `init()`
 
 **Source sentence:** "Never spawn goroutines in `init()`. Startup ordering is implicit and fragile."
@@ -481,6 +490,7 @@ func isInitWithGoroutine(fd *ast.FuncDecl) bool {
 
 ---
 
+<a id="concurrency-10"></a>
 ### concurrency-10 — undocumented concurrency safety (narrowed)
 
 **Source sentence:** "Document whether a type is concurrency-safe, and how: mutex, channels, or immutable-after-construction. Absent a statement, callers must assume it is not safe."
@@ -527,6 +537,7 @@ Flag when: `typeSpec.Name.IsExported()`, `structHasNamedSyncField` is true, and 
 
 ---
 
+<a id="concurrency-11"></a>
 ### concurrency-11 — EXCLUDED: prefer context cancellation over `done` channels
 
 **Source sentence:** "Prefer context cancellation over `done` channels for stop signalling. Reserve `done chan` for when you need to send a value, not just a signal."
@@ -535,6 +546,7 @@ Flag when: `typeSpec.Name.IsExported()`, `structHasNamedSyncField` is true, and 
 
 ---
 
+<a id="concurrency-12"></a>
 ### concurrency-12 — hand-rolled `WaitGroup` + error-channel coordination (use `errgroup.Group`)
 
 **Source sentence:** "Use `errgroup.Group` for coordinated goroutines that must all succeed. It propagates the first error and cancels the group on failure."
@@ -579,6 +591,7 @@ func manualWaitGroupErrChanPattern(pass *analysis.Pass, body *ast.BlockStmt) (fo
 
 ---
 
+<a id="concurrency-13"></a>
 ### concurrency-13 — EXCLUDED: `go test -race` in CI
 
 **Source sentence:** "Run `go test -race` in CI and never merge code that races under it. The race detector is the enforcement behind every rule in this file; a data race is undefined behavior, not a flake test to investigate later."
@@ -587,6 +600,7 @@ func manualWaitGroupErrChanPattern(pass *analysis.Pass, body *ast.BlockStmt) (fo
 
 ---
 
+<a id="concurrency-14"></a>
 ### concurrency-14 — `sync.Pool.Put` without a preceding `Reset()` (narrowed)
 
 **Source sentence:** "Reset pooled items to a clean state before `Put` (a `*bytes.Buffer` needs `Reset()`), and do not pool items you cannot fully reset or that still hold references to caller-owned data."
@@ -655,6 +669,7 @@ private payloads to the wrong caller; not a style issue.
 
 ---
 
+<a id="concurrency-15"></a>
 ### concurrency-15 — compound state mutated via multiple independent atomics (narrowed)
 
 **Source sentence:** "Reach for `sync.Map` and `sync/atomic` only in their niches... Use `atomic.Int64`, `atomic.Bool`, and `atomic.Pointer`... for a single hot counter, flag, or pointer without a mutex; compound state still needs a mutex."
@@ -720,6 +735,7 @@ func methodMutatesMultipleAtomicsWithoutMutex(pass *analysis.Pass, fd *ast.FuncD
 
 ---
 
+<a id="concurrency-17"></a>
 ### concurrency-17 — multi-lock acquisition without an ordering comment (narrowed)
 
 **Source sentence:** "When a path acquires multiple locks, acquire them in a consistent global order and document that order in a comment. Two goroutines that each hold one lock and reach for the other in opposite order deadlock under load."
@@ -766,6 +782,7 @@ func undocumentedMultiLock(cmap ast.CommentMap, body *ast.BlockStmt) (firstLock 
 
 ---
 
+<a id="concurrency-18"></a>
 ### concurrency-18 — `time.After` in a `select` loop, and `Ticker`/`Timer` never `Stop`ped
 
 **Source sentence:** "Stop every `time.Ticker` and `time.Timer`. Do not call `time.After` in a select loop: it allocates a new timer each iteration that the runtime cannot collect until the duration fires. Reuse one `time.Timer` with `Reset`, or use a `time.Ticker` you `Stop`."
@@ -834,6 +851,7 @@ func tickerOrTimerNeverStopped(pass *analysis.Pass, assign *ast.AssignStmt, fnBo
 
 ---
 
+<a id="concurrency-19"></a>
 ### concurrency-19 — loop variable captured by reference in a go/defer closure (pre-1.22 targets only)
 
 **Source sentence (pass-added — not one of concurrency.md's 18 numbered rules; quoted from this
@@ -1020,6 +1038,7 @@ hard-to-detect production defects, not a style nit.
 
 ---
 
+<a id="concurrency-20"></a>
 ### concurrency-20 — `defer` directly inside a loop, unscoped
 
 **Source sentence (pass-added — not one of concurrency.md's 18 numbered rules; quoted from this

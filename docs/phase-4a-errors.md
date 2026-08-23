@@ -121,6 +121,7 @@ space rather than reusing either gap.
 
 ## 2. Per-rule AST pattern
 
+<a id="errors-01"></a>
 ### errors-01 — error last return value
 
 **Source:** "`error` is always the last return value. A function returning `(User, error)` is
@@ -162,6 +163,7 @@ functions correctly; not `Info` because it breaks every caller's `if err != nil`
 
 ---
 
+<a id="errors-02"></a>
 ### errors-02 — exported concrete error type
 
 **Source:** "Exported functions return the `error` interface, never a concrete error type.
@@ -214,6 +216,7 @@ later is a breaking change across service boundaries, not a local cleanup.
 
 ---
 
+<a id="errors-03"></a>
 ### errors-03 — happy path in `else`
 
 **Source:** "Handle errors before the happy path. Put the error path in the `if`, leave the happy
@@ -245,6 +248,7 @@ correctness.
 
 ---
 
+<a id="errors-04"></a>
 ### errors-04 — log AND return (flagship rule)
 
 **Source:** "Handle each error exactly once: log OR return, never both. Logging then returning
@@ -321,6 +325,7 @@ one timeout misread as dozens of failures). Direct incident-response cost, not s
 
 ---
 
+<a id="errors-05"></a>
 ### errors-05 — bare `return err` with no context
 
 **Source:** "Wrap errors with context at each meaningful call boundary... Without context, a bare
@@ -354,6 +359,7 @@ doesn't corrupt behavior; distinct from `errors-04` which is the double-handling
 
 ---
 
+<a id="errors-06"></a>
 ### errors-06 — "failed to" prefix
 
 **Source:** "Noun phrases for context, not 'failed to' prefixes... Noun phrases stack cleanly."
@@ -380,6 +386,7 @@ compile time — skip rather than guess.
 
 ---
 
+<a id="errors-07"></a>
 ### errors-07 — string casing/punctuation/acronyms
 
 **Source:** "Error strings: lowercase, no ending punctuation, no capitalized acronyms.
@@ -424,6 +431,7 @@ runtime behavior.
 
 ---
 
+<a id="errors-08"></a>
 ### errors-08 — EXCLUDED: `%w` vs `%v`
 
 **Source:** "Use `%w` only when callers need `errors.Is`/`errors.As` on the wrapped type. Use `%v`
@@ -443,6 +451,7 @@ approximated with a boundary-guessing heuristic.
 
 ---
 
+<a id="errors-09"></a>
 ### errors-09 — bare error discard without comment
 
 **Source:** "Never discard an error with `_` without a comment explaining why it is safe.
@@ -485,6 +494,7 @@ path is a data-loss risk, not a style nit; matches
 
 ---
 
+<a id="errors-10"></a>
 ### errors-10 — `panic` in library code
 
 **Source:** "No `panic` in library code. `panic` is for unrecoverable startup failures in `main`,
@@ -531,6 +541,7 @@ record can take down the entire ingestion worker; matches
 
 ---
 
+<a id="errors-11"></a>
 ### errors-11 — `MustXYZ` outside startup
 
 **Source:** "`MustXYZ` helpers only at program startup or package-level init. Never in request
@@ -585,6 +596,7 @@ the goroutine handling that work item (or the process, if unrecovered) mid-fligh
 
 ---
 
+<a id="errors-12"></a>
 ### errors-12 — boundary translation by string match
 
 **Source:** "At system boundaries (HTTP, gRPC, SQS), translate errors into canonical codes... A raw
@@ -651,6 +663,7 @@ severity like `errors-09`/`errors-15`.
 
 ---
 
+<a id="errors-13"></a>
 ### errors-13 — multiple `%w` verbs faking a linear chain
 
 **Source:** "`errors.Join`... folds independent errors into one... a single `fmt.Errorf` may carry
@@ -679,6 +692,7 @@ causal chain) and confuses incident responders reading the message.
 
 ---
 
+<a id="errors-14"></a>
 ### errors-14 — custom wrapper missing `Unwrap`
 
 **Source:** "Implement `Unwrap() error` so a wrapper joins the chain... a single `fmt.Errorf` may
@@ -742,6 +756,7 @@ which is a debugging cost, not an outage.
 
 ---
 
+<a id="errors-15"></a>
 ### errors-15 — goroutine without recover boundary
 
 **Source:** "Recover panics at goroutine and request boundaries... Wrap every goroutine entry point
@@ -803,6 +818,7 @@ one unrecovered goroutine panic takes down every concurrent job in that worker.
 
 ---
 
+<a id="errors-16"></a>
 ### errors-16 — `defer Close()` drops the error
 
 **Source:** "Capture deferred close errors with named returns. A bare `defer rc.Close()` drops the
@@ -870,6 +886,7 @@ silently ignored errors.
 
 ---
 
+<a id="errors-17"></a>
 ### errors-17 — retry classification by string match
 
 **Source:** "Classify retryable versus terminal errors with data, not string matching... A
@@ -901,6 +918,7 @@ wording change, misses wrapped errors), same severity tier.
 
 ---
 
+<a id="errors-18"></a>
 ### errors-18 — EXCLUDED: raw error string as metric label
 
 **Source:** "Label error metrics by a stable code bucket, not the raw error string.
@@ -923,6 +941,7 @@ specific metrics client import path, but that's out of this file's self-containe
 
 ---
 
+<a id="errors-19"></a>
 ### errors-19 — `os.Exit`/`log.Fatal*` outside `main`
 
 **Source:** project Go convention: "`os.Exit` and `log.Fatal` only in
