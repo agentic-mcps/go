@@ -46,26 +46,28 @@ Startup sequence:
    carve-out, level from `--log-level`. Every subsequent step — including
    preflight — logs through this logger, never `fmt.Println` or
    `log.Default()`.
-3. **Startup preflight** — fatal (`logger.Error(...)` then `os.Exit(1)`,
+3. Create the process context with
+   `signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)`.
+4. **Startup preflight** — fatal (`logger.Error(...)` then `os.Exit(1)`,
    never a silent `os.Exit` with no logged reason) if any of:
    - `--workspace` does not resolve to a directory, or that directory has no
      `go.mod` reachable from it (nor a `go.work` workspace file covering it).
    This is the predictable top support burden this project can eliminate for
    free: cheaper to fail loud once at startup than to have every tool
    independently discover that this is not a Go workspace on its first call.
-4. Resolve `--workspace` to an absolute path; `os.Chdir` is NOT done — pass the
+5. Resolve `--workspace` to an absolute path; `os.Chdir` is NOT done — pass the
    absolute path explicitly to every tool call instead. (Chdir in a
    long-lived server is a footgun the moment any tool call is concurrent.)
-5. Construct the server with deprecated MCP logging disabled:
+6. Construct the server with deprecated MCP logging disabled:
    `server := mcp.NewServer(&mcp.Implementation{Name: "agentic-go", Version: "0.1.0"}, &mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}})`.
-6. Call every `Register<Name>(server)` function in one explicit flat list,
+7. Call every `Register<Name>(server)` function in one explicit flat list,
    ordered by phase/tier (Tier 1 first). This list is the single place that
    proves which tools exist — each new tool adds one line here and never
    touches this file for anything else.
-7. Initialize trace under `os.UserCacheDir()/agentic-go/runs`, inject it into
+8. Initialize trace under `os.UserCacheDir()/agentic-go/runs`, inject it into
    tool constructors, and run `server.Run(ctx, &mcp.StdioTransport{})`.
-8. `ctx` is `signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)` —
-   graceful shutdown on Ctrl-C, propagated into every in-flight tool call.
+9. Run with graceful shutdown on Ctrl-C/SIGTERM, propagated into every
+   in-flight tool call.
 
 ## `go_test_structured`
 

@@ -1,0 +1,7 @@
+.DS_Store
+dist/
+coverage.out
+*.test
+
+/agentic-go
+/agentic-go-vet
