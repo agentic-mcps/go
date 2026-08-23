@@ -248,13 +248,16 @@ Goroutine 6 (running) created at:
 
 Implements the trace contract from `docs/contracts.md` exactly. Public surface:
 ```go
-func Init(logLevel string) *Tracer // reads AGENTIC_GO_TRACE once, no-op Tracer if unset
-func (t *Tracer) Record(toolName string, args any, duration time.Duration, resultSummary string)
+func Init() (*Tracer, error) // reads AGENTIC_GO_TRACE once; disabled tracer if unset
+func (t *Tracer) Record(event Event) error
 func (t *Tracer) Close() error // flushes and closes the JSONL file, called from main's shutdown path
 ```
 `Record` on a no-op `Tracer` (env var unset) does nothing and allocates
 nothing — check the bool first, return before touching `args` (which would
 otherwise cost a `json.Marshal` + `sha256.Sum` on every call for no reason).
+Enabled initialization reports cache-directory failures instead of silently
+disabling a trace the user explicitly requested. `Event` accepts only bounded
+aggregate fields and an `ErrorKind` enum; it has no raw-error field.
 
 ## Fixture: `internal/tools/testdata/fixtures/testing/`
 
