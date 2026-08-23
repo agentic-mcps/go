@@ -22,6 +22,8 @@ func TestAuditFixtures(t *testing.T) {
 		{"errors-01", finding.SeverityWarning},
 		{"errors-02", finding.SeverityError},
 		{"errors-03", finding.SeverityInfo},
+		{"errors-04", finding.SeverityError},
+		{"errors-05", finding.SeverityWarning},
 		{"errors-06", finding.SeverityInfo},
 		{"errors-07", finding.SeverityInfo},
 	}
@@ -38,10 +40,22 @@ func TestAuditFixtures(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if result.Total != 1 || len(result.Findings) != 1 {
+			wantTotal := 1
+			if tc.rule == "errors-05" {
+				wantTotal = 2
+			}
+			if result.Total != wantTotal || len(result.Findings) != wantTotal {
 				t.Fatalf("result = %#v", result)
 			}
 			got := result.Findings[0]
+			if tc.rule == "errors-05" {
+				for _, candidate := range result.Findings {
+					if candidate.Rule == tc.rule {
+						got = candidate
+						break
+					}
+				}
+			}
 			if got.Rule != tc.rule || got.Severity != tc.sev || got.Location.File != filepath.ToSlash(filepath.Join(pkg, "violation.go")) {
 				t.Fatalf("finding = %#v", got)
 			}
@@ -57,6 +71,17 @@ func TestAuditFixtures(t *testing.T) {
 			}
 			if got.Location.Line != wantLine {
 				t.Fatalf("line = %d, want %d", got.Location.Line, wantLine)
+			}
+			if tc.rule == "errors-05" {
+				foundSuppression := false
+				for _, candidate := range result.Findings {
+					if candidate.Rule == "errors-04" && strings.HasSuffix(candidate.Location.File, "suppression.go") {
+						foundSuppression = true
+					}
+				}
+				if !foundSuppression {
+					t.Fatalf("suppression finding missing: %#v", result.Findings)
+				}
 			}
 			for _, f := range result.Findings {
 				if strings.HasSuffix(f.Location.File, "compliant.go") {

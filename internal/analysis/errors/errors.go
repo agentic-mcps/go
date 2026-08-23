@@ -28,6 +28,8 @@ func init() {
 	astutil.RegisterRule("errors-01", "error_last_return", finding.SeverityWarning)
 	astutil.RegisterRule("errors-02", "exported_concrete_error", finding.SeverityError)
 	astutil.RegisterRule("errors-03", "happy_path_in_else", finding.SeverityInfo)
+	astutil.RegisterRule("errors-04", "log_and_return", finding.SeverityError)
+	astutil.RegisterRule("errors-05", "bare_return_error", finding.SeverityWarning)
 	astutil.RegisterRule("errors-06", "failed_to_prefix", finding.SeverityInfo)
 	astutil.RegisterRule("errors-07", "error_string_style", finding.SeverityInfo)
 }
@@ -47,6 +49,14 @@ func run(pass *analysis.Pass) (any, error) {
 			if isErrorCheck(pass, x) && x.Else != nil {
 				if _, nested := x.Else.(*ast.IfStmt); !nested {
 					astutil.Report(pass, x.Else.Pos(), "errors-03", "error check at %s nests the happy path inside an else block — leave the happy path unindented after the if", pass.Fset.Position(x.Pos()))
+				}
+			}
+			if name, ok := errorCheckIdent(pass, x); ok {
+				if logCall, ret, matched := logThenReturn(x.Body, name); matched {
+					sel := logCall.Fun.(*ast.SelectorExpr)
+					astutil.Report(pass, x.Pos(), "errors-04", "%s is logged via %s and then returned at %s — pick one: log, or wrap and return, never both", name.Name, sel.Sel.Name, pass.Fset.Position(ret.Pos()))
+				} else if bareReturn(x.Body, name) {
+					astutil.Report(pass, x.Pos(), "errors-05", "%s returned bare with no context at %s — wrap at this boundary: fmt.Errorf(\"...: %%w\", %s)", name.Name, pass.Fset.Position(x.Pos()), name.Name)
 				}
 			}
 		case *ast.CallExpr:
@@ -87,24 +97,80 @@ func checkResultList(pass *analysis.Pass, results *ast.FieldList, name string) {
 }
 
 func isErrorCheck(pass *analysis.Pass, stmt *ast.IfStmt) bool {
+	_, ok := errorCheckIdent(pass, stmt)
+	return ok
+}
+
+func errorCheckIdent(pass *analysis.Pass, stmt *ast.IfStmt) (*ast.Ident, bool) {
 	b, ok := stmt.Cond.(*ast.BinaryExpr)
 	if !ok || b.Op != token.NEQ {
-		return false
+		return nil, false
 	}
 	left, lok := b.X.(*ast.Ident)
 	right, rok := b.Y.(*ast.Ident)
 	if !lok || !rok {
-		return false
+		return nil, false
 	}
 	if right.Name == "nil" && isErrorIdent(pass, left) {
-		return true
+		return left, true
 	}
-	return left.Name == "nil" && isErrorIdent(pass, right)
+	if left.Name == "nil" && isErrorIdent(pass, right) {
+		return right, true
+	}
+	return nil, false
 }
 
 func isErrorIdent(pass *analysis.Pass, id *ast.Ident) bool {
 	t := pass.TypesInfo.TypeOf(id)
 	return t != nil && types.Implements(t, types.Universe.Lookup("error").Type().Underlying().(*types.Interface))
+}
+
+var loggingMethods = map[string]bool{"Error": true, "Errorf": true, "Errorln": true, "ErrorContext": true, "Warn": true, "Warnf": true, "WarnContext": true, "Err": true}
+
+func logThenReturn(block *ast.BlockStmt, name *ast.Ident) (*ast.CallExpr, *ast.ReturnStmt, bool) {
+	for i, stmt := range block.List {
+		call, ok := astutil.ExprStmtCall(stmt)
+		if !ok || !isLoggingCall(call) || !references(call, name.Name) {
+			continue
+		}
+		for _, later := range block.List[i+1:] {
+			if ret, ok := later.(*ast.ReturnStmt); ok && references(ret, name.Name) {
+				return call, ret, true
+			}
+		}
+	}
+	return nil, nil, false
+}
+
+func isLoggingCall(call *ast.CallExpr) bool {
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && loggingMethods[sel.Sel.Name]
+}
+
+func references(node ast.Node, name string) bool {
+	found := false
+	ast.Inspect(node, func(n ast.Node) bool {
+		if id, ok := n.(*ast.Ident); ok && id.Name == name {
+			found = true
+			return false
+		}
+		return true
+	})
+	return found
+}
+
+func bareReturn(block *ast.BlockStmt, name *ast.Ident) bool {
+	for _, stmt := range block.List {
+		ret, ok := stmt.(*ast.ReturnStmt)
+		if ok {
+			for _, result := range ret.Results {
+				if id, ok := result.(*ast.Ident); ok && id.Name == name.Name {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func checkMessage(pass *analysis.Pass, call *ast.CallExpr) {
