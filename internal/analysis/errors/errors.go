@@ -30,6 +30,9 @@ func init() {
 	astutil.RegisterRule("errors-03", "happy_path_in_else", finding.SeverityInfo)
 	astutil.RegisterRule("errors-04", "log_and_return", finding.SeverityError)
 	astutil.RegisterRule("errors-05", "bare_return_error", finding.SeverityWarning)
+	astutil.RegisterRule("errors-09", "discarded_error", finding.SeverityError)
+	astutil.RegisterRule("errors-10", "library_panic", finding.SeverityError)
+	astutil.RegisterRule("errors-11", "must_outside_startup", finding.SeverityError)
 	astutil.RegisterRule("errors-06", "failed_to_prefix", finding.SeverityInfo)
 	astutil.RegisterRule("errors-07", "error_string_style", finding.SeverityInfo)
 }
@@ -63,7 +66,92 @@ func run(pass *analysis.Pass) (any, error) {
 			checkMessage(pass, x)
 		}
 	})
+	for _, file := range pass.Files {
+		cmap := ast.NewCommentMap(pass.Fset, file, file.Comments)
+		ast.Inspect(file, func(node ast.Node) bool {
+			switch x := node.(type) {
+			case *ast.AssignStmt:
+				if isBareErrDiscard(pass, x) && len(cmap[x]) == 0 {
+					astutil.Report(pass, x.Pos(), "errors-09", "error discarded with \"_ = %s\" at %s with no comment explaining why it's safe", errorDiscardName(x), pass.Fset.Position(x.Pos()))
+				}
+			case *ast.CallExpr:
+				if isPanicCall(pass, x) && !startupContext(pass, x.Pos()) {
+					astutil.Report(pass, x.Pos(), "errors-10", "panic(...) at %s outside main/init — return an error instead; panic is not control flow in library code", pass.Fset.Position(x.Pos()))
+				}
+				if name, ok := mustCall(x); ok && !allowedMust(pass, x.Pos(), name) {
+					astutil.Report(pass, x.Pos(), "errors-11", "%s called at %s outside main/init/TestMain/package-init — Must* helpers panic and must not run in request or worker paths", name, pass.Fset.Position(x.Pos()))
+				}
+			}
+			return true
+		})
+	}
 	return nil, nil
+}
+
+func isBareErrDiscard(pass *analysis.Pass, a *ast.AssignStmt) bool {
+	if a.Tok != token.ASSIGN || len(a.Lhs) != 1 || len(a.Rhs) != 1 {
+		return false
+	}
+	l, ok := a.Lhs[0].(*ast.Ident)
+	if !ok || l.Name != "_" {
+		return false
+	}
+	id, ok := a.Rhs[0].(*ast.Ident)
+	return ok && isErrorIdent(pass, id)
+}
+func errorDiscardName(a *ast.AssignStmt) string {
+	if id, ok := a.Rhs[0].(*ast.Ident); ok {
+		return id.Name
+	}
+	return "error"
+}
+func isPanicCall(pass *analysis.Pass, c *ast.CallExpr) bool {
+	id, ok := c.Fun.(*ast.Ident)
+	if !ok || id.Name != "panic" {
+		return false
+	}
+	_, ok = pass.TypesInfo.Uses[id].(*types.Builtin)
+	return ok
+}
+func enclosingFunc(pass *analysis.Pass, pos token.Pos) *ast.FuncDecl {
+	for _, f := range pass.Files {
+		var found *ast.FuncDecl
+		ast.Inspect(f, func(n ast.Node) bool {
+			if d, ok := n.(*ast.FuncDecl); ok && d.Pos() <= pos && pos <= d.End() {
+				found = d
+				return true
+			}
+			return true
+		})
+		if found != nil {
+			return found
+		}
+	}
+	return nil
+}
+func startupContext(pass *analysis.Pass, pos token.Pos) bool {
+	f := enclosingFunc(pass, pos)
+	return f != nil && pass.Pkg.Name() == "main" && (f.Name.Name == "main" || f.Name.Name == "init")
+}
+func mustCall(c *ast.CallExpr) (string, bool) {
+	switch f := c.Fun.(type) {
+	case *ast.Ident:
+		if strings.HasPrefix(f.Name, "Must") {
+			return f.Name, true
+		}
+	case *ast.SelectorExpr:
+		if strings.HasPrefix(f.Sel.Name, "Must") {
+			return f.Sel.Name, true
+		}
+	}
+	return "", false
+}
+func allowedMust(pass *analysis.Pass, pos token.Pos, name string) bool {
+	f := enclosingFunc(pass, pos)
+	if f == nil {
+		return true
+	}
+	return f.Name.Name == "main" || f.Name.Name == "init" || f.Name.Name == "TestMain" || strings.HasPrefix(f.Name.Name, "Must")
 }
 
 func checkReturns(pass *analysis.Pass, fn *ast.FuncDecl) {
