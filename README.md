@@ -44,8 +44,13 @@ The server uses stdio only. A generic MCP client configuration is:
 ```
 
 `--workspace` defaults to the current directory. The server validates that
-the directory is a Go module or workspace before serving requests. Use
-`agentic-go --version` to print the running version.
+the directory is a Go module or workspace before serving requests. Startup
+also validates the `go` executable inherited from the MCP process `PATH` with
+`GOTOOLCHAIN=local`: it must be Go 1.25 or newer and satisfy the configured
+workspace's active module requirements. MCP clients can inherit a different
+`PATH` than an interactive shell, so configure the client's process
+environment when necessary. Agentic-go does not download a replacement
+toolchain. Use `agentic-go --version` to print the running version.
 
 Available server flags are:
 

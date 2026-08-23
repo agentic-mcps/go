@@ -52,6 +52,11 @@ Startup sequence:
    `signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)`.
 4. **Startup preflight** — fatal (`logger.Error(...)` then `os.Exit(1)`,
    never a silent `os.Exit` with no logged reason) if any of:
+   - the `go` executable inherited from the MCP process `PATH` cannot be
+     executed with `GOTOOLCHAIN=local`, reports a version below stable Go
+     1.25, or is older than the highest Go version required by the active
+     workspace modules; the error names the selected and required versions
+     and tells the user to check the MCP client's `PATH`;
    - `--workspace` does not resolve to a directory, or that directory has no
      `go.mod` reachable from it (nor a `go.work` workspace file covering it).
    This is the predictable top support burden this project can eliminate for

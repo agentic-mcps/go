@@ -28,6 +28,14 @@ Grounded facts (verified against the local official SDK checkout at
   deprecated logging; lifecycle diagnostics remain on stderr.
 - Go 1.27 is current stable. The SDK requires Go 1.25, so the module floor is
   1.25 and CI explicitly tests Go 1.25, 1.26, and 1.27.
+- Server startup resolves `go` through the MCP process `PATH` and checks it
+  with `GOTOOLCHAIN=local` before serving stdio. The selected toolchain must
+  compare at or above stable Go 1.25 and satisfy the highest Go version
+  required by the active workspace modules. A valid newer development
+  toolchain may pass preflight but remains outside the explicit Go 1.25–1.27
+  support claim. Missing, malformed, older, or insufficient toolchains fail
+  startup with an actionable diagnostic; v0.1 does not download toolchains or
+  expose a separate Go-binary flag.
 - `golang.org/x/tools/go/analysis/checker` confirmed API (2026-08-22):
   `checker.Analyze(analyzers []*analysis.Analyzer, pkgs []*packages.Package, opts *checker.Options) (*checker.Graph, error)`.
   Requires `pkgs` loaded with the `packages.LoadAllSyntax`-equivalent `Need*`
@@ -45,11 +53,13 @@ go 1.25
 CI matrix tests `{1.25, 1.26, 1.27}` — floor stays 1.25 for adoption reach,
 CI proves forward-compat. `go.mod` `toolchain` directive: omit (let CI pick).
 
-Dependencies — exactly these two in production code, nothing else, per plan's own
+Dependencies — exactly these three in production code, nothing else, per plan's own
 dependency table:
 - `github.com/modelcontextprotocol/go-sdk`
 - `golang.org/x/tools` (gopls libs + `go/analysis` + `go/analysis/checker`
   + `go/analysis/passes/inspect` + `go/analysis/passes/fieldalignment`)
+- `golang.org/x/mod/modfile` for parsing active `go.mod` and `go.work`
+  requirements during the offline startup toolchain preflight.
 
 **Fixture-only exception.** A handful of Phase 4 audit-domain fixtures must compile against
 the *real* third-party type their predicate resolves via `pass.TypesInfo` — a local mock type
