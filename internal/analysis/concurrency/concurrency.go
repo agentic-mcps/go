@@ -16,6 +16,8 @@ import (
 
 func init() {
 	astutil.RegisterRule("concurrency-03", "unjustified_channel_buffer", finding.SeverityWarning)
+	astutil.RegisterRule("concurrency-01", "fire_and_forget_goroutine", finding.SeverityError)
+	astutil.RegisterRule("concurrency-06", "background_context_in_goroutine", finding.SeverityError)
 	astutil.RegisterRule("concurrency-04", "undirected_channel_signature", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-05", "async_goroutine_wrapper", finding.SeverityWarning)
 	astutil.RegisterRule("concurrency-09", "goroutine_in_init", finding.SeverityWarning)
@@ -61,6 +63,30 @@ func run(pass *analysis.Pass) (any, error) {
 		return true
 	})
 	ins.WithStack(nil, func(_ ast.Node, _ bool, stack []ast.Node) bool {
+		if gs, ok := stack[len(stack)-1].(*ast.GoStmt); ok {
+			if !strings.HasSuffix(pass.Fset.Position(gs.Pos()).Filename, "_test.go") {
+				var block *ast.BlockStmt
+				main := false
+				for i := len(stack) - 2; i >= 0; i-- {
+					switch n := stack[i].(type) {
+					case *ast.BlockStmt:
+						if block == nil {
+							block = n
+						}
+					case *ast.FuncDecl:
+						main = n.Recv == nil && n.Name != nil && n.Name.Name == "main"
+					}
+				}
+				if block != nil && isFireAndForget(pass, gs, block) {
+					astutil.Report(pass, gs.Pos(), "concurrency-01", "goroutine spawned at %s has no owner, stop signal, or waiter — wrap it in a Start/Stop-owned worker, errgroup.Group, or a WaitGroup", pass.Fset.Position(gs.Pos()))
+				}
+				if !main {
+					if lit, ok := gs.Call.Fun.(*ast.FuncLit); ok && hasBackgroundInGoroutine(pass, lit) {
+						astutil.Report(pass, gs.Pos(), "concurrency-06", "goroutine at %s calls context.Background()/context.TODO() instead of deriving from the parent context — orphans work after client disconnect", pass.Fset.Position(gs.Pos()))
+					}
+				}
+			}
+		}
 		deferStmt, ok := stack[len(stack)-1].(*ast.DeferStmt)
 		if ok {
 			if loop, found := deferEnclosingLoop(stack); found {
@@ -74,6 +100,74 @@ func run(pass *analysis.Pass) (any, error) {
 		return true
 	})
 	return nil, nil
+}
+
+func isFireAndForget(pass *analysis.Pass, gs *ast.GoStmt, enclosing *ast.BlockStmt) bool {
+	for _, stmt := range enclosing.List {
+		call, ok := astutil.ExprStmtCall(stmt)
+		if !ok {
+			continue
+		}
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			continue
+		}
+		if sel.Sel.Name == "Add" && strings.Contains(astutil.TypeString(pass, sel.X), "sync.WaitGroup") {
+			return false
+		}
+		if sel.Sel.Name == "Go" && strings.Contains(astutil.TypeString(pass, sel.X), "errgroup.Group") {
+			return false
+		}
+	}
+	if lit, ok := gs.Call.Fun.(*ast.FuncLit); ok {
+		return !hasDoneSelect(lit.Body)
+	}
+	for _, arg := range gs.Call.Args {
+		if astutil.TypeString(pass, arg) == "context.Context" {
+			return false
+		}
+	}
+	return true
+}
+func hasDoneSelect(body ast.Node) bool {
+	found := false
+	ast.Inspect(body, func(n ast.Node) bool {
+		cc, ok := n.(*ast.CommClause)
+		if !ok || cc.Comm == nil {
+			return true
+		}
+		var call *ast.CallExpr
+		switch comm := cc.Comm.(type) {
+		case *ast.ExprStmt:
+			if ue, ok := comm.X.(*ast.UnaryExpr); ok && ue.Op == token.ARROW {
+				call, _ = ue.X.(*ast.CallExpr)
+			}
+		case *ast.AssignStmt:
+			if len(comm.Rhs) == 1 {
+				if ue, ok := comm.Rhs[0].(*ast.UnaryExpr); ok && ue.Op == token.ARROW {
+					call, _ = ue.X.(*ast.CallExpr)
+				}
+			}
+		}
+		if call != nil {
+			if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "Done" {
+				found = true
+			}
+		}
+		return true
+	})
+	return found
+}
+func hasBackgroundInGoroutine(pass *analysis.Pass, lit *ast.FuncLit) bool {
+	found := false
+	ast.Inspect(lit.Body, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if ok && (astutil.IsPkgFunc(pass, call, "context", "Background") || astutil.IsPkgFunc(pass, call, "context", "TODO")) {
+			found = true
+		}
+		return true
+	})
+	return found
 }
 
 func unjustifiedBuffer(call *ast.CallExpr, cmap ast.CommentMap, stmt ast.Node) bool {

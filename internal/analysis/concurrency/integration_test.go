@@ -19,6 +19,8 @@ func TestFixtureRules(t *testing.T) {
 		dir  string
 	}{
 		{"concurrency-03", "rule03"},
+		{"concurrency-01", "rule01"},
+		{"concurrency-06", "rule06"},
 		{"concurrency-04", "rule04"},
 		{"concurrency-05", "rule05"},
 		{"concurrency-09", "rule09"},
@@ -30,11 +32,21 @@ func TestFixtureRules(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if result.Total != 1 || len(result.Findings) != 1 {
-				t.Fatalf("got %d findings: %#v", result.Total, result.Findings)
+			var target []finding.Finding
+			for _, item := range result.Findings {
+				if item.Rule == tc.rule {
+					target = append(target, item)
+				}
 			}
-			got := result.Findings[0]
-			if got.Rule != tc.rule || got.Severity != finding.SeverityWarning {
+			if len(target) != 1 {
+				t.Fatalf("got %d target findings (total %d): %#v", len(target), result.Total, result.Findings)
+			}
+			got := target[0]
+			wantSeverity := finding.SeverityWarning
+			if tc.rule == "concurrency-01" || tc.rule == "concurrency-06" {
+				wantSeverity = finding.SeverityError
+			}
+			if got.Rule != tc.rule || got.Severity != wantSeverity {
 				t.Fatalf("got rule/severity %s/%s", got.Rule, got.Severity)
 			}
 			if got.Location.File != "violation.go" {
