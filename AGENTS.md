@@ -2,10 +2,12 @@
 
 ## Start here
 
-Read [`docs/v0.1.0-release-scope.md`](docs/v0.1.0-release-scope.md) before
-changing behavior. It is the current release authority and overrides broader
-roadmap documents. Read [`docs/contracts.md`](docs/contracts.md) when changing
-protocol types, execution boundaries, findings, tracing, or analyzer wiring.
+Read [`docs/v0.2.0-release-scope.md`](docs/v0.2.0-release-scope.md) before
+changing v0.2 behavior. It is the target release authority and overrides
+broader roadmap documents. The tagged
+[`v0.1.0 release scope`](docs/v0.1.0-release-scope.md) remains the compatibility
+baseline. Read [`docs/contracts.md`](docs/contracts.md) when changing protocol
+types, execution boundaries, findings, tracing, or analyzer wiring.
 
 For a rule change, also read the matching domain specification:
 [`docs/phase-4a-concurrency.md`](docs/phase-4a-concurrency.md) or
@@ -14,8 +16,12 @@ For a rule change, also read the matching domain specification:
 
 ## Invariants
 
-- v0.1.0 is exactly seven tools, four resources, four prompts, and the
-  `agentic-go-vet` binary. `internal/tools.RegisterAll` is the live inventory.
+- Tagged v0.1.0 is exactly seven tools, four resources, four prompts, and the
+  `agentic-go-vet` binary. The v0.2.0 target adds only `go_change_impact`, for
+  eight tools total. `internal/tools.RegisterAll` is always the live inventory.
+- `go_change_impact` returns conservative verification candidates with
+  evidence and explicit uncertainty. It never claims to prove that omitted
+  code is safe and never executes its proposed plan.
 - The server is stdio-only and helps an external coding agent make decisions.
   It does not embed an LLM or become an agent framework.
 - All filesystem access stays within the configured, symlink-resolved

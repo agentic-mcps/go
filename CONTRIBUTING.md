@@ -5,15 +5,16 @@ analysis over a large rule or tool count.
 
 ## Before changing code
 
-Read [`AGENTS.md`](AGENTS.md) and the canonical
-[`v0.1.0 release scope`](docs/v0.1.0-release-scope.md). Shared protocol and
-safety invariants live in [`docs/contracts.md`](docs/contracts.md); domain
-specifications under `docs/` explain individual analyzer rules and their
-limitations.
+Read [`AGENTS.md`](AGENTS.md), the canonical
+[`v0.2.0 release scope`](docs/v0.2.0-release-scope.md), and the tagged
+[`v0.1.0 compatibility baseline`](docs/v0.1.0-release-scope.md). Shared
+protocol and safety invariants live in [`docs/contracts.md`](docs/contracts.md);
+domain specifications under `docs/` explain individual analyzer rules and
+their limitations.
 
 Discuss additions that change the MCP inventory, trust boundary, output schema,
 or supported platforms before implementation. Deferred roadmap items are not
-implicitly part of v0.1.0.
+implicitly part of v0.2.0.
 
 ## Development
 
@@ -57,6 +58,10 @@ findings. Register shipped protocol surfaces through
 `internal/tools.RegisterAll` and extend the in-memory protocol inventory test.
 Keep the MCP interface focused on local coding agents; CI-oriented output
 belongs in compatible command-line surfaces when it would distort MCP.
+Additive v0.2 protocol work must retain the v0.1 contract or document the
+compatibility behavior explicitly. Change-impact relationships are
+conservative candidates: preserve their evidence and uncertainty rather than
+presenting them as proof of runtime reachability.
 
 ## Pull requests
 

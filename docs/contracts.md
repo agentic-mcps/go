@@ -865,10 +865,12 @@ only place a bare count assertion is acceptable, because it is checking
 
 ## Roadmap inventory
 
-The full roadmap contains 30 tools, 6 resources, and 6 prompts toward v1.0.0.
+The full roadmap contains 31 tools, 6 resources, and 6 prompts toward v1.0.0.
 The v0.1.0 registry gate derives its 7-tool/4-resource/4-prompt expectation
-from [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md); future release
-catalogs derive from the roadmap table below. None of them
+from [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md). The v0.2.0 target
+derives its 8-tool/4-resource/4-prompt expectation from
+[`v0.2.0-release-scope.md`](v0.2.0-release-scope.md); future release catalogs
+derive from the roadmap table below. None of them
 re-derive the count independently; this table is the ground
 truth a registry test asserts against). Each phase file below owns the full
 `Input`/`Output`/annotations spec for its own rows; this table is the roster,
@@ -906,6 +908,7 @@ not a duplicate of those specs.
 | 28 | `go_test_map` | Phase 4b — `phase-4b-tier-2-tools.md` | roadmap |
 | 29 | `go_audit_all` | Phase 4 index — `phase-4a-index.md` | roadmap |
 | 30 | `go_generics_candidates` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
+| 31 | `go_change_impact` | `v0.2.0-release-scope.md` | v0.2.0 target |
 
 Deleted, never counted: `go_goroutine_leak` (strict subset of
 `concurrency-01`/`02`/`06`/`18`, a second tool re-reporting the same
@@ -957,13 +960,13 @@ this repo's CI config.
 ## v0.1.0 release scope — `docs/v0.1.0-release-scope.md`
 
 The canonical v0.1.0 release is exactly 7 tools, 4 resources, 4 prompts, and
-the `agentic-go-vet` binary. It is stdio-only; the 30-tool inventory above is
+the `agentic-go-vet` binary. It is stdio-only; the roadmap inventory above is
 the roadmap toward v1.0.0. Deprecated MCP logging capability is disabled:
 lifecycle logs go to stderr only. Long-running subprocess tools report MCP
 progress when a progress token is supplied.
 
 This file remains the canonical contracts reference for every phase, but
-the **release scope for v0.1.0 is scoped down** from the full 30-tool
+the **release scope for v0.1.0 is scoped down** from the full roadmap
 inventory above. `docs/v0.1.0-release-scope.md` defines what ships and what
 is deferred. Read it before starting any build work.
 
@@ -1000,6 +1003,18 @@ here or in the phase files it references. The scope doc does not redefine
 types, error handling, fixture layout, or the pass skeleton — it points
 back to this file for each.
 
+## v0.2.0 release scope — `docs/v0.2.0-release-scope.md`
+
+The canonical v0.2.0 target is exactly 8 tools, 4 resources, 4 prompts, and
+the `agentic-go-vet` binary. It adds `go_change_impact`, targeted test
+selection, bounded structured-test detail, explainable analyzer context, and a
+change-aware `verify-change` workflow. The tagged v0.1.0 scope remains its
+compatibility baseline.
+
+`docs/v0.2.0-release-scope.md` owns the complete public types, defaults,
+evidence model, uncertainty model, containment behavior, and focused release
+gate for these additions. Broader roadmap documents do not widen that scope.
+
 ## What every phase file assumes you already did
 
 1. Read this file fully.
@@ -1010,7 +1025,8 @@ back to this file for each.
 4. Will place fixtures under `internal/tools/testdata/fixtures/audit-<domain>/rule<NN>/`
    as specified above, never a shared mega-fixture and never a bare `<domain>/`
    or `testdata/<domain>/` prefix.
-5. Read `docs/v0.1.0-release-scope.md` to know which subset of this file's
-   full roadmap actually ships in v0.1.0. Skip cache and HTTP/SSE; progress
-   reporting is part of v0.1.0.
+5. Read the target release scope before implementation:
+   `docs/v0.2.0-release-scope.md` for v0.2 work and
+   `docs/v0.1.0-release-scope.md` for the tagged compatibility baseline. Skip
+   cache and HTTP/SSE; progress reporting remains part of the live contract.
 </content>

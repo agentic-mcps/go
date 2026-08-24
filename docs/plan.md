@@ -18,7 +18,7 @@ Module path: `github.com/ashwingopalsamy/agentic-go`
 Go version: 1.25+ (matches official SDK)
 SDK: `github.com/modelcontextprotocol/go-sdk` (official, not mark3labs)
 
-**v0.1.0 ships exactly 7 tools, 4 resources, 4 prompts, and the `agentic-go-vet` binary.** The later roadmap reaches 30 tools, 6 resources, and 6 prompts (the five original roadmap prompts plus `verify-change`). The audit tools are the thesis: agentic-go packages narrow concurrency and error-handling rules as structured, AI-consumable findings instead of trying to duplicate gopls navigation.
+**v0.1.0 ships exactly 7 tools, 4 resources, 4 prompts, and the `agentic-go-vet` binary. v0.2.0 targets 8 tools by adding only `go_change_impact`.** The later roadmap reaches 31 tools, 6 resources, and 6 prompts (the five original roadmap prompts plus `verify-change`). The audit tools and change-aware verification are the thesis: agentic-go packages compiler-grounded evidence for external coding agents instead of trying to duplicate gopls navigation.
 
 ## Architecture
 
@@ -97,7 +97,7 @@ The provisional roadmap policy is:
 
 ## Tool catalog
 
-**30 tools total toward v1.0.0** (the inventory in `docs/contracts.md`) + 6 resources + 6 prompts. v0.1.0 is the first seven tools below; later phases add the remaining inventory. The audit tools are the differentiator: they expose the repository's deliberately narrow analyzer rules as stable structured findings.
+**31 tools total toward v1.0.0** (the inventory in `docs/contracts.md`) + 6 resources + 6 prompts. v0.1.0 is the first seven tools; v0.2.0 adds only `go_change_impact`; later phases add the remaining inventory. The audit tools and evidence-backed change verification are the differentiators.
 
 ### Skill reference coverage map
 
@@ -130,6 +130,7 @@ The rule corpus reproduced in the Phase 4 specifications is operationalized into
 
 | Tool | Input | Output | Backing tool |
 |---|---|---|---|
+| `go_change_impact` | local base revision, package scope, bounds | changed declarations, affected packages, selected verification steps, evidence, and uncertainty | Git diff + `go/packages` + SSA/call graph |
 | `go_panic_trace` | package, test name | structured: panic location, call chain with file:line, goroutine dump | `go test` panic capture |
 | `go_test_map` | package | structured: test function to production code it exercises (call graph) | `go test -json` + AST analysis |
 | `go_audit_concurrency` | package/path | structured concurrency findings | custom `go/analysis` pass |
@@ -204,7 +205,7 @@ The build is staged around the canonical release boundary; dates are intentional
 
 ### Post-v0.1.0 roadmap
 
-1. Add the remaining tools in the 30-tool inventory in `docs/contracts.md`, in dependency-aware phases: navigation, the remaining audit domains and consolidation tools, then creative and profiling tools.
+1. Ship the focused `go_change_impact` slice defined by `docs/v0.2.0-release-scope.md`, then add the remaining tools in the 31-tool inventory in dependency-aware phases: navigation, the remaining audit domains and consolidation tools, then creative and profiling tools.
 2. Add the two deferred resources, `agentic-go://config` and `agentic-go://cache-stats`, and then `agentic-go://trace-summary` if it was not delivered in v0.1.0; keep the six-URI inventory authoritative.
 3. Complete the five original roadmap prompts (`audit-package`, `pre-commit-check`, `bisect-flake`, `benchmark-regression-gate`, `explain-symbol`) and retain `verify-change` as the sixth prompt.
 4. Introduce gopls-backed navigation only after the v0.1.0 boundary; its subprocess lifecycle, compatibility, and cache behavior are separate milestones. HTTP/SSE and cache policy are also deferred.
