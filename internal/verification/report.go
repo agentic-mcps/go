@@ -14,6 +14,7 @@ const SchemaVersion = "agentic.verify/v1alpha1"
 // Severity is the portable importance of a finding.
 type Severity string
 
+// Finding severities are ordered from advisory information to blocking errors.
 const (
 	SeverityInfo    Severity = "info"
 	SeverityWarning Severity = "warning"
@@ -23,6 +24,7 @@ const (
 // ResultStatus is the automation state of a completed report.
 type ResultStatus string
 
+// Report result states distinguish complete evidence from findings and gaps.
 const (
 	ResultPass       ResultStatus = "pass"
 	ResultFindings   ResultStatus = "findings"
@@ -32,6 +34,7 @@ const (
 // EvidenceStatus records whether a planned check completed and what it found.
 type EvidenceStatus string
 
+// Evidence states distinguish executed outcomes from unavailable checks.
 const (
 	EvidencePassed  EvidenceStatus = "passed"
 	EvidenceFailed  EvidenceStatus = "failed"
@@ -43,6 +46,7 @@ const (
 // adapter or command name.
 type CheckKind string
 
+// Check kinds identify the language-native evidence shipped in v0.2.
 const (
 	CheckTests       CheckKind = "go.test"
 	CheckCoverage    CheckKind = "go.coverage"
@@ -54,6 +58,7 @@ const (
 // BaselineState describes how an analyzer diagnostic compares with the base.
 type BaselineState string
 
+// Baseline states classify diagnostics relative to the merge-base snapshot.
 const (
 	BaselineIntroduced BaselineState = "introduced"
 	BaselineExisting   BaselineState = "existing"
@@ -64,6 +69,7 @@ const (
 // ChangeKind describes a final-snapshot file or declaration change.
 type ChangeKind string
 
+// Change kinds describe final-worktree paths and declarations.
 const (
 	ChangeAdded     ChangeKind = "added"
 	ChangeModified  ChangeKind = "modified"
@@ -113,12 +119,12 @@ type ChangedFile struct {
 
 // ChangedDeclaration is one source declaration intersecting a changed range.
 type ChangedDeclaration struct {
+	BaseLocation    *Location  `json:"base_location,omitempty"`
+	CurrentLocation *Location  `json:"current_location,omitempty"`
 	Kind            string     `json:"kind"`
 	Package         string     `json:"package"`
 	Name            string     `json:"name"`
 	Change          ChangeKind `json:"change"`
-	BaseLocation    *Location  `json:"base_location,omitempty"`
-	CurrentLocation *Location  `json:"current_location,omitempty"`
 }
 
 // Change contains the source facts in a change snapshot.
@@ -131,8 +137,8 @@ type Change struct {
 type ImpactedPackage struct {
 	Kind     string   `json:"kind"`
 	ID       string   `json:"id"`
-	Distance int      `json:"distance"`
 	Reasons  []string `json:"reasons"`
+	Distance int      `json:"distance"`
 }
 
 // Impact contains the conservative package closure for a change.
@@ -144,19 +150,19 @@ type Impact struct {
 type Check struct {
 	ID       string    `json:"id"`
 	Kind     CheckKind `json:"kind"`
-	Required bool      `json:"required"`
-	Targets  []string  `json:"targets"`
 	Reason   string    `json:"reason"`
+	Targets  []string  `json:"targets"`
+	Required bool      `json:"required"`
 }
 
 // TestPackageSummary aggregates terminal test outcomes for one package.
 type TestPackageSummary struct {
 	Package string `json:"package"`
 	Status  string `json:"status"`
+	Output  string `json:"output,omitempty"`
 	Passed  int    `json:"passed"`
 	Failed  int    `json:"failed"`
 	Skipped int    `json:"skipped"`
-	Output  string `json:"output,omitempty"`
 }
 
 // TestCaseSummary is a retained failed or skipped test case.
@@ -164,17 +170,17 @@ type TestCaseSummary struct {
 	Package  string  `json:"package"`
 	Name     string  `json:"name"`
 	Status   string  `json:"status"`
-	ElapsedS float64 `json:"elapsed_s"`
 	Output   string  `json:"output,omitempty"`
+	ElapsedS float64 `json:"elapsed_s"`
 }
 
 // TestSummary contains bounded test evidence without passing test records.
 type TestSummary struct {
+	Packages   []TestPackageSummary `json:"packages"`
+	Nonpassing []TestCaseSummary    `json:"nonpassing"`
 	Passed     int                  `json:"passed"`
 	Failed     int                  `json:"failed"`
 	Skipped    int                  `json:"skipped"`
-	Packages   []TestPackageSummary `json:"packages"`
-	Nonpassing []TestCaseSummary    `json:"nonpassing"`
 }
 
 // SourceRange is a workspace-relative source range with a statement count.
@@ -189,10 +195,10 @@ type SourceRange struct {
 
 // CoverageSummary contains statement-weighted coverage of changed code.
 type CoverageSummary struct {
+	Uncovered          []SourceRange `json:"uncovered"`
 	TotalStatements    int           `json:"total_statements"`
 	CoveredStatements  int           `json:"covered_statements"`
 	Percent            float64       `json:"percent"`
-	Uncovered          []SourceRange `json:"uncovered"`
 	UncoveredTotal     int           `json:"uncovered_total"`
 	UncoveredTruncated bool          `json:"uncovered_truncated"`
 }
@@ -214,16 +220,16 @@ type RaceSummary struct {
 
 // Evidence records the outcome of one planned check.
 type Evidence struct {
-	CheckID    string           `json:"check_id"`
-	Kind       CheckKind        `json:"kind"`
-	Status     EvidenceStatus   `json:"status"`
-	DurationMS int64            `json:"duration_ms"`
-	Summary    string           `json:"summary"`
-	Error      string           `json:"error,omitempty"`
 	Tests      *TestSummary     `json:"tests,omitempty"`
 	Coverage   *CoverageSummary `json:"coverage,omitempty"`
 	Analysis   *AnalysisSummary `json:"analysis,omitempty"`
 	Race       *RaceSummary     `json:"race,omitempty"`
+	CheckID    string           `json:"check_id"`
+	Kind       CheckKind        `json:"kind"`
+	Status     EvidenceStatus   `json:"status"`
+	Summary    string           `json:"summary"`
+	Error      string           `json:"error,omitempty"`
+	DurationMS int64            `json:"duration_ms"`
 }
 
 // Finding is an observed issue produced by executed evidence.
@@ -257,16 +263,16 @@ type Uncertainty struct {
 // PolicyResult is the report's automation result, not a safety verdict.
 type PolicyResult struct {
 	Status           ResultStatus `json:"status"`
+	Summary          string       `json:"summary"`
 	ExitCode         int          `json:"exit_code"`
 	BlockingFindings int          `json:"blocking_findings"`
 	IncompleteChecks int          `json:"incomplete_checks"`
-	Summary          string       `json:"summary"`
 }
 
 // Report is the portable result shared by every delivery adapter.
 type Report struct {
-	SchemaVersion string        `json:"schema_version"`
 	Provider      Provider      `json:"provider"`
+	SchemaVersion string        `json:"schema_version"`
 	Repository    Repository    `json:"repository"`
 	Change        Change        `json:"change"`
 	Impact        Impact        `json:"impact"`
@@ -281,6 +287,7 @@ type Report struct {
 // FailOn controls which introduced analyzer severities block policy.
 type FailOn string
 
+// Fail-on thresholds control which introduced severities block policy.
 const (
 	FailOnError   FailOn = "error"
 	FailOnWarning FailOn = "warning"
@@ -290,8 +297,8 @@ const (
 
 // Policy controls report evaluation without changing collected evidence.
 type Policy struct {
-	FailOn             FailOn
 	MinChangedCoverage *float64
+	FailOn             FailOn
 }
 
 // NewReport initializes the canonical schema and every collection.

@@ -203,9 +203,9 @@ func TestPublishedSchemaMatchesReportVersion(t *testing.T) {
 		t.Fatalf("read published schema: %v", err)
 	}
 	var schema struct {
+		Properties map[string]any `json:"properties"`
 		ID         string         `json:"$id"`
 		Required   []string       `json:"required"`
-		Properties map[string]any `json:"properties"`
 	}
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatalf("decode published schema: %v", err)

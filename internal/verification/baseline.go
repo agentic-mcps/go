@@ -11,9 +11,9 @@ import (
 )
 
 type baselineComparison struct {
-	Summary       AnalysisSummary
 	Introduced    []Finding
 	Uncertainties []Uncertainty
+	Summary       AnalysisSummary
 }
 
 func compareAnalyzerFindings(checkID string, base, current []finding.Finding, files []SourceFile) baselineComparison {

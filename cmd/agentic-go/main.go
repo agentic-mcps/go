@@ -159,30 +159,30 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if flags.NArg() != 0 {
-		fmt.Fprintf(stderr, "agentic-go verify: unexpected arguments: %s\n", strings.Join(flags.Args(), " "))
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: unexpected arguments: %s\n", strings.Join(flags.Args(), " "))
 		return 2
 	}
 	if strings.TrimSpace(*base) == "" {
-		fmt.Fprintln(stderr, "agentic-go verify: --base is required")
+		_, _ = fmt.Fprintln(stderr, "agentic-go verify: --base is required")
 		return 2
 	}
 	if *format != "text" && *format != "json" {
-		fmt.Fprintf(stderr, "agentic-go verify: invalid --format %q (want text or json)\n", *format)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: invalid --format %q (want text or json)\n", *format)
 		return 2
 	}
 	threshold := verification.FailOn(*failOn)
 	switch threshold {
 	case verification.FailOnError, verification.FailOnWarning, verification.FailOnInfo, verification.FailOnNone:
 	default:
-		fmt.Fprintf(stderr, "agentic-go verify: invalid --fail-on %q (want error, warning, info, or none)\n", *failOn)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: invalid --fail-on %q (want error, warning, info, or none)\n", *failOn)
 		return 2
 	}
 	if minimumCoverage.set && (minimumCoverage.value < 0 || minimumCoverage.value > 100) {
-		fmt.Fprintln(stderr, "agentic-go verify: --min-changed-coverage must be between 0 and 100")
+		_, _ = fmt.Fprintln(stderr, "agentic-go verify: --min-changed-coverage must be between 0 and 100")
 		return 2
 	}
 	if *maxPackages < 1 || *maxPackages > 500 {
-		fmt.Fprintln(stderr, "agentic-go verify: --max-packages must be between 1 and 500")
+		_, _ = fmt.Fprintln(stderr, "agentic-go verify: --max-packages must be between 1 and 500")
 		return 2
 	}
 
@@ -190,22 +190,22 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 	defer stop()
 	ws, err := workspace.Open(ctx, *workspacePath)
 	if err != nil {
-		fmt.Fprintf(stderr, "agentic-go verify: workspace preflight failed: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: workspace preflight failed: %v\n", err)
 		return 2
 	}
 	runner, err := execution.New(ws, execution.Config{})
 	if err != nil {
-		fmt.Fprintf(stderr, "agentic-go verify: execution setup failed: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: execution setup failed: %v\n", err)
 		return 2
 	}
 	impact, err := changeimpact.New(ws, runner)
 	if err != nil {
-		fmt.Fprintf(stderr, "agentic-go verify: change analysis setup failed: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: change analysis setup failed: %v\n", err)
 		return 2
 	}
 	engine, err := verification.NewEngine(ws, runner, impact, version)
 	if err != nil {
-		fmt.Fprintf(stderr, "agentic-go verify: verification setup failed: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: verification setup failed: %v\n", err)
 		return 2
 	}
 	request := verification.Request{
@@ -216,18 +216,18 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 	}
 	report, err := engine.Verify(ctx, request)
 	if err != nil {
-		fmt.Fprintf(stderr, "agentic-go verify: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: %v\n", err)
 		return 2
 	}
 	if *format == "json" {
 		encoder := json.NewEncoder(stdout)
 		encoder.SetEscapeHTML(false)
 		if err := encoder.Encode(report); err != nil {
-			fmt.Fprintf(stderr, "agentic-go verify: writing JSON report: %v\n", err)
+			_, _ = fmt.Fprintf(stderr, "agentic-go verify: writing JSON report: %v\n", err)
 			return 2
 		}
 	} else if err := renderTextReport(stdout, report); err != nil {
-		fmt.Fprintf(stderr, "agentic-go verify: writing text report: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "agentic-go verify: writing text report: %v\n", err)
 		return 2
 	}
 	return report.Result.ExitCode

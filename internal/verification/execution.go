@@ -29,11 +29,11 @@ type executionOutcome struct {
 }
 
 type affectedRun struct {
-	result      execution.Result
-	tests       TestSummary
-	profile     []parser.CoverageBlock
 	coverageErr error
+	profile     []parser.CoverageBlock
 	race        parser.RaceReportOutput
+	tests       TestSummary
+	result      execution.Result
 }
 
 func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis, request Request, direct []string) (executionOutcome, error) {
@@ -207,8 +207,8 @@ func createVerificationRunDir(prefix string) (string, error) {
 		return "", fmt.Errorf("locating user cache: %w", err)
 	}
 	runs := filepath.Join(cache, "agentic-go", "runs")
-	if err := os.MkdirAll(runs, 0o700); err != nil {
-		return "", fmt.Errorf("creating run cache: %w", err)
+	if mkdirErr := os.MkdirAll(runs, 0o700); mkdirErr != nil {
+		return "", fmt.Errorf("creating run cache: %w", mkdirErr)
 	}
 	directory, err := os.MkdirTemp(runs, prefix+"-")
 	if err != nil {

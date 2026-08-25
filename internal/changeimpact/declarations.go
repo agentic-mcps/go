@@ -17,9 +17,9 @@ import (
 type sourceDeclaration struct {
 	kind     string
 	name     string
+	location verification.Location
 	start    int
 	end      int
-	location verification.Location
 }
 
 func (a *Analyzer) changedDeclarations(files []File) ([]verification.ChangedDeclaration, error) {

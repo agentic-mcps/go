@@ -281,8 +281,8 @@ func TestEngineRetainsEvidenceWhenAnalyzerBaselineIsUnavailable(t *testing.T) {
 }
 
 type unavailableBaselineAnalyzer struct {
-	analysis    verification.ChangeAnalysis
 	destination string
+	analysis    verification.ChangeAnalysis
 }
 
 func (a *unavailableBaselineAnalyzer) Analyze(context.Context, verification.ChangeOptions) (verification.ChangeAnalysis, error) {

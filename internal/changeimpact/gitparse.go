@@ -14,10 +14,10 @@ type RawChange struct {
 	NewMode string
 	OldOID  string
 	NewOID  string
-	Status  byte
-	Score   int
 	Path    string
 	OldPath string
+	Score   int
+	Status  byte
 }
 
 // Hunk is one unified-diff hunk. Counts are retained even when zero.

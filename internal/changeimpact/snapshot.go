@@ -71,22 +71,22 @@ func (a *Analyzer) snapshot(ctx context.Context, options Options) (Analysis, err
 		if raw.Status == 'U' {
 			return Analysis{}, fmt.Errorf("repository contains an unresolved merge at %q", raw.Path)
 		}
-		path, err := cleanRelativePath(raw.Path)
-		if err != nil {
-			return Analysis{}, fmt.Errorf("validating changed path: %w", err)
+		path, cleanErr := cleanRelativePath(raw.Path)
+		if cleanErr != nil {
+			return Analysis{}, fmt.Errorf("validating changed path: %w", cleanErr)
 		}
 		oldPath := path
 		if raw.OldPath != "" {
-			oldPath, err = cleanRelativePath(raw.OldPath)
-			if err != nil {
-				return Analysis{}, fmt.Errorf("validating previous path: %w", err)
+			oldPath, cleanErr = cleanRelativePath(raw.OldPath)
+			if cleanErr != nil {
+				return Analysis{}, fmt.Errorf("validating previous path: %w", cleanErr)
 			}
 		}
 		trackedPaths[path] = struct{}{}
 
-		kind, err := rawChangeKind(raw.Status)
-		if err != nil {
-			return Analysis{}, err
+		kind, kindErr := rawChangeKind(raw.Status)
+		if kindErr != nil {
+			return Analysis{}, kindErr
 		}
 		file := File{Change: verification.ChangedFile{
 			Path:          path,
@@ -353,15 +353,15 @@ func sourceLineCount(content []byte) int {
 func snapshotIdentity(repository verification.Repository, files []File) string {
 	hash := sha256.New()
 	for _, value := range []string{repository.BaseCommit, repository.MergeBaseCommit, repository.HeadCommit, repository.Workspace} {
-		fmt.Fprintf(hash, "%d:%s\x00", len(value), value)
+		_, _ = fmt.Fprintf(hash, "%d:%s\x00", len(value), value)
 	}
 	for _, file := range files {
 		for _, value := range []string{file.Change.Path, file.Change.PreviousPath, string(file.Change.Change)} {
-			fmt.Fprintf(hash, "%d:%s\x00", len(value), value)
+			_, _ = fmt.Fprintf(hash, "%d:%s\x00", len(value), value)
 		}
-		fmt.Fprintf(hash, "%d:", len(file.BaseContent))
+		_, _ = fmt.Fprintf(hash, "%d:", len(file.BaseContent))
 		hash.Write(file.BaseContent)
-		fmt.Fprintf(hash, "%d:", len(file.CurrentContent))
+		_, _ = fmt.Fprintf(hash, "%d:", len(file.CurrentContent))
 		hash.Write(file.CurrentContent)
 	}
 	return fmt.Sprintf("sha256:%x", hash.Sum(nil))

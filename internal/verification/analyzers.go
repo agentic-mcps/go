@@ -18,10 +18,10 @@ import (
 )
 
 type analyzerSpec struct {
+	analyzer *analysis.Analyzer
 	checkID  string
 	kind     CheckKind
 	label    string
-	analyzer *analysis.Analyzer
 }
 
 var analyzerSpecs = []analyzerSpec{

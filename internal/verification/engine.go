@@ -21,12 +21,12 @@ const (
 // Request configures one complete verification run independently of its CLI
 // or MCP adapter.
 type Request struct {
+	MinChangedCoverage *float64
 	Base               string
 	Package            string
-	Race               bool
 	FailOn             FailOn
-	MinChangedCoverage *float64
 	MaxPackages        int
+	Race               bool
 }
 
 // Engine assembles one portable report from injected change discovery and the

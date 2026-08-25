@@ -9,8 +9,8 @@ import (
 func TestMapUnchangedLineAcrossDiffHunks(t *testing.T) {
 	tests := []struct {
 		name  string
-		line  int
 		edits []LineEdit
+		line  int
 		want  int
 		ok    bool
 	}{

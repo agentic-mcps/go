@@ -17,11 +17,16 @@ const (
 	maximumMaxPackages    = 500
 )
 
-// Options, File, Package, and Analysis retain their changeimpact names while
-// implementing the interface owned by the verification engine.
+// Options is the verification engine's change-discovery request.
 type Options = verification.ChangeOptions
+
+// File is one source file passed from discovery into verification.
 type File = verification.SourceFile
+
+// Package is one executable unit passed from discovery into verification.
 type Package = verification.ExecutionTarget
+
+// Analysis is the complete discovery result consumed by verification.
 type Analysis = verification.ChangeAnalysis
 
 // Analyzer owns Git and Go discovery within one configured workspace.

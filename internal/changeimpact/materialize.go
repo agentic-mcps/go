@@ -36,8 +36,8 @@ func (a *Analyzer) MaterializeBase(ctx context.Context, repository verification.
 		return "", fmt.Errorf("base destination is not a directory")
 	}
 	archivePath := filepath.Join(absolute, "base.tar")
-	if _, err := a.gitBytes(ctx, "archive", "--format=tar", "--output="+archivePath, repository.MergeBaseCommit); err != nil {
-		return "", fmt.Errorf("archiving merge-base: %w", err)
+	if _, archiveErr := a.gitBytes(ctx, "archive", "--format=tar", "--output="+archivePath, repository.MergeBaseCommit); archiveErr != nil {
+		return "", fmt.Errorf("archiving merge-base: %w", archiveErr)
 	}
 	defer func() { _ = os.Remove(archivePath) }()
 	archiveInfo, err := os.Stat(archivePath)
@@ -49,8 +49,8 @@ func (a *Analyzer) MaterializeBase(ctx context.Context, repository verification.
 	}
 
 	tree := filepath.Join(absolute, "tree")
-	if err := os.Mkdir(tree, 0o700); err != nil {
-		return "", fmt.Errorf("creating base tree: %w", err)
+	if mkdirErr := os.Mkdir(tree, 0o700); mkdirErr != nil {
+		return "", fmt.Errorf("creating base tree: %w", mkdirErr)
 	}
 	archive, err := os.Open(archivePath)
 	if err != nil {
@@ -66,9 +66,9 @@ func (a *Analyzer) MaterializeBase(ctx context.Context, repository verification.
 	}
 	workspacePath := tree
 	if repository.Workspace != "" && repository.Workspace != "." {
-		relative, err := cleanRelativePath(repository.Workspace)
-		if err != nil {
-			return "", fmt.Errorf("validating base workspace path: %w", err)
+		relative, relativeErr := cleanRelativePath(repository.Workspace)
+		if relativeErr != nil {
+			return "", fmt.Errorf("validating base workspace path: %w", relativeErr)
 		}
 		workspacePath = filepath.Join(tree, filepath.FromSlash(relative))
 	}
@@ -118,7 +118,7 @@ func extractBaseArchive(root string, source io.Reader) error {
 			if err := os.MkdirAll(target, 0o700); err != nil {
 				return fmt.Errorf("creating base directory: %w", err)
 			}
-		case tar.TypeReg, tar.TypeRegA:
+		case tar.TypeReg:
 			mode := os.FileMode(0o600)
 			if header.FileInfo().Mode()&0o111 != 0 {
 				mode = 0o700

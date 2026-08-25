@@ -34,8 +34,8 @@ type ExecutionTarget struct {
 	Dir              string
 	ModulePath       string
 	ModuleDir        string
-	Distance         int
 	Reasons          []string
+	Distance         int
 	Cgo              bool
 	BuildConstrained bool
 }

@@ -38,6 +38,11 @@ type packageRecord struct {
 }
 
 type goListPackage struct {
+	Error  *struct{ Err string }
+	Module *struct {
+		Path string
+		Dir  string
+	}
 	ImportPath      string
 	Dir             string
 	GoFiles         []string
@@ -51,11 +56,6 @@ type goListPackage struct {
 	Imports         []string
 	TestImports     []string
 	XTestImports    []string
-	Error           *struct{ Err string }
-	Module          *struct {
-		Path string
-		Dir  string
-	}
 }
 
 func (a *Analyzer) loadPackages(ctx context.Context, pattern string) ([]packageRecord, error) {

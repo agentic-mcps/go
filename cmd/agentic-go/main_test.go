@@ -15,8 +15,8 @@ import (
 func TestRunVerifyValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
 	tests := []struct {
 		name string
-		args []string
 		want string
+		args []string
 	}{
 		{name: "missing base", args: nil, want: "--base is required"},
 		{name: "bad format", args: []string{"--base", "HEAD", "--format", "yaml"}, want: "--format"},
