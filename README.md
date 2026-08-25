@@ -4,7 +4,7 @@
 
 <h1 align="center">agentic-go</h1>
 
-<p align="center">Language-native change verification for production Go code.</p>
+<p align="center">Source-grounded Go change intelligence for coding agents.</p>
 
 <p align="center">
   <a href="docs/v0.2.0-release-scope.md">Release scope</a> |
@@ -13,7 +13,7 @@
   <a href="SECURITY.md">Security</a>
 </p>
 
-agentic-go produces a source-grounded report of what changed, what may be
+agentic-go currently produces a source-grounded report of what changed, what may be
 affected, which checks ran, what evidence they produced, and what remains
 uncertain. The report is the durable product boundary; the CLI, GitHub Action,
 and MCP server are delivery adapters over the same verification engine. It does
@@ -104,23 +104,47 @@ When the Action is pinned by commit SHA instead of a semver tag, pass its
 
 Go 1.25 or newer is required. Versions 1.25, 1.26, and 1.27 are explicitly
 supported; newer stable toolchains may pass preflight but are not yet claimed.
-From the repository root:
+
+After v0.3.0 is published, the canonical exact-version installer is:
+
+~~~sh
+curl --fail --location --silent --show-error \
+  https://raw.githubusercontent.com/ashwingopalsamy/agentic-go/v0.3.0/scripts/install.sh \
+  | bash -s -- 0.3.0
+~~~
+
+It verifies `checksums.txt` before installing `agentic-go`, `agentic-go-vet`,
+and the exact `agentic-go-gopls` companion into `~/.local/bin`. Release
+archives also contain the Apache license, upstream gopls BSD license, and
+gopls dependency notices.
+
+For development from this checkout, the advanced module path remains:
 
 ~~~sh
 go install ./cmd/agentic-go ./cmd/agentic-go-vet
+go install golang.org/x/tools/gopls@v0.21.0
+cp "$(go env GOPATH)/bin/gopls" "$(go env GOPATH)/bin/agentic-go-gopls"
 export PATH="$(go env GOPATH)/bin:$PATH"
-agentic-go --version
+agentic-go doctor
 ~~~
 
 Keep `$(go env GOPATH)/bin` on your `PATH` so an MCP client can find the
-binaries. Published module commands and Homebrew are not available for this
-pre-release checkout. The personal repository is
-`github.com/ashwingopalsamy/agentic-go` through v0.2; the future organization
-path is a planned, breaking module migration, not a current import path.
+binaries. Homebrew is not advertised because no maintained tap exists. The
+personal repository and module path remain `github.com/ashwingopalsamy/agentic-go`
+through public v0.x releases. The future organization path is a planned,
+breaking module migration, not a current import path.
 
 ## Connect an MCP client
 
-agentic-go speaks stdio. A generic MCP client configuration looks like this:
+agentic-go speaks stdio. Generate configuration without editing client files:
+
+~~~sh
+agentic-go mcp-config --client generic --workspace /absolute/path/to/your/go/module
+agentic-go mcp-config --client codex --workspace /absolute/path/to/your/go/module
+agentic-go mcp-config --client claude --workspace /absolute/path/to/your/go/module
+~~~
+
+A generic MCP client configuration looks like this:
 
 ~~~json
 {
@@ -137,6 +161,12 @@ agentic-go speaks stdio. A generic MCP client configuration looks like this:
 a Go module or workspace. The server checks the `go` executable inherited from
 the MCP process `PATH`, requires Go 1.25 or newer, and uses
 `GOTOOLCHAIN=local`. It does not download a replacement toolchain.
+
+Run `agentic-go doctor --format text` or `agentic-go doctor --format json` to
+inspect the effective workspace, inherited Go toolchain, exact gopls companion,
+and guarded-refactor recovery state. `doctor --recover` is currently a
+non-mutating clean-state check; recovery journals arrive with guarded
+refactoring.
 
 ## Server flags
 
@@ -241,9 +271,12 @@ Resources are computed fresh on read.
 - Set `AGENTIC_GO_TRACE=true` to write bounded JSONL traces under
   `os.UserCacheDir()/agentic-go/runs/<run-id>/trace.jsonl`. Traces hash
   arguments and retain summaries rather than source contents.
-- MCP remains stdio only. HTTP, SARIF, `doctor`, automatic toolchain
-  installation, gopls navigation, result caching, Homebrew distribution, and
-  a Windows support claim are not shipped.
+- The v0.3 distribution bundles gopls v0.21.0 as `agentic-go-gopls`, disables
+  its telemetry in managed sessions, and validates its exact version. Public
+  semantic navigation and Context Packs arrive in v0.4; the raw gopls LSP and
+  experimental gopls MCP interface are not exposed as agentic-go's product API.
+- MCP remains stdio only. HTTP, SARIF, automatic toolchain installation,
+  Homebrew distribution, and a Windows support claim are not shipped.
 
 See the [protocol contracts](docs/contracts.md) and
 [security guidance](SECURITY.md) for the full boundary.
@@ -267,6 +300,7 @@ sanitized reports, classifications, limitations, and reproduction command.
 ## Read next
 
 - [v0.2.0 release scope](docs/v0.2.0-release-scope.md): the current executable specification
+- [v1 roadmap](docs/v1.0.0-roadmap.md): incremental semantic-intelligence and continuity plan
 - [v0.1.0 release scope](docs/v0.1.0-release-scope.md): the compatibility baseline
 - [Protocol contracts](docs/contracts.md): shared types, limits, and invariants
 - [v0.2.0 evidence](validation/v0.2.0/summary.md): change-verification reports and release gates

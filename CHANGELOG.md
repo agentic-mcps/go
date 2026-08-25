@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A pinned gopls v0.21.0 companion foundation with long-lived stdio LSP
+  sessions, negotiated capabilities, UTF-16 positions, cancellation, bounded
+  protocol frames, controlled restart, and no automatic mutation replay.
+- `agentic-go doctor` for Go/workspace, sidecar, and recovery diagnostics, plus
+  `agentic-go mcp-config` for non-mutating generic, Codex, and Claude setup.
+- Deterministic combined release archives, exact-version checksum installer,
+  upstream gopls license notices, and Darwin/Linux amd64/arm64 sidecar builds.
 - Bounded verification-report detail with explicit totals and truncation flags;
   policy evaluates full evidence and findings, and the full impacted closure
   drives planning and execution, before adapter display limits.

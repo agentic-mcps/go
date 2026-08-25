@@ -2,7 +2,8 @@
 
 ## Product thesis
 
-Agentic-go is language-native change verification for Go:
+Agentic-go is source-grounded Go change intelligence for coding agents. Its
+currently shipped workflow is language-native change verification:
 
 > Given a local base and the final worktree, explain what changed, what may be
 > affected, what evidence was executed, which findings appear introduced, and
@@ -14,7 +15,9 @@ GitHub Action, and MCP server are adapters over one engine. Agentic-go remains
 deterministic developer tooling; it embeds no LLM and performs no agent
 orchestration.
 
-Module path through v0.2: `github.com/ashwingopalsamy/agentic-go`.
+Module path through public v0.x releases:
+`github.com/ashwingopalsamy/agentic-go`. The organization transfer and explicit
+module-identity change are v1 release-candidate gates after v0.9.
 
 ## Release authorities
 
@@ -24,6 +27,8 @@ Module path through v0.2: `github.com/ashwingopalsamy/agentic-go`.
   baseline.
 - [`contracts.md`](contracts.md) owns shared protocol and execution
   invariants.
+- [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md) owns the staged v0.3 through v1
+  direction without retroactively changing the v0.2 contract.
 - [`../CONTEXT.md`](../CONTEXT.md) defines the domain language.
 - [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
   records why the report is the durable boundary.

@@ -8,6 +8,9 @@ broader roadmap documents. The tagged
 [`v0.1.0 release scope`](docs/v0.1.0-release-scope.md) remains the compatibility
 baseline. Read [`docs/contracts.md`](docs/contracts.md) when changing protocol
 types, execution boundaries, findings, tracing, or analyzer wiring.
+Read [`docs/v1.0.0-roadmap.md`](docs/v1.0.0-roadmap.md) before changing the
+v0.3+ sidecar, intelligence, snapshot, contract, refactor, or distribution
+work. The roadmap adds staged scope without weakening v0.2 compatibility.
 
 For a rule change, also read the matching domain specification:
 [`docs/phase-4a-concurrency.md`](docs/phase-4a-concurrency.md) or
@@ -23,6 +26,10 @@ For a rule change, also read the matching domain specification:
   CLI, GitHub Action, and MCP adapter. It reports conservative impact,
   executed evidence, findings, risk facts, and explicit uncertainty; it never
   claims to prove that omitted code is safe.
+- v0.3 release bundles pair `agentic-go` with the exact
+  `agentic-go-gopls` companion. Managed sessions negotiate capabilities,
+  disable telemetry, use bounded stdio LSP, and replay only an explicitly
+  idempotent read after terminal failure.
 - The server is stdio-only and helps an external coding agent make decisions.
   It does not embed an LLM or become an agent framework.
 - All filesystem access stays within the configured, symlink-resolved

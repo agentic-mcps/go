@@ -37,6 +37,14 @@ The server uses stdio only. It exposes no HTTP listener. Optional traces
 hash arguments and omit raw source, raw errors, and raw workspace paths, but a
 trace file is still local operational data and should be handled accordingly.
 
+Release archives include the exact gopls v0.21.0 companion. Managed gopls
+sessions inherit the agentic-go process privileges and may read source inside
+the configured workspace and maintain upstream caches under the user's normal
+cache directories. Agentic-go sets `GOTELEMETRY=off` for managed sessions,
+bounds JSON-RPC frames and stderr, and never accepts a gopls-initiated workspace
+edit outside the guarded-refactor flow. These controls do not make gopls a
+sandbox.
+
 ## Supported releases
 
 Security fixes target the latest published release. The pre-release branch is

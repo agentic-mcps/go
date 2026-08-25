@@ -19,7 +19,7 @@ Grounded facts (verified against the local official SDK checkout at
 - `server.AddResource(*mcp.Resource, mcp.ResourceHandler)`,
   `server.AddResourceTemplate(*mcp.ResourceTemplate, mcp.ResourceHandler)`,
   `server.AddPrompt(*mcp.Prompt, mcp.PromptHandler)` confirmed.
-- `mcp.StdioTransport{}` is the only transport through v0.2. Streamable HTTP
+- `mcp.StdioTransport{}` is the only transport through v1. Streamable HTTP
   and legacy SSE exist in the SDK but remain roadmap-only and must not leak
   into released flags, documentation, or tests.
 - The SDK still defaults to advertising MCP logging for compatibility, but
@@ -78,8 +78,25 @@ Verification may compile and run trusted repository code with the caller's
 privileges. Workspace containment, symlink resolution, cancellation,
 deadlines, concurrency limits, and bounded output constrain scope and resource
 use, but provide no sandbox or hostile-code isolation. The Action has the same
-trust boundary through its runner. SARIF, `doctor`, HTTP, automatic toolchain
+trust boundary through its runner. SARIF, HTTP, automatic toolchain
 installation, and Windows support claims remain deferred.
+
+## v0.3 semantic sidecar foundation
+
+Release archives contain the server, analyzer CLI, and an exact gopls v0.21.0
+companion named `agentic-go-gopls`. The managed adapter communicates through a
+long-lived stdio LSP session, records capabilities from `initialize`, uses
+UTF-16 LSP positions, sends cancellation, bounds frames and stderr, and
+disables gopls telemetry. A terminal sidecar failure may replay one explicitly
+idempotent read after restart; mutation is never replayed. Agentic-go rejects
+an external companion unless it reports the exact pinned version.
+
+The v0.3 public additions are `agentic-go doctor` and `agentic-go mcp-config`.
+The config command prints generic JSON, Codex TOML, or Claude JSON and never
+edits client settings. These additions do not change the v0.2 MCP inventory.
+The semantic sidecar is infrastructure until the v0.4 Context Pack operations
+become public; raw LSP and the upstream experimental gopls MCP surface are not
+agentic-go contracts.
 
 ## Module
 
