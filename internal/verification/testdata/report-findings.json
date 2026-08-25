@@ -1,0 +1,12 @@
+{
+  "schema_version": "agentic.verify/v1alpha1",
+  "provider": {"name": "agentic-go", "version": "0.2.0"},
+  "repository": {"requested_base": "origin/main", "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "merge_base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "snapshot_id": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "workspace": ".", "dirty": false},
+  "change": {"files": [], "files_total": 0, "files_truncated": false, "declarations": [], "declarations_total": 0, "declarations_truncated": false},
+  "impact": {"packages": [], "packages_total": 0, "packages_truncated": false},
+  "plan": [{"id": "errors", "kind": "go.analysis.errors", "required": true, "targets": ["example.com/service/pkg/example"], "targets_total": 1, "targets_truncated": false, "reason": "inspect affected error flow"}], "evidence": [{"check_id": "errors", "kind": "go.analysis.errors", "status": "passed", "duration_ms": 30, "summary": "1 introduced finding", "analysis": {"base": 0, "current": 1, "introduced": 1, "existing": 0, "resolved": 0, "unknown": 0}}],
+  "findings": [{"kind": "go.analysis", "rule": "errors-09", "severity": "error", "message": "error discarded with \"_ = err\" with no comment explaining why it is safe", "location": {"file": "pkg/example.go", "line": 12, "col": 2}, "check_id": "errors", "baseline": "introduced"}],
+  "findings_total": 1, "findings_truncated": false,
+  "risks": [], "uncertainties": [],
+  "result": {"status": "findings", "exit_code": 1, "blocking_findings": 1, "incomplete_checks": 0, "summary": "verification completed with 1 blocking findings"}
+}
