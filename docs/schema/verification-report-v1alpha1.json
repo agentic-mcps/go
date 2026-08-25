@@ -63,6 +63,7 @@
         "base_commit",
         "merge_base_commit",
         "head_commit",
+        "snapshot_id",
         "workspace",
         "dirty"
       ],
@@ -71,6 +72,7 @@
         "base_commit": { "type": "string" },
         "merge_base_commit": { "type": "string" },
         "head_commit": { "type": "string" },
+        "snapshot_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
         "workspace": { "type": "string" },
         "dirty": { "type": "boolean" }
       }

@@ -97,6 +97,7 @@ type Repository struct {
 	BaseCommit      string `json:"base_commit"`
 	MergeBaseCommit string `json:"merge_base_commit"`
 	HeadCommit      string `json:"head_commit"`
+	SnapshotID      string `json:"snapshot_id"`
 	Workspace       string `json:"workspace"`
 	Dirty           bool   `json:"dirty"`
 }
