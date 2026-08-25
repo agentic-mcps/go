@@ -313,6 +313,16 @@ type Decision struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// CheckpointRef is one immutable snapshot transition in a Change Contract.
+//
+//nolint:govet // field order is the public JSON schema order.
+type CheckpointRef struct {
+	ID                 string    `json:"id"`
+	PreviousSnapshotID string    `json:"previous_snapshot_id"`
+	CurrentSnapshotID  string    `json:"current_snapshot_id"`
+	RecordedAt         time.Time `json:"recorded_at"`
+}
+
 // BeginRequest creates one persistent Change Contract.
 //
 //nolint:govet // request order follows the public operation contract.
@@ -346,6 +356,7 @@ type ChangeContract struct {
 	Policies            StructuralPolicies `json:"policies"`
 	Decisions           []Decision         `json:"decisions"`
 	UnresolvedQuestions []string           `json:"unresolved_questions"`
+	Checkpoints         []CheckpointRef    `json:"checkpoints"`
 	LatestVerification  string             `json:"latest_verification,omitempty"`
 	Active              bool               `json:"active"`
 	CreatedAt           time.Time          `json:"created_at"`
