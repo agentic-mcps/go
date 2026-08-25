@@ -9,7 +9,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
+	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 )
 
@@ -17,6 +19,8 @@ const (
 	doctorStatusOK    = "ok"
 	doctorStatusError = "error"
 	recoveryClean     = "clean"
+	recoveryRequired  = "recovery_required"
+	recoveryRecovered = "recovered"
 )
 
 type doctorWorkspace struct {
@@ -28,6 +32,7 @@ type doctorWorkspace struct {
 type doctorDependencies struct {
 	inspectWorkspace func(context.Context, string) (doctorWorkspace, error)
 	locateSidecar    func(context.Context) (gopls.Installation, error)
+	inspectRecovery  func(context.Context, string, bool) (doctorRecovery, error)
 }
 
 type doctorReport struct {
@@ -83,6 +88,32 @@ func defaultDoctorDependencies() doctorDependencies {
 			}
 			return gopls.Locate(ctx, host, os.Getenv("AGENTIC_GO_GOPLS"))
 		},
+		inspectRecovery: func(ctx context.Context, path string, recoverState bool) (doctorRecovery, error) {
+			ws, err := workspace.Open(ctx, path)
+			if err != nil {
+				return doctorRecovery{}, err
+			}
+			runner, err := execution.New(ws, execution.Config{})
+			if err != nil {
+				return doctorRecovery{}, err
+			}
+			store, err := intelligence.NewRefactorStore("")
+			if err != nil {
+				return doctorRecovery{}, err
+			}
+			result, err := intelligence.RecoverGuardedRefactor(ctx, ws, runner, store, recoverState)
+			if err != nil {
+				return doctorRecovery{}, err
+			}
+			switch result.Status {
+			case intelligence.RefactorRecoveryRequired:
+				return doctorRecovery{Status: recoveryRequired, Message: "an interrupted guarded refactor requires agentic-go doctor --recover"}, nil
+			case intelligence.RefactorRecoveryRecovered:
+				return doctorRecovery{Status: recoveryRecovered, Message: fmt.Sprintf("restored %d file(s) from the interrupted guarded refactor", result.RecoveredFiles)}, nil
+			default:
+				return doctorRecovery{Status: recoveryClean, Message: "no interrupted refactor requires recovery"}, nil
+			}
+		},
 	}
 }
 
@@ -133,12 +164,25 @@ func runDoctor(args []string, stdout, stderr io.Writer, dependencies doctorDepen
 		report.Checks = append(report.Checks, doctorCheck{Name: "gopls.sidecar", Status: doctorStatusOK, Message: "pinned semantic sidecar is available"})
 	}
 
-	recoveryMessage := report.Recovery.Message
-	if *recoverState {
-		recoveryMessage = "no interrupted refactor found; no files changed"
-		report.Recovery.Message = recoveryMessage
+	if workspaceErr != nil {
+		report.Recovery = doctorRecovery{Status: doctorStatusError, Message: "workspace inspection failed before recovery state could be identified"}
+		report.Checks = append(report.Checks, doctorCheck{Name: "refactor.recovery", Status: doctorStatusError, Message: report.Recovery.Message})
+	} else {
+		recovery, recoveryErr := dependencies.inspectRecovery(ctx, *workspacePath, *recoverState)
+		if recoveryErr != nil {
+			report.Status = doctorStatusError
+			report.Recovery = doctorRecovery{Status: doctorStatusError, Message: recoveryErr.Error()}
+			report.Checks = append(report.Checks, doctorCheck{Name: "refactor.recovery", Status: doctorStatusError, Message: recoveryErr.Error()})
+		} else {
+			report.Recovery = recovery
+			checkStatus := doctorStatusOK
+			if recovery.Status == recoveryRequired {
+				report.Status = doctorStatusError
+				checkStatus = doctorStatusError
+			}
+			report.Checks = append(report.Checks, doctorCheck{Name: "refactor.recovery", Status: checkStatus, Message: recovery.Message})
+		}
 	}
-	report.Checks = append(report.Checks, doctorCheck{Name: "refactor.recovery", Status: doctorStatusOK, Message: recoveryMessage})
 
 	if *format == "json" {
 		encoder := json.NewEncoder(stdout)
