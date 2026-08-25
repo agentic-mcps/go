@@ -12,6 +12,12 @@ repository:
 - `go_benchmark_diff`
 - `go_flake_finder`
 
+The v0.2 `agentic-go verify` CLI, GitHub Action, and `go_verify_change` MCP
+tool can also run trusted repository tests and analyzers as part of a report.
+They use the caller/runner's privileges. Containment, cancellation, deadlines,
+concurrency limits, and output caps reduce accidental scope and resource use;
+they do not isolate hostile code.
+
 That code runs with the same operating-system privileges as the agentic-go
 process, just as it would when a developer runs `go test` directly. Use these
 tools only with repositories you trust. The Go toolchain and the target tests
@@ -27,7 +33,7 @@ cancellation, applies deadlines and concurrency limits, and caps each
 subprocess output stream. These controls limit accidental scope and resource
 use; they do not isolate hostile code from the host.
 
-The v0.1 server uses stdio only. It exposes no HTTP listener. Optional traces
+The server uses stdio only. It exposes no HTTP listener. Optional traces
 hash arguments and omit raw source, raw errors, and raw workspace paths, but a
 trace file is still local operational data and should be handled accordingly.
 

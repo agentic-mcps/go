@@ -19,9 +19,9 @@ Grounded facts (verified against the local official SDK checkout at
 - `server.AddResource(*mcp.Resource, mcp.ResourceHandler)`,
   `server.AddResourceTemplate(*mcp.ResourceTemplate, mcp.ResourceHandler)`,
   `server.AddPrompt(*mcp.Prompt, mcp.PromptHandler)` confirmed.
-- `mcp.StdioTransport{}` is the only v0.1.0 transport. Streamable HTTP and
-  legacy SSE exist in the SDK but remain roadmap-only and must not leak into
-  v0.1.0 flags, documentation, or tests.
+- `mcp.StdioTransport{}` is the only transport through v0.2. Streamable HTTP
+  and legacy SSE exist in the SDK but remain roadmap-only and must not leak
+  into released flags, documentation, or tests.
 - The SDK still defaults to advertising MCP logging for compatibility, but
   logging is deprecated in protocol `2026-07-28`. Construct the server with
   an explicit empty `ServerCapabilities` value so v0.1.0 does not advertise
@@ -43,6 +43,32 @@ Grounded facts (verified against the local official SDK checkout at
   analyzer×package; each root `Action` carries `Diagnostics []analysis.Diagnostic`
   and `Duration time.Duration` directly as struct fields — no separate accessor.
   `Action.Result` is populated only when `IsRoot`.
+
+## Verification report boundary
+
+For v0.2, `agentic.verify/v1alpha1` is the durable product contract. The
+adapter-independent verification engine assembles one deterministic report from
+the change snapshot, affected-package closure, verification plan, executed
+evidence, findings, risk facts, and explicit uncertainties. The CLI, composite
+GitHub Action, and MCP server transport or render that report; they must not
+duplicate policy or ask a caller to reconstruct it from low-level results.
+The checked-in [JSON Schema](schema/verification-report-v1alpha1.json) is the
+machine-readable authority. Collections are non-null and deterministically
+ordered, source locations are workspace-relative, and reports contain no
+absolute workspace or run-cache paths. Result precedence is `incomplete`, then
+`findings`, then `pass`; `pass` means only that requested checks completed
+without policy-blocking evidence.
+
+The v0.2 MCP inventory is eight tools, four resources, and four prompts. The
+additive `go_verify_change` tool is the MCP adapter for the report; the seven
+v0.1 tool schemas and behavior remain compatible. MCP remains stdio-only.
+
+Verification may compile and run trusted repository code with the caller's
+privileges. Workspace containment, symlink resolution, cancellation,
+deadlines, concurrency limits, and bounded output constrain scope and resource
+use, but provide no sandbox or hostile-code isolation. The Action has the same
+trust boundary through its runner. SARIF, `doctor`, HTTP, automatic toolchain
+installation, and Windows support claims remain deferred.
 
 ## Module
 
@@ -863,93 +889,43 @@ This is non-negotiable per-rule; the domain-wide count test above is the
 only place a bare count assertion is acceptable, because it is checking
 "how many rules exist," not "did the right rule fire in the right file."
 
-## Roadmap inventory
+## Live protocol inventory
 
-The full roadmap contains 31 tools, 6 resources, and 6 prompts toward v1.0.0.
-The v0.1.0 registry gate derives its 7-tool/4-resource/4-prompt expectation
-from [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md). The v0.2.0 target
-derives its 8-tool/4-resource/4-prompt expectation from
-[`v0.2.0-release-scope.md`](v0.2.0-release-scope.md); future release catalogs
-derive from the roadmap table below. None of them
-re-derive the count independently; this table is the ground
-truth a registry test asserts against). Each phase file below owns the full
-`Input`/`Output`/annotations spec for its own rows; this table is the roster,
-not a duplicate of those specs.
+Release inventories come from their canonical scope and are asserted against
+`internal/tools.RegisterAll`; a roadmap count is never a product goal.
+Tagged v0.1.0 has seven tools, four resources, and four prompts. The v0.2.0
+target adds only `go_verify_change`, for eight tools total, while retaining the
+four resources and four prompt names.
 
-| # | Tool | Phase / file | Status |
-|---|---|---|---|
-| 1 | `go_test_structured` | Phase 1 — `phase-1-test-intelligence.md` | v0.1.0 |
-| 2 | `go_race_report` | Phase 1 — `phase-1-test-intelligence.md` | v0.1.0 |
-| 3 | `go_coverage_gaps` | Phase 2 — `phase-2-coverage-benchmark-flake.md` | v0.1.0 |
-| 4 | `go_benchmark_diff` | Phase 2 — `phase-2-coverage-benchmark-flake.md` | v0.1.0 |
-| 5 | `go_flake_finder` | Phase 2 — `phase-2-coverage-benchmark-flake.md` | v0.1.0 |
-| 6 | `go_definition` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 7 | `go_references` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 8 | `go_hover` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 9 | `go_workspace_symbols` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 10 | `go_diagnostics` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 11 | `go_rename_symbol` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 12 | `go_call_hierarchy` | Phase 3 — `phase-3-gopls-navigation-resources-prompts.md` | roadmap |
-| 13 | `go_audit_concurrency` | Phase 4 — `phase-4a-concurrency.md` | v0.1.0 |
-| 14 | `go_audit_errors` | Phase 4 — `phase-4a-errors.md` | v0.1.0 |
-| 15 | `go_audit_security` | Phase 4 — `phase-4a-security.md` | roadmap |
-| 16 | `go_audit_observability` | Phase 4 — `phase-4a-observability.md` | roadmap |
-| 17 | `go_audit_naming` | Phase 4 — `phase-4a-naming.md` | roadmap |
-| 18 | `go_audit_typedesign` | Phase 4 — `phase-4a-type-design.md` | roadmap |
-| 19 | `go_audit_performance` | Phase 4 — `phase-4a-performance.md` | roadmap |
-| 20 | `go_fuzz_orchestrate` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 21 | `go_build_matrix` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 22 | `go_module_risk` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 23 | `go_generics_map` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 24 | `go_pprof_analyze` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 25 | `go_field_alignment` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 26 | `go_dead_code` | Phase 4b — `phase-4b-tier-2-tools.md` | roadmap |
-| 27 | `go_panic_trace` | Phase 4b — `phase-4b-tier-2-tools.md` | roadmap |
-| 28 | `go_test_map` | Phase 4b — `phase-4b-tier-2-tools.md` | roadmap |
-| 29 | `go_audit_all` | Phase 4 index — `phase-4a-index.md` | roadmap |
-| 30 | `go_generics_candidates` | Phase 5 — `phase-5-creative-tools.md` | roadmap |
-| 31 | `go_change_impact` | `v0.2.0-release-scope.md` | v0.2.0 target |
+| Tool | Release |
+|---|---|
+| `go_test_structured` | v0.1.0 |
+| `go_race_report` | v0.1.0 |
+| `go_coverage_gaps` | v0.1.0 |
+| `go_benchmark_diff` | v0.1.0 |
+| `go_flake_finder` | v0.1.0 |
+| `go_audit_concurrency` | v0.1.0 |
+| `go_audit_errors` | v0.1.0 |
+| `go_verify_change` | v0.2.0 target |
 
-Deleted, never counted: `go_goroutine_leak` (strict subset of
-`concurrency-01`/`02`/`06`/`18`, a second tool re-reporting the same
-findings).
+The live resources are `agentic-go://module`, `agentic-go://packages`,
+`agentic-go://analysis-rules`, and `agentic-go://trace-summary`. The live
+prompts are `audit-package`, `pre-commit-check`, `bisect-flake`, and
+`verify-change`; in v0.2 the last prompt calls `go_verify_change` once.
 
-Resources (6, all read-only, `server.AddResource`/`AddResourceTemplate`):
+The phase documents retain possible navigation, audit, profiling, and creative
+tools as design material. None is committed release scope. A future tool ships
+only when repeated user pain justifies a public surface and, for analyzers, the
+fixture and external-calibration gates are satisfied.
 
-| # | URI | Defined in |
-|---|---|---|
-| 1 | `agentic-go://module` | `phase-3-gopls-navigation-resources-prompts.md` |
-| 2 | `agentic-go://packages` | `phase-3-gopls-navigation-resources-prompts.md` |
-| 3 | `agentic-go://analysis-rules` | `phase-3-gopls-navigation-resources-prompts.md` |
-| 4 | `agentic-go://config` | `phase-3-gopls-navigation-resources-prompts.md` |
-| 5 | `agentic-go://cache-stats` | `phase-3-gopls-navigation-resources-prompts.md` |
-| 6 | `agentic-go://trace-summary` | this file — Trace contract section above |
-
-Prompts (6, `server.AddPrompt`, all defined in
-`phase-3-gopls-navigation-resources-prompts.md`):
-
-| # | Name | Status |
-|---|---|---|
-| 1 | `audit-package` | v0.1.0; expands to `go_audit_all` when that roadmap tool ships |
-| 2 | `pre-commit-check` | v0.1.0 |
-| 3 | `bisect-flake` | v0.1.0 |
-| 4 | `verify-change` | v0.1.0 |
-| 5 | `benchmark-regression-gate` | roadmap |
-| 6 | `explain-symbol` | roadmap |
-
-## v0.1.0 CI contract — `.github/workflows/ci.yml`
+## Repository verification workflow — `.github/workflows/verify.yml`
 
 Matrix: `go-version: [1.25, 1.26, 1.27]` × `os: [ubuntu-latest, macos-latest]`
 (covers linux/amd64 + darwin/arm64 directly; darwin/amd64 + linux/arm64 covered
-by build-only cross-compile step, not full test run — GitHub-hosted runners
-don't offer those natively). Steps, in order, every push:
-1. `go build ./...`
-2. `go test -race ./...` (mandatory per go-security.md tooling rule — never skip)
-3. `go vet ./...`
-4. `staticcheck ./...`
-5. `golangci-lint run` (config from Phase 6)
-6. cross-compile both binaries for `darwin/arm64`, `darwin/amd64`,
-   `linux/amd64`, and `linux/arm64` via `GOOS`/`GOARCH`, build-only
+by build-only cross-compilation). Each matrix job builds, runs race-enabled
+tests, and vets the repository. Separate jobs run Staticcheck and
+golangci-lint, then cross-build both binaries for `darwin/arm64`,
+`darwin/amd64`, `linux/amd64`, and `linux/arm64`.
 
 MCP protocol tests use the SDK's in-memory transport and run under step 2;
 v0.1.0 has no gopls dependency or separate gopls CI step.
@@ -960,15 +936,13 @@ this repo's CI config.
 ## v0.1.0 release scope — `docs/v0.1.0-release-scope.md`
 
 The canonical v0.1.0 release is exactly 7 tools, 4 resources, 4 prompts, and
-the `agentic-go-vet` binary. It is stdio-only; the roadmap inventory above is
-the roadmap toward v1.0.0. Deprecated MCP logging capability is disabled:
+the `agentic-go-vet` binary. It is stdio-only; possible tools in phase
+documents are not release scope. Deprecated MCP logging capability is disabled:
 lifecycle logs go to stderr only. Long-running subprocess tools report MCP
 progress when a progress token is supplied.
 
-This file remains the canonical contracts reference for every phase, but
-the **release scope for v0.1.0 is scoped down** from the full roadmap
-inventory above. `docs/v0.1.0-release-scope.md` defines what ships and what
-is deferred. Read it before starting any build work.
+This file remains the canonical contracts reference for every phase, while
+`docs/v0.1.0-release-scope.md` defines what shipped and what remained deferred.
 
 Three additions in the v0.1.0 scope doc are not defined elsewhere in this
 contracts file and are called out here as nice additions worth noting:
@@ -1006,10 +980,12 @@ back to this file for each.
 ## v0.2.0 release scope — `docs/v0.2.0-release-scope.md`
 
 The canonical v0.2.0 target is exactly 8 tools, 4 resources, 4 prompts, and
-the `agentic-go-vet` binary. It adds `go_change_impact`, targeted test
-selection, bounded structured-test detail, explainable analyzer context, and a
-change-aware `verify-change` workflow. The tagged v0.1.0 scope remains its
-compatibility baseline.
+the `agentic-go-vet` binary. It adds the adapter-independent verification
+engine, `agentic-go verify`, the root composite Action, and
+`go_verify_change`. Verification runs whole-package checks for the complete
+bounded affected closure; selective tests, reachability analysis, SSA/VTA,
+`test_regex`, and the former plan-only `go_change_impact` proposal do not ship.
+The tagged v0.1.0 scope remains the compatibility baseline.
 
 `docs/v0.2.0-release-scope.md` owns the complete public types, defaults,
 evidence model, uncertainty model, containment behavior, and focused release
@@ -1029,4 +1005,3 @@ gate for these additions. Broader roadmap documents do not widen that scope.
    `docs/v0.2.0-release-scope.md` for v0.2 work and
    `docs/v0.1.0-release-scope.md` for the tagged compatibility baseline. Skip
    cache and HTTP/SSE; progress reporting remains part of the live contract.
-</content>

@@ -17,19 +17,20 @@ For a rule change, also read the matching domain specification:
 ## Invariants
 
 - Tagged v0.1.0 is exactly seven tools, four resources, four prompts, and the
-  `agentic-go-vet` binary. The v0.2.0 target adds only `go_change_impact`, for
+  `agentic-go-vet` binary. The v0.2.0 target adds only `go_verify_change`, for
   eight tools total. `internal/tools.RegisterAll` is always the live inventory.
-- `go_change_impact` returns conservative verification candidates with
-  evidence and explicit uncertainty. It never claims to prove that omitted
-  code is safe and never executes its proposed plan.
+- The v0.2 verification report is the durable product boundary shared by the
+  CLI, GitHub Action, and MCP adapter. It reports conservative impact,
+  executed evidence, findings, risk facts, and explicit uncertainty; it never
+  claims to prove that omitted code is safe.
 - The server is stdio-only and helps an external coding agent make decisions.
   It does not embed an LLM or become an agent framework.
 - All filesystem access stays within the configured, symlink-resolved
-  workspace. Subprocess and analyzer work shares cancellation, deadlines,
+  workspace. Subprocess and analyzer work share cancellation, deadlines,
   concurrency limits, and bounded output. Describe these controls as
   containment, never as sandboxing.
-- Execution tools may compile and run trusted target-repository code. Audit
-  tools remain read-only and closed-world.
+- Execution and verification tools may compile and run trusted
+  target-repository code. Audit tools remain read-only and closed-world.
 - A rule ships only with a positive fixture, a meaningful near miss, a stated
   limitation, and integration coverage through the production audit path.
   External validation is a release gate, not a claim to infer from fixtures.

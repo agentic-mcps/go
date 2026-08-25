@@ -12,9 +12,13 @@ the complete roadmap toward v1.0.0.
 ## v0.2.0 implementation specification
 
 - [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) — change-aware
-  verification, targeted test execution, response detail, and rule context
-- [`continuation/v0.2-planning.md`](continuation/v0.2-planning.md) — current
-  branch state and exact next action
+  whole-package verification, changed-statement coverage, analyzer baselining,
+  risk guidance, and CLI/Action/MCP adapters
+- [`schema/verification-report-v1alpha1.json`](schema/verification-report-v1alpha1.json)
+  — portable machine-readable report contract
+- [`../CONTEXT.md`](../CONTEXT.md) and
+  [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
+  — shared language and the durable product-boundary decision
 
 ## v0.1.0 implementation specifications
 
@@ -37,5 +41,7 @@ the complete roadmap toward v1.0.0.
 - [`phase-4b-tier-2-tools.md`](phase-4b-tier-2-tools.md)
 - [`phase-5-creative-tools.md`](phase-5-creative-tools.md)
 
-All filenames are lowercase kebab-case. No implementation step depends on a
-private reference checkout or a document outside this repository.
+[`continuation/v0.2-planning.md`](continuation/v0.2-planning.md) is retained as
+a superseded planning record and is not implementation authority. All
+filenames are lowercase kebab-case. No implementation step depends on a private
+reference checkout or a document outside this repository.

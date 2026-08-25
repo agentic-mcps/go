@@ -8,10 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- Stdio MCP server with seven tools:
+- Change verification through `agentic-go verify`, the root GitHub Action, and
+  the additive `go_verify_change` MCP tool, all sharing the
+  `agentic.verify/v1alpha1` report contract.
+- Stdio MCP server with eight tools (the seven v0.1 tools remain compatible):
   `go_test_structured`, `go_race_report`, `go_coverage_gaps`,
   `go_benchmark_diff`, `go_flake_finder`, `go_audit_concurrency`, and
-  `go_audit_errors`.
+  `go_audit_errors`, plus `go_verify_change`.
 - Four fresh-on-read resources: `agentic-go://module`,
   `agentic-go://packages`, `agentic-go://analysis-rules`, and
   `agentic-go://trace-summary`.
