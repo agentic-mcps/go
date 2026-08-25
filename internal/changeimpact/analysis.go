@@ -17,42 +17,12 @@ const (
 	maximumMaxPackages    = 500
 )
 
-// Options bounds one change-impact analysis.
-type Options struct {
-	Base        string
-	Package     string
-	MaxPackages int
-}
-
-// File retains the source bytes used to derive one portable changed-file
-// record. Paths remain workspace-relative.
-type File struct {
-	Change         verification.ChangedFile
-	BaseContent    []byte
-	CurrentContent []byte
-}
-
-// Package describes one active package needed by verification execution.
-type Package struct {
-	ID         string
-	Dir        string
-	ModulePath string
-	ModuleDir  string
-	Distance   int
-	Reasons    []string
-}
-
-// Analysis is the adapter-independent result of snapshot and impact discovery.
-type Analysis struct {
-	Repository       verification.Repository
-	Change           verification.Change
-	Impact           verification.Impact
-	Files            []File
-	Packages         []Package
-	Uncertainties    []verification.Uncertainty
-	Complete         bool
-	ObservedPackages int
-}
+// Options, File, Package, and Analysis retain their changeimpact names while
+// implementing the interface owned by the verification engine.
+type Options = verification.ChangeOptions
+type File = verification.SourceFile
+type Package = verification.ExecutionTarget
+type Analysis = verification.ChangeAnalysis
 
 // Analyzer owns Git and Go discovery within one configured workspace.
 type Analyzer struct {

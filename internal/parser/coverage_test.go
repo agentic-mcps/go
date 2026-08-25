@@ -21,6 +21,28 @@ func TestParseCoverage(t *testing.T) {
 	}
 }
 
+func TestParseCoverageBlocksIncludesCoveredAndUncoveredAtomicBlocks(t *testing.T) {
+	input := "mode: atomic\npkg/file.go:1.1,1.5 2 3\npkg/file.go:2.1,2.5 1 0\n"
+	blocks, err := ParseCoverageBlocks(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(blocks) != 2 {
+		t.Fatalf("got %d blocks, want 2", len(blocks))
+	}
+	if blocks[0].Count != 3 || blocks[1].Count != 0 || blocks[1].Statements != 1 {
+		t.Fatalf("blocks = %+v", blocks)
+	}
+}
+
+func TestParseCoverageBlocksPreservesErrors(t *testing.T) {
+	for _, input := range []string{"", "mode: atomic\n", "mode: nope\na.go:1.1,1.2 1 0\n", "mode: atomic\na.go:1.1,1.2 -1 0\n"} {
+		if _, err := ParseCoverageBlocks(strings.NewReader(input)); err == nil {
+			t.Errorf("accepted %q", input)
+		}
+	}
+}
+
 func TestParseCoverageRejectsMalformedProfiles(t *testing.T) {
 	for _, input := range []string{"", "mode: atomic\n", "mode: nope\na.go:1.1,1.2 1 0\n", "mode: atomic\na.go:1.1,1.2 -1 0\n", "mode: atomic\na.go:2.1,1.2 1 0\n", "mode: atomic\na.go:1.1,1.2 18446744073709551616 0\n"} {
 		if _, err := ParseCoverage(strings.NewReader(input)); err == nil {

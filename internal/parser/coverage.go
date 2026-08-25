@@ -45,45 +45,13 @@ type CoverageReport struct {
 
 // ParseCoverage parses a Go coverage profile from r.
 func ParseCoverage(r io.Reader) (CoverageReport, error) {
-	if r == nil {
-		return CoverageReport{}, errors.New("coverage: nil reader")
-	}
-	s := bufio.NewScanner(r)
-	s.Buffer(make([]byte, 64*1024), maxCoverageLine)
-	if !s.Scan() {
-		if err := s.Err(); err != nil {
-			return CoverageReport{}, fmt.Errorf("coverage: scan: %w", err)
-		}
-		return CoverageReport{}, errors.New("coverage: missing mode header")
-	}
-	header := s.Text()
-	if !strings.HasPrefix(header, "mode: ") || header != strings.TrimSpace(header) {
-		return CoverageReport{}, errors.New("coverage: invalid mode header")
-	}
-	mode := strings.TrimPrefix(header, "mode: ")
-	if mode != "set" && mode != "count" && mode != "atomic" {
-		return CoverageReport{}, fmt.Errorf("coverage: unsupported mode %q", mode)
+	blocks, err := parseCoverageBlocks(r)
+	if err != nil {
+		return CoverageReport{}, err
 	}
 	byFile := make(map[string][]CoverageBlock)
-	blocks := 0
-	for line := 2; s.Scan(); line++ {
-		text := s.Text()
-		fields := strings.Fields(text)
-		if len(fields) != 3 || strings.Join(fields, " ") != text {
-			return CoverageReport{}, fmt.Errorf("coverage: malformed line %d", line)
-		}
-		b, err := parseCoverageBlock(fields)
-		if err != nil {
-			return CoverageReport{}, fmt.Errorf("coverage: line %d: %w", line, err)
-		}
+	for _, b := range blocks {
 		byFile[b.File] = append(byFile[b.File], b)
-		blocks++
-	}
-	if err := s.Err(); err != nil {
-		return CoverageReport{}, fmt.Errorf("coverage: scan: %w", err)
-	}
-	if blocks == 0 {
-		return CoverageReport{}, errors.New("coverage: profile has no blocks")
 	}
 
 	files := make([]CoverageFile, 0, len(byFile))
@@ -125,6 +93,55 @@ func ParseCoverage(r io.Reader) (CoverageReport, error) {
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].File < files[j].File })
 	return CoverageReport{Files: files, OverallPercent: 100 * float64(covered) / float64(total)}, nil
+}
+
+// ParseCoverageBlocks parses and validates a Go coverage profile, returning
+// every block, including blocks with zero execution count. The input mode is
+// validated even though it does not alter block parsing.
+func ParseCoverageBlocks(r io.Reader) ([]CoverageBlock, error) {
+	return parseCoverageBlocks(r)
+}
+
+func parseCoverageBlocks(r io.Reader) ([]CoverageBlock, error) {
+	if r == nil {
+		return nil, errors.New("coverage: nil reader")
+	}
+	s := bufio.NewScanner(r)
+	s.Buffer(make([]byte, 64*1024), maxCoverageLine)
+	if !s.Scan() {
+		if err := s.Err(); err != nil {
+			return nil, fmt.Errorf("coverage: scan: %w", err)
+		}
+		return nil, errors.New("coverage: missing mode header")
+	}
+	header := s.Text()
+	if !strings.HasPrefix(header, "mode: ") || header != strings.TrimSpace(header) {
+		return nil, errors.New("coverage: invalid mode header")
+	}
+	mode := strings.TrimPrefix(header, "mode: ")
+	if mode != "set" && mode != "count" && mode != "atomic" {
+		return nil, fmt.Errorf("coverage: unsupported mode %q", mode)
+	}
+	blocks := make([]CoverageBlock, 0)
+	for line := 2; s.Scan(); line++ {
+		text := s.Text()
+		fields := strings.Fields(text)
+		if len(fields) != 3 || strings.Join(fields, " ") != text {
+			return nil, fmt.Errorf("coverage: malformed line %d", line)
+		}
+		b, err := parseCoverageBlock(fields)
+		if err != nil {
+			return nil, fmt.Errorf("coverage: line %d: %w", line, err)
+		}
+		blocks = append(blocks, b)
+	}
+	if err := s.Err(); err != nil {
+		return nil, fmt.Errorf("coverage: scan: %w", err)
+	}
+	if len(blocks) == 0 {
+		return nil, errors.New("coverage: profile has no blocks")
+	}
+	return blocks, nil
 }
 
 func parseCoverageBlock(fields []string) (CoverageBlock, error) {
