@@ -55,7 +55,17 @@ func (a *Analyzer) Analyze(ctx context.Context, options Options) (Analysis, erro
 	if err != nil {
 		return Analysis{}, err
 	}
-	return a.computeImpact(callCtx, analysis, options)
+	analysis, err = a.computeImpact(callCtx, analysis, options)
+	if err != nil {
+		return Analysis{}, err
+	}
+	risks, uncertainties, err := assessRisk(analysis)
+	if err != nil {
+		return Analysis{}, err
+	}
+	analysis.Risks = risks
+	analysis.Uncertainties = append(analysis.Uncertainties, uncertainties...)
+	return analysis, nil
 }
 
 func normalizeOptions(options *Options) error {

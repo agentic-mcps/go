@@ -73,6 +73,7 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 	report := NewReport(e.providerVersion, analysis.Repository)
 	report.Change = analysis.Change
 	report.Impact = analysis.Impact
+	report.Risks = append(report.Risks, analysis.Risks...)
 	report.Uncertainties = append(report.Uncertainties, analysis.Uncertainties...)
 	targets := executionTargetIDs(analysis.Packages)
 	direct := directTargetIDs(analysis.Packages)

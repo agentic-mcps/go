@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/changeimpact"
+	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 )
 
 func TestImpactIncludesTransitiveReverseImporters(t *testing.T) {
@@ -61,7 +62,7 @@ func TestImpactNeverTruncatesOversizedClosure(t *testing.T) {
 	if analysis.Complete || analysis.ObservedPackages != 3 || len(analysis.Packages) != 3 {
 		t.Fatalf("bounded analysis = complete:%v observed:%d retained:%d, want false/3/3", analysis.Complete, analysis.ObservedPackages, len(analysis.Packages))
 	}
-	if len(analysis.Uncertainties) != 1 || analysis.Uncertainties[0].Code != "package_limit" {
+	if !hasUncertainty(analysis.Uncertainties, "package_limit") {
 		t.Fatalf("uncertainties = %#v, want package_limit", analysis.Uncertainties)
 	}
 }
@@ -118,6 +119,15 @@ func TestImpactLoadsEveryActiveWorkModule(t *testing.T) {
 func contains(values []string, target string) bool {
 	for _, value := range values {
 		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
+func hasUncertainty(values []verification.Uncertainty, code string) bool {
+	for _, value := range values {
+		if value.Code == code {
 			return true
 		}
 	}

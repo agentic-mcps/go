@@ -30,12 +30,14 @@ type LineEdit struct {
 // ExecutionTarget is one language-native unit that can be verified. Absolute
 // directories are internal infrastructure and never enter the report.
 type ExecutionTarget struct {
-	ID         string
-	Dir        string
-	ModulePath string
-	ModuleDir  string
-	Distance   int
-	Reasons    []string
+	ID               string
+	Dir              string
+	ModulePath       string
+	ModuleDir        string
+	Distance         int
+	Reasons          []string
+	Cgo              bool
+	BuildConstrained bool
 }
 
 // ChangeAnalysis is the complete discovery handoff consumed by Engine.
@@ -46,6 +48,7 @@ type ChangeAnalysis struct {
 	Files            []SourceFile
 	Packages         []ExecutionTarget
 	Uncertainties    []Uncertainty
+	Risks            []RiskArea
 	Complete         bool
 	ObservedPackages int
 }

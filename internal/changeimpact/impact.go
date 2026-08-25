@@ -168,6 +168,7 @@ func (a *Analyzer) computeImpact(ctx context.Context, analysis Analysis, options
 		analysis.Packages = append(analysis.Packages, Package{
 			ID: id, Dir: record.Dir, ModulePath: record.ModulePath, ModuleDir: record.ModuleDir,
 			Distance: distance[id], Reasons: append([]string(nil), packageReasons...),
+			Cgo: len(record.CgoFiles) > 0, BuildConstrained: len(record.IgnoredGoFiles) > 0,
 		})
 	}
 	analysis.ObservedPackages = len(ids)
