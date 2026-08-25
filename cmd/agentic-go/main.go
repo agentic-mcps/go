@@ -42,6 +42,8 @@ func run(args []string) int {
 			return runDoctor(args[1:], os.Stdout, os.Stderr, defaultDoctorDependencies())
 		case "mcp-config":
 			return runMCPConfig(args[1:], os.Stdout, os.Stderr, defaultMCPConfigDependencies())
+		case "contract":
+			return runContract(args[1:], os.Stdout, os.Stderr)
 		}
 	}
 	return runMCP(args)

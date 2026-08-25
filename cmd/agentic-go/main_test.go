@@ -2,13 +2,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
 	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 )
 
@@ -48,6 +51,70 @@ func TestRunVerifyRejectsUnpublishedOperationalFlags(t *testing.T) {
 				t.Fatalf("stderr = %q, want unknown-flag diagnostic", stderr.String())
 			}
 		})
+	}
+}
+
+func TestRunContractExportValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{name: "missing subcommand", args: nil, want: "subcommand export is required"},
+		{name: "missing output", args: []string{"export"}, want: "--output is required"},
+		{name: "invalid format", args: []string{"export", "--output", "handoff.json", "--format", "yaml"}, want: "--format"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if exit := runContract(test.args, &stdout, &stderr); exit != 2 {
+				t.Fatalf("exit = %d, want 2", exit)
+			}
+			if stdout.Len() != 0 || !strings.Contains(stderr.String(), test.want) {
+				t.Fatalf("stdout=%q stderr=%q, want %q diagnostic", stdout.String(), stderr.String(), test.want)
+			}
+		})
+	}
+}
+
+func TestRunContractExportMapsRequestAndWritesCanonicalResults(t *testing.T) {
+	want := intelligence.ContractExport{ContractID: "chg_123", SnapshotID: "snap_123", Path: "handoff/change.json", Digest: "sha256:123"}
+	var workspacePath string
+	var request intelligence.ContractExportRequest
+	dependencies := contractExportDependencies{export: func(_ context.Context, workspace string, got intelligence.ContractExportRequest) (intelligence.ContractExport, error) {
+		workspacePath, request = workspace, got
+		return want, nil
+	}}
+	var stdout, stderr bytes.Buffer
+	exit := runContractWithDependencies([]string{"export", "--workspace", "workspace", "--output", "handoff/change.json", "--id", "chg_123", "--format", "json"}, &stdout, &stderr, dependencies)
+	if exit != 0 || stderr.Len() != 0 {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+	}
+	if workspacePath != "workspace" || request.ContractID != "chg_123" || request.Destination != "handoff/change.json" {
+		t.Fatalf("workspace=%q request=%#v", workspacePath, request)
+	}
+	var decoded intelligence.ContractExport
+	if err := json.Unmarshal(stdout.Bytes(), &decoded); err != nil || decoded != want {
+		t.Fatalf("decoded=%#v error=%v", decoded, err)
+	}
+
+	stdout.Reset()
+	exit = runContractWithDependencies([]string{"export", "--output", "handoff/change.json"}, &stdout, &stderr, dependencies)
+	if exit != 0 || !strings.Contains(stdout.String(), "handoff/change.json") || strings.Contains(stdout.String(), "/Users/") {
+		t.Fatalf("text exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+	}
+}
+
+func TestRunContractExportReportsOperationalFailure(t *testing.T) {
+	dependencies := contractExportDependencies{export: func(context.Context, string, intelligence.ContractExportRequest) (intelligence.ContractExport, error) {
+		return intelligence.ContractExport{}, errors.New("contract not found")
+	}}
+	var stdout, stderr bytes.Buffer
+	if exit := runContractWithDependencies([]string{"export", "--output", "handoff/change.json"}, &stdout, &stderr, dependencies); exit != 1 {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+	}
+	if stdout.Len() != 0 || !strings.Contains(stderr.String(), "contract not found") {
+		t.Fatalf("stdout=%q stderr=%q", stdout.String(), stderr.String())
 	}
 }
 
