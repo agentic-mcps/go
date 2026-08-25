@@ -98,6 +98,34 @@ The semantic sidecar is infrastructure until the v0.4 Context Pack operations
 become public; raw LSP and the upstream experimental gopls MCP surface are not
 agentic-go contracts.
 
+## v0.4 Context Pack boundary
+
+The v0.4 development surface adds `go_workspace_brief`, `go_search`, and
+`go_symbol_context`. The live inventory is 11 tools, five fixed resources, one
+artifact resource template, and four prompts. The three intelligence tools are
+read-only, non-destructive, idempotent, and closed-world. Existing eight tool
+contracts remain unchanged.
+
+`agentic.context/v1alpha1` is the compact semantic contract. The checked-in
+[JSON Schema](schema/context-pack-v1alpha1.json) is authoritative. Every result
+records its observed Snapshot Ref, uses workspace-relative locations with
+one-based UTF-8 byte columns, keeps collections non-null and deterministic, and
+reports omitted external or dynamic relationships as uncertainty. LSP UTF-16
+positions exist only inside the pinned-gopls adapter and opaque Symbol Refs.
+Stale Snapshot Refs, Symbol Refs, and continuation cursors fail loudly.
+
+Workspace briefs default to 8 KiB, symbol context to 16 KiB, and search to 20
+matches with a maximum of 100. Overflow detail is written atomically to the
+private user cache as a content-addressed artifact. The
+`agentic-go://artifact/{id}` template accepts the opaque cursor returned by a
+compact result and returns bounded UTF-8-safe chunks with another cursor until
+complete. `agentic-go://capabilities` reports the effective negotiated semantic
+manifest without exposing the sidecar path.
+
+The intelligence module owns orchestration and neutral domain types. Git, Go,
+gopls, LSP, MCP, subprocess, and cache mechanics remain infrastructure
+adapters. Raw gopls responses are never public product types.
+
 ## Module
 
 ```

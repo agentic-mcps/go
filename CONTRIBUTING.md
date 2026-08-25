@@ -58,9 +58,9 @@ findings. Register shipped protocol surfaces through
 `internal/tools.RegisterAll` and extend the in-memory protocol inventory test.
 Keep the MCP interface focused on local coding agents; CI-oriented output
 belongs in compatible command-line surfaces when it would distort MCP.
-The current v0.2 inventory is eight tools, four resources, and four prompts;
-additive v0.2 protocol work must retain the v0.1 contract or document the
-compatibility behavior explicitly. Impact relationships are
+The current v0.4 development inventory is 11 tools, five fixed resources, one
+artifact resource template, and four prompts. Existing v0.1 and v0.2 tool
+contracts remain compatible. Impact relationships are
 conservative candidates: preserve their evidence and uncertainty rather than
 presenting them as proof of runtime reachability.
 

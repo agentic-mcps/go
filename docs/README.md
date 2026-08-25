@@ -20,6 +20,16 @@ product plan and routing summary.
   [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
   — shared language and the durable product-boundary decision
 
+## v0.3 and v0.4 implementation contracts
+
+- [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md): staged sidecar, semantic,
+  continuity, refactor, evaluation, and contract-freeze authority
+- [`schema/context-pack-v1alpha1.json`](schema/context-pack-v1alpha1.json):
+  compact snapshot-bound semantic context contract
+- [`adr/0002-context-pack-boundary.md`](adr/0002-context-pack-boundary.md):
+  why Context Packs and the intelligence service, not raw gopls or MCP, form
+  the semantic product boundary
+
 ## v0.1.0 implementation specifications
 
 - [`phase-1-test-intelligence.md`](phase-1-test-intelligence.md)
@@ -32,8 +42,8 @@ product plan and routing summary.
 
 ## Deferred roadmap specifications
 
-The v1 roadmap is future authority only. It does not expand the v0.2 release
-scope or describe currently available tools.
+The unimplemented v0.5 and later portions of the v1 roadmap remain future
+authority. They do not silently expand the current development surface.
 
 - [`phase-4a-index.md`](phase-4a-index.md)
 - [`phase-4a-security.md`](phase-4a-security.md)

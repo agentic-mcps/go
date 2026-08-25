@@ -19,9 +19,10 @@ For a rule change, also read the matching domain specification:
 
 ## Invariants
 
-- Tagged v0.1.0 is exactly seven tools, four resources, four prompts, and the
-  `agentic-go-vet` binary. The v0.2.0 target adds only `go_verify_change`, for
-  eight tools total. `internal/tools.RegisterAll` is always the live inventory.
+- Tagged v0.1.0 is seven tools, four resources, four prompts, and the
+  `agentic-go-vet` binary. v0.2 adds `go_verify_change`. The current v0.4
+  development surface is 11 tools, five fixed resources, one artifact resource
+  template, and four prompts. `internal/tools.RegisterAll` is the live inventory.
 - The v0.2 verification report is the durable product boundary shared by the
   CLI, GitHub Action, and MCP adapter. It reports conservative impact,
   executed evidence, findings, risk facts, and explicit uncertainty; it never
@@ -30,6 +31,13 @@ For a rule change, also read the matching domain specification:
   `agentic-go-gopls` companion. Managed sessions negotiate capabilities,
   disable telemetry, use bounded stdio LSP, and replay only an explicitly
   idempotent read after terminal failure.
+- v0.4 intelligence is bound to immutable Snapshot Refs. Public locations use
+  one-based UTF-8 byte columns; LSP UTF-16 positions stay inside the gopls
+  adapter and opaque Symbol Refs. Stale refs fail instead of being re-resolved.
+- `agentic.context/v1alpha1` Context Packs are compact, deterministic, and
+  source-grounded. Complete overflow detail stays in private content-addressed
+  artifacts addressed by opaque cursors. MCP and LSP types do not enter
+  `internal/intelligence` domain contracts.
 - The server is stdio-only and helps an external coding agent make decisions.
   It does not embed an LLM or become an agent framework.
 - All filesystem access stays within the configured, symlink-resolved

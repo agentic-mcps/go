@@ -28,6 +28,14 @@ and analyze source without running target tests, benchmarks, or fuzz targets.
 Their package loading is closed-world: module downloads and toolchain downloads
 are disabled.
 
+The v0.4 semantic tools read and type-check workspace source through the pinned
+gopls companion. They do not apply edits or run target tests. Workspace briefs,
+search results, symbol context, and artifact chunks remain subject to the same
+symlink-resolved containment and request deadline. Semantic results can still
+reflect the local module cache, build configuration, cgo environment, and
+generated source, so their uncertainty fields must not be treated as a safety
+claim.
+
 Agentic-go enforces a symlink-resolved workspace boundary, propagates
 cancellation, applies deadlines and concurrency limits, and caps each
 subprocess output stream. These controls limit accidental scope and resource
@@ -44,6 +52,12 @@ cache directories. Agentic-go sets `GOTELEMETRY=off` for managed sessions,
 bounds JSON-RPC frames and stderr, and never accepts a gopls-initiated workspace
 edit outside the guarded-refactor flow. These controls do not make gopls a
 sandbox.
+
+Context Pack overflow artifacts are stored under the user cache with private
+directory and file permissions, content-addressed identities, and atomic
+writes. They may contain source-derived signatures, diagnostics, and symbol
+relationships. Normal operation never writes them into the analyzed worktree;
+users should protect the local cache like other developer-tool state.
 
 ## Supported releases
 

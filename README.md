@@ -22,6 +22,27 @@ not embed an LLM or an agent runtime.
 > Status: pre-release. Install from this checkout. Release packages are not
 > published yet.
 
+## Keep an agent oriented
+
+The v0.4 development workflow starts with compact semantic context and ends
+with executed change evidence:
+
+~~~text
+Workspace Brief -> Search / Symbol Context -> agent edits -> Verify Change
+~~~
+
+`go_workspace_brief` returns package layout, exported APIs, diagnostics,
+repository guidance hashes, optional change impact, risks, and explicit
+uncertainty in a bounded `agentic.context/v1alpha1` Context Pack. `go_search`
+returns stable Symbol Refs. `go_symbol_context` uses those refs for hover,
+definitions, reference totals, implementations, related tests, diagnostics,
+and optional call hierarchy without trusting stale line numbers.
+
+Every response identifies the exact workspace snapshot it observed. When full
+detail exceeds the compact byte budget, the response provides an opaque cursor
+for the `agentic-go://artifact/{id}` resource template. Agentic-go rejects stale
+refs instead of silently resolving them against changed source.
+
 ## Verify a change
 
 The primary workflow compares the final working tree with an explicit local
@@ -180,14 +201,12 @@ refactoring.
 
 ## MCP adapter
 
-agentic-go also speaks stdio MCP for local coding agents. The v0.2 inventory is
-eight tools, four resources, and four prompts. The seven v0.1 tools retain
-their contracts; the additive `go_verify_change` tool returns the same report
-as the CLI in authoritative `structuredContent`, with only a concise text
-fallback to avoid duplicating the report in client context. It declares
-execution annotations so supporting clients can gate approval. The
-`verify-change` prompt invokes that operation once rather than
-asking an agent to reconstruct a report from low-level tools.
+agentic-go also speaks stdio MCP for local coding agents. The current v0.4
+development inventory is 11 tools, five fixed resources, one artifact resource
+template, and four prompts. The eight v0.2 tools retain their contracts. The
+three semantic tools are read-only and return canonical structured content.
+`go_verify_change` returns the same report as the CLI with only a concise text
+fallback, and supporting clients can approval-gate its trusted-code execution.
 
 ## Analyzer CLI
 
@@ -206,6 +225,14 @@ present, so CI must parse the report and fail on analysis errors. The
 [release scope](docs/v0.1.0-release-scope.md) documents the exact contract.
 
 ## MCP surface
+
+### Semantic context
+
+| Tool | Use |
+| --- | --- |
+| `go_workspace_brief` | Return a compact snapshot-bound workspace and optional change overview |
+| `go_search` | Search workspace symbols and return stable Symbol Refs |
+| `go_symbol_context` | Resolve a Symbol Ref or source position into bounded semantic context |
 
 ### Change verification
 
@@ -247,6 +274,11 @@ Resources are computed fresh on read.
 | `agentic-go://packages` | Package inventory from `go list` |
 | `agentic-go://analysis-rules` | Registered concurrency and error rule manifest |
 | `agentic-go://trace-summary` | Bounded summary of recent trace calls |
+| `agentic-go://capabilities` | Effective pinned-gopls capability manifest and Context Pack limits |
+
+`agentic-go://artifact/{id}` is a resource template. Replace `{id}` with the
+opaque cursor returned by a truncated Context Pack or symbol context. Each read
+returns a bounded UTF-8-safe chunk and, when needed, another cursor.
 
 ### Prompts
 
@@ -272,9 +304,9 @@ Resources are computed fresh on read.
   `os.UserCacheDir()/agentic-go/runs/<run-id>/trace.jsonl`. Traces hash
   arguments and retain summaries rather than source contents.
 - The v0.3 distribution bundles gopls v0.21.0 as `agentic-go-gopls`, disables
-  its telemetry in managed sessions, and validates its exact version. Public
-  semantic navigation and Context Packs arrive in v0.4; the raw gopls LSP and
-  experimental gopls MCP interface are not exposed as agentic-go's product API.
+  its telemetry in managed sessions, and validates its exact version. The v0.4
+  development line exposes compact Context Packs, not raw LSP or the
+  experimental upstream gopls MCP interface.
 - MCP remains stdio only. HTTP, SARIF, automatic toolchain installation,
   Homebrew distribution, and a Windows support claim are not shipped.
 

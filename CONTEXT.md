@@ -54,14 +54,15 @@ The report's automation state: requested evidence passed policy, blocking
 findings were observed, or required evidence was incomplete.
 _Avoid_: Safety verdict, confidence score
 
-## v1 planning language
+## Change intelligence
 
-These terms describe the future v1 product direction. They are planning
-concepts, not part of the current v0.2 implementation contract.
+Snapshot Refs, Context Packs, and Symbol Refs are implemented in the current
+v0.4 development line. Change Contracts, Checkpoints, and Refactor Plans remain
+staged v0.5 and v0.6 concepts.
 
 **Snapshot Ref**:
-A stable identity for one observed workspace state, including the repository
-and source configuration relevant to an operation.
+An immutable identity for one observed workspace state, including repository,
+final content, Go configuration, package scope, and semantic provider inputs.
 
 **Context Pack**:
 A bounded, source-grounded explanation of the workspace, relevant symbols,
@@ -76,7 +77,13 @@ A recorded observation of a change contract during work, including detected
 drift, policy observations, and current verification evidence.
 
 **Symbol Ref**:
-A stable reference to a Go symbol within a particular snapshot.
+An opaque Go symbol identity tied to one Snapshot Ref. It is rejected when the
+workspace no longer matches that snapshot.
+
+**Artifact Cursor**:
+An opaque, snapshot-bound reference to complete Context Pack detail retained in
+the private user cache when a compact response exceeds its byte budget.
+_Avoid_: File path, permanent URL
 
 **Refactor Plan**:
 A reviewable description of a deterministic source change, including affected
