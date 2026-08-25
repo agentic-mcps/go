@@ -1,11 +1,71 @@
 package intelligence
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func TestArtifactReadChunkIsUTF8SafeAndCursorBound(t *testing.T) {
+	s, _ := NewArtifactStore(t.TempDir())
+	a, _ := s.Put("snap", "context", []byte("aé🙂z"))
+	got, err := s.ReadChunk(context.Background(), a.ID, "", 0, 3)
+	if err != nil || got.Text != "aé" || got.Offset != 0 || got.TotalBytes != 8 || got.Complete || got.NextCursor == "" {
+		t.Fatalf("first chunk: %+v %v", got, err)
+	}
+	next, err := s.ReadChunk(context.Background(), a.ID, got.NextCursor, 999, 4)
+	if err != nil || next.Text != "🙂" || next.Offset != 3 || next.Complete {
+		t.Fatalf("second chunk: %+v %v", next, err)
+	}
+	last, err := s.ReadChunk(context.Background(), a.ID, next.NextCursor, 0, 64)
+	if err != nil || last.Text != "z" || !last.Complete || last.NextCursor != "" {
+		t.Fatalf("last chunk: %+v %v", last, err)
+	}
+	end, err := s.ReadChunk(context.Background(), a.ID, "", int64(len(a.Payload)), 1)
+	if err != nil || !end.Complete || end.Text != "" {
+		t.Fatalf("end chunk: %+v %v", end, err)
+	}
+}
+
+func TestArtifactReadChunkRejectsInvalidRequests(t *testing.T) {
+	s, _ := NewArtifactStore(t.TempDir())
+	a, _ := s.Put("snap", "context", []byte("é"))
+	cases := []struct {
+		name string
+		fn   func() error
+	}{
+		{"id", func() error {
+			_, err := s.ReadChunk(context.Background(), "bad", "", 0, 1)
+			return err
+		}},
+		{"offset", func() error {
+			_, err := s.ReadChunk(context.Background(), a.ID, "", 1, 1)
+			return err
+		}},
+		{"negative", func() error {
+			_, err := s.ReadChunk(context.Background(), a.ID, "", -1, 1)
+			return err
+		}},
+		{"limit", func() error {
+			_, err := s.ReadChunk(context.Background(), a.ID, "", 0, 0)
+			return err
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.fn(); err == nil {
+				t.Fatal("expected error")
+			}
+		})
+	}
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := s.ReadChunk(cancelled, a.ID, "", 0, 1); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancellation: %v", err)
+	}
+}
 
 func TestArtifactStorePermissionsAndRoundTrip(t *testing.T) {
 	root := t.TempDir()

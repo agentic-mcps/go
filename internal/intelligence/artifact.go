@@ -90,6 +90,17 @@ func (s *ArtifactStore) Put(snapshotID, key string, payload []byte) (Artifact, e
 
 // Get loads an artifact only when its snapshot and operation key match.
 func (s *ArtifactStore) Get(id, expectedSnapshotID, expectedKey string) (Artifact, error) {
+	a, err := s.getVerified(id)
+	if err != nil {
+		return Artifact{}, err
+	}
+	if a.SnapshotID != expectedSnapshotID || a.Key != expectedKey {
+		return Artifact{}, ErrArtifactMismatch
+	}
+	return a, nil
+}
+
+func (s *ArtifactStore) getVerified(id string) (Artifact, error) {
 	if s == nil || s.root == "" {
 		return Artifact{}, ErrArtifactNotFound
 	}
@@ -109,9 +120,6 @@ func (s *ArtifactStore) Get(id, expectedSnapshotID, expectedKey string) (Artifac
 	}
 	if artifactID(a.SnapshotID, a.Key, a.Payload) != id {
 		return Artifact{}, ErrArtifactCorrupt
-	}
-	if a.SnapshotID != expectedSnapshotID || a.Key != expectedKey {
-		return Artifact{}, ErrArtifactMismatch
 	}
 	return Artifact{ID: a.ID, SnapshotID: a.SnapshotID, Key: a.Key, Payload: append([]byte(nil), a.Payload...)}, nil
 }

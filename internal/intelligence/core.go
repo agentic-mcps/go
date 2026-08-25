@@ -99,6 +99,8 @@ func newCore(
 
 // Search returns one deterministic page of snapshot-bound workspace symbols.
 func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult, error) {
+	ctx, cancel := c.runner.Deadline(ctx)
+	defer cancel()
 	if strings.TrimSpace(request.Query) == "" {
 		return SearchResult{}, fmt.Errorf("search query is required")
 	}
@@ -195,6 +197,8 @@ func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult,
 // Symbol returns default semantic facets for a stable ref or compatibility
 // source position, rejecting any stale snapshot identity.
 func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext, error) {
+	ctx, cancel := c.runner.Deadline(ctx)
+	defer cancel()
 	if (request.Ref == "") == (request.Position == nil) {
 		return SymbolContext{}, fmt.Errorf("provide exactly one symbol reference or source position")
 	}
@@ -350,6 +354,8 @@ func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext
 // Brief assembles a compact workspace/package overview with optional change
 // impact when a local base is supplied.
 func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, error) {
+	ctx, cancel := c.runner.Deadline(ctx)
+	defer cancel()
 	if request.Scope == "" {
 		request.Scope = "./..."
 	}
@@ -460,6 +466,28 @@ func (c *Core) capture(ctx context.Context, base, scope, expected string) (Snaps
 
 func (c *Core) provider() Provider {
 	return Provider{Name: "agentic-go-gopls", Version: c.semantic.Identity().Version}
+}
+
+// Capabilities returns the effective negotiated semantic manifest and compact
+// response defaults without exposing the sidecar path or LSP wire types.
+func (c *Core) Capabilities() Capabilities {
+	identity := c.semantic.Identity()
+	return Capabilities{Provider: c.provider(), Semantic: identity.Capabilities, ContextSchema: ContextSchemaVersion,
+		BriefBytes: DefaultBriefBytes, SymbolBytes: DefaultSymbolBytes, SearchDefault: DefaultSearchLimit,
+		SearchMaximum: MaximumSearchLimit, ArtifactMaximum: MaxArtifactChunkBytes}
+}
+
+// ReadArtifact resolves an opaque Context Pack continuation cursor into one
+// bounded resource chunk.
+func (c *Core) ReadArtifact(ctx context.Context, cursor string, limit int64) (ArtifactChunk, error) {
+	decoded, err := DecodeArtifactCursor(cursor, "")
+	if err != nil {
+		return ArtifactChunk{}, err
+	}
+	if limit == 0 {
+		limit = MaxArtifactChunkBytes
+	}
+	return c.artifacts.ReadChunk(ctx, decoded.ID, cursor, decoded.Offset, limit)
 }
 
 func sourcePosition(path string, source SourcePosition) (Position, error) {

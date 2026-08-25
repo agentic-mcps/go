@@ -182,6 +182,30 @@ func TestCoreBriefReturnsBoundedNonNullWorkspaceContext(t *testing.T) {
 	}
 }
 
+func TestCoreCapabilitiesAndArtifactCursor(t *testing.T) {
+	snapshotter := newTestSnapshotter(t, snapshotRepository(t))
+	core := newTestCore(t, snapshotter, &fakeSemanticReader{})
+	capabilities := core.Capabilities()
+	if capabilities.Provider.Version != "v0.21.0" || !capabilities.Semantic.WorkspaceSymbol || capabilities.ContextSchema != ContextSchemaVersion {
+		t.Fatalf("capabilities = %#v", capabilities)
+	}
+	artifact, err := core.artifacts.Put("snapshot", "detail", []byte("detail"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cursor, err := EncodeArtifactCursor(artifact.ID, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	chunk, err := core.ReadArtifact(context.Background(), cursor, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if chunk.Text != "det" || chunk.Complete || chunk.NextCursor == "" || chunk.SnapshotID != "snapshot" {
+		t.Fatalf("chunk = %#v", chunk)
+	}
+}
+
 func newTestCore(t *testing.T, snapshots *Snapshotter, reader *fakeSemanticReader) *Core {
 	t.Helper()
 	artifacts, err := NewArtifactStore(filepath.Join(t.TempDir(), "artifacts"))

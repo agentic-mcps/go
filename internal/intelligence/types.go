@@ -40,6 +40,18 @@ type Provider struct {
 	Version string `json:"version"`
 }
 
+// Capabilities describes the effective semantic and compact-context contract.
+type Capabilities struct {
+	Provider        Provider           `json:"provider"`
+	Semantic        CapabilityManifest `json:"semantic"`
+	ContextSchema   string             `json:"context_schema"`
+	BriefBytes      int                `json:"brief_bytes"`
+	SymbolBytes     int                `json:"symbol_bytes"`
+	SearchDefault   int                `json:"search_default"`
+	SearchMaximum   int                `json:"search_maximum"`
+	ArtifactMaximum int64              `json:"artifact_maximum_bytes"`
+}
+
 // Location is a workspace-relative, one-based UTF-8 byte source range.
 type Location struct {
 	File      string `json:"file"`
