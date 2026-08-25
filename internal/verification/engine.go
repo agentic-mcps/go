@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -85,7 +86,11 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 			if errors.Is(runErr, context.Canceled) || errors.Is(runErr, context.DeadlineExceeded) {
 				return Report{}, runErr
 			}
-			report.Evidence = append(report.Evidence, failedExecutionEvidence(executionChecks(targets, request.Race), runErr)...)
+			roots := []string{e.workspace.Root()}
+			if cache, cacheErr := os.UserCacheDir(); cacheErr == nil {
+				roots = append(roots, cache)
+			}
+			report.Evidence = append(report.Evidence, failedExecutionEvidence(executionChecks(targets, request.Race), runErr, roots...)...)
 		} else {
 			report.Evidence = append(report.Evidence, outcome.Evidence...)
 			report.Findings = append(report.Findings, outcome.Findings...)
@@ -96,7 +101,7 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 			if errors.Is(analyzerErr, context.Canceled) || errors.Is(analyzerErr, context.DeadlineExceeded) {
 				return Report{}, analyzerErr
 			}
-			return Report{}, fmt.Errorf("materializing analyzer baseline: %w", analyzerErr)
+			return Report{}, fmt.Errorf("running analyzer comparison: %w", analyzerErr)
 		}
 		report.Evidence = append(report.Evidence, analyzerOutcome.Evidence...)
 		report.Findings = append(report.Findings, analyzerOutcome.Findings...)
@@ -171,12 +176,12 @@ func directTargetIDs(targets []ExecutionTarget) []string {
 	return ids
 }
 
-func failedExecutionEvidence(plan []Check, err error) []Evidence {
+func failedExecutionEvidence(plan []Check, err error, roots ...string) []Evidence {
 	result := make([]Evidence, 0, len(plan))
 	for _, check := range plan {
 		result = append(result, Evidence{
 			CheckID: check.ID, Kind: check.Kind, Status: EvidenceError,
-			Summary: "check could not produce trustworthy evidence", Error: boundedError(err),
+			Summary: "check could not produce trustworthy evidence", Error: portableCheckError(err, roots...),
 		})
 	}
 	return result
@@ -196,16 +201,4 @@ func applyCoveragePolicy(report *Report, minimum float64) {
 		})
 		return
 	}
-}
-
-func boundedError(err error) string {
-	if err == nil {
-		return ""
-	}
-	const limit = 1024
-	value := err.Error()
-	if len(value) <= limit {
-		return value
-	}
-	return value[:limit]
 }

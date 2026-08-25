@@ -153,8 +153,6 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 	race := flags.Bool("race", false, "include race detection")
 	failOn := flags.String("fail-on", "error", "blocking analyzer severity: error, warning, info, or none")
 	maxPackages := flags.Int("max-packages", 200, "maximum affected package closure")
-	maxConcurrent := flags.Int("max-concurrent-loads", 4, "maximum concurrent Go and Git subprocesses")
-	maxToolSeconds := flags.Int("max-tool-seconds", 300, "whole-verification deadline in seconds")
 	var minimumCoverage optionalPercentage
 	flags.Var(&minimumCoverage, "min-changed-coverage", "optional changed-statement coverage minimum from 0 through 100")
 	if err := flags.Parse(args); err != nil {
@@ -187,14 +185,6 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "agentic-go verify: --max-packages must be between 1 and 500")
 		return 2
 	}
-	if *maxConcurrent < 1 {
-		fmt.Fprintln(stderr, "agentic-go verify: --max-concurrent-loads must be positive")
-		return 2
-	}
-	if *maxToolSeconds < 1 || *maxToolSeconds > 300 {
-		fmt.Fprintln(stderr, "agentic-go verify: --max-tool-seconds must be between 1 and 300")
-		return 2
-	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -203,10 +193,7 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "agentic-go verify: workspace preflight failed: %v\n", err)
 		return 2
 	}
-	runner, err := execution.New(ws, execution.Config{
-		MaxConcurrent: *maxConcurrent,
-		Timeout:       time.Duration(*maxToolSeconds) * time.Second,
-	})
+	runner, err := execution.New(ws, execution.Config{})
 	if err != nil {
 		fmt.Fprintf(stderr, "agentic-go verify: execution setup failed: %v\n", err)
 		return 2

@@ -2,12 +2,52 @@ package verification
 
 import (
 	"fmt"
+	"go/ast"
+	goparser "go/parser"
+	"go/token"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/parser"
 )
+
+func (e *Engine) hasChangedExecutableStatements(analysis ChangeAnalysis) bool {
+	for _, file := range analysis.Files {
+		if filepath.Ext(file.Change.Path) != ".go" || strings.HasSuffix(file.Change.Path, "_test.go") || file.Change.Change == ChangeDeleted || len(file.Change.CurrentRanges) == 0 {
+			continue
+		}
+		set := token.NewFileSet()
+		parsed, err := goparser.ParseFile(set, file.Change.Path, file.CurrentContent, 0)
+		if err != nil {
+			return true
+		}
+		changed := false
+		ast.Inspect(parsed, func(node ast.Node) bool {
+			statement, ok := node.(ast.Stmt)
+			if !ok {
+				return true
+			}
+			switch statement.(type) {
+			case *ast.BadStmt, *ast.BlockStmt, *ast.EmptyStmt:
+				return true
+			}
+			start := set.Position(statement.Pos()).Line
+			end := set.Position(statement.End()).Line
+			for _, current := range file.Change.CurrentRanges {
+				if start <= current.End && end >= current.Start {
+					changed = true
+					return false
+				}
+			}
+			return true
+		})
+		if changed {
+			return true
+		}
+	}
+	return false
+}
 
 func (e *Engine) changedCoverage(analysis ChangeAnalysis, blocks []parser.CoverageBlock) (CoverageSummary, []Uncertainty, error) {
 	changed := make(map[string][]LineRange)
@@ -31,7 +71,7 @@ func (e *Engine) changedCoverage(analysis ChangeAnalysis, blocks []parser.Covera
 		file, err := e.coverageFile(analysis.Packages, block.File)
 		if err != nil {
 			uncertainties = append(uncertainties, Uncertainty{
-				Code: "coverage_path_unmapped", Message: err.Error(), Locations: make([]Location, 0),
+				Code: "coverage_path_unmapped", Message: portableCheckError(err, e.workspace.Root()), Locations: make([]Location, 0),
 			})
 			continue
 		}
@@ -96,7 +136,10 @@ func (e *Engine) changedCoverage(analysis ChangeAnalysis, blocks []parser.Covera
 
 func (e *Engine) coverageFile(targets []ExecutionTarget, file string) (string, error) {
 	if filepath.IsAbs(file) {
-		return e.workspace.Relative(file)
+		if relative, err := e.workspace.Relative(file); err == nil {
+			return relative, nil
+		}
+		return "", fmt.Errorf("coverage file could not be mapped into the configured workspace")
 	}
 	if relative, err := e.workspace.Relative(filepath.FromSlash(file)); err == nil {
 		return relative, nil
@@ -111,7 +154,7 @@ func (e *Engine) coverageFile(targets []ExecutionTarget, file string) (string, e
 			return relative, nil
 		}
 	}
-	return "", fmt.Errorf("coverage file %q could not be mapped into the workspace", file)
+	return "", fmt.Errorf("coverage file could not be mapped into the configured workspace")
 }
 
 func coverageIntersects(block parser.CoverageBlock, ranges []LineRange) bool {

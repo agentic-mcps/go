@@ -3,6 +3,7 @@ package verification
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	verificationTestTimeout = 300 * time.Second
+	verificationTestTimeout = 60 * time.Second
 	maxUncoveredRanges      = 200
 	maxCoverageProfileSize  = 8 << 20
 )
@@ -46,7 +47,8 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 		}
 		return executionOutcome{Evidence: evidence, Findings: []Finding{}, Uncertainties: []Uncertainty{}}, nil
 	}
-	run, err := e.executeGoTest(ctx, analysis.Packages, direct, request.Race)
+	coverageApplicable := e.hasChangedExecutableStatements(analysis)
+	run, err := e.executeGoTest(ctx, analysis.Packages, direct, request.Race, coverageApplicable)
 	if err != nil {
 		return executionOutcome{}, err
 	}
@@ -64,22 +66,30 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 	})
 	outcome.Findings = append(outcome.Findings, testFailureFindings(run.tests, run.result.ExitCode)...)
 
-	coverage, coverageUncertainty, coverageErr := e.changedCoverage(analysis, run.profile)
-	if run.coverageErr != nil {
-		coverageErr = run.coverageErr
+	if !coverageApplicable {
+		outcome.Evidence = append(outcome.Evidence, Evidence{
+			CheckID: "coverage", Kind: CheckCoverage, Status: EvidenceSkipped,
+			DurationMS: run.result.Duration.Milliseconds(),
+			Summary:    "no added or modified executable Go statements",
+		})
+	} else {
+		coverage, coverageUncertainty, coverageErr := e.changedCoverage(analysis, run.profile)
+		if run.coverageErr != nil {
+			coverageErr = run.coverageErr
+		}
+		coverageEvidence := Evidence{
+			CheckID: "coverage", Kind: CheckCoverage, DurationMS: run.result.Duration.Milliseconds(),
+			Status: EvidencePassed, Summary: fmt.Sprintf("%.1f%% of changed statements covered", coverage.Percent), Coverage: &coverage,
+		}
+		if coverageErr != nil {
+			coverageEvidence.Status = EvidenceError
+			coverageEvidence.Summary = "changed coverage could not be calculated"
+			coverageEvidence.Error = portableCheckError(coverageErr, e.workspace.Root())
+			coverageEvidence.Coverage = nil
+		}
+		outcome.Evidence = append(outcome.Evidence, coverageEvidence)
+		outcome.Uncertainties = append(outcome.Uncertainties, coverageUncertainty...)
 	}
-	coverageEvidence := Evidence{
-		CheckID: "coverage", Kind: CheckCoverage, DurationMS: run.result.Duration.Milliseconds(),
-		Status: EvidencePassed, Summary: fmt.Sprintf("%.1f%% of changed statements covered", coverage.Percent), Coverage: &coverage,
-	}
-	if coverageErr != nil {
-		coverageEvidence.Status = EvidenceError
-		coverageEvidence.Summary = "changed coverage could not be calculated"
-		coverageEvidence.Error = boundedError(coverageErr)
-		coverageEvidence.Coverage = nil
-	}
-	outcome.Evidence = append(outcome.Evidence, coverageEvidence)
-	outcome.Uncertainties = append(outcome.Uncertainties, coverageUncertainty...)
 
 	if request.Race {
 		raceStatus := EvidencePassed
@@ -96,19 +106,19 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 	return outcome, nil
 }
 
-func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, direct []string, race bool) (affectedRun, error) {
+func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, direct []string, race, coverage bool) (affectedRun, error) {
 	runDir, err := createVerificationRunDir("verify")
 	if err != nil {
 		return affectedRun{}, err
 	}
 	defer func() { _ = os.RemoveAll(runDir) }()
 	profilePath := filepath.Join(runDir, "coverage.out")
-	args := []string{
-		"test", "-json", "-count=1", "-covermode=atomic", "-coverprofile=" + profilePath,
-		"-timeout=" + verificationTestTimeout.String(),
-	}
-	if len(direct) > 0 {
-		args = append(args, "-coverpkg="+strings.Join(direct, ","))
+	args := []string{"test", "-json", "-count=1", fmt.Sprintf("-timeout=%ds", int(verificationTestTimeout.Seconds()))}
+	if coverage {
+		args = append(args, "-covermode=atomic", "-coverprofile="+profilePath)
+		if len(direct) > 0 {
+			args = append(args, "-coverpkg="+strings.Join(direct, ","))
+		}
 	}
 	if race {
 		args = append(args, "-race")
@@ -139,8 +149,20 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 		return affectedRun{}, fmt.Errorf("parsing affected package tests (exit %d): %w", result.ExitCode, parseErr)
 	}
 
-	profile, profileErr := readCoverageProfile(profilePath)
+	var profile []parser.CoverageBlock
+	var profileErr error
+	if coverage {
+		profile, profileErr = readCoverageProfile(profilePath)
+	}
 	tests, packageText := collector.result()
+	portableRoots := []string{runDir, e.workspace.Root()}
+	if cache, cacheErr := os.UserCacheDir(); cacheErr == nil {
+		portableRoots = append(portableRoots, cache)
+	}
+	sanitizeTestSummary(&tests, portableRoots...)
+	if profileErr != nil {
+		profileErr = errors.New(portableCheckError(profileErr, portableRoots...))
+	}
 	raceText := make([]string, 0, len(packageText))
 	packages := make([]string, 0, len(packageText))
 	for pkg := range packageText {
@@ -214,6 +236,18 @@ func testFailureFindings(summary TestSummary, exitCode int) []Finding {
 		})
 	}
 	return findings
+}
+
+func sanitizeTestSummary(summary *TestSummary, roots ...string) {
+	if summary == nil {
+		return
+	}
+	for index := range summary.Packages {
+		summary.Packages[index].Output = boundedText(portableReportText(summary.Packages[index].Output, roots...), 4096)
+	}
+	for index := range summary.Nonpassing {
+		summary.Nonpassing[index].Output = boundedText(portableReportText(summary.Nonpassing[index].Output, roots...), 4096)
+	}
 }
 
 func boundedText(value string, limit int) string {

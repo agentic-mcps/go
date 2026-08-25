@@ -108,6 +108,11 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		}
 	}
 	verifyTool := listedTool(t, listed.Tools, "go_verify_change")
+	for _, phrase := range []string{"trusted repository tests", "privileges", "containment"} {
+		if !strings.Contains(verifyTool.Description, phrase) {
+			t.Errorf("go_verify_change description %q missing %q", verifyTool.Description, phrase)
+		}
+	}
 	verifyAnnotations := verifyTool.Annotations
 	if verifyAnnotations == nil || verifyAnnotations.ReadOnlyHint || verifyAnnotations.IdempotentHint || verifyAnnotations.DestructiveHint == nil || !*verifyAnnotations.DestructiveHint || verifyAnnotations.OpenWorldHint == nil || !*verifyAnnotations.OpenWorldHint {
 		t.Fatalf("unexpected go_verify_change annotations: %+v", verifyAnnotations)

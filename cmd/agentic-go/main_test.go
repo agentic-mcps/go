@@ -37,6 +37,20 @@ func TestRunVerifyValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
 	}
 }
 
+func TestRunVerifyRejectsUnpublishedOperationalFlags(t *testing.T) {
+	for _, name := range []string{"--max-concurrent-loads", "--max-tool-seconds"} {
+		t.Run(name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if exit := runVerify([]string{name, "1"}, &stdout, &stderr); exit != 2 {
+				t.Fatalf("exit = %d, want 2", exit)
+			}
+			if !strings.Contains(stderr.String(), "flag provided but not defined") {
+				t.Fatalf("stderr = %q, want unknown-flag diagnostic", stderr.String())
+			}
+		})
+	}
+}
+
 func TestRunVerifyWritesCanonicalJSONAndPolicyExit(t *testing.T) {
 	repository := cliRepository(t)
 	base := cliGit(t, repository, "rev-parse", "HEAD")

@@ -30,7 +30,7 @@ type VerifyChangeInput struct {
 func RegisterVerifyChange(server *mcp.Server, runtime *Runtime) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "go_verify_change",
-		Description: "Verifies a local Go change with the same trusted repository tests developers run locally, plus contained audits, coverage, impact, risk guidance, and explicit uncertainty.",
+		Description: "Runs the same trusted repository tests a developer would run locally with the MCP process privileges and workspace, deadline, concurrency, and output containment, then reports impact, findings, risk guidance, and uncertainty.",
 		Annotations: &mcp.ToolAnnotations{
 			ReadOnlyHint:    false,
 			DestructiveHint: boolPtr(true),
