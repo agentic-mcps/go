@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.context/v1alpha1",
+  "title": "Agentic Context Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "provider", "snapshot", "modules", "packages",
+    "symbols", "diagnostics", "guidance", "risks", "uncertainties",
+    "totals", "truncated"
+  ],
+  "properties": {
+    "schema_version": { "const": "agentic.context/v1alpha1" },
+    "provider": { "$ref": "#/$defs/provider" },
+    "snapshot": { "$ref": "#/$defs/snapshot" },
+    "modules": { "type": "array", "items": { "$ref": "#/$defs/module" } },
+    "packages": { "type": "array", "items": { "$ref": "#/$defs/package" } },
+    "symbols": { "type": "array", "items": { "$ref": "#/$defs/symbol" } },
+    "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+    "guidance": { "type": "array", "items": { "$ref": "#/$defs/guidance" } },
+    "change": { "$ref": "#/$defs/change" },
+    "risks": { "type": "array", "items": { "$ref": "#/$defs/risk" } },
+    "uncertainties": { "type": "array", "items": { "$ref": "#/$defs/uncertainty" } },
+    "totals": { "$ref": "#/$defs/totals" },
+    "truncated": { "type": "boolean" },
+    "next_cursor": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": { "name": { "type": "string" }, "version": { "type": "string" } }
+    },
+    "capabilities": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "workspace_symbol", "hover", "definition", "type_definition",
+        "references", "implementation", "document_symbol", "call_hierarchy",
+        "diagnostics", "rename", "formatting", "code_action"
+      ],
+      "properties": {
+        "workspace_symbol": { "type": "boolean" }, "hover": { "type": "boolean" },
+        "definition": { "type": "boolean" }, "type_definition": { "type": "boolean" },
+        "references": { "type": "boolean" }, "implementation": { "type": "boolean" },
+        "document_symbol": { "type": "boolean" }, "call_hierarchy": { "type": "boolean" },
+        "diagnostics": { "type": "boolean" }, "rename": { "type": "boolean" },
+        "formatting": { "type": "boolean" }, "code_action": { "type": "boolean" }
+      }
+    },
+    "build": {
+      "type": "object", "additionalProperties": false,
+      "required": ["goos", "goarch", "cgo_enabled", "goflags", "tags", "workspace"],
+      "properties": {
+        "goos": { "type": "string" }, "goarch": { "type": "string" },
+        "cgo_enabled": { "type": "boolean" }, "goflags": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "workspace": { "type": "string" }
+      }
+    },
+    "snapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "id", "repository_id", "workspace", "head_commit", "content_digest",
+        "go_version", "gopls_version", "capabilities", "build", "scope"
+      ],
+      "properties": {
+        "id": { "type": "string" }, "repository_id": { "type": "string" },
+        "workspace": { "type": "string" }, "requested_base": { "type": "string" },
+        "base_commit": { "type": "string" }, "merge_base_commit": { "type": "string" },
+        "head_commit": { "type": "string" }, "content_digest": { "type": "string" },
+        "go_version": { "type": "string" }, "gopls_version": { "type": "string" },
+        "capabilities": { "$ref": "#/$defs/capabilities" },
+        "build": { "$ref": "#/$defs/build" }, "scope": { "type": "string" }
+      }
+    },
+    "location": {
+      "type": "object", "additionalProperties": false,
+      "required": ["file", "line", "column"],
+      "properties": {
+        "file": { "type": "string" }, "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "end_column": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "module": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "go_version", "workspace"],
+      "properties": {
+        "path": { "type": "string" }, "go_version": { "type": "string" },
+        "workspace": { "type": "string" }
+      }
+    },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "id", "name", "directory", "module", "imports", "tests", "exported", "cgo", "generated", "constrained"],
+      "properties": {
+        "kind": { "const": "go.package" }, "id": { "type": "string" },
+        "name": { "type": "string" }, "directory": { "type": "string" },
+        "module": { "type": "string" }, "imports": { "type": "integer", "minimum": 0 },
+        "tests": { "type": "integer", "minimum": 0 },
+        "exported": { "type": "array", "items": { "type": "string" } },
+        "cgo": { "type": "boolean" }, "generated": { "type": "boolean" },
+        "constrained": { "type": "boolean" }
+      }
+    },
+    "symbol": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "kind", "name", "qualified", "package", "location"],
+      "properties": {
+        "ref": { "type": "string" }, "kind": { "type": "string", "pattern": "^go\\." },
+        "name": { "type": "string" }, "qualified": { "type": "string" },
+        "package": { "type": "string" }, "location": { "$ref": "#/$defs/location" }
+      }
+    },
+    "diagnostic": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "severity", "message", "location"],
+      "properties": {
+        "source": { "type": "string" }, "code": { "type": "string" },
+        "severity": { "enum": ["error", "warning", "info", "hint", "unknown"] },
+        "message": { "type": "string" }, "location": { "$ref": "#/$defs/location" }
+      }
+    },
+    "guidance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["file", "digest"],
+      "properties": { "file": { "type": "string" }, "digest": { "type": "string" } }
+    },
+    "change": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "files", "files_total", "declarations", "declarations_total",
+        "direct_units", "direct_units_total", "reverse_dependents",
+        "reverse_dependents_total", "observed_units", "truncated", "complete"
+      ],
+      "properties": {
+        "files": { "type": "array", "items": { "type": "string" } },
+        "files_total": { "type": "integer", "minimum": 0 },
+        "declarations": { "type": "array", "items": { "type": "string" } },
+        "declarations_total": { "type": "integer", "minimum": 0 },
+        "direct_units": { "type": "array", "items": { "type": "string" } },
+        "direct_units_total": { "type": "integer", "minimum": 0 },
+        "reverse_dependents": { "type": "array", "items": { "type": "string" } },
+        "reverse_dependents_total": { "type": "integer", "minimum": 0 },
+        "observed_units": { "type": "integer", "minimum": 0 },
+        "truncated": { "type": "boolean" }, "complete": { "type": "boolean" }
+      }
+    },
+    "risk": {
+      "type": "object", "additionalProperties": false,
+      "required": ["code", "summary", "guidance", "locations"],
+      "properties": {
+        "code": { "type": "string" }, "summary": { "type": "string" },
+        "guidance": { "type": "string" },
+        "locations": { "type": "array", "items": { "$ref": "#/$defs/location" } }
+      }
+    },
+    "uncertainty": {
+      "type": "object", "additionalProperties": false,
+      "required": ["code", "message", "locations"],
+      "properties": {
+        "code": { "type": "string" }, "message": { "type": "string" },
+        "locations": { "type": "array", "items": { "$ref": "#/$defs/location" } }
+      }
+    },
+    "totals": {
+      "type": "object", "additionalProperties": false,
+      "required": ["modules", "packages", "symbols", "diagnostics", "guidance", "risks", "uncertainties"],
+      "properties": {
+        "modules": { "type": "integer", "minimum": 0 },
+        "packages": { "type": "integer", "minimum": 0 },
+        "symbols": { "type": "integer", "minimum": 0 },
+        "diagnostics": { "type": "integer", "minimum": 0 },
+        "guidance": { "type": "integer", "minimum": 0 },
+        "risks": { "type": "integer", "minimum": 0 },
+        "uncertainties": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
