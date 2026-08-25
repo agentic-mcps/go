@@ -23,10 +23,13 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
         with:
           fetch-depth: 0
-      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 (# v7)
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
         with:
-          distribution: goreleaser
-          version: v2.17.1
-          args: release --clean
+          go-version: "1.27.x"
+          cache: true
+      - name: Build release bundles
+        run: go run ./internal/cmd/releasepack --version "${GITHUB_REF_NAME#v}" --output dist
+      - name: Publish GitHub release
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

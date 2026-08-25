@@ -73,15 +73,19 @@ jobs:
         with:
           go-version: "1.27.x"
           cache: true
-      - name: Build server
+      - name: Build release bundle
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: "0"
-        run: go build -mod=readonly -o /tmp/agentic-go-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/agentic-go
-      - name: Build analyzer CLI
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: "0"
-        run: go build -mod=readonly -o /tmp/agentic-go-vet-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/agentic-go-vet
+          RELEASE_TARGET: ${{ matrix.goos }}/${{ matrix.goarch }}
+        run: go run ./internal/cmd/releasepack --version 0.3.0-test --output /tmp/agentic-go-release --targets "$RELEASE_TARGET"
+
+  installer:
+    name: Installer / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - name: Test exact-version installer
+        run: bash scripts/install.test.sh
