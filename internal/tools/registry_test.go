@@ -13,7 +13,7 @@ import (
 func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	ctx := context.Background()
 	server := mcp.NewServer(
-		&mcp.Implementation{Name: "agentic-go-test", Version: "0.1.0-dev"},
+		&mcp.Implementation{Name: "agentic-go-test", Version: "0.2.0-dev"},
 		&mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}},
 	)
 	RegisterAll(server, newTestRuntime(t))
@@ -36,8 +36,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 7 {
-		t.Fatalf("len(tools/list) = %d, want 7", len(listed.Tools))
+	if len(listed.Tools) != 8 {
+		t.Fatalf("len(tools/list) = %d, want 8", len(listed.Tools))
 	}
 
 	resources, err := clientSession.ListResources(ctx, nil)
@@ -105,6 +105,20 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		annotations := tool.Annotations
 		if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || !*annotations.DestructiveHint || annotations.OpenWorldHint == nil || !*annotations.OpenWorldHint {
 			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
+		}
+	}
+	verifyTool := listedTool(t, listed.Tools, "go_verify_change")
+	verifyAnnotations := verifyTool.Annotations
+	if verifyAnnotations == nil || verifyAnnotations.ReadOnlyHint || verifyAnnotations.IdempotentHint || verifyAnnotations.DestructiveHint == nil || !*verifyAnnotations.DestructiveHint || verifyAnnotations.OpenWorldHint == nil || !*verifyAnnotations.OpenWorldHint {
+		t.Fatalf("unexpected go_verify_change annotations: %+v", verifyAnnotations)
+	}
+	verifySchema, err := json.Marshal(verifyTool.InputSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{`"base"`, `"package"`, `"race"`, `"fail_on"`, `"min_changed_coverage"`, `"max_packages"`} {
+		if !strings.Contains(string(verifySchema), field) {
+			t.Fatalf("go_verify_change input schema %s missing %s", verifySchema, field)
 		}
 	}
 

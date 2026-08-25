@@ -103,7 +103,7 @@ func runMCP(args []string) int {
 			logger.Error("trace shutdown failed", "error", closeErr)
 		}
 	}()
-	runtime, err := tools.NewRuntime(ws, runner, tracer)
+	runtime, err := tools.NewRuntimeWithVersion(ws, runner, tracer, version)
 	if err != nil {
 		logger.Error("tool runtime setup failed", "error", err)
 		return 1

@@ -62,7 +62,7 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 		}
 		prompts = append(prompts, item)
 	}
-	if len(tools) != 7 || len(resources) != 4 || len(prompts) != 4 {
+	if len(tools) != 8 || len(resources) != 4 || len(prompts) != 4 {
 		t.Fatalf("surface counts: tools=%d resources=%d prompts=%d", len(tools), len(resources), len(prompts))
 	}
 

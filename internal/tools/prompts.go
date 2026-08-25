@@ -13,12 +13,12 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterPrompts registers the four workflow prompts in the v0.1 contract.
+// RegisterPrompts registers the four workflow prompts.
 func RegisterPrompts(server *mcp.Server) {
 	server.AddPrompt(&mcp.Prompt{Name: "audit-package", Description: "Combine concurrency and error-handling audit findings for a Go package.", Arguments: requiredArgs("package", "Go package import path or ./relative/path")}, promptHandler("audit-package", []string{"package"}, auditPackageTemplate))
 	server.AddPrompt(&mcp.Prompt{Name: "pre-commit-check", Description: "Run tests, race detection, and coverage checks before committing a Go package.", Arguments: []*mcp.PromptArgument{{Name: "package", Description: "Go package import path or ./relative/path", Required: true}, {Name: "coverage_threshold", Description: "Minimum required overall coverage percentage", Required: true}}}, promptHandler("pre-commit-check", []string{"package", "coverage_threshold"}, preCommitTemplate))
 	server.AddPrompt(&mcp.Prompt{Name: "bisect-flake", Description: "Investigate flaky Go tests and correlate them with race reports.", Arguments: []*mcp.PromptArgument{{Name: "package", Description: "Go package import path or ./relative/path", Required: true}, {Name: "runs", Description: "Number of repeated flake-finder runs", Required: true}}}, promptHandler("bisect-flake", []string{"package", "runs"}, bisectFlakeTemplate))
-	server.AddPrompt(&mcp.Prompt{Name: "verify-change", Description: "Post-edit verification: run tests with race detector and concurrency+error audits against a package. Lightweight, no coverage. Repeat after every edit.", Arguments: requiredArgs("package", "Go package import path or ./relative/path")}, promptHandler("verify-change", []string{"package"}, verifyChangeTemplate))
+	server.AddPrompt(&mcp.Prompt{Name: "verify-change", Description: "Verify a local Go change once and interpret its source-grounded report.", Arguments: requiredArgs("base", "Local commit or ref to compare with HEAD and the final worktree")}, promptHandler("verify-change", []string{"base"}, verifyChangeTemplate))
 }
 
 func requiredArgs(name, description string) []*mcp.PromptArgument {
@@ -50,6 +50,9 @@ func promptHandler(name string, args []string, tmpl *template.Template) mcp.Prom
 }
 
 func validatePromptValues(name string, values map[string]string) error {
+	if base := values["base"]; strings.HasPrefix(base, "-") || strings.IndexFunc(base, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }) >= 0 {
+		return fmt.Errorf("%s prompt: argument %q is not a valid local commit or ref", name, "base")
+	}
 	if pkg := values["package"]; strings.HasPrefix(pkg, "-") || strings.IndexFunc(pkg, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }) >= 0 {
 		return fmt.Errorf("%s prompt: argument %q is not a valid package pattern", name, "package")
 	}
@@ -80,13 +83,5 @@ Fail explicitly if any test failed, any race conflict was found, or OverallPerce
 var bisectFlakeTemplate = template.Must(template.New("bisect-flake").Parse(`Investigate flaky tests in Go package {{.package}}.
 Call go_flake_finder with package="{{.package}}" and runs={{.runs}}. For each name in Flaky, call go_race_report on the same package and cross-reference whether any RaceConflict.Current.Function matches the flaky test's package. State the correlation explicitly when found; otherwise state "no race correlation found". Do not omit the negative result.`))
 
-var verifyChangeTemplate = template.Must(template.New("verify-change").Parse(`You are verifying a recent edit to the Go package {{.package}}. Run these tools in sequence and report findings:
-1. Call go_test_structured with package="{{.package}}" and race=true. Report any test failures by name and any race conflicts by location and the two goroutines involved. If all tests pass and no races, state "tests pass, no races detected."
-
-2. Call go_audit_concurrency with package="{{.package}}". Report each finding as [severity] rule-id at file:line — message. If zero findings, state "no concurrency findings."
-
-3. Call go_audit_errors with package="{{.package}}". Report each finding as [severity] rule-id at file:line — message. If zero findings, state "no error-handling findings."
-
-Final line: if all three steps are clean, state explicitly "no issues found in {{.package}}." If any step reported issues, state "issues found in {{.package}}: N test failures, M race conflicts, C concurrency findings, E error-handling findings."
-
-Do not omit the negative result. Coverage is intentionally omitted because this is a per-edit verification loop.`))
+var verifyChangeTemplate = template.Must(template.New("verify-change").Parse(`Verify the current Go repository change against base {{.base}}.
+Call go_verify_change exactly once with base="{{.base}}". Treat the returned policy result as automation state, not a safety verdict. Summarize the changed surface, affected packages, executed evidence, introduced findings, change-grounded risk guidance, and explicit uncertainties. Distinguish failed checks from unavailable evidence, retain source locations, and do not infer absence of risk from an absent trigger.`))

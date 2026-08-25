@@ -17,13 +17,20 @@ import (
 
 // Runtime owns the shared, process-wide dependencies used by MCP tools.
 type Runtime struct {
-	workspace *workspace.Workspace
-	runner    *execution.Runner
-	tracer    *trace.Tracer
+	workspace       *workspace.Workspace
+	runner          *execution.Runner
+	tracer          *trace.Tracer
+	providerVersion string
 }
 
 // NewRuntime validates the dependencies shared by every tool registration.
 func NewRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace.Tracer) (*Runtime, error) {
+	return NewRuntimeWithVersion(ws, runner, tracer, "0.2.0-dev")
+}
+
+// NewRuntimeWithVersion preserves the producing binary version in portable
+// verification reports while retaining NewRuntime for internal callers.
+func NewRuntimeWithVersion(ws *workspace.Workspace, runner *execution.Runner, tracer *trace.Tracer, providerVersion string) (*Runtime, error) {
 	if ws == nil {
 		return nil, fmt.Errorf("workspace is nil")
 	}
@@ -33,10 +40,13 @@ func NewRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace
 	if tracer == nil {
 		return nil, fmt.Errorf("tracer is nil")
 	}
-	return &Runtime{workspace: ws, runner: runner, tracer: tracer}, nil
+	if strings.TrimSpace(providerVersion) == "" {
+		return nil, fmt.Errorf("provider version is empty")
+	}
+	return &Runtime{workspace: ws, runner: runner, tracer: tracer, providerVersion: providerVersion}, nil
 }
 
-// RegisterAll is the single deterministic v0.1 protocol registration list.
+// RegisterAll is the single deterministic protocol registration list.
 func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterTestStructured(server, runtime)
 	RegisterRaceReport(server, runtime)
@@ -45,6 +55,7 @@ func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterFlakeFinder(server, runtime)
 	RegisterAuditConcurrency(server, runtime)
 	RegisterAuditErrors(server, runtime)
+	RegisterVerifyChange(server, runtime)
 	RegisterResources(server, runtime)
 	RegisterPrompts(server)
 }
