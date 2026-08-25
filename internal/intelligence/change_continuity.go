@@ -306,6 +306,10 @@ func exportedAPIChanges(analysis verification.ChangeAnalysis) ([]Location, []Unc
 	locations := []Location{}
 	uncertainties := []Uncertainty{}
 	for _, declaration := range analysis.Change.Declarations {
+		if declarationNameExported(declaration.Name) && (declaration.Change == verification.ChangeAdded || declaration.Change == verification.ChangeUntracked || declaration.Change == verification.ChangeDeleted) {
+			locations = append(locations, declarationLocation(declaration))
+			continue
+		}
 		file := sourceForDeclaration(analysis.Files, declaration)
 		if file == nil {
 			if declarationNameExported(declaration.Name) {
@@ -424,10 +428,10 @@ func declarationShape(content []byte, declaration verification.ChangedDeclaratio
 					}
 				case *ast.ValueSpec:
 					if declaration.Kind == "variable" || declaration.Kind == "constant" {
-						for _, n := range s.Names {
+						for index, n := range s.Names {
 							if n.Name == name {
-								shape, shapeErr := nodeText(s)
-								return declarationShapeInfo{Exported: ast.IsExported(name), Shape: d.Tok.String() + " " + shape}, shapeErr
+								shape, shapeErr := valueSpecShape(d.Tok, s, index)
+								return declarationShapeInfo{Exported: ast.IsExported(name), Shape: shape}, shapeErr
 							}
 						}
 					}
@@ -470,6 +474,45 @@ func receiverTypeName(expression ast.Expr) string {
 	default:
 		return ""
 	}
+}
+
+func valueSpecShape(kind token.Token, spec *ast.ValueSpec, nameIndex int) (string, error) {
+	if kind == token.CONST {
+		shape, err := nodeText(spec)
+		return kind.String() + " " + shape, err
+	}
+	if spec.Type != nil {
+		shape, err := nodeText(spec.Type)
+		return kind.String() + " " + shape, err
+	}
+	if len(spec.Values) != len(spec.Names) || nameIndex >= len(spec.Values) {
+		return "", fmt.Errorf("variable type is inferred from an unmodelled multi-value expression")
+	}
+	inferred, ok := inferredExpressionShape(spec.Values[nameIndex])
+	if !ok {
+		return "", fmt.Errorf("variable type is inferred from an unmodelled expression")
+	}
+	return kind.String() + " inferred:" + inferred, nil
+}
+
+func inferredExpressionShape(expression ast.Expr) (string, bool) {
+	switch item := expression.(type) {
+	case *ast.BasicLit:
+		return item.Kind.String(), true
+	case *ast.Ident:
+		if item.Name == "true" || item.Name == "false" {
+			return "BOOL", true
+		}
+	case *ast.UnaryExpr:
+		return inferredExpressionShape(item.X)
+	case *ast.CompositeLit:
+		shape, err := nodeText(item.Type)
+		return shape, err == nil
+	case *ast.FuncLit:
+		shape, err := nodeText(item.Type)
+		return shape, err == nil
+	}
+	return "", false
 }
 
 func nodeText(node ast.Node) (string, error) {
