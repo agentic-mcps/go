@@ -30,7 +30,8 @@ func TestGoldenReportsMatchPortableContract(t *testing.T) {
 			var report verification.Report
 			decoder := json.NewDecoder(bytes.NewReader(encoded))
 			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&report); err != nil {
+			err = decoder.Decode(&report)
+			if err != nil {
 				t.Fatalf("decode golden report: %v", err)
 			}
 			if report.SchemaVersion != verification.SchemaVersion || report.Result.Status != test.status {
@@ -43,7 +44,8 @@ func TestGoldenReportsMatchPortableContract(t *testing.T) {
 				t.Fatal("golden report contains a nil collection")
 			}
 			finalized := report
-			if err := finalized.Finalize(verification.Policy{}); err != nil {
+			err = finalized.Finalize(verification.Policy{})
+			if err != nil {
 				t.Fatalf("finalize golden report: %v", err)
 			}
 			if !reflect.DeepEqual(finalized, report) {
