@@ -105,6 +105,7 @@ func Start(ctx context.Context, config Config) (*Client, error) {
 	command.Dir = workspace
 	command.Env = replaceEnv(os.Environ(), "GOTOOLCHAIN", "local")
 	command.Env = replaceEnv(command.Env, "GOTELEMETRY", "off")
+	command.Env = replaceEnv(command.Env, "GOWORK", "auto")
 	stdin, err := command.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("opening gopls stdin: %w", err)
