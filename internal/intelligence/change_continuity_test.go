@@ -46,6 +46,41 @@ func TestCoreBeginPersistsNormalizedContract(t *testing.T) {
 	}
 }
 
+func TestChangeContractResumesAcrossFreshCores(t *testing.T) {
+	root := snapshotRepository(t)
+	contractRoot := filepath.Join(t.TempDir(), "contracts")
+	first := newContractTestCoreWithStore(t, root, contractRoot)
+	contract, err := first.Begin(context.Background(), BeginRequest{
+		Base: "HEAD", Goal: "carry structural context across processes", FocusedPaths: []string{"main.go"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	second := newContractTestCoreWithStore(t, root, contractRoot)
+	resumed, err := second.CurrentChangeContract(context.Background())
+	if err != nil || resumed.ID != contract.ID || resumed.LatestSnapshot.ID != contract.LatestSnapshot.ID {
+		t.Fatalf("resumed contract = %#v, error %v", resumed, err)
+	}
+	writeSnapshotFile(t, root, "main.go", "package fixture\n\nvar Value = 2\n")
+	checkpoint, err := second.Checkpoint(context.Background(), CheckpointRequest{
+		ContractID: contract.ID, ExpectedSnapshot: resumed.LatestSnapshot.ID,
+		Decisions: []string{"Keep the exported variable"}, UnresolvedQuestions: []string{"Should this become a constant?"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	third := newContractTestCoreWithStore(t, root, contractRoot)
+	handoff, err := third.CurrentChangeContract(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if handoff.LatestSnapshot.ID != checkpoint.Current.ID || len(handoff.Checkpoints) != 1 || len(handoff.Decisions) != 1 || len(handoff.UnresolvedQuestions) != 1 {
+		t.Fatalf("fresh-core handoff = %#v", handoff)
+	}
+}
+
 func TestCoreBeginRejectsInvalidInputs(t *testing.T) {
 	root := snapshotRepository(t)
 	core := newContractTestCore(t, root)
@@ -209,12 +244,17 @@ func TestStructuralPolicyNearMisses(t *testing.T) {
 
 func newContractTestCore(t *testing.T, root string) *Core {
 	t.Helper()
+	return newContractTestCoreWithStore(t, root, filepath.Join(t.TempDir(), "contracts"))
+}
+
+func newContractTestCoreWithStore(t *testing.T, root, contractRoot string) *Core {
+	t.Helper()
 	snapshots := newTestSnapshotter(t, root)
 	artifacts, err := NewArtifactStore(filepath.Join(t.TempDir(), "artifacts"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	contracts, err := NewContractStore(filepath.Join(t.TempDir(), "contracts"))
+	contracts, err := NewContractStore(contractRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
