@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Private Change Contracts with exact snapshot lineage, structural
+  checkpoints, explicit contained export, two continuity tools, one current
+  contract resource, and two handoff prompts.
+- `go_refactor` as the fourteenth MCP tool, with deterministic preview and
+  explicit apply for rename, format, import organization, and fix-all actions.
+- Content-addressed private refactor plans with exact snapshots, SHA-256
+  preimages, bounded diffs, generated-file exclusion, and existing-file
+  containment.
+- Exclusive recovery journals and active `agentic-go doctor --recover`
+  restoration that refuses diverged files.
 - A pinned gopls v0.21.0 companion foundation with long-lived stdio LSP
   sessions, negotiated capabilities, UTF-16 positions, cancellation, bounded
   protocol frames, controlled restart, and no automatic mutation replay.

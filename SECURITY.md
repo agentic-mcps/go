@@ -67,6 +67,15 @@ contained, workspace-relative destination, creates a 0600 file, and never
 overwrites an existing file. Normal contract operation does not write to the
 worktree.
 
+Guarded refactor plans and recovery journals are private source-bearing cache
+state under `os.UserCacheDir()/agentic-go/refactors`. Preview does not modify
+the worktree. Apply is limited to existing, contained, non-generated files and
+requires the exact preview snapshot and exact SHA-256 file preimages. A
+preimage mismatch blocks mutation. `agentic-go doctor --recover` restores only
+from a valid journal whose targets still match their recorded preimages or
+postimages; it refuses diverged files instead of overwriting user edits.
+Refactoring does not stage, commit, or change Git history.
+
 ## Supported releases
 
 Security fixes target the latest published release. The pre-release branch is

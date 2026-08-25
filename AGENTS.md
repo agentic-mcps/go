@@ -20,12 +20,16 @@ For a rule change, also read the matching domain specification:
 ## Invariants
 
 - Tagged v0.1.0 is seven tools, four resources, four prompts, and the
-  `agentic-go-vet` binary. v0.2 adds `go_verify_change`. The current v0.5
-  development surface is 13 tools, six fixed resources, one artifact resource
+  `agentic-go-vet` binary. v0.2 adds `go_verify_change`. The current v0.6
+  development surface is 14 tools, six fixed resources, one artifact resource
   template, and six prompts. `internal/tools.RegisterAll` is the live inventory.
   Change Contracts are private same-machine user-cache state with exact
   snapshot lineage and stale rejection. Goal and decision prose is never
   semantically enforced.
+- Guarded refactor preview is non-mutating and content-addressed. Apply requires
+  the exact snapshot and every exact preimage, changes only existing contained
+  non-generated files, and journals before writing. Recovery fails closed when
+  a target diverges. Refactoring never mutates Git state or history.
 - The v0.2 verification report is the durable product boundary shared by the
   CLI, GitHub Action, and MCP adapter. It reports conservative impact,
   executed evidence, findings, risk facts, and explicit uncertainty; it never

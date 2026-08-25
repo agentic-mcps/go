@@ -59,12 +59,17 @@ findings. Register shipped protocol surfaces through
 `internal/tools.RegisterAll` and extend the in-memory protocol inventory test.
 Keep the MCP interface focused on local coding agents; CI-oriented output
 belongs in compatible command-line surfaces when it would distort MCP.
-The current v0.5 development inventory is 13 tools, six fixed resources, one
+The current v0.6 development inventory is 14 tools, six fixed resources, one
 artifact resource template, and six prompts. Existing v0.1, v0.2, and v0.4
 tool contracts remain compatible. Change Contract state is private same-machine
 user-cache state. Impact relationships are
 conservative candidates: preserve their evidence and uncertainty rather than
 presenting them as proof of runtime reachability.
+
+Guarded-refactor protocol changes must preserve content-addressed plan
+identity, exact snapshot and preimage checks, exclusive recovery journals,
+workspace containment, generated-file exclusion, rollback behavior, and
+`doctor --recover` divergence refusal.
 
 The portable verification report is the durable boundary. CLI, Action, and MCP
 adapters must consume the same report rather than duplicating policy or

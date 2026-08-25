@@ -24,13 +24,14 @@ not embed an LLM or an agent runtime.
 
 ## Keep an agent oriented
 
-The current v0.5 development workflow starts with compact semantic context,
-retains structural continuity while an agent edits, and ends with executed
-change evidence:
+The current v0.6 development workflow starts with compact semantic context,
+retains structural continuity while an agent edits, can apply a reviewed
+deterministic refactor, and ends with executed change evidence:
 
 ~~~text
 Workspace Brief -> Begin Change -> Search / Symbol Context
-  -> agent edits -> Checkpoint Change -> Verify Change
+  -> agent edits -> Checkpoint Change
+  -> optional Refactor Preview / Apply -> Verify Change
 ~~~
 
 `go_workspace_brief` returns package layout, exported APIs, diagnostics,
@@ -194,9 +195,10 @@ the MCP process `PATH`, requires Go 1.25 or newer, and uses
 
 Run `agentic-go doctor --format text` or `agentic-go doctor --format json` to
 inspect the effective workspace, inherited Go toolchain, exact gopls companion,
-and guarded-refactor recovery state. `doctor --recover` is currently a
-non-mutating clean-state check; recovery journals arrive with guarded
-refactoring.
+and guarded-refactor recovery state. If an apply was interrupted, ordinary
+refactor mutation stops. `agentic-go doctor --recover` restores only files
+that still match the journaled preimage or postimage and refuses to overwrite
+diverged user edits.
 
 ## Server flags
 
@@ -210,14 +212,15 @@ refactoring.
 
 ## MCP adapter
 
-agentic-go also speaks stdio MCP for local coding agents. The current v0.5
-development inventory is 13 tools, six fixed resources, one artifact resource
+agentic-go also speaks stdio MCP for local coding agents. The current v0.6
+development inventory is 14 tools, six fixed resources, one artifact resource
 template, and six prompts. Earlier tool contracts remain compatible. Change
 Contracts are private same-machine user-cache state, preserve exact snapshot
 lineage, and reject stale checkpoints. Goal and decision prose is context only
 and is never semantically enforced.
 The three semantic tools are read-only and return canonical structured content.
 The two continuity tools persist private state but do not edit source.
+`go_refactor` previews or applies one deterministic, snapshot-bound plan.
 `go_verify_change` returns the same report as the CLI with only a concise text
 fallback, and supporting clients can approval-gate its trusted-code execution.
 
@@ -226,6 +229,22 @@ explicit 0600, contained, non-overwriting workspace copy. Normal operation
 does not write into the worktree. Exported API policy compares declaration
 shape and reports uncertainty when source cannot be classified. These are
 implementation properties, not model accuracy or adoption claims.
+
+## Guarded refactoring
+
+`go_refactor` supports `rename`, `format`, `organize_imports`, and `fix_all`.
+A preview asks the pinned gopls companion for edits, normalizes UTF-16 ranges,
+rejects overlapping or outside-workspace changes, and returns a
+content-addressed plan, diff, affected files, and exact SHA-256 preimages.
+Preview does not modify the worktree.
+
+Apply requires the plan ID and the exact preview snapshot. The MCP tool is
+marked destructive and non-idempotent so clients can require explicit
+approval. Agentic-go reloads and validates the private plan, rechecks every
+preimage, writes a durable recovery journal, and changes only existing,
+contained, non-generated files. It never creates or deletes files and never
+stages, commits, or rewrites Git history. Plans and journals remain private
+under `os.UserCacheDir()/agentic-go/refactors`.
 
 ## Analyzer CLI
 
@@ -258,6 +277,12 @@ present, so CI must parse the report and fail on analysis errors. The
 | Tool | Use |
 | --- | --- |
 | `go_verify_change` | Return one source-grounded impact, evidence, findings, risk, and uncertainty report for a local change |
+
+### Guarded refactoring
+
+| Tool | Use |
+| --- | --- |
+| `go_refactor` | Preview a deterministic rename, format, import organization, or fix-all plan, then apply that exact plan after approval |
 
 ### Change continuity
 

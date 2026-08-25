@@ -172,6 +172,43 @@ function and method body-only edits, and report `exported_api_unknown`
 uncertainty when available source cannot classify an exported declaration.
 That evidence is structural guidance, not a universal Go compatibility proof.
 
+## v0.6 Guarded Refactoring boundary
+
+The v0.6 development surface adds `go_refactor`. The live inventory is 14
+tools, six fixed resources, one artifact resource template, and six prompts.
+Existing tool, resource, and prompt contracts remain additive and compatible.
+
+`go_refactor` supports `rename`, `format`, `organize_imports`, and `fix_all`.
+Preview requires an exact Snapshot Ref, asks the pinned gopls provider for
+edits, immediately converts LSP UTF-16 positions to source byte offsets, and
+rejects malformed, overlapping, external, or resource-operation edits.
+Preview does not modify source. It returns a content-addressed plan ID, bounded
+review diff, deterministic affected-file list, and SHA-256 preimages.
+
+Plans are private state under
+`os.UserCacheDir()/agentic-go/refactors/plans/<repository-id>/`. Plan
+directories use 0700 and files use 0600. A plan contains source preimages and
+postimages required for guarded application and recovery, so users should
+protect this cache like other local source-bearing developer-tool state.
+
+Apply accepts only the plan ID, exact expected snapshot ID, and explicit apply
+intent. The MCP operation is statically annotated as not read-only,
+destructive, non-idempotent, and closed-world so an apply-capable call can be
+approval-gated. Before the first write, agentic-go validates the plan identity,
+current snapshot, containment, generated-file exclusion, and every file
+preimage, then exclusively creates and fsyncs a recovery journal. It writes
+only existing contained non-generated regular files and preserves their
+permission bits. It never creates or deletes source files and never mutates
+the Git index, commits, branches, tags, or history.
+
+An interrupted or partially failed apply blocks later refactor operations.
+`agentic-go doctor --recover` restores journaled postimages to their exact
+preimages only after verifying that every target still equals one of those two
+recorded states. Any third state is treated as user divergence, no target is
+overwritten, and the journal remains for explicit resolution. Recovery
+journals are private 0600 state under
+`os.UserCacheDir()/agentic-go/refactors/recovery/`.
+
 ## Module
 
 ```
@@ -274,11 +311,10 @@ source. Two real mechanisms, used instead:
   field still gets the correct default applied inside the handler: the
   schema default documents intent, the normalize call enforces it.
 
-`go_rename_symbol`'s destructive flag is `Apply bool` (`,omitempty`), not
-`DryRun bool`. The Go zero value (`false`) must mean "do not touch the
-caller's source" — a `DryRun` field means the opposite: an omitted or
-zero-value field silently defaults to *writing*, which is exactly backwards
-for the one tool in this server capable of mutating a caller's repository.
+`go_refactor` uses `Apply bool` (`,omitempty`), not `DryRun bool`. The Go
+zero value (`false`) means preview only and does not touch the caller's source.
+A `DryRun` field would invert that safe default by making an omitted or
+zero-value field mean apply.
 
 ## Canonical shared types — `internal/finding` (leaf package)
 
@@ -734,9 +770,9 @@ func boolPtr(value bool) *bool { return &value }
 
 | Field | Default posture | Named exceptions |
 |---|---|---|
-| `ReadOnlyHint` | `true` | `false` for test-oriented tools and `go_rename_symbol`; audit tools remain `true` |
-| `DestructiveHint` | `false` | `true` for test-oriented tools and `go_rename_symbol` |
-| `IdempotentHint` | `true` | `false` for test-oriented tools and `go_rename_symbol` with `Apply: true` |
+| `ReadOnlyHint` | `true` | `false` for test-oriented tools, continuity tools, and apply-capable `go_refactor`; audit tools remain `true` |
+| `DestructiveHint` | `false` | `true` for test-oriented tools and apply-capable `go_refactor` |
+| `IdempotentHint` | `true` | `false` for test-oriented tools, continuity tools, and `go_refactor` |
 | `OpenWorldHint` | `false` | `true` for test-oriented tools and `go_module_risk` |
 
 Describe executable tools reassuringly and plainly: they run trusted target
@@ -996,9 +1032,10 @@ only place a bare count assertion is acceptable, because it is checking
 Release inventories come from their canonical scope and are asserted against
 `internal/tools.RegisterAll`; a roadmap count is never a product goal.
 Tagged v0.1.0 has seven tools, four resources, and four prompts. The v0.2.0
-target adds `go_verify_change`, v0.4 adds three semantic context tools, and v0.5
-adds two continuity tools. The current local development inventory is 13 tools,
-six fixed resources, one resource template, and six prompts.
+target adds `go_verify_change`, v0.4 adds three semantic context tools, v0.5
+adds two continuity tools, and v0.6 adds guarded refactoring. The current local
+development inventory is 14 tools, six fixed resources, one resource template,
+and six prompts.
 
 | Tool | Release |
 |---|---|
@@ -1015,6 +1052,7 @@ six fixed resources, one resource template, and six prompts.
 | `go_symbol_context` | v0.4 development |
 | `go_begin_change` | v0.5 development |
 | `go_checkpoint_change` | v0.5 development |
+| `go_refactor` | v0.6 development |
 
 The live resources are `agentic-go://module`, `agentic-go://packages`,
 `agentic-go://analysis-rules`, `agentic-go://trace-summary`,
