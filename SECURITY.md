@@ -59,6 +59,14 @@ writes. They may contain source-derived signatures, diagnostics, and symbol
 relationships. Normal operation never writes them into the analyzed worktree;
 users should protect the local cache like other developer-tool state.
 
+Change Contracts and Checkpoints use the same-machine, same-user cache and are
+not a shared coordination service. Snapshot lineage is exact, and stale
+checkpoint requests are rejected. `agentic-go contract export --output ...`
+is the only documented Change Contract worktree export path. It requires a
+contained, workspace-relative destination, creates a 0600 file, and never
+overwrites an existing file. Normal contract operation does not write to the
+worktree.
+
 ## Supported releases
 
 Security fixes target the latest published release. The pre-release branch is

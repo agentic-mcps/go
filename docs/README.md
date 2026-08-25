@@ -1,13 +1,14 @@
 # Documentation authority map
 
-Start with [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md). It is the
-canonical authority for the current executable implementation. The tagged
-[`v0.1.0-release-scope.md`](v0.1.0-release-scope.md) remains the compatibility
-baseline. Shared interfaces and invariants live in
-[`contracts.md`](contracts.md). The architectural rationale is recorded in
-[`decision-memo.md`](decision-memo.md). The future v1 direction is recorded in
-[`v1.0.0-roadmap.md`](v1.0.0-roadmap.md); [`plan.md`](plan.md) is the concise
-product plan and routing summary.
+Start with [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) for the
+verification compatibility baseline. The tagged
+[`v0.1.0-release-scope.md`](v0.1.0-release-scope.md) remains the earlier
+compatibility baseline. Shared interfaces and invariants live in
+[`contracts.md`](contracts.md). The current additive v0.3+ development stages
+and their implementation status live in
+[`v1.0.0-roadmap.md`](v1.0.0-roadmap.md). The architectural rationale is
+recorded in [`decision-memo.md`](decision-memo.md); [`plan.md`](plan.md) is the
+concise product plan and routing summary.
 
 ## v0.2.0 implementation specification
 
@@ -20,12 +21,14 @@ product plan and routing summary.
   [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
   — shared language and the durable product-boundary decision
 
-## v0.3 and v0.4 implementation contracts
+## v0.3 through v0.5 implementation contracts
 
 - [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md): staged sidecar, semantic,
   continuity, refactor, evaluation, and contract-freeze authority
 - [`schema/context-pack-v1alpha1.json`](schema/context-pack-v1alpha1.json):
   compact snapshot-bound semantic context contract
+- [`schema/change-contract-v1alpha1.json`](schema/change-contract-v1alpha1.json):
+  snapshot-bound Change Contract and Checkpoint contract
 - [`adr/0002-context-pack-boundary.md`](adr/0002-context-pack-boundary.md):
   why Context Packs and the intelligence service, not raw gopls or MCP, form
   the semantic product boundary
@@ -42,8 +45,9 @@ product plan and routing summary.
 
 ## Deferred roadmap specifications
 
-The unimplemented v0.5 and later portions of the v1 roadmap remain future
-authority. They do not silently expand the current development surface.
+The v0.5 Change Contract milestone is implemented locally. The v0.6 and later
+portions of the v1 roadmap remain future authority. They do not silently
+expand the current development surface.
 
 - [`phase-4a-index.md`](phase-4a-index.md)
 - [`phase-4a-security.md`](phase-4a-security.md)

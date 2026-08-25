@@ -57,8 +57,8 @@ _Avoid_: Safety verdict, confidence score
 ## Change intelligence
 
 Snapshot Refs, Context Packs, and Symbol Refs are implemented in the current
-v0.4 development line. Change Contracts, Checkpoints, and Refactor Plans remain
-staged v0.5 and v0.6 concepts.
+v0.4 development line. Change Contracts and Checkpoints are implemented in the
+current v0.5 development line. Refactor Plans remain a staged v0.6 concept.
 
 **Snapshot Ref**:
 An immutable identity for one observed workspace state, including repository,
@@ -72,9 +72,17 @@ relationships, diagnostics, risks, and uncertainty.
 A persistent statement of a change's goal, scope, decisions, expected state,
 and structural policies.
 
+Contracts are private same-machine, same-user state retained in the user cache.
+Goal and decision fields are explanatory context only. Structural policies are
+evaluated from repository evidence, never from prose. Explicit exports are
+workspace-relative, 0600, and non-overwriting.
+
 **Checkpoint**:
 A recorded observation of a change contract during work, including detected
-drift, policy observations, and current verification evidence.
+drift, affected packages, focused diagnostics, and policy observations.
+
+Checkpoints preserve exact snapshot lineage and reject stale snapshots. They
+report uncertainty when an exported declaration cannot be classified by shape.
 
 **Symbol Ref**:
 An opaque Go symbol identity tied to one Snapshot Ref. It is rejected when the

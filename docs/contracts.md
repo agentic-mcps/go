@@ -101,10 +101,10 @@ agentic-go contracts.
 ## v0.4 Context Pack boundary
 
 The v0.4 development surface adds `go_workspace_brief`, `go_search`, and
-`go_symbol_context`. The live inventory is 11 tools, five fixed resources, one
-artifact resource template, and four prompts. The three intelligence tools are
-read-only, non-destructive, idempotent, and closed-world. Existing eight tool
-contracts remain unchanged.
+`go_symbol_context`. The v0.4 milestone inventory is 11 tools, five fixed
+resources, one artifact resource template, and four prompts. The three
+intelligence tools are read-only, non-destructive, idempotent, and closed-world.
+Existing eight tool contracts remain unchanged.
 
 `agentic.context/v1alpha1` is the compact semantic contract. The checked-in
 [JSON Schema](schema/context-pack-v1alpha1.json) is authoritative. Every result
@@ -125,6 +125,52 @@ manifest without exposing the sidecar path.
 The intelligence module owns orchestration and neutral domain types. Git, Go,
 gopls, LSP, MCP, subprocess, and cache mechanics remain infrastructure
 adapters. Raw gopls responses are never public product types.
+
+## v0.5 Change Contract boundary
+
+The v0.5 development surface adds `go_begin_change` and
+`go_checkpoint_change`, the fixed
+`agentic-go://change-contract/current` resource, and the `understand-change`
+and `resume-change` prompts. The live inventory is 13 tools, six fixed
+resources, one artifact resource template, and six prompts. Existing tool,
+resource, and prompt contracts remain additive and compatible.
+
+`agentic.change/v1alpha1` is the private continuity contract. The checked-in
+[JSON Schema](schema/change-contract-v1alpha1.json) is authoritative. A Change
+Contract records the caller's opaque goal, local base, package scope, focused
+paths, packages and Symbol Refs, optional allowed paths, structural policies,
+decisions, unresolved questions, exact Snapshot Ref lineage, and latest
+verification reference. Goal, decision, and question prose is retained exactly
+for handoff and is never interpreted or semantically enforced.
+
+Normal persistence is atomic private state under
+`os.UserCacheDir()/agentic-go/contracts/<repository-id>/<contract-id>.json`.
+Directories use 0700 and files use 0600. Contracts contain no source contents,
+absolute workspace paths, or telemetry. Resume is supported across fresh
+processes running as the same user on the same machine and requires the same
+repository identity. `agentic-go contract export --output <path>` is an
+explicit CLI-only handoff operation. The destination must be a new contained
+workspace-relative file in an existing directory, must not enter Git metadata,
+uses 0600, and is never overwritten. Normal contract operations do not modify
+the worktree.
+
+Every checkpoint names the contract ID and exact latest snapshot ID. A stale
+lineage, invalid input, corrupt state, containment failure, cancellation, or
+deadline is an error. A successful checkpoint records affected packages,
+focused diagnostics, structural policy observations, uncertainty, decisions,
+questions, and the immutable snapshot transition. It does not run tests or
+claim that the change is correct. The two Change Contract tools persist private
+state but do not edit source. They are non-idempotent, closed-world, and
+truthfully annotated as not read-only and not destructive.
+
+Default structural policy is `forbid` outside explicit allowed paths and for
+generated-file modification; it is `warn` outside focus, for exported API
+shape changes, dependency or workspace changes, cross-module impact, and test
+deletion. An affected-package closure above 200 is incomplete rather than
+silently narrowed. Exported API checks compare declaration shape, ignore
+function and method body-only edits, and report `exported_api_unknown`
+uncertainty when available source cannot classify an exported declaration.
+That evidence is structural guidance, not a universal Go compatibility proof.
 
 ## Module
 
@@ -950,8 +996,9 @@ only place a bare count assertion is acceptable, because it is checking
 Release inventories come from their canonical scope and are asserted against
 `internal/tools.RegisterAll`; a roadmap count is never a product goal.
 Tagged v0.1.0 has seven tools, four resources, and four prompts. The v0.2.0
-target adds only `go_verify_change`, for eight tools total, while retaining the
-four resources and four prompt names.
+target adds `go_verify_change`, v0.4 adds three semantic context tools, and v0.5
+adds two continuity tools. The current local development inventory is 13 tools,
+six fixed resources, one resource template, and six prompts.
 
 | Tool | Release |
 |---|---|
@@ -963,11 +1010,18 @@ four resources and four prompt names.
 | `go_audit_concurrency` | v0.1.0 |
 | `go_audit_errors` | v0.1.0 |
 | `go_verify_change` | v0.2.0 target |
+| `go_workspace_brief` | v0.4 development |
+| `go_search` | v0.4 development |
+| `go_symbol_context` | v0.4 development |
+| `go_begin_change` | v0.5 development |
+| `go_checkpoint_change` | v0.5 development |
 
 The live resources are `agentic-go://module`, `agentic-go://packages`,
-`agentic-go://analysis-rules`, and `agentic-go://trace-summary`. The live
-prompts are `audit-package`, `pre-commit-check`, `bisect-flake`, and
-`verify-change`; in v0.2 the last prompt calls `go_verify_change` once.
+`agentic-go://analysis-rules`, `agentic-go://trace-summary`,
+`agentic-go://capabilities`, and `agentic-go://change-contract/current`. The
+`agentic-go://artifact/{id}` resource template reads snapshot-bound overflow
+detail. The live prompts are `audit-package`, `pre-commit-check`,
+`bisect-flake`, `verify-change`, `understand-change`, and `resume-change`.
 
 The phase documents retain possible navigation, audit, profiling, and creative
 tools as design material. None is committed release scope. A future tool ships

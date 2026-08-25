@@ -24,11 +24,13 @@ not embed an LLM or an agent runtime.
 
 ## Keep an agent oriented
 
-The v0.4 development workflow starts with compact semantic context and ends
-with executed change evidence:
+The current v0.5 development workflow starts with compact semantic context,
+retains structural continuity while an agent edits, and ends with executed
+change evidence:
 
 ~~~text
-Workspace Brief -> Search / Symbol Context -> agent edits -> Verify Change
+Workspace Brief -> Begin Change -> Search / Symbol Context
+  -> agent edits -> Checkpoint Change -> Verify Change
 ~~~
 
 `go_workspace_brief` returns package layout, exported APIs, diagnostics,
@@ -42,6 +44,13 @@ Every response identifies the exact workspace snapshot it observed. When full
 detail exceeds the compact byte budget, the response provides an opaque cursor
 for the `agentic-go://artifact/{id}` resource template. Agentic-go rejects stale
 refs instead of silently resolving them against changed source.
+
+`go_begin_change` stores an opaque human goal, local base, scope, optional
+focus and allowed paths, structural policies, and the initial Snapshot Ref in a
+private Change Contract. `go_checkpoint_change` requires the exact latest
+snapshot ID and reports structural drift, affected packages, focused
+diagnostics, policy violations, and uncertainty. Goal and decision prose is
+retained for handoff, never interpreted as an enforceable instruction.
 
 ## Verify a change
 
@@ -201,12 +210,22 @@ refactoring.
 
 ## MCP adapter
 
-agentic-go also speaks stdio MCP for local coding agents. The current v0.4
-development inventory is 11 tools, five fixed resources, one artifact resource
-template, and four prompts. The eight v0.2 tools retain their contracts. The
-three semantic tools are read-only and return canonical structured content.
+agentic-go also speaks stdio MCP for local coding agents. The current v0.5
+development inventory is 13 tools, six fixed resources, one artifact resource
+template, and six prompts. Earlier tool contracts remain compatible. Change
+Contracts are private same-machine user-cache state, preserve exact snapshot
+lineage, and reject stale checkpoints. Goal and decision prose is context only
+and is never semantically enforced.
+The three semantic tools are read-only and return canonical structured content.
+The two continuity tools persist private state but do not edit source.
 `go_verify_change` returns the same report as the CLI with only a concise text
 fallback, and supporting clients can approval-gate its trusted-code execution.
+
+Use `agentic-go contract export --output <workspace-relative-path>` for an
+explicit 0600, contained, non-overwriting workspace copy. Normal operation
+does not write into the worktree. Exported API policy compares declaration
+shape and reports uncertainty when source cannot be classified. These are
+implementation properties, not model accuracy or adoption claims.
 
 ## Analyzer CLI
 
@@ -239,6 +258,13 @@ present, so CI must parse the report and fail on analysis errors. The
 | Tool | Use |
 | --- | --- |
 | `go_verify_change` | Return one source-grounded impact, evidence, findings, risk, and uncertainty report for a local change |
+
+### Change continuity
+
+| Tool | Use |
+| --- | --- |
+| `go_begin_change` | Persist a private snapshot-bound goal, scope, focus, and structural policy contract |
+| `go_checkpoint_change` | Record exact snapshot lineage, structural drift, decisions, questions, and focused diagnostics |
 
 ### Execution tools
 
@@ -275,6 +301,7 @@ Resources are computed fresh on read.
 | `agentic-go://analysis-rules` | Registered concurrency and error rule manifest |
 | `agentic-go://trace-summary` | Bounded summary of recent trace calls |
 | `agentic-go://capabilities` | Effective pinned-gopls capability manifest and Context Pack limits |
+| `agentic-go://change-contract/current` | Latest active private Change Contract for the workspace repository |
 
 `agentic-go://artifact/{id}` is a resource template. Replace `{id}` with the
 opaque cursor returned by a truncated Context Pack or symbol context. Each read
@@ -288,6 +315,8 @@ returns a bounded UTF-8-safe chunk and, when needed, another cursor.
 | `pre-commit-check` | Run the broader pre-commit verification sequence |
 | `bisect-flake` | Investigate a flaky test with race evidence |
 | `verify-change` | Call `go_verify_change` once and interpret its complete report |
+| `understand-change` | Begin one private Change Contract before editing |
+| `resume-change` | Read and checkpoint the current Change Contract before continuing |
 
 ## Boundaries
 
@@ -331,8 +360,8 @@ sanitized reports, classifications, limitations, and reproduction command.
 
 ## Read next
 
-- [v0.2.0 release scope](docs/v0.2.0-release-scope.md): the current executable specification
-- [v1 roadmap](docs/v1.0.0-roadmap.md): incremental semantic-intelligence and continuity plan
+- [v0.2.0 release scope](docs/v0.2.0-release-scope.md): the verification compatibility baseline
+- [v1 roadmap](docs/v1.0.0-roadmap.md): current additive v0.3+ development authority and implementation status
 - [v0.1.0 release scope](docs/v0.1.0-release-scope.md): the compatibility baseline
 - [Protocol contracts](docs/contracts.md): shared types, limits, and invariants
 - [v0.2.0 evidence](validation/v0.2.0/summary.md): change-verification reports and release gates
