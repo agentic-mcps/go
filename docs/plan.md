@@ -138,7 +138,21 @@ change discovery and evidence execution. They share only semantics proven
 portable in practice: snapshots, impacted units, checks, evidence, findings,
 risks, uncertainty, and policy status.
 
-The personal Go module remains unchanged through v0.2. A repository transfer
-may redirect GitHub URLs, but changing the Go module path changes package
-identity. Any move to `github.com/agentic-mcps/go` is therefore an explicit
-v0.3 migration, not a seamless rename.
+The personal Go module remains unchanged throughout the public v0.x milestone
+series. A repository transfer may redirect GitHub URLs, but changing the Go
+module path changes package identity. The move to
+`github.com/agentic-mcps/go` is therefore an explicit v1 release-candidate
+migration after v0.9, not a seamless rename.
+
+## v1 direction
+
+The executable authority remains [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md).
+The future product direction is [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md):
+source-grounded Go change intelligence combining semantic navigation, compact
+context, persistent change continuity, guarded deterministic refactoring, and
+verification with explicit provenance and uncertainty.
+
+The roadmap is staged. It must prove useful workflows and reliable contracts
+before the repository is transferred to `github.com/agentic-mcps/go`; it is
+not permission to claim that a larger MCP surface, gopls integration, or
+model/token improvement already exists.

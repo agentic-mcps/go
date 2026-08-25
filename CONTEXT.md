@@ -54,6 +54,34 @@ The report's automation state: requested evidence passed policy, blocking
 findings were observed, or required evidence was incomplete.
 _Avoid_: Safety verdict, confidence score
 
+## v1 planning language
+
+These terms describe the future v1 product direction. They are planning
+concepts, not part of the current v0.2 implementation contract.
+
+**Snapshot Ref**:
+A stable identity for one observed workspace state, including the repository
+and source configuration relevant to an operation.
+
+**Context Pack**:
+A bounded, source-grounded explanation of the workspace, relevant symbols,
+relationships, diagnostics, risks, and uncertainty.
+
+**Change Contract**:
+A persistent statement of a change's goal, scope, decisions, expected state,
+and structural policies.
+
+**Checkpoint**:
+A recorded observation of a change contract during work, including detected
+drift, policy observations, and current verification evidence.
+
+**Symbol Ref**:
+A stable reference to a Go symbol within a particular snapshot.
+
+**Refactor Plan**:
+A reviewable description of a deterministic source change, including affected
+files, preconditions, risks, and uncertainty.
+
 ## Bounded report detail
 
 The report evaluates complete evidence and findings before truncating any

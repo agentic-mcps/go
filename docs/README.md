@@ -1,13 +1,13 @@
 # Documentation authority map
 
 Start with [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md). It is the
-canonical authority for the target release and wins when a roadmap document
-describes a broader surface. The tagged
+canonical authority for the current executable implementation. The tagged
 [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md) remains the compatibility
 baseline. Shared interfaces and invariants live in
 [`contracts.md`](contracts.md). The architectural rationale is recorded in
-[`decision-memo.md`](decision-memo.md), while [`plan.md`](plan.md) describes
-the complete roadmap toward v1.0.0.
+[`decision-memo.md`](decision-memo.md). The future v1 direction is recorded in
+[`v1.0.0-roadmap.md`](v1.0.0-roadmap.md); [`plan.md`](plan.md) is the concise
+product plan and routing summary.
 
 ## v0.2.0 implementation specification
 
@@ -31,6 +31,9 @@ the complete roadmap toward v1.0.0.
 - [`phase-6-release-polish.md`](phase-6-release-polish.md)
 
 ## Deferred roadmap specifications
+
+The v1 roadmap is future authority only. It does not expand the v0.2 release
+scope or describe currently available tools.
 
 - [`phase-4a-index.md`](phase-4a-index.md)
 - [`phase-4a-security.md`](phase-4a-security.md)
