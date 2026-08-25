@@ -93,8 +93,10 @@ func newCore(
 	case verify == nil:
 		return nil, fmt.Errorf("verification engine is nil")
 	}
-	return &Core{workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
-		artifacts: artifacts, changes: changes, verifier: verify}, nil
+	return &Core{
+		workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
+		artifacts: artifacts, changes: changes, verifier: verify,
+	}, nil
 }
 
 // Search returns one deterministic page of snapshot-bound workspace symbols.
@@ -138,8 +140,8 @@ func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult,
 			return SearchResult{}, artifactErr
 		}
 		var stored storedSearch
-		if err := json.Unmarshal(artifact.Payload, &stored); err != nil {
-			return SearchResult{}, fmt.Errorf("decoding search artifact: %w", err)
+		if decodeErr := json.Unmarshal(artifact.Payload, &stored); decodeErr != nil {
+			return SearchResult{}, fmt.Errorf("decoding search artifact: %w", decodeErr)
 		}
 		matches, omitted = stored.Matches, stored.Omitted
 		offset, artifactID = cursor.Offset, artifact.ID
@@ -183,15 +185,19 @@ func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult,
 	}
 	uncertainties := []Uncertainty{}
 	if omitted > 0 {
-		uncertainties = append(uncertainties, Uncertainty{Code: "semantic.external_locations",
-			Message: fmt.Sprintf("%d semantic matches outside the configured workspace were omitted", omitted), Locations: []Location{}})
+		uncertainties = append(uncertainties, Uncertainty{
+			Code:    "semantic.external_locations",
+			Message: fmt.Sprintf("%d semantic matches outside the configured workspace were omitted", omitted), Locations: []Location{},
+		})
 	}
 	if _, err := c.snapshots.Validate(ctx, snapshot); err != nil {
 		return SearchResult{}, err
 	}
-	return SearchResult{SchemaVersion: ContextSchemaVersion, Provider: c.provider(), Snapshot: snapshot,
+	return SearchResult{
+		SchemaVersion: ContextSchemaVersion, Provider: c.provider(), Snapshot: snapshot,
 		Matches: page, Total: len(matches), Truncated: end < len(matches), NextCursor: next,
-		Uncertainties: uncertainties}, nil
+		Uncertainties: uncertainties,
+	}, nil
 }
 
 // Symbol returns default semantic facets for a stable ref or compatibility
@@ -322,17 +328,23 @@ func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext
 	}
 	for facet, count := range omitted {
 		if count > 0 {
-			result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "semantic.external_locations",
-				Message: fmt.Sprintf("%d %s outside the configured workspace were omitted", count, facet), Locations: []Location{}})
+			result.Uncertainties = append(result.Uncertainties, Uncertainty{
+				Code:    "semantic.external_locations",
+				Message: fmt.Sprintf("%d %s outside the configured workspace were omitted", count, facet), Locations: []Location{},
+			})
 		}
 	}
 	if request.Facets.CallHierarchy && !snapshot.Capabilities.CallHierarchy {
-		result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "semantic.unsupported_capability",
-			Message: "the active semantic provider does not support call hierarchy", Locations: []Location{}})
+		result.Uncertainties = append(result.Uncertainties, Uncertainty{
+			Code:    "semantic.unsupported_capability",
+			Message: "the active semantic provider does not support call hierarchy", Locations: []Location{},
+		})
 	}
 	if request.Facets.TypeDefinition && !snapshot.Capabilities.TypeDefinition {
-		result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "semantic.unsupported_capability",
-			Message: "the active semantic provider does not support type definitions", Locations: []Location{}})
+		result.Uncertainties = append(result.Uncertainties, Uncertainty{
+			Code:    "semantic.unsupported_capability",
+			Message: "the active semantic provider does not support type definitions", Locations: []Location{},
+		})
 	}
 	result.Uncertainties = append(result.Uncertainties, fileSemanticUncertainties(c.workspace, file, request.Facets.CallHierarchy)...)
 	sort.Slice(result.Uncertainties, func(i, j int) bool {
@@ -381,23 +393,29 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 	if err != nil {
 		return ContextPack{}, err
 	}
-	result := ContextPack{SchemaVersion: ContextSchemaVersion, Provider: c.provider(), Snapshot: snapshot,
+	result := ContextPack{
+		SchemaVersion: ContextSchemaVersion, Provider: c.provider(), Snapshot: snapshot,
 		Modules: modules, Packages: packageSummaries, Symbols: []SymbolMatch{}, Diagnostics: []Diagnostic{},
-		Guidance: guidance, Risks: []RiskArea{}, Uncertainties: []Uncertainty{}}
-	result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "go.external_consumers",
-		Message: "packages and consumers outside the configured workspace are not modeled", Locations: []Location{}})
+		Guidance: guidance, Risks: []RiskArea{}, Uncertainties: []Uncertainty{},
+	}
+	result.Uncertainties = append(result.Uncertainties, Uncertainty{
+		Code:    "go.external_consumers",
+		Message: "packages and consumers outside the configured workspace are not modeled", Locations: []Location{},
+	})
 	if snapshot.Capabilities.Diagnostics {
 		files := inventoryGoFiles(c.workspace, packages)
 		limit := len(files)
 		if limit > briefDiagnosticFiles {
 			limit = briefDiagnosticFiles
-			result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "semantic.diagnostics_bounded",
-				Message: fmt.Sprintf("workspace brief diagnostics sampled %d of %d active Go files", limit, len(files)), Locations: []Location{}})
+			result.Uncertainties = append(result.Uncertainties, Uncertainty{
+				Code:    "semantic.diagnostics_bounded",
+				Message: fmt.Sprintf("workspace brief diagnostics sampled %d of %d active Go files", limit, len(files)), Locations: []Location{},
+			})
 		}
 		err = c.semantic.Read(ctx, snapshot, func(reader semanticReader) error {
 			for _, file := range files[:limit] {
-				if err := ctx.Err(); err != nil {
-					return err
+				if contextErr := ctx.Err(); contextErr != nil {
+					return contextErr
 				}
 				diagnostics, readErr := reader.Diagnostics(ctx, file)
 				if readErr != nil {
@@ -413,16 +431,22 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 	}
 	for _, pkg := range packageSummaries {
 		if pkg.Generated {
-			result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "go.generated_code",
-				Message: "active generated Go files are analyzed, but their generator inputs may not be modeled", Locations: []Location{}})
+			result.Uncertainties = append(result.Uncertainties, Uncertainty{
+				Code:    "go.generated_code",
+				Message: "active generated Go files are analyzed, but their generator inputs may not be modeled", Locations: []Location{},
+			})
 		}
 		if pkg.Constrained {
-			result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "go.build_constraints",
-				Message: "package selection reflects only the recorded active build configuration", Locations: []Location{}})
+			result.Uncertainties = append(result.Uncertainties, Uncertainty{
+				Code:    "go.build_constraints",
+				Message: "package selection reflects only the recorded active build configuration", Locations: []Location{},
+			})
 		}
 		if pkg.Cgo {
-			result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "go.cgo",
-				Message: "cgo semantics depend on the local C toolchain and build environment", Locations: []Location{}})
+			result.Uncertainties = append(result.Uncertainties, Uncertainty{
+				Code:    "go.cgo",
+				Message: "cgo semantics depend on the local C toolchain and build environment", Locations: []Location{},
+			})
 		}
 	}
 	if request.Base != "" {
@@ -436,8 +460,10 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 	}
 	sortDiagnostics(result.Diagnostics)
 	sort.Slice(result.Uncertainties, func(i, j int) bool { return result.Uncertainties[i].Code < result.Uncertainties[j].Code })
-	result.Totals = ContextTotals{Modules: len(result.Modules), Packages: len(result.Packages), Symbols: len(result.Symbols),
-		Diagnostics: len(result.Diagnostics), Guidance: len(result.Guidance), Risks: len(result.Risks), Uncertainties: len(result.Uncertainties)}
+	result.Totals = ContextTotals{
+		Modules: len(result.Modules), Packages: len(result.Packages), Symbols: len(result.Symbols),
+		Diagnostics: len(result.Diagnostics), Guidance: len(result.Guidance), Risks: len(result.Risks), Uncertainties: len(result.Uncertainties),
+	}
 	result, err = c.boundContextPack(result, request.MaxBytes, artifactKey("brief", request.Base, request.Scope))
 	if err != nil {
 		return ContextPack{}, err
@@ -472,9 +498,11 @@ func (c *Core) provider() Provider {
 // response defaults without exposing the sidecar path or LSP wire types.
 func (c *Core) Capabilities() Capabilities {
 	identity := c.semantic.Identity()
-	return Capabilities{Provider: c.provider(), Semantic: identity.Capabilities, ContextSchema: ContextSchemaVersion,
+	return Capabilities{
+		Provider: c.provider(), Semantic: identity.Capabilities, ContextSchema: ContextSchemaVersion,
 		BriefBytes: DefaultBriefBytes, SymbolBytes: DefaultSymbolBytes, SearchDefault: DefaultSearchLimit,
-		SearchMaximum: MaximumSearchLimit, ArtifactMaximum: MaxArtifactChunkBytes}
+		SearchMaximum: MaximumSearchLimit, ArtifactMaximum: MaxArtifactChunkBytes,
+	}
 }
 
 // ReadArtifact resolves an opaque Context Pack continuation cursor into one
@@ -547,10 +575,12 @@ func normalizeSymbolMatch(snapshot SnapshotRef, match SymbolMatch) (SymbolMatch,
 		return SymbolMatch{}, fmt.Errorf("semantic provider returned an incomplete symbol")
 	}
 	if match.Ref == "" {
-		ref, err := encodeSymbolRef(symbolIdentity{SnapshotID: snapshot.ID, Path: match.Location.File,
+		ref, err := encodeSymbolRef(symbolIdentity{
+			SnapshotID: snapshot.ID, Path: match.Location.File,
 			Base: snapshot.RequestedBase, Scope: snapshot.Scope,
 			Position: Position{Line: match.Location.Line - 1, Character: match.Location.Column - 1},
-			Kind:     match.Kind, Package: match.Package, Qualified: match.Qualified})
+			Kind:     match.Kind, Package: match.Package, Qualified: match.Qualified,
+		})
 		if err != nil {
 			return SymbolMatch{}, err
 		}
@@ -580,11 +610,13 @@ func callSet(result semanticCalls) CallSet {
 }
 
 func emptySymbolContext(snapshot SnapshotRef, provider Provider) SymbolContext {
-	return SymbolContext{SchemaVersion: ContextSchemaVersion, Provider: provider, Snapshot: snapshot,
+	return SymbolContext{
+		SchemaVersion: ContextSchemaVersion, Provider: provider, Snapshot: snapshot,
 		Definitions: LocationSet{Items: []Location{}}, TypeDefinitions: LocationSet{Items: []Location{}},
 		References: LocationSet{Items: []Location{}}, Implementations: SymbolSet{Items: []SymbolMatch{}},
 		RelatedTests: LocationSet{Items: []Location{}}, Diagnostics: []Diagnostic{}, Calls: CallSet{Items: []CallEdge{}},
-		Uncertainties: []Uncertainty{}}
+		Uncertainties: []Uncertainty{},
+	}
 }
 
 func (c *Core) boundSymbolContext(full SymbolContext, maximum int) (SymbolContext, error) {
@@ -745,8 +777,10 @@ func inventoryGoFiles(ws *workspace.Workspace, packages []inventoryPackage) []st
 }
 
 func fileSemanticUncertainties(ws *workspace.Workspace, file string, callsRequested bool) []Uncertainty {
-	result := []Uncertainty{{Code: "go.external_consumers",
-		Message: "references and implementations outside the configured workspace are not modeled", Locations: []Location{}}}
+	result := []Uncertainty{{
+		Code:    "go.external_consumers",
+		Message: "references and implementations outside the configured workspace are not modeled", Locations: []Location{},
+	}}
 	absolute, err := ws.Resolve(file)
 	if err != nil {
 		return append(result, Uncertainty{Code: "source.unavailable", Message: err.Error(), Locations: []Location{}})
@@ -757,27 +791,37 @@ func fileSemanticUncertainties(ws *workspace.Workspace, file string, callsReques
 	}
 	location := []Location{{File: file, Line: 1, Column: 1}}
 	if strings.Contains(string(contents), "Code generated ") {
-		result = append(result, Uncertainty{Code: "go.generated_code",
-			Message: "generated source is analyzed, but its generator inputs may not be modeled", Locations: location})
+		result = append(result, Uncertainty{
+			Code:    "go.generated_code",
+			Message: "generated source is analyzed, but its generator inputs may not be modeled", Locations: location,
+		})
 	}
 	if strings.Contains(string(contents), "//go:build") || strings.Contains(string(contents), "// +build") {
-		result = append(result, Uncertainty{Code: "go.build_constraints",
-			Message: "symbol context reflects only the recorded active build configuration", Locations: location})
+		result = append(result, Uncertainty{
+			Code:    "go.build_constraints",
+			Message: "symbol context reflects only the recorded active build configuration", Locations: location,
+		})
 	}
 	if strings.Contains(string(contents), `import "C"`) {
-		result = append(result, Uncertainty{Code: "go.cgo",
-			Message: "cgo semantics depend on the local C toolchain and build environment", Locations: location})
+		result = append(result, Uncertainty{
+			Code:    "go.cgo",
+			Message: "cgo semantics depend on the local C toolchain and build environment", Locations: location,
+		})
 	}
 	if callsRequested {
-		result = append(result, Uncertainty{Code: "go.dynamic_calls",
-			Message: "static call hierarchy may omit interface dispatch, reflection, and other dynamic calls", Locations: location})
+		result = append(result, Uncertainty{
+			Code:    "go.dynamic_calls",
+			Message: "static call hierarchy may omit interface dispatch, reflection, and other dynamic calls", Locations: location,
+		})
 	}
 	return result
 }
 
 func compactChange(analysis verification.ChangeAnalysis) *ChangeContext {
-	result := &ChangeContext{Files: []string{}, Declarations: []string{}, DirectUnits: []string{}, ReverseDependents: []string{},
-		ObservedUnits: analysis.ObservedPackages, Complete: analysis.Complete}
+	result := &ChangeContext{
+		Files: []string{}, Declarations: []string{}, DirectUnits: []string{}, ReverseDependents: []string{},
+		ObservedUnits: analysis.ObservedPackages, Complete: analysis.Complete,
+	}
 	for _, file := range analysis.Change.Files {
 		result.Files = append(result.Files, file.Path)
 	}

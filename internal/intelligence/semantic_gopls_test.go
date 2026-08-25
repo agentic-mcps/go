@@ -20,11 +20,11 @@ type fakeGoplsRPC struct {
 }
 
 type goplsNotification struct {
-	method string
 	params any
+	method string
 }
 
-func (f *fakeGoplsRPC) Request(_ context.Context, method string, params, out any, _ bool) error {
+func (f *fakeGoplsRPC) Request(_ context.Context, method string, _ any, out any, _ bool) error {
 	response, ok := f.responses[method]
 	if !ok {
 		return errors.New("unexpected request: " + method)
@@ -52,8 +52,8 @@ func TestGoplsProviderSynchronizesChangedFilesAtRequestBoundaries(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := provider.Read(context.Background(), first, func(semanticReader) error { return nil }); err != nil {
-		t.Fatal(err)
+	if readErr := provider.Read(context.Background(), first, func(semanticReader) error { return nil }); readErr != nil {
+		t.Fatal(readErr)
 	}
 	if len(rpc.notifies) != 0 {
 		t.Fatalf("initial notifications = %d, want 0", len(rpc.notifies))
@@ -64,8 +64,8 @@ func TestGoplsProviderSynchronizesChangedFilesAtRequestBoundaries(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := provider.Read(context.Background(), second, func(semanticReader) error { return nil }); err != nil {
-		t.Fatal(err)
+	if readErr := provider.Read(context.Background(), second, func(semanticReader) error { return nil }); readErr != nil {
+		t.Fatal(readErr)
 	}
 	if len(rpc.notifies) != 1 || rpc.notifies[0].method != "workspace/didChangeWatchedFiles" {
 		t.Fatalf("notifications = %#v", rpc.notifies)
@@ -100,8 +100,8 @@ func TestGoplsProviderRestartsForConfigurationAndDoesNotAdvanceOnFailure(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := provider.Read(context.Background(), first, func(semanticReader) error { return nil }); err != nil {
-		t.Fatal(err)
+	if readErr := provider.Read(context.Background(), first, func(semanticReader) error { return nil }); readErr != nil {
+		t.Fatal(readErr)
 	}
 	writeSnapshotFile(t, root, "go.mod", "module example.test/snapshot\n\ngo 1.25.0\n\n// restart\n")
 	second, err := snapshots.Capture(context.Background(), SnapshotRequest{Semantic: provider.Identity()})

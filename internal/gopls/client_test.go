@@ -142,8 +142,8 @@ func TestGoplsHelperProcess(t *testing.T) {
 		}
 		var message struct {
 			JSONRPC string          `json:"jsonrpc"`
-			ID      json.RawMessage `json:"id"`
 			Method  string          `json:"method"`
+			ID      json.RawMessage `json:"id"`
 		}
 		if err := json.Unmarshal(payload, &message); err != nil {
 			t.Fatalf("decode message: %v", err)

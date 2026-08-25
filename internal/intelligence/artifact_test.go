@@ -33,22 +33,22 @@ func TestArtifactReadChunkRejectsInvalidRequests(t *testing.T) {
 	s, _ := NewArtifactStore(t.TempDir())
 	a, _ := s.Put("snap", "context", []byte("é"))
 	cases := []struct {
-		name string
 		fn   func() error
+		name string
 	}{
-		{"id", func() error {
+		{name: "id", fn: func() error {
 			_, err := s.ReadChunk(context.Background(), "bad", "", 0, 1)
 			return err
 		}},
-		{"offset", func() error {
+		{name: "offset", fn: func() error {
 			_, err := s.ReadChunk(context.Background(), a.ID, "", 1, 1)
 			return err
 		}},
-		{"negative", func() error {
+		{name: "negative", fn: func() error {
 			_, err := s.ReadChunk(context.Background(), a.ID, "", -1, 1)
 			return err
 		}},
-		{"limit", func() error {
+		{name: "limit", fn: func() error {
 			_, err := s.ReadChunk(context.Background(), a.ID, "", 0, 0)
 			return err
 		}},
@@ -77,14 +77,14 @@ func TestArtifactStorePermissionsAndRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, err := os.Stat(filepath.Join(root, "artifacts")); err != nil || got.Mode().Perm() != 0700 {
-		t.Fatalf("root mode: %v %v", got, err)
+	if got, statErr := os.Stat(filepath.Join(root, "artifacts")); statErr != nil || got.Mode().Perm() != 0o700 {
+		t.Fatalf("root mode: %v %v", got, statErr)
 	}
 	info, err := os.Stat(filepath.Join(root, "artifacts", a.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0600 {
+	if info.Mode().Perm() != 0o600 {
 		t.Fatalf("file mode = %o", info.Mode().Perm())
 	}
 	got, err := s.Get(a.ID, "snap-1", "brief:q")
@@ -121,7 +121,7 @@ func TestArtifactCorruptionAndAtomicReplacement(t *testing.T) {
 	if err != nil || string(got.Payload) != "old" {
 		t.Fatalf("content-addressed replacement: %+v %v", got, err)
 	}
-	if err := os.WriteFile(filepath.Join(s.root, a.ID), []byte("broken"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(s.root, a.ID), []byte("broken"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.Get(a.ID, "s", "k"); !errors.Is(err, ErrArtifactCorrupt) {

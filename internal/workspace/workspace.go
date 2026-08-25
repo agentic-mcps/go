@@ -82,7 +82,7 @@ func Open(ctx context.Context, root string) (*Workspace, error) {
 
 	return &Workspace{
 		root:       resolved,
-		toolchain:  Toolchain{Path: selectedGo.Path, Version: selectedGo.Version},
+		toolchain:  Toolchain(selectedGo),
 		requiredGo: requiredGo,
 	}, nil
 }

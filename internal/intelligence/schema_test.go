@@ -14,9 +14,9 @@ func TestPublishedContextPackSchemaIdentityAndRequiredFields(t *testing.T) {
 		t.Fatal(err)
 	}
 	var schema struct {
+		Properties map[string]json.RawMessage `json:"properties"`
 		ID         string                     `json:"$id"`
 		Required   []string                   `json:"required"`
-		Properties map[string]json.RawMessage `json:"properties"`
 	}
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatal(err)
@@ -36,9 +36,11 @@ func TestPublishedContextPackSchemaIdentityAndRequiredFields(t *testing.T) {
 }
 
 func TestContextPackJSONKeepsCollectionsNonNull(t *testing.T) {
-	pack := ContextPack{SchemaVersion: ContextSchemaVersion, Modules: []ModuleSummary{}, Packages: []PackageSummary{},
+	pack := ContextPack{
+		SchemaVersion: ContextSchemaVersion, Modules: []ModuleSummary{}, Packages: []PackageSummary{},
 		Symbols: []SymbolMatch{}, Diagnostics: []Diagnostic{}, Guidance: []GuidanceRef{}, Risks: []RiskArea{},
-		Uncertainties: []Uncertainty{}}
+		Uncertainties: []Uncertainty{},
+	}
 	encoded, err := json.Marshal(pack)
 	if err != nil {
 		t.Fatal(err)

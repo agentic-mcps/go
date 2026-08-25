@@ -18,11 +18,11 @@ import (
 
 // Runtime owns the shared, process-wide dependencies used by MCP tools.
 type Runtime struct {
+	intelligence    IntelligenceService
 	workspace       *workspace.Workspace
 	runner          *execution.Runner
 	tracer          *trace.Tracer
 	providerVersion string
-	intelligence    IntelligenceService
 }
 
 // IntelligenceService is the narrow read-only seam used by v0.4 MCP adapters.

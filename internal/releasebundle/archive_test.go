@@ -35,7 +35,7 @@ func TestWriteArchiveIsDeterministicAndOrdered(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer archive.Close()
+	t.Cleanup(func() { _ = archive.Close() })
 	gzipReader, err := gzip.NewReader(archive)
 	if err != nil {
 		t.Fatal(err)

@@ -32,15 +32,16 @@ type goplsRPC interface {
 
 // goplsProvider serializes request-boundary synchronization with semantic
 // reads so every result describes exactly its declared workspace snapshot.
+//
+//nolint:govet // lifecycle state stays grouped; one provider exists per workspace.
 type goplsProvider struct {
 	manager   goplsRPC
 	workspace *workspace.Workspace
 	snapshots *Snapshotter
 	root      string
-
-	mu      sync.Mutex
-	last    SnapshotRef
-	records []contentRecord
+	records   []contentRecord
+	last      SnapshotRef
+	mu        sync.Mutex
 }
 
 func newGoplsProvider(manager goplsRPC, ws *workspace.Workspace, snapshots *Snapshotter) (*goplsProvider, error) {
@@ -184,33 +185,33 @@ type rpcRange struct {
 
 type rpcLocation struct {
 	URI                  string   `json:"uri"`
-	Range                rpcRange `json:"range"`
 	TargetURI            string   `json:"targetUri"`
+	Range                rpcRange `json:"range"`
 	TargetSelectionRange rpcRange `json:"targetSelectionRange"`
 }
 
 type rpcDocumentSymbol struct {
 	Name           string              `json:"name"`
-	Kind           int                 `json:"kind"`
+	Children       []rpcDocumentSymbol `json:"children"`
 	Range          rpcRange            `json:"range"`
 	SelectionRange rpcRange            `json:"selectionRange"`
-	Children       []rpcDocumentSymbol `json:"children"`
+	Kind           int                 `json:"kind"`
 }
 
 type rpcWorkspaceSymbol struct {
 	Name          string      `json:"name"`
-	Kind          int         `json:"kind"`
 	ContainerName string      `json:"containerName"`
 	Location      rpcLocation `json:"location"`
+	Kind          int         `json:"kind"`
 }
 
 type rpcCallItem struct {
 	Name           string   `json:"name"`
-	Kind           int      `json:"kind"`
 	Detail         string   `json:"detail"`
 	URI            string   `json:"uri"`
 	Range          rpcRange `json:"range"`
 	SelectionRange rpcRange `json:"selectionRange"`
+	Kind           int      `json:"kind"`
 }
 
 func (r *goplsReader) req(ctx context.Context, method string, params, out any) error {
@@ -281,10 +282,12 @@ func (r *goplsReader) symbol(name string, kind int, packageName, file string, so
 	if packageName != "" {
 		qualified = packageName + "." + name
 	}
-	ref, err := encodeSymbolRef(symbolIdentity{SnapshotID: r.snapshot.ID, Path: file,
+	ref, err := encodeSymbolRef(symbolIdentity{
+		SnapshotID: r.snapshot.ID, Path: file,
 		Base: r.snapshot.RequestedBase, Scope: r.snapshot.Scope,
 		Position: Position{Line: sourceRange.Start.Line, Character: sourceRange.Start.Character},
-		Kind:     normalizedSymbolKind(kind), Package: packageName, Qualified: qualified})
+		Kind:     normalizedSymbolKind(kind), Package: packageName, Qualified: qualified,
+	})
 	if err != nil {
 		return SymbolMatch{}, err
 	}
@@ -292,8 +295,10 @@ func (r *goplsReader) symbol(name string, kind int, packageName, file string, so
 	if err != nil {
 		return SymbolMatch{}, err
 	}
-	return SymbolMatch{Ref: ref, Kind: normalizedSymbolKind(kind), Name: name, Qualified: qualified,
-		Package: packageName, Location: location}, nil
+	return SymbolMatch{
+		Ref: ref, Kind: normalizedSymbolKind(kind), Name: name, Qualified: qualified,
+		Package: packageName, Location: location,
+	}, nil
 }
 
 func (r *goplsReader) Search(ctx context.Context, query string) (semanticSymbols, error) {
@@ -465,11 +470,11 @@ func (r *goplsReader) Implementations(ctx context.Context, file string, position
 func (r *goplsReader) Diagnostics(ctx context.Context, file string) ([]Diagnostic, error) {
 	var raw struct {
 		Items []struct {
-			Range    rpcRange        `json:"range"`
 			Message  string          `json:"message"`
-			Severity int             `json:"severity"`
-			Code     json.RawMessage `json:"code"`
 			Source   string          `json:"source"`
+			Code     json.RawMessage `json:"code"`
+			Range    rpcRange        `json:"range"`
+			Severity int             `json:"severity"`
 		} `json:"items"`
 	}
 	if err := r.req(ctx, "textDocument/diagnostic", map[string]any{"textDocument": textDocument(r.p.root, file)}, &raw); err != nil {
@@ -485,9 +490,11 @@ func (r *goplsReader) Diagnostics(ctx context.Context, file string) ([]Diagnosti
 		if locationErr != nil {
 			return nil, locationErr
 		}
-		result = append(result, Diagnostic{Source: source, Code: diagnosticCode(item.Code),
+		result = append(result, Diagnostic{
+			Source: source, Code: diagnosticCode(item.Code),
 			Severity: diagnosticSeverity(item.Severity), Message: item.Message,
-			Location: location})
+			Location: location,
+		})
 	}
 	sort.Slice(result, func(i, j int) bool {
 		left, right := result[i], result[j]

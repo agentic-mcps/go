@@ -88,10 +88,11 @@ func TestVerifyChangeToolReturnsCanonicalReport(t *testing.T) {
 
 func TestNormalizeVerifyChangeInput(t *testing.T) {
 	coverage := 75.0
+	//nolint:govet // table order keeps the failure expectation beside its name.
 	for _, test := range []struct {
 		name  string
-		input VerifyChangeInput
 		want  string
+		input VerifyChangeInput
 	}{
 		{name: "missing base", input: VerifyChangeInput{}, want: "base is required"},
 		{name: "option base", input: VerifyChangeInput{Base: "-main"}, want: "base is invalid"},

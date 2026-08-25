@@ -7,6 +7,7 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -62,13 +63,17 @@ func WriteArchive(destination string, files []File) error {
 	if err != nil {
 		return fmt.Errorf("creating gzip stream: %w", err)
 	}
-	gzipWriter.Header.ModTime = time.Unix(0, 0).UTC()
-	gzipWriter.Header.OS = 255
+	gzipWriter.ModTime = time.Unix(0, 0).UTC()
+	gzipWriter.OS = 255
 	tarWriter := tar.NewWriter(gzipWriter)
 	for _, file := range sorted {
 		if err := appendFile(tarWriter, file); err != nil {
-			_ = tarWriter.Close()
-			_ = gzipWriter.Close()
+			if closeErr := tarWriter.Close(); closeErr != nil {
+				return err
+			}
+			if closeErr := gzipWriter.Close(); closeErr != nil {
+				return err
+			}
 			return err
 		}
 	}
@@ -121,12 +126,14 @@ func WriteChecksums(destination string, artifacts []string) error {
 	return atomicWrite(destination, []byte(contents.String()), 0o644)
 }
 
-func appendFile(writer *tar.Writer, file File) error {
+func appendFile(writer *tar.Writer, file File) (resultErr error) {
 	source, err := os.Open(file.Source)
 	if err != nil {
 		return fmt.Errorf("opening release file %s: %w", file.Source, err)
 	}
-	defer source.Close()
+	defer func() {
+		resultErr = errors.Join(resultErr, source.Close())
+	}()
 	info, err := source.Stat()
 	if err != nil {
 		return fmt.Errorf("inspecting release file %s: %w", file.Source, err)

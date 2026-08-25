@@ -21,6 +21,8 @@ var (
 
 // ArtifactChunk is a deterministic, snapshot-bound slice of an artifact.
 // Offset and TotalBytes are byte offsets, not rune or model-token counts.
+//
+//nolint:govet // field order is the public JSON schema order.
 type ArtifactChunk struct {
 	ID         string `json:"id"`
 	SnapshotID string `json:"snapshot_id"`
@@ -35,8 +37,8 @@ type ArtifactChunk struct {
 // is content-addressed and its persisted snapshot binding is revalidated before
 // bytes are exposed. A cursor determines the offset when supplied.
 func (s *ArtifactStore) ReadChunk(ctx context.Context, id, cursor string, offset, limit int64) (ArtifactChunk, error) {
-	if err := contextError(ctx); err != nil {
-		return ArtifactChunk{}, err
+	if contextErr := contextError(ctx); contextErr != nil {
+		return ArtifactChunk{}, contextErr
 	}
 	if !validID(id) {
 		return ArtifactChunk{}, ErrArtifactNotFound
@@ -55,8 +57,8 @@ func (s *ArtifactStore) ReadChunk(ctx context.Context, id, cursor string, offset
 	if err != nil {
 		return ArtifactChunk{}, err
 	}
-	if err := contextError(ctx); err != nil {
-		return ArtifactChunk{}, err
+	if contextErr := contextError(ctx); contextErr != nil {
+		return ArtifactChunk{}, contextErr
 	}
 	total := int64(len(a.Payload))
 	if offset < 0 || offset > total || (offset < total && !utf8.RuneStart(a.Payload[offset])) {

@@ -13,18 +13,19 @@ import (
 var errInvalidSymbolRef = errors.New("invalid symbol reference")
 
 type symbolIdentity struct {
-	Version    int      `json:"v"`
 	SnapshotID string   `json:"snapshot"`
 	Base       string   `json:"base,omitempty"`
 	Scope      string   `json:"scope"`
 	Path       string   `json:"path"`
-	Position   Position `json:"position"`
 	Kind       string   `json:"kind"`
 	Package    string   `json:"package"`
 	Qualified  string   `json:"qualified"`
 	Digest     string   `json:"digest,omitempty"`
+	Position   Position `json:"position"`
+	Version    int      `json:"v"`
 }
 
+// Position is a zero-based UTF-16 LSP position.
 type Position struct {
 	Line      int `json:"line"`
 	Character int `json:"character"`
@@ -63,7 +64,7 @@ func decodeSymbolRef(ref SymbolRef) (symbolIdentity, error) {
 		return symbolIdentity{}, errInvalidSymbolRef
 	}
 	var identity symbolIdentity
-	if err := json.Unmarshal(encoded, &identity); err != nil || identity.Version != 1 || identity.Digest == "" {
+	if decodeErr := json.Unmarshal(encoded, &identity); decodeErr != nil || identity.Version != 1 || identity.Digest == "" {
 		return symbolIdentity{}, errInvalidSymbolRef
 	}
 	digest := identity.Digest

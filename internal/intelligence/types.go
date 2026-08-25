@@ -41,6 +41,8 @@ type Provider struct {
 }
 
 // Capabilities describes the effective semantic and compact-context contract.
+//
+//nolint:govet // field order is the public JSON schema order.
 type Capabilities struct {
 	Provider        Provider           `json:"provider"`
 	Semantic        CapabilityManifest `json:"semantic"`
@@ -93,6 +95,8 @@ type ModuleSummary struct {
 }
 
 // PackageSummary describes one workspace package and compact API facts.
+//
+//nolint:govet // field order is the public JSON schema order.
 type PackageSummary struct {
 	Kind        string   `json:"kind"`
 	ID          string   `json:"id"`
@@ -114,6 +118,8 @@ type GuidanceRef struct {
 }
 
 // ChangeContext is a compact, language-neutral view of local change impact.
+//
+//nolint:govet // field order is the public JSON schema order.
 type ChangeContext struct {
 	Files                  []string `json:"files"`
 	FilesTotal             int      `json:"files_total"`
@@ -153,6 +159,8 @@ type ContextTotals struct {
 }
 
 // ContextPack is the durable, compact workspace-or-symbol context boundary.
+//
+//nolint:govet // field order is the public JSON schema order.
 type ContextPack struct {
 	SchemaVersion string           `json:"schema_version"`
 	Provider      Provider         `json:"provider"`
@@ -179,6 +187,8 @@ type BriefRequest struct {
 }
 
 // SearchRequest selects a deterministic page of workspace symbols.
+//
+//nolint:govet // request order follows the public operation contract.
 type SearchRequest struct {
 	Query              string
 	Scope              string
@@ -188,6 +198,8 @@ type SearchRequest struct {
 }
 
 // SearchResult is one snapshot-bound, deterministically ordered search page.
+//
+//nolint:govet // field order is the public JSON schema order.
 type SearchResult struct {
 	SchemaVersion string        `json:"schema_version"`
 	Provider      Provider      `json:"provider"`
@@ -249,6 +261,8 @@ type CallSet struct {
 }
 
 // SymbolContext contains default source-grounded facets for one Go symbol.
+//
+//nolint:govet // field order is the public JSON schema order.
 type SymbolContext struct {
 	SchemaVersion    string        `json:"schema_version"`
 	Provider         Provider      `json:"provider"`
@@ -292,12 +306,16 @@ type StructuralPolicies struct {
 }
 
 // Decision is caller-authored handoff context and is never semantically enforced.
+//
+//nolint:govet // field order is the public JSON schema order.
 type Decision struct {
 	Text      string    `json:"text"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 // BeginRequest creates one persistent Change Contract.
+//
+//nolint:govet // request order follows the public operation contract.
 type BeginRequest struct {
 	Base            string
 	Goal            string
@@ -310,6 +328,8 @@ type BeginRequest struct {
 }
 
 // ChangeContract is one persistent structural continuity record.
+//
+//nolint:govet // field order is the public JSON schema order.
 type ChangeContract struct {
 	SchemaVersion       string             `json:"schema_version"`
 	ID                  string             `json:"id"`
@@ -349,6 +369,8 @@ type PolicyViolation struct {
 }
 
 // Checkpoint is one snapshot transition and its structural evidence.
+//
+//nolint:govet // field order is the public JSON schema order.
 type Checkpoint struct {
 	ContractID       string            `json:"contract_id"`
 	Previous         SnapshotRef       `json:"previous"`
@@ -361,6 +383,8 @@ type Checkpoint struct {
 }
 
 // RefactorRequest previews or applies one deterministic semantic operation.
+//
+//nolint:govet // request order follows the public operation contract.
 type RefactorRequest struct {
 	Operation          string
 	Ref                SymbolRef
@@ -372,6 +396,8 @@ type RefactorRequest struct {
 }
 
 // RefactorResult is one content-addressed preview or guarded apply outcome.
+//
+//nolint:govet // field order is the public JSON schema order.
 type RefactorResult struct {
 	PlanID        string        `json:"plan_id"`
 	Operation     string        `json:"operation"`

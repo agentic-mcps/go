@@ -38,23 +38,23 @@ type inventoryPackage struct {
 }
 
 type inventoryList struct {
-	ImportPath string `json:"ImportPath"`
-	Dir        string `json:"Dir"`
-	Name       string `json:"Name"`
-	Module     *struct {
+	Module *struct {
 		Path      string `json:"Path"`
 		Dir       string `json:"Dir"`
 		GoVersion string `json:"GoVersion"`
 	} `json:"Module"`
+	Error *struct {
+		Err string `json:"Err"`
+	} `json:"Error"`
+	ImportPath     string   `json:"ImportPath"`
+	Dir            string   `json:"Dir"`
+	Name           string   `json:"Name"`
 	GoFiles        []string `json:"GoFiles"`
 	CgoFiles       []string `json:"CgoFiles"`
 	IgnoredGoFiles []string `json:"IgnoredGoFiles"`
 	TestGoFiles    []string `json:"TestGoFiles"`
 	XTestGoFiles   []string `json:"XTestGoFiles"`
 	Imports        []string `json:"Imports"`
-	Error          *struct {
-		Err string `json:"Err"`
-	} `json:"Error"`
 }
 
 func inventoryPackages(ctx context.Context, ws *workspace.Workspace, runner *execution.Runner, scope string) ([]inventoryPackage, error) {
@@ -184,8 +184,8 @@ func exportedInventory(ctx context.Context, dir string, files []string) ([]strin
 					case *ast.ValueSpec:
 						for _, n := range x.Names {
 							if n.IsExported() {
-								copy := &ast.ValueSpec{Names: []*ast.Ident{n}, Type: x.Type}
-								formatted, formatErr := formatInventoryNode(&ast.GenDecl{Tok: decl.Tok, Specs: []ast.Spec{copy}})
+								valueSpec := &ast.ValueSpec{Names: []*ast.Ident{n}, Type: x.Type}
+								formatted, formatErr := formatInventoryNode(&ast.GenDecl{Tok: decl.Tok, Specs: []ast.Spec{valueSpec}})
 								if formatErr != nil {
 									return nil, false, false, fmt.Errorf("formatting %s: %w", n.Name, formatErr)
 								}

@@ -35,11 +35,11 @@ type Artifact struct {
 }
 
 type artifactDisk struct {
-	Version    int    `json:"version"`
 	ID         string `json:"id"`
 	SnapshotID string `json:"snapshot_id"`
 	Key        string `json:"key"`
 	Payload    []byte `json:"payload"`
+	Version    int    `json:"version"`
 }
 
 // ArtifactCursor is the decoded position within one stored artifact.
@@ -62,10 +62,10 @@ func NewArtifactStore(root string) (*ArtifactStore, error) {
 		}
 		root = filepath.Join(cache, "agentic-go", "artifacts")
 	}
-	if err := os.MkdirAll(root, 0700); err != nil {
+	if err := os.MkdirAll(root, 0o700); err != nil {
 		return nil, fmt.Errorf("create artifact store: %w", err)
 	}
-	if err := os.Chmod(root, 0700); err != nil {
+	if err := os.Chmod(root, 0o700); err != nil {
 		return nil, fmt.Errorf("secure artifact store: %w", err)
 	}
 	return &ArtifactStore{root: root}, nil
@@ -149,7 +149,7 @@ func DecodeArtifactCursor(cursor, expectedID string) (ArtifactCursor, error) {
 	if json.Unmarshal(b, &c) != nil || !validID(c.ID) || c.Offset < 0 || (expectedID != "" && c.ID != expectedID) {
 		return ArtifactCursor{}, ErrCursorInvalid
 	}
-	return ArtifactCursor{ID: c.ID, Offset: c.Offset}, nil
+	return ArtifactCursor(c), nil
 }
 
 func artifactID(snapshotID, key string, payload []byte) string {
@@ -172,8 +172,8 @@ func atomicWrite(path string, data []byte) error {
 		return err
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName)
-	if err = tmp.Chmod(0600); err == nil {
+	defer func() { _ = os.Remove(tmpName) }()
+	if err = tmp.Chmod(0o600); err == nil {
 		_, err = tmp.Write(data)
 	}
 	if err == nil {

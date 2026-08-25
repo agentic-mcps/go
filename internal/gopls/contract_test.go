@@ -23,13 +23,13 @@ func TestPinnedSidecarContract(t *testing.T) {
 	}
 
 	workspace := t.TempDir()
-	if err := os.WriteFile(filepath.Join(workspace, "go.mod"), []byte("module example.test/semantic\n\ngo 1.25.0\n"), 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(filepath.Join(workspace, "go.mod"), []byte("module example.test/semantic\n\ngo 1.25.0\n"), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 	source := []byte("package semantic\n\nconst Emoji = \"🙂\"; var Target = Emoji\n")
 	file := filepath.Join(workspace, "semantic.go")
-	if err := os.WriteFile(file, source, 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(file, source, 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 	client, err := Start(ctx, Config{Command: installation.Path, Args: []string{"serve"}, Workspace: workspace})
 	if err != nil {
@@ -49,10 +49,10 @@ func TestPinnedSidecarContract(t *testing.T) {
 	}
 
 	uri := (&url.URL{Scheme: "file", Path: file}).String()
-	if err := client.Notify("textDocument/didOpen", map[string]any{
+	if notifyErr := client.Notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "go", "version": 1, "text": string(source)},
-	}); err != nil {
-		t.Fatalf("didOpen: %v", err)
+	}); notifyErr != nil {
+		t.Fatalf("didOpen: %v", notifyErr)
 	}
 	var symbols []struct {
 		Name string `json:"name"`
@@ -65,9 +65,9 @@ func TestPinnedSidecarContract(t *testing.T) {
 	}
 
 	targetOffset := strings.Index(string(source), "Target")
-	position, err := PositionForOffset(source, targetOffset)
-	if err != nil {
-		t.Fatal(err)
+	position, positionErr := PositionForOffset(source, targetOffset)
+	if positionErr != nil {
+		t.Fatal(positionErr)
 	}
 	var hover map[string]any
 	if err := client.Request(ctx, "textDocument/hover", map[string]any{

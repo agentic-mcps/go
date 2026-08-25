@@ -13,11 +13,10 @@ import (
 // replayed because the server may have applied an edit before disconnecting.
 type Manager struct {
 	lifecycle context.Context
+	client    *Client
 	config    Config
-
-	mu     sync.Mutex
-	client *Client
-	closed bool
+	mu        sync.Mutex
+	closed    bool
 }
 
 // NewManager starts the initial long-lived sidecar session.
@@ -56,9 +55,9 @@ func (m *Manager) Request(ctx context.Context, method string, params, result any
 	if err := m.replace(ctx, client, false); err != nil {
 		return errors.Join(requestErr, fmt.Errorf("restarting gopls: %w", err))
 	}
-	replacement, err := m.current()
-	if err != nil {
-		return err
+	replacement, replacementErr := m.current()
+	if replacementErr != nil {
+		return replacementErr
 	}
 	return replacement.Request(ctx, method, params, result)
 }

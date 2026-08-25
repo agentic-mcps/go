@@ -12,8 +12,8 @@ import (
 )
 
 type fakeSemanticProvider struct {
-	identity SemanticIdentity
 	reader   *fakeSemanticReader
+	identity SemanticIdentity
 	reads    int
 }
 
@@ -24,43 +24,51 @@ func (p *fakeSemanticProvider) Read(_ context.Context, _ SnapshotRef, fn func(se
 }
 
 type fakeSemanticReader struct {
-	search          semanticSymbols
-	symbol          SymbolMatch
 	hover           string
+	diagnostics     []Diagnostic
+	search          semanticSymbols
 	definitions     semanticLocations
 	typeDefinitions semanticLocations
 	references      semanticLocations
 	implementations semanticSymbols
-	diagnostics     []Diagnostic
 	calls           semanticCalls
+	symbol          SymbolMatch
 	position        Position
 }
 
 func (r *fakeSemanticReader) Search(context.Context, string) (semanticSymbols, error) {
 	return r.search, nil
 }
+
 func (r *fakeSemanticReader) SymbolAt(_ context.Context, _ string, position Position) (SymbolMatch, error) {
 	r.position = position
 	return r.symbol, nil
 }
+
 func (r *fakeSemanticReader) Hover(context.Context, string, Position) (string, error) {
 	return r.hover, nil
 }
+
 func (r *fakeSemanticReader) Definition(context.Context, string, Position) (semanticLocations, error) {
 	return r.definitions, nil
 }
+
 func (r *fakeSemanticReader) TypeDefinition(context.Context, string, Position) (semanticLocations, error) {
 	return r.typeDefinitions, nil
 }
+
 func (r *fakeSemanticReader) References(context.Context, string, Position) (semanticLocations, error) {
 	return r.references, nil
 }
+
 func (r *fakeSemanticReader) Implementations(context.Context, string, Position) (semanticSymbols, error) {
 	return r.implementations, nil
 }
+
 func (r *fakeSemanticReader) Diagnostics(context.Context, string) ([]Diagnostic, error) {
 	return append([]Diagnostic(nil), r.diagnostics...), nil
 }
+
 func (r *fakeSemanticReader) Calls(context.Context, string, Position) (semanticCalls, error) {
 	return r.calls, nil
 }
@@ -73,6 +81,7 @@ func (a fakeChangeAnalyzer) Analyze(context.Context, verification.ChangeOptions)
 	}
 	return a.analysis, nil
 }
+
 func (fakeChangeAnalyzer) MaterializeBase(context.Context, verification.Repository, string) (string, error) {
 	return "", errors.New("not used")
 }

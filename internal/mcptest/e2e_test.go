@@ -24,8 +24,8 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(t.TempDir(), "agentic-go")
-	if err := os.Symlink(sidecar, filepath.Join(filepath.Dir(bin), "agentic-go-gopls")); err != nil {
-		t.Fatal(err)
+	if symlinkErr := os.Symlink(sidecar, filepath.Join(filepath.Dir(bin), "agentic-go-gopls")); symlinkErr != nil {
+		t.Fatal(symlinkErr)
 	}
 	build := exec.CommandContext(ctx, "go", "build", "-o", bin, "./cmd/agentic-go")
 	build.Dir = repoRoot
@@ -94,11 +94,11 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 	}
 	//nolint:govet // decode shape follows the public structured output schema.
 	var output struct {
-		Failed   int `json:"failed"`
-		Passed   int `json:"passed"`
 		Packages map[string]struct {
 			Status string `json:"status"`
 		} `json:"packages"`
+		Failed int `json:"failed"`
+		Passed int `json:"passed"`
 	}
 	if decodeErr := json.Unmarshal(data, &output); decodeErr != nil {
 		t.Fatalf("decode structured output: %v; raw=%s", decodeErr, data)
@@ -126,13 +126,13 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 		t.Fatal(err)
 	}
 	var searchResult struct {
-		Total   int `json:"total"`
 		Matches []struct {
 			Ref string `json:"ref"`
 		} `json:"matches"`
+		Total int `json:"total"`
 	}
-	if err := json.Unmarshal(encodedSearch, &searchResult); err != nil || searchResult.Total == 0 || len(searchResult.Matches) == 0 || searchResult.Matches[0].Ref == "" {
-		t.Fatalf("semantic search = %s, error %v", encodedSearch, err)
+	if decodeErr := json.Unmarshal(encodedSearch, &searchResult); decodeErr != nil || searchResult.Total == 0 || len(searchResult.Matches) == 0 || searchResult.Matches[0].Ref == "" {
+		t.Fatalf("semantic search = %s, error %v", encodedSearch, decodeErr)
 	}
 	symbol, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "go_symbol_context", Arguments: map[string]any{"symbol_ref": searchResult.Matches[0].Ref}})
 	if err != nil || symbol.IsError {
@@ -149,8 +149,8 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 	var briefResult struct {
 		NextCursor string `json:"next_cursor"`
 	}
-	if err := json.Unmarshal(encodedBrief, &briefResult); err != nil || briefResult.NextCursor == "" {
-		t.Fatalf("workspace brief has no artifact cursor: %s; error %v", encodedBrief, err)
+	if decodeErr := json.Unmarshal(encodedBrief, &briefResult); decodeErr != nil || briefResult.NextCursor == "" {
+		t.Fatalf("workspace brief has no artifact cursor: %s; error %v", encodedBrief, decodeErr)
 	}
 	artifact, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: "agentic-go://artifact/" + briefResult.NextCursor})
 	if err != nil || len(artifact.Contents) != 1 || artifact.Contents[0].Text == "" {

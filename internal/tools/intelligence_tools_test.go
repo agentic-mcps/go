@@ -19,20 +19,25 @@ func (f *fakeIntelligence) Brief(_ context.Context, request intelligence.BriefRe
 	f.brief = request
 	return intelligence.ContextPack{Snapshot: intelligence.SnapshotRef{ID: "snap-brief"}, Packages: make([]intelligence.PackageSummary, 2)}, nil
 }
+
 func (f *fakeIntelligence) Search(_ context.Context, request intelligence.SearchRequest) (intelligence.SearchResult, error) {
 	f.search = request
 	return intelligence.SearchResult{Snapshot: intelligence.SnapshotRef{ID: "snap-search"}, Matches: []intelligence.SymbolMatch{{Name: "Widget"}}, Total: 1, Uncertainties: []intelligence.Uncertainty{}}, nil
 }
+
 func (f *fakeIntelligence) Symbol(_ context.Context, request intelligence.SymbolRequest) (intelligence.SymbolContext, error) {
 	f.symbol = request
 	return intelligence.SymbolContext{Snapshot: intelligence.SnapshotRef{ID: "snap-symbol"}, Symbol: intelligence.SymbolMatch{Name: "Widget"}}, nil
 }
+
 func (*fakeIntelligence) Capabilities() intelligence.Capabilities {
 	return intelligence.Capabilities{ContextSchema: intelligence.ContextSchemaVersion}
 }
+
 func (*fakeIntelligence) ReadArtifact(_ context.Context, cursor string, _ int64) (intelligence.ArtifactChunk, error) {
 	return intelligence.ArtifactChunk{ID: cursor, SnapshotID: "snapshot", Text: "detail", Complete: true}, nil
 }
+
 func testIntelligenceRuntime(service IntelligenceService) *Runtime {
 	return &Runtime{intelligence: service}
 }
@@ -85,8 +90,8 @@ func TestIntelligenceResourcesReturnCapabilitiesAndArtifactChunks(t *testing.T) 
 		t.Fatal(err)
 	}
 	var manifest intelligence.Capabilities
-	if err := json.Unmarshal([]byte(capabilities.Contents[0].Text), &manifest); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal([]byte(capabilities.Contents[0].Text), &manifest); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if manifest.ContextSchema != intelligence.ContextSchemaVersion {
 		t.Fatalf("capabilities = %#v", manifest)

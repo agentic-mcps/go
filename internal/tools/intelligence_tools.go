@@ -21,21 +21,21 @@ type WorkspaceBriefInput struct {
 type SearchInput struct {
 	Query              string `json:"query" jsonschema:"workspace symbol query"`
 	Package            string `json:"package,omitempty" jsonschema:"optional Go package scope"`
-	Limit              int    `json:"limit,omitempty" jsonschema:"maximum 100; default 20"`
 	Cursor             string `json:"cursor,omitempty" jsonschema:"snapshot-bound continuation cursor"`
 	ExpectedSnapshotID string `json:"expected_snapshot_id,omitempty" jsonschema:"reject the request unless this snapshot is still current"`
+	Limit              int    `json:"limit,omitempty" jsonschema:"maximum 100; default 20"`
 }
 
 // SymbolContextInput selects a symbol by opaque reference or source position.
 type SymbolContextInput struct {
 	SymbolRef          string `json:"symbol_ref,omitempty" jsonschema:"opaque snapshot-bound symbol reference"`
 	File               string `json:"file,omitempty" jsonschema:"workspace-relative Go file"`
+	ExpectedSnapshotID string `json:"expected_snapshot_id,omitempty" jsonschema:"reject the request unless this snapshot is still current"`
 	Line               int    `json:"line,omitempty" jsonschema:"one-based source line"`
 	Column             int    `json:"column,omitempty" jsonschema:"one-based UTF-8 byte column"`
+	MaxBytes           int    `json:"max_bytes,omitempty" jsonschema:"optional response budget; default 16384"`
 	CallHierarchy      bool   `json:"call_hierarchy,omitempty"`
 	TypeDefinition     bool   `json:"type_definition,omitempty"`
-	MaxBytes           int    `json:"max_bytes,omitempty" jsonschema:"optional response budget; default 16384"`
-	ExpectedSnapshotID string `json:"expected_snapshot_id,omitempty" jsonschema:"reject the request unless this snapshot is still current"`
 }
 
 func intelligenceAnnotations() *mcp.ToolAnnotations {

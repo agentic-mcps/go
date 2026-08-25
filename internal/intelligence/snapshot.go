@@ -46,6 +46,8 @@ type SemanticIdentity struct {
 }
 
 // BuildConfig records source-selection inputs that affect Go semantics.
+//
+//nolint:govet // field order is the public JSON schema order.
 type BuildConfig struct {
 	GOOS       string   `json:"goos"`
 	GOARCH     string   `json:"goarch"`
@@ -57,6 +59,8 @@ type BuildConfig struct {
 
 // SnapshotRef is an immutable, portable reference to one observed workspace.
 // It contains identities and versions, never absolute repository paths.
+//
+//nolint:govet // field order is the public JSON schema order.
 type SnapshotRef struct {
 	ID              string             `json:"id"`
 	RepositoryID    string             `json:"repository_id"`
@@ -85,9 +89,9 @@ type SnapshotRequest struct {
 type Snapshotter struct {
 	workspace *workspace.Workspace
 	runner    *execution.Runner
-	mu        sync.RWMutex
 	manifests map[string][]contentRecord
 	order     []string
+	mu        sync.RWMutex
 }
 
 // NewSnapshotter constructs a snapshot source over shared contained execution.
@@ -140,11 +144,12 @@ func (s *Snapshotter) Validate(ctx context.Context, expected SnapshotRef) (Snaps
 	return current, nil
 }
 
+//nolint:govet // ephemeral capture state is grouped by semantic role.
 type snapshotState struct {
-	ref     SnapshotRef
 	records []contentRecord
 	status  []byte
 	index   []byte
+	ref     SnapshotRef
 }
 
 type contentRecord struct {

@@ -44,8 +44,8 @@ func TestSymbolRefRejectsTamperingAndUnsafePaths(t *testing.T) {
 		t.Fatal(err)
 	}
 	var payload map[string]any
-	if err := json.Unmarshal(decoded, &payload); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal(decoded, &payload); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	payload["qualified"] = "Tampered"
 	decoded, err = json.Marshal(payload)

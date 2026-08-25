@@ -52,8 +52,8 @@ func run(parent context.Context, args []string) error {
 	if err != nil {
 		return fmt.Errorf("resolving repository root: %w", err)
 	}
-	if err := requireRegularFile(filepath.Join(repository, "go.mod")); err != nil {
-		return fmt.Errorf("validating repository root: %w", err)
+	if validationErr := requireRegularFile(filepath.Join(repository, "go.mod")); validationErr != nil {
+		return fmt.Errorf("validating repository root: %w", validationErr)
 	}
 	outputRoot, err := filepath.Abs(*output)
 	if err != nil {
@@ -77,7 +77,7 @@ func run(parent context.Context, args []string) error {
 	if err != nil {
 		return fmt.Errorf("creating release workspace: %w", err)
 	}
-	defer os.RemoveAll(working)
+	defer func() { _ = os.RemoveAll(working) }()
 	licensesPath := filepath.Join(working, "gopls-dependencies.txt")
 	if err := generateGoplsLicenses(ctx, goCommand, goplsSource, licensesPath); err != nil {
 		return err
@@ -146,10 +146,10 @@ func downloadGopls(ctx context.Context, goCommand, repository string) (string, e
 		return "", fmt.Errorf("downloading pinned gopls: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 	var module struct {
+		Error   *struct{ Err string }
 		Path    string
 		Version string
 		Dir     string
-		Error   *struct{ Err string }
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &module); err != nil {
 		return "", fmt.Errorf("decoding pinned gopls module: %w", err)

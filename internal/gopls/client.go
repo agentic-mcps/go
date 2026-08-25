@@ -20,14 +20,16 @@ import (
 	"time"
 )
 
-const defaultMaxFrame = 16 << 20
-const defaultInitializeTimeout = 10 * time.Second
+const (
+	defaultMaxFrame          = 16 << 20
+	defaultInitializeTimeout = 10 * time.Second
+)
 
 // Config describes one managed gopls process.
 type Config struct {
 	Command           string
-	Args              []string
 	Workspace         string
+	Args              []string
 	MaxFrame          int
 	InitializeTimeout time.Duration
 }
@@ -50,26 +52,26 @@ type Capabilities struct {
 }
 
 type callResult struct {
-	result json.RawMessage
 	err    error
+	result json.RawMessage
 }
 
 // Client owns one long-lived stdio LSP process.
 type Client struct {
-	cmd        *exec.Cmd
 	stdin      io.WriteCloser
-	maxFrame   int
-	done       chan struct{}
-	nextID     atomic.Uint64
-	writeMu    sync.Mutex
-	pendingMu  sync.Mutex
-	pending    map[string]chan callResult
-	failOnce   sync.Once
-	closeOnce  sync.Once
-	terminalMu sync.Mutex
 	terminal   error
-	caps       Capabilities
+	cmd        *exec.Cmd
+	done       chan struct{}
 	stderr     *boundedBuffer
+	pending    map[string]chan callResult
+	maxFrame   int
+	nextID     atomic.Uint64
+	closeOnce  sync.Once
+	failOnce   sync.Once
+	terminalMu sync.Mutex
+	pendingMu  sync.Mutex
+	writeMu    sync.Mutex
+	caps       Capabilities
 }
 
 // Start launches and initializes one gopls LSP session.
@@ -394,17 +396,17 @@ func (c *Client) terminalError() error {
 }
 
 type rpcFailure struct {
-	Code    int    `json:"code"`
 	Message string `json:"message"`
+	Code    int    `json:"code"`
 }
 
 type wireMessage struct {
+	Error   *rpcFailure     `json:"error"`
 	JSONRPC string          `json:"jsonrpc"`
-	ID      json.RawMessage `json:"id"`
 	Method  string          `json:"method"`
+	ID      json.RawMessage `json:"id"`
 	Params  json.RawMessage `json:"params"`
 	Result  json.RawMessage `json:"result"`
-	Error   *rpcFailure     `json:"error"`
 }
 
 func normalizeCapabilities(values map[string]json.RawMessage) Capabilities {
@@ -479,9 +481,9 @@ func replaceEnv(environment []string, key, value string) []string {
 }
 
 type boundedBuffer struct {
-	mu    sync.Mutex
 	data  []byte
 	limit int
+	mu    sync.Mutex
 }
 
 func (b *boundedBuffer) Write(data []byte) (int, error) {
