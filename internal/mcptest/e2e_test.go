@@ -3,6 +3,7 @@ package mcptest
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -12,6 +13,10 @@ import (
 )
 
 func TestServerProtocolSurfaceAndTool(t *testing.T) {
+	sidecar := os.Getenv("AGENTIC_GO_GOPLS")
+	if sidecar == "" {
+		t.Skip("AGENTIC_GO_GOPLS is not set")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	repoRoot, err := filepath.Abs(filepath.Join("..", ".."))
@@ -19,6 +24,9 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(t.TempDir(), "agentic-go")
+	if err := os.Symlink(sidecar, filepath.Join(filepath.Dir(bin), "agentic-go-gopls")); err != nil {
+		t.Fatal(err)
+	}
 	build := exec.CommandContext(ctx, "go", "build", "-o", bin, "./cmd/agentic-go")
 	build.Dir = repoRoot
 	if output, buildErr := build.CombinedOutput(); buildErr != nil {
@@ -62,8 +70,15 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 		}
 		prompts = append(prompts, item)
 	}
-	if len(tools) != 8 || len(resources) != 4 || len(prompts) != 4 {
-		t.Fatalf("surface counts: tools=%d resources=%d prompts=%d", len(tools), len(resources), len(prompts))
+	var templates []*mcp.ResourceTemplate
+	for item, err := range session.ResourceTemplates(ctx, nil) {
+		if err != nil {
+			t.Fatal(err)
+		}
+		templates = append(templates, item)
+	}
+	if len(tools) != 11 || len(resources) != 5 || len(templates) != 1 || len(prompts) != 4 {
+		t.Fatalf("surface counts: tools=%d resources=%d templates=%d prompts=%d", len(tools), len(resources), len(templates), len(prompts))
 	}
 
 	result, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "go_test_structured", Arguments: map[string]any{"package": "./internal/finding", "timeout_seconds": 30}})
@@ -98,5 +113,47 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 		if summary.Status != "ok" {
 			t.Fatalf("package %q status = %q, want ok", pkg, summary.Status)
 		}
+	}
+	search, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "go_search", Arguments: map[string]any{"query": "NewCore", "limit": 5}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if search.IsError {
+		t.Fatalf("semantic tool returned protocol error: %#v", search.Content)
+	}
+	encodedSearch, err := json.Marshal(search.StructuredContent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var searchResult struct {
+		Total   int `json:"total"`
+		Matches []struct {
+			Ref string `json:"ref"`
+		} `json:"matches"`
+	}
+	if err := json.Unmarshal(encodedSearch, &searchResult); err != nil || searchResult.Total == 0 || len(searchResult.Matches) == 0 || searchResult.Matches[0].Ref == "" {
+		t.Fatalf("semantic search = %s, error %v", encodedSearch, err)
+	}
+	symbol, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "go_symbol_context", Arguments: map[string]any{"symbol_ref": searchResult.Matches[0].Ref}})
+	if err != nil || symbol.IsError {
+		t.Fatalf("symbol context error=%v result=%#v", err, symbol)
+	}
+	brief, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "go_workspace_brief", Arguments: map[string]any{"max_bytes": 4096}})
+	if err != nil || brief.IsError {
+		t.Fatalf("workspace brief error=%v result=%#v", err, brief)
+	}
+	encodedBrief, err := json.Marshal(brief.StructuredContent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var briefResult struct {
+		NextCursor string `json:"next_cursor"`
+	}
+	if err := json.Unmarshal(encodedBrief, &briefResult); err != nil || briefResult.NextCursor == "" {
+		t.Fatalf("workspace brief has no artifact cursor: %s; error %v", encodedBrief, err)
+	}
+	artifact, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: "agentic-go://artifact/" + briefResult.NextCursor})
+	if err != nil || len(artifact.Contents) != 1 || artifact.Contents[0].Text == "" {
+		t.Fatalf("artifact resource error=%v result=%#v", err, artifact)
 	}
 }

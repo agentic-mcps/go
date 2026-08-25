@@ -18,6 +18,8 @@ import (
 
 	"github.com/ashwingopalsamy/agentic-go/internal/changeimpact"
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
+	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
+	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
 	"github.com/ashwingopalsamy/agentic-go/internal/tools"
 	"github.com/ashwingopalsamy/agentic-go/internal/trace"
 	"github.com/ashwingopalsamy/agentic-go/internal/verification"
@@ -99,6 +101,38 @@ func runMCP(args []string) int {
 		logger.Error("execution setup failed", "error", err)
 		return 1
 	}
+	installation, err := gopls.Locate(ctx, "", "")
+	if err != nil {
+		logger.Error("semantic sidecar preflight failed", "error", err)
+		return 1
+	}
+	semanticManager, err := gopls.NewManager(ctx, gopls.Config{Command: installation.Path, Args: []string{"serve"}, Workspace: ws.Root()})
+	if err != nil {
+		logger.Error("semantic sidecar setup failed", "error", err)
+		return 1
+	}
+	defer func() {
+		closeCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if closeErr := semanticManager.Close(closeCtx); closeErr != nil {
+			logger.Error("semantic sidecar shutdown failed", "error", closeErr)
+		}
+	}()
+	impact, err := changeimpact.New(ws, runner)
+	if err != nil {
+		logger.Error("change analysis setup failed", "error", err)
+		return 1
+	}
+	engine, err := verification.NewEngine(ws, runner, impact, version)
+	if err != nil {
+		logger.Error("verification setup failed", "error", err)
+		return 1
+	}
+	intelligenceService, err := intelligence.NewCore(ws, runner, semanticManager, impact, engine)
+	if err != nil {
+		logger.Error("intelligence setup failed", "error", err)
+		return 1
+	}
 	tracer, err := trace.Init()
 	if err != nil {
 		logger.Error("trace setup failed", "error", err)
@@ -110,7 +144,7 @@ func runMCP(args []string) int {
 			logger.Error("trace shutdown failed", "error", closeErr)
 		}
 	}()
-	runtime, err := tools.NewRuntimeWithVersion(ws, runner, tracer, version)
+	runtime, err := tools.NewRuntimeWithIntelligence(ws, runner, tracer, version, intelligenceService)
 	if err != nil {
 		logger.Error("tool runtime setup failed", "error", err)
 		return 1

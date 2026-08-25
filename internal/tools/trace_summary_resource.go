@@ -8,7 +8,7 @@ import (
 
 const traceSummaryURI = "agentic-go://trace-summary"
 
-// RegisterResources registers the complete v0.1 resource inventory.
+// RegisterResources registers the complete fixed and templated resource inventory.
 func RegisterResources(server *mcp.Server, runtime *Runtime) {
 	RegisterWorkspaceResources(server, runtime)
 	server.AddResource(&mcp.Resource{
@@ -17,6 +17,7 @@ func RegisterResources(server *mcp.Server, runtime *Runtime) {
 		URI:         traceSummaryURI,
 		MIMEType:    "application/json",
 	}, runtime.traceSummaryResource)
+	RegisterIntelligenceResources(server, runtime)
 }
 
 func (r *Runtime) traceSummaryResource(_ context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {

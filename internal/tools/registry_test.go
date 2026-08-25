@@ -16,7 +16,9 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		&mcp.Implementation{Name: "agentic-go-test", Version: "0.2.0-dev"},
 		&mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}},
 	)
-	RegisterAll(server, newTestRuntime(t))
+	runtime := newTestRuntime(t)
+	runtime.intelligence = &fakeIntelligence{}
+	RegisterAll(server, runtime)
 
 	clientTransport, serverTransport := mcp.NewInMemoryTransports()
 	serverSession, err := server.Connect(ctx, serverTransport, nil)
@@ -36,22 +38,30 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 8 {
-		t.Fatalf("len(tools/list) = %d, want 8", len(listed.Tools))
+	if len(listed.Tools) != 11 {
+		t.Fatalf("len(tools/list) = %d, want 11", len(listed.Tools))
 	}
 
 	resources, err := clientSession.ListResources(ctx, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resources.Resources) != 4 {
-		t.Fatalf("len(resources/list) = %d, want 4", len(resources.Resources))
+	if len(resources.Resources) != 5 {
+		t.Fatalf("len(resources/list) = %d, want 5", len(resources.Resources))
 	}
 	wantResources := map[string]bool{
 		"agentic-go://module":         false,
 		"agentic-go://packages":       false,
 		"agentic-go://analysis-rules": false,
 		traceSummaryURI:               false,
+		capabilitiesURI:               false,
+	}
+	templates, err := clientSession.ListResourceTemplates(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(templates.ResourceTemplates) != 1 || templates.ResourceTemplates[0].URITemplate != "agentic-go://artifact/{id}" {
+		t.Fatalf("resource templates = %#v", templates.ResourceTemplates)
 	}
 	for _, resource := range resources.Resources {
 		if _, ok := wantResources[resource.URI]; !ok {
@@ -120,6 +130,13 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	verifySchema, err := json.Marshal(verifyTool.InputSchema)
 	if err != nil {
 		t.Fatal(err)
+	}
+	for _, name := range []string{"go_workspace_brief", "go_search", "go_symbol_context"} {
+		tool := listedTool(t, listed.Tools, name)
+		annotations := tool.Annotations
+		if annotations == nil || !annotations.ReadOnlyHint || !annotations.IdempotentHint || annotations.DestructiveHint == nil || *annotations.DestructiveHint || annotations.OpenWorldHint == nil || *annotations.OpenWorldHint {
+			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
+		}
 	}
 	for _, field := range []string{`"base"`, `"package"`, `"race"`, `"fail_on"`, `"min_changed_coverage"`, `"max_packages"`} {
 		if !strings.Contains(string(verifySchema), field) {

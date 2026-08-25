@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
+	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
 	"github.com/ashwingopalsamy/agentic-go/internal/trace"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -21,6 +22,14 @@ type Runtime struct {
 	runner          *execution.Runner
 	tracer          *trace.Tracer
 	providerVersion string
+	intelligence    IntelligenceService
+}
+
+// IntelligenceService is the narrow read-only seam used by v0.4 MCP adapters.
+type IntelligenceService interface {
+	Brief(context.Context, intelligence.BriefRequest) (intelligence.ContextPack, error)
+	Search(context.Context, intelligence.SearchRequest) (intelligence.SearchResult, error)
+	Symbol(context.Context, intelligence.SymbolRequest) (intelligence.SymbolContext, error)
 }
 
 // NewRuntime validates the dependencies shared by every tool registration.
@@ -31,6 +40,16 @@ func NewRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace
 // NewRuntimeWithVersion preserves the producing binary version in portable
 // verification reports while retaining NewRuntime for internal callers.
 func NewRuntimeWithVersion(ws *workspace.Workspace, runner *execution.Runner, tracer *trace.Tracer, providerVersion string) (*Runtime, error) {
+	return newRuntime(ws, runner, tracer, providerVersion, nil)
+}
+
+// NewRuntimeWithIntelligence preserves the existing runtime constructor while
+// allowing the semantic MCP adapters to be installed by newer binaries.
+func NewRuntimeWithIntelligence(ws *workspace.Workspace, runner *execution.Runner, tracer *trace.Tracer, providerVersion string, service IntelligenceService) (*Runtime, error) {
+	return newRuntime(ws, runner, tracer, providerVersion, service)
+}
+
+func newRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace.Tracer, providerVersion string, service IntelligenceService) (*Runtime, error) {
 	if ws == nil {
 		return nil, fmt.Errorf("workspace is nil")
 	}
@@ -43,7 +62,7 @@ func NewRuntimeWithVersion(ws *workspace.Workspace, runner *execution.Runner, tr
 	if strings.TrimSpace(providerVersion) == "" {
 		return nil, fmt.Errorf("provider version is empty")
 	}
-	return &Runtime{workspace: ws, runner: runner, tracer: tracer, providerVersion: providerVersion}, nil
+	return &Runtime{workspace: ws, runner: runner, tracer: tracer, providerVersion: providerVersion, intelligence: service}, nil
 }
 
 // RegisterAll is the single deterministic protocol registration list.
@@ -56,6 +75,9 @@ func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterAuditConcurrency(server, runtime)
 	RegisterAuditErrors(server, runtime)
 	RegisterVerifyChange(server, runtime)
+	RegisterWorkspaceBrief(server, runtime)
+	RegisterSearch(server, runtime)
+	RegisterSymbolContext(server, runtime)
 	RegisterResources(server, runtime)
 	RegisterPrompts(server)
 }

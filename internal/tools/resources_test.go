@@ -133,8 +133,8 @@ func TestRegisterWorkspaceResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Resources) != 4 {
-		t.Fatalf("resources = %d, want 4", len(listed.Resources))
+	if len(listed.Resources) != 5 {
+		t.Fatalf("resources = %d, want 5", len(listed.Resources))
 	}
 	for _, uri := range []string{"agentic-go://module", "agentic-go://packages", "agentic-go://analysis-rules", traceSummaryURI} {
 		read, err := clientSession.ReadResource(context.Background(), &mcp.ReadResourceParams{URI: uri})

@@ -68,7 +68,7 @@ jobs:
         env:
           AGENTIC_GO_GOPLS: ${{ runner.temp }}/agentic-go-gopls
           GOTELEMETRY: "off"
-        run: go test ./internal/gopls -run '^TestPinnedSidecarContract$' -count=1
+        run: go test ./internal/gopls ./internal/intelligence ./internal/mcptest -count=1
 
   golangci-lint:
     name: golangci-lint
