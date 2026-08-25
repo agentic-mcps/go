@@ -344,8 +344,8 @@ func exportedAPIChanges(analysis verification.ChangeAnalysis) ([]Location, []Unc
 }
 
 type declarationShapeInfo struct {
-	Exported bool
 	Shape    string
+	Exported bool
 }
 
 func sourceForDeclaration(files []verification.SourceFile, declaration verification.ChangedDeclaration) *verification.SourceFile {

@@ -81,8 +81,8 @@ func runContractWithDependencies(args []string, stdout, stderr io.Writer, depend
 		return 1
 	}
 	if *format == "json" {
-		if err := json.NewEncoder(stdout).Encode(exported); err != nil {
-			_, _ = fmt.Fprintf(stderr, "agentic-go contract export: writing JSON result: %v\n", err)
+		if encodeErr := json.NewEncoder(stdout).Encode(exported); encodeErr != nil {
+			_, _ = fmt.Fprintf(stderr, "agentic-go contract export: writing JSON result: %v\n", encodeErr)
 			return 1
 		}
 		return 0

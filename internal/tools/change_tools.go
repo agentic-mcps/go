@@ -10,7 +10,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type BeginChangeInput struct {
+// BeginChangeInput selects the initial private Change Contract boundary.
+type BeginChangeInput struct { //nolint:govet // Field order follows the public request contract.
 	Base            string                          `json:"base" jsonschema:"required local base ref"`
 	Goal            string                          `json:"goal" jsonschema:"required human-written change goal"`
 	Package         string                          `json:"package,omitempty"`
@@ -21,6 +22,7 @@ type BeginChangeInput struct {
 	Policies        intelligence.StructuralPolicies `json:"policies,omitempty"`
 }
 
+// CheckpointChangeInput selects one exact Change Contract lineage transition.
 type CheckpointChangeInput struct {
 	ContractID          string   `json:"contract_id" jsonschema:"required"`
 	ExpectedSnapshotID  string   `json:"expected_snapshot_id" jsonschema:"required"`
@@ -32,6 +34,7 @@ func changeAnnotations() *mcp.ToolAnnotations {
 	return &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(false), IdempotentHint: false, OpenWorldHint: boolPtr(false)}
 }
 
+// RegisterChangeTools registers private Change Contract continuity operations.
 func RegisterChangeTools(server *mcp.Server, runtime *Runtime) {
 	mcp.AddTool(server, &mcp.Tool{Name: "go_begin_change", Description: "Creates a private Change Contract for continuity; does not edit source.", Annotations: changeAnnotations()}, runtime.beginChange)
 	mcp.AddTool(server, &mcp.Tool{Name: "go_checkpoint_change", Description: "Updates a private Change Contract with structural drift; does not edit source.", Annotations: changeAnnotations()}, runtime.checkpointChange)

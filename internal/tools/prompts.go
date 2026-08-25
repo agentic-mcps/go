@@ -90,5 +90,6 @@ Call go_verify_change exactly once with base="{{.base}}". Treat the returned pol
 
 var understandChangeTemplate = template.Must(template.New("understand-change").Parse(`Begin a private change contract for base {{.base}} and goal "{{.goal}}".
 Call go_begin_change exactly once with base="{{.base}}" and goal="{{.goal}}". Then use source-grounded context to understand the workspace before editing. The contract does not edit source.`))
+
 var resumeChangeTemplate = template.Must(template.New("resume-change").Parse(`Read agentic-go://change-contract/current before continuing.
 Inspect the current private Change Contract and call go_checkpoint_change exactly once with its contract_id and expected_snapshot_id. Treat stale snapshots and policy violations as signals to stop and reorient before editing.`))

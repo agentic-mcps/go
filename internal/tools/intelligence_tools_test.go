@@ -9,7 +9,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type fakeIntelligence struct {
+type fakeIntelligence struct { //nolint:govet // Test requests are grouped by operation.
 	brief      intelligence.BriefRequest
 	search     intelligence.SearchRequest
 	symbol     intelligence.SymbolRequest
@@ -153,13 +153,13 @@ func TestIntelligenceResourcesReturnCapabilitiesAndArtifactChunks(t *testing.T) 
 		t.Fatal(err)
 	}
 	var chunk intelligence.ArtifactChunk
-	if err := json.Unmarshal([]byte(artifact.Contents[0].Text), &chunk); err != nil {
-		t.Fatal(err)
+	if decodeErr := json.Unmarshal([]byte(artifact.Contents[0].Text), &chunk); decodeErr != nil {
+		t.Fatal(decodeErr)
 	}
 	if chunk.ID != "cursor_1" || chunk.Text != "detail" {
 		t.Fatalf("artifact = %#v", chunk)
 	}
-	if _, err := runtime.artifactResource(context.Background(), &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: "agentic-go://artifact/a/b"}}); err == nil {
+	if _, resourceErr := runtime.artifactResource(context.Background(), &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: "agentic-go://artifact/a/b"}}); resourceErr == nil {
 		t.Fatal("artifact resource accepted a nested path")
 	}
 	contractResource, err := runtime.currentChangeContractResource(context.Background(), &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: changeContractCurrentURI}})
@@ -167,7 +167,7 @@ func TestIntelligenceResourcesReturnCapabilitiesAndArtifactChunks(t *testing.T) 
 		t.Fatal(err)
 	}
 	var contract intelligence.ChangeContract
-	if err := json.Unmarshal([]byte(contractResource.Contents[0].Text), &contract); err != nil || contract.ID != "chg_current" || contract.Goal != "private goal" {
-		t.Fatalf("current contract = %#v, error %v", contract, err)
+	if decodeErr := json.Unmarshal([]byte(contractResource.Contents[0].Text), &contract); decodeErr != nil || contract.ID != "chg_current" || contract.Goal != "private goal" {
+		t.Fatalf("current contract = %#v, error %v", contract, decodeErr)
 	}
 }

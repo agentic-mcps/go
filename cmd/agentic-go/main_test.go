@@ -16,7 +16,7 @@ import (
 )
 
 func TestRunVerifyValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // Table fields follow request readability.
 		name string
 		want string
 		args []string
@@ -55,9 +55,10 @@ func TestRunVerifyRejectsUnpublishedOperationalFlags(t *testing.T) {
 }
 
 func TestRunContractExportValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
+	//nolint:govet // Table fields follow request readability.
 	tests := []struct {
-		name string
 		args []string
+		name string
 		want string
 	}{
 		{name: "missing subcommand", args: nil, want: "subcommand export is required"},

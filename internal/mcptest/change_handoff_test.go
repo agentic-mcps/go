@@ -35,11 +35,11 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
-	repository := handoffRepository(t, ctx)
-	binary := buildHandoffServer(t, ctx, sidecar)
+	repository := handoffRepository(ctx, t)
+	binary := buildHandoffServer(ctx, t, sidecar)
 
-	first := connectHandoffServer(t, ctx, binary, repository)
-	begin := callHandoffTool(t, ctx, first, "go_begin_change", map[string]any{
+	first := connectHandoffServer(ctx, t, binary, repository)
+	begin := callHandoffTool(ctx, t, first, "go_begin_change", map[string]any{
 		"base": "HEAD", "goal": "change Value API", "package": "./...",
 	})
 	if begin.IsError {
@@ -58,12 +58,12 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(repository, "value.go"), []byte("package handoff\n\nfunc Value(s string) string { return s }\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	second := connectHandoffServer(t, ctx, binary, repository)
-	current := readHandoffContract(t, ctx, second)
+	second := connectHandoffServer(ctx, t, binary, repository)
+	current := readHandoffContract(ctx, t, second)
 	if current.ID != contract.ID || current.RepositoryID != contract.RepositoryID || current.LatestSnapshot.ID != contract.LatestSnapshot.ID {
 		t.Fatalf("fresh process did not resume exact lineage: initial=%#v current=%#v", contract, current)
 	}
-	checkpoint := callHandoffTool(t, ctx, second, "go_checkpoint_change", map[string]any{
+	checkpoint := callHandoffTool(ctx, t, second, "go_checkpoint_change", map[string]any{
 		"contract_id": current.ID, "expected_snapshot_id": current.LatestSnapshot.ID,
 		"decisions": []string{"API change reviewed"}, "unresolved_questions": []string{},
 	})
@@ -74,7 +74,7 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	if !strings.Contains(string(checkpointJSON), "exported_api_change") {
 		t.Fatalf("checkpoint omitted exported API evidence: %s", checkpointJSON)
 	}
-	stale := callHandoffTool(t, ctx, second, "go_checkpoint_change", map[string]any{
+	stale := callHandoffTool(ctx, t, second, "go_checkpoint_change", map[string]any{
 		"contract_id": current.ID, "expected_snapshot_id": current.LatestSnapshot.ID,
 	})
 	if !stale.IsError {
@@ -84,8 +84,8 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	third := connectHandoffServer(t, ctx, binary, repository)
-	handoff := readHandoffContract(t, ctx, third)
+	third := connectHandoffServer(ctx, t, binary, repository)
+	handoff := readHandoffContract(ctx, t, third)
 	if handoff.ID != contract.ID || handoff.LatestSnapshot.ID == contract.LatestSnapshot.ID || len(handoff.Checkpoints) != 1 || len(handoff.Decisions) != 1 {
 		t.Fatalf("checkpoint lineage was not persisted across processes: %#v", handoff)
 	}
@@ -105,7 +105,7 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	}
 }
 
-func handoffRepository(t *testing.T, ctx context.Context) string {
+func handoffRepository(ctx context.Context, t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/handoff\n\ngo 1.25\n"), 0o644); err != nil {
@@ -131,7 +131,7 @@ func handoffRepository(t *testing.T, ctx context.Context) string {
 	return root
 }
 
-func buildHandoffServer(t *testing.T, ctx context.Context, sidecar string) string {
+func buildHandoffServer(ctx context.Context, t *testing.T, sidecar string) string {
 	t.Helper()
 	repositoryRoot, err := filepath.Abs(filepath.Join("..", ".."))
 	if err != nil {
@@ -149,7 +149,7 @@ func buildHandoffServer(t *testing.T, ctx context.Context, sidecar string) strin
 	return binary
 }
 
-func connectHandoffServer(t *testing.T, ctx context.Context, binary, repository string) *mcp.ClientSession {
+func connectHandoffServer(ctx context.Context, t *testing.T, binary, repository string) *mcp.ClientSession {
 	t.Helper()
 	client := mcp.NewClient(&mcp.Implementation{Name: "handoff-e2e", Version: "test"}, nil)
 	command := exec.CommandContext(ctx, binary, "--workspace", repository, "--max-tool-seconds", "30")
@@ -160,7 +160,7 @@ func connectHandoffServer(t *testing.T, ctx context.Context, binary, repository 
 	return session
 }
 
-func callHandoffTool(t *testing.T, ctx context.Context, session *mcp.ClientSession, name string, arguments map[string]any) *mcp.CallToolResult {
+func callHandoffTool(ctx context.Context, t *testing.T, session *mcp.ClientSession, name string, arguments map[string]any) *mcp.CallToolResult {
 	t.Helper()
 	result, err := session.CallTool(ctx, &mcp.CallToolParams{Name: name, Arguments: arguments})
 	if err != nil {
@@ -169,7 +169,7 @@ func callHandoffTool(t *testing.T, ctx context.Context, session *mcp.ClientSessi
 	return result
 }
 
-func readHandoffContract(t *testing.T, ctx context.Context, session *mcp.ClientSession) handoffContract {
+func readHandoffContract(ctx context.Context, t *testing.T, session *mcp.ClientSession) handoffContract {
 	t.Helper()
 	resource, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: "agentic-go://change-contract/current"})
 	if err != nil {

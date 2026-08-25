@@ -10,8 +10,10 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-const capabilitiesURI = "agentic-go://capabilities"
-const changeContractCurrentURI = "agentic-go://change-contract/current"
+const (
+	capabilitiesURI          = "agentic-go://capabilities"
+	changeContractCurrentURI = "agentic-go://change-contract/current"
+)
 
 type intelligenceResourceService interface {
 	Capabilities() intelligence.Capabilities

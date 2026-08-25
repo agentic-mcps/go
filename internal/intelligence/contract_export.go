@@ -108,10 +108,10 @@ func contractExportDestination(ws *workspace.Workspace, destination string) (str
 		return "", "", fmt.Errorf("export directory is not an existing contained directory")
 	}
 	target := filepath.Join(parent, filepath.Base(clean))
-	if _, err := os.Lstat(target); err == nil {
+	if _, statErr := os.Lstat(target); statErr == nil {
 		return "", "", fmt.Errorf("export destination already exists")
-	} else if !os.IsNotExist(err) {
-		return "", "", fmt.Errorf("inspecting export destination: %w", err)
+	} else if !os.IsNotExist(statErr) {
+		return "", "", fmt.Errorf("inspecting export destination: %w", statErr)
 	}
 	relative, err := filepath.Rel(ws.Root(), target)
 	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
@@ -139,8 +139,8 @@ func atomicCreatePrivate(path string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	if err := os.Link(temporaryPath, path); err != nil {
-		return err
+	if linkErr := os.Link(temporaryPath, path); linkErr != nil {
+		return linkErr
 	}
 	directory, err := os.Open(filepath.Dir(path))
 	if err != nil {

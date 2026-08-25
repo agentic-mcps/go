@@ -17,8 +17,8 @@ func TestExportChangeContractCreatesContainedPrivateCopy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Mkdir(filepath.Join(root, "handoff"), 0o755); err != nil {
-		t.Fatal(err)
+	if mkdirErr := os.Mkdir(filepath.Join(root, "handoff"), 0o755); mkdirErr != nil {
+		t.Fatal(mkdirErr)
 	}
 
 	exported, err := ExportChangeContract(context.Background(), core.workspace, core.runner, core.contracts, ContractExportRequest{
@@ -86,8 +86,8 @@ func TestExportChangeContractSelectsCurrentAndHonorsCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Mkdir(filepath.Join(root, "handoff"), 0o755); err != nil {
-		t.Fatal(err)
+	if mkdirErr := os.Mkdir(filepath.Join(root, "handoff"), 0o755); mkdirErr != nil {
+		t.Fatal(mkdirErr)
 	}
 	exported, err := ExportChangeContract(context.Background(), core.workspace, core.runner, core.contracts, ContractExportRequest{Destination: "handoff/current.json"})
 	if err != nil || exported.ContractID != contract.ID {
