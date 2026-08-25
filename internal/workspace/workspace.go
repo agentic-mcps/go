@@ -19,7 +19,15 @@ const minimumGoVersion = "go1.25"
 
 // Workspace is a validated, symlink-resolved Go workspace root.
 type Workspace struct {
-	root string
+	root       string
+	toolchain  Toolchain
+	requiredGo string
+}
+
+// Toolchain is the effective Go executable selected from the process PATH.
+type Toolchain struct {
+	Path    string `json:"path"`
+	Version string `json:"version"`
 }
 
 // Open validates root as a directory in an active Go module or workspace.
@@ -72,7 +80,11 @@ func Open(ctx context.Context, root string) (*Workspace, error) {
 		return nil, fmt.Errorf("validating Go workspace: no go.mod or active go.work module found")
 	}
 
-	return &Workspace{root: resolved}, nil
+	return &Workspace{
+		root:       resolved,
+		toolchain:  Toolchain{Path: selectedGo.Path, Version: selectedGo.Version},
+		requiredGo: requiredGo,
+	}, nil
 }
 
 type goToolchain struct {
@@ -232,6 +244,16 @@ func containsMainModule(output []byte) bool {
 // Root returns the absolute, symlink-resolved workspace root.
 func (w *Workspace) Root() string {
 	return w.root
+}
+
+// Toolchain returns the immutable effective Go toolchain recorded at preflight.
+func (w *Workspace) Toolchain() Toolchain {
+	return w.toolchain
+}
+
+// RequiredGo returns the highest Go version required by the active workspace.
+func (w *Workspace) RequiredGo() string {
+	return w.requiredGo
 }
 
 // Resolve resolves an existing path and rejects anything outside the workspace.

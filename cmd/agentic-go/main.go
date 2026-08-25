@@ -25,15 +25,22 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-var version = "0.2.0-dev"
+var version = "0.3.0-dev"
 
 func main() {
 	os.Exit(run(os.Args[1:]))
 }
 
 func run(args []string) int {
-	if len(args) > 0 && args[0] == "verify" {
-		return runVerify(args[1:], os.Stdout, os.Stderr)
+	if len(args) > 0 {
+		switch args[0] {
+		case "verify":
+			return runVerify(args[1:], os.Stdout, os.Stderr)
+		case "doctor":
+			return runDoctor(args[1:], os.Stdout, os.Stderr, defaultDoctorDependencies())
+		case "mcp-config":
+			return runMCPConfig(args[1:], os.Stdout, os.Stderr, defaultMCPConfigDependencies())
+		}
 	}
 	return runMCP(args)
 }
