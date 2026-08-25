@@ -29,7 +29,7 @@ func TestServerProtocolSurfaceAndTool(t *testing.T) {
 	if versionErr != nil {
 		t.Fatalf("agentic-go --version: %v\n%s", versionErr, versionOutput)
 	}
-	if string(versionOutput) != "agentic-go 0.1.0-dev\n" {
+	if string(versionOutput) != "agentic-go 0.2.0-dev\n" {
 		t.Fatalf("agentic-go --version = %q", versionOutput)
 	}
 

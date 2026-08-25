@@ -2,30 +2,43 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
+	"math"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/changeimpact"
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/tools"
 	"github.com/ashwingopalsamy/agentic-go/internal/trace"
+	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-var version = "0.1.0-dev"
+var version = "0.2.0-dev"
 
 func main() {
 	os.Exit(run(os.Args[1:]))
 }
 
 func run(args []string) int {
+	if len(args) > 0 && args[0] == "verify" {
+		return runVerify(args[1:], os.Stdout, os.Stderr)
+	}
+	return runMCP(args)
+}
+
+func runMCP(args []string) int {
 	flags := flag.NewFlagSet("agentic-go", flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
 	workspacePath := flags.String("workspace", ".", "Go workspace root")
@@ -107,6 +120,193 @@ func run(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+type optionalPercentage struct {
+	set   bool
+	value float64
+}
+
+func (p *optionalPercentage) String() string {
+	if p == nil || !p.set {
+		return ""
+	}
+	return strconv.FormatFloat(p.value, 'f', -1, 64)
+}
+
+func (p *optionalPercentage) Set(value string) error {
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) {
+		return fmt.Errorf("must be a finite number")
+	}
+	p.value, p.set = parsed, true
+	return nil
+}
+
+func runVerify(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("agentic-go verify", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	base := flags.String("base", "", "required local commit or ref")
+	workspacePath := flags.String("workspace", ".", "Go workspace root")
+	packagePattern := flags.String("package", "./...", "Go package scope")
+	format := flags.String("format", "text", "report format: text or json")
+	race := flags.Bool("race", false, "include race detection")
+	failOn := flags.String("fail-on", "error", "blocking analyzer severity: error, warning, info, or none")
+	maxPackages := flags.Int("max-packages", 200, "maximum affected package closure")
+	maxConcurrent := flags.Int("max-concurrent-loads", 4, "maximum concurrent Go and Git subprocesses")
+	maxToolSeconds := flags.Int("max-tool-seconds", 300, "whole-verification deadline in seconds")
+	var minimumCoverage optionalPercentage
+	flags.Var(&minimumCoverage, "min-changed-coverage", "optional changed-statement coverage minimum from 0 through 100")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintf(stderr, "agentic-go verify: unexpected arguments: %s\n", strings.Join(flags.Args(), " "))
+		return 2
+	}
+	if strings.TrimSpace(*base) == "" {
+		fmt.Fprintln(stderr, "agentic-go verify: --base is required")
+		return 2
+	}
+	if *format != "text" && *format != "json" {
+		fmt.Fprintf(stderr, "agentic-go verify: invalid --format %q (want text or json)\n", *format)
+		return 2
+	}
+	threshold := verification.FailOn(*failOn)
+	switch threshold {
+	case verification.FailOnError, verification.FailOnWarning, verification.FailOnInfo, verification.FailOnNone:
+	default:
+		fmt.Fprintf(stderr, "agentic-go verify: invalid --fail-on %q (want error, warning, info, or none)\n", *failOn)
+		return 2
+	}
+	if minimumCoverage.set && (minimumCoverage.value < 0 || minimumCoverage.value > 100) {
+		fmt.Fprintln(stderr, "agentic-go verify: --min-changed-coverage must be between 0 and 100")
+		return 2
+	}
+	if *maxPackages < 1 || *maxPackages > 500 {
+		fmt.Fprintln(stderr, "agentic-go verify: --max-packages must be between 1 and 500")
+		return 2
+	}
+	if *maxConcurrent < 1 {
+		fmt.Fprintln(stderr, "agentic-go verify: --max-concurrent-loads must be positive")
+		return 2
+	}
+	if *maxToolSeconds < 1 || *maxToolSeconds > 300 {
+		fmt.Fprintln(stderr, "agentic-go verify: --max-tool-seconds must be between 1 and 300")
+		return 2
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	ws, err := workspace.Open(ctx, *workspacePath)
+	if err != nil {
+		fmt.Fprintf(stderr, "agentic-go verify: workspace preflight failed: %v\n", err)
+		return 2
+	}
+	runner, err := execution.New(ws, execution.Config{
+		MaxConcurrent: *maxConcurrent,
+		Timeout:       time.Duration(*maxToolSeconds) * time.Second,
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "agentic-go verify: execution setup failed: %v\n", err)
+		return 2
+	}
+	impact, err := changeimpact.New(ws, runner)
+	if err != nil {
+		fmt.Fprintf(stderr, "agentic-go verify: change analysis setup failed: %v\n", err)
+		return 2
+	}
+	engine, err := verification.NewEngine(ws, runner, impact, version)
+	if err != nil {
+		fmt.Fprintf(stderr, "agentic-go verify: verification setup failed: %v\n", err)
+		return 2
+	}
+	request := verification.Request{
+		Base: *base, Package: *packagePattern, Race: *race, FailOn: threshold, MaxPackages: *maxPackages,
+	}
+	if minimumCoverage.set {
+		request.MinChangedCoverage = &minimumCoverage.value
+	}
+	report, err := engine.Verify(ctx, request)
+	if err != nil {
+		fmt.Fprintf(stderr, "agentic-go verify: %v\n", err)
+		return 2
+	}
+	if *format == "json" {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(report); err != nil {
+			fmt.Fprintf(stderr, "agentic-go verify: writing JSON report: %v\n", err)
+			return 2
+		}
+	} else if err := renderTextReport(stdout, report); err != nil {
+		fmt.Fprintf(stderr, "agentic-go verify: writing text report: %v\n", err)
+		return 2
+	}
+	return report.Result.ExitCode
+}
+
+func renderTextReport(writer io.Writer, report verification.Report) error {
+	write := func(format string, values ...any) error {
+		_, err := fmt.Fprintf(writer, format, values...)
+		return err
+	}
+	if err := write("agentic-go verification\n\nStatus: %s\n", report.Result.Status); err != nil {
+		return err
+	}
+	if err := write("Base: %s (%s)\nMerge-base: %s\nSnapshot: %s\n", report.Repository.RequestedBase, shortCommit(report.Repository.BaseCommit), shortCommit(report.Repository.MergeBaseCommit), report.Repository.SnapshotID); err != nil {
+		return err
+	}
+	if err := write("Change: %d files, %d declarations\nImpact: %d packages\n\nEvidence:\n", len(report.Change.Files), len(report.Change.Declarations), len(report.Impact.Packages)); err != nil {
+		return err
+	}
+	for _, evidence := range report.Evidence {
+		if err := write("- %s: %s — %s\n", evidence.Kind, evidence.Status, evidence.Summary); err != nil {
+			return err
+		}
+	}
+	if len(report.Findings) > 0 {
+		if err := write("\nFindings:\n"); err != nil {
+			return err
+		}
+		for _, finding := range report.Findings {
+			location := ""
+			if finding.Location != nil {
+				location = fmt.Sprintf("%s:%d: ", finding.Location.File, finding.Location.Line)
+			}
+			if err := write("- %s%s: %s\n", location, finding.Severity, finding.Message); err != nil {
+				return err
+			}
+		}
+	}
+	if len(report.Risks) > 0 {
+		if err := write("\nReview guidance:\n"); err != nil {
+			return err
+		}
+		for _, risk := range report.Risks {
+			if err := write("- %s: %s\n", risk.Code, risk.Guidance); err != nil {
+				return err
+			}
+		}
+	}
+	if len(report.Uncertainties) > 0 {
+		if err := write("\nUncertainty:\n"); err != nil {
+			return err
+		}
+		for _, uncertainty := range report.Uncertainties {
+			if err := write("- %s: %s\n", uncertainty.Code, uncertainty.Message); err != nil {
+				return err
+			}
+		}
+	}
+	return write("\n%s. A passing report does not prove the change safe.\n", report.Result.Summary)
+}
+
+func shortCommit(value string) string {
+	if len(value) > 12 {
+		return value[:12]
+	}
+	return value
 }
 
 func parseLogLevel(value string) (slog.Level, error) {
