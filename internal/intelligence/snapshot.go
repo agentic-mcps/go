@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
@@ -84,6 +85,9 @@ type SnapshotRequest struct {
 type Snapshotter struct {
 	workspace *workspace.Workspace
 	runner    *execution.Runner
+	mu        sync.RWMutex
+	manifests map[string][]contentRecord
+	order     []string
 }
 
 // NewSnapshotter constructs a snapshot source over shared contained execution.
@@ -94,7 +98,7 @@ func NewSnapshotter(ws *workspace.Workspace, runner *execution.Runner) (*Snapsho
 	if runner == nil {
 		return nil, fmt.Errorf("runner is nil")
 	}
-	return &Snapshotter{workspace: ws, runner: runner}, nil
+	return &Snapshotter{workspace: ws, runner: runner, manifests: make(map[string][]contentRecord)}, nil
 }
 
 // Capture observes the final worktree twice and rejects concurrent drift.
@@ -184,7 +188,28 @@ func (s *Snapshotter) capture(ctx context.Context, request SnapshotRequest) (Sna
 	}
 	identity.Write(capabilities)
 	state.ref.ID = fmt.Sprintf("sha256:%x", identity.Sum(nil))
+	s.remember(state.ref.ID, state.records)
 	return state.ref, nil
+}
+
+func (s *Snapshotter) remember(id string, records []contentRecord) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, exists := s.manifests[id]; !exists {
+		s.order = append(s.order, id)
+	}
+	s.manifests[id] = append([]contentRecord(nil), records...)
+	for len(s.order) > 32 {
+		delete(s.manifests, s.order[0])
+		s.order = s.order[1:]
+	}
+}
+
+func (s *Snapshotter) manifest(id string) ([]contentRecord, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	records, found := s.manifests[id]
+	return append([]contentRecord(nil), records...), found
 }
 
 func (s *Snapshotter) readState(ctx context.Context, request SnapshotRequest) (snapshotState, error) {
