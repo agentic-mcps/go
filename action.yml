@@ -1,0 +1,80 @@
+name: agentic-go verification
+description: Run the released agentic-go change verification report
+author: Ashwin Gopalsamy
+inputs:
+  version:
+    description: Released agentic-go version, with or without the leading v
+    required: false
+  base:
+    description: Pull request base commit SHA (derived from the event when omitted)
+    required: false
+  package:
+    description: Go package scope
+    default: ./...
+  race:
+    description: Include race detection
+    default: 'false'
+  fail-on:
+    description: Blocking finding severity
+    default: error
+  min-changed-coverage:
+    description: Optional changed-statement coverage threshold
+    required: false
+  max-packages:
+    description: Maximum affected package closure
+    default: '200'
+  enforce:
+    description: Fail the job for findings or incomplete verification
+    default: 'false'
+outputs:
+  report-path:
+    description: Absolute path to the JSON verification report
+    value: ${{ steps.verify.outputs.report-path }}
+  status:
+    description: Actual report result (pass, findings, or incomplete)
+    value: ${{ steps.verify.outputs.status }}
+runs:
+  using: composite
+  steps:
+    - name: Resolve release
+      id: release
+      shell: bash
+      env:
+        AGENTIC_VERSION_INPUT: ${{ inputs.version }}
+        AGENTIC_ACTION_REF: ${{ github.action_ref }}
+      run: node "$GITHUB_ACTION_PATH/scripts/action-release.mjs" "$AGENTIC_VERSION_INPUT" "$AGENTIC_ACTION_REF"
+    - name: Download agentic-go
+      shell: bash
+      env:
+        AGENTIC_VERSION: ${{ steps.release.outputs.version }}
+        AGENTIC_OS: ${{ steps.release.outputs.os }}
+        AGENTIC_ARCH: ${{ steps.release.outputs.arch }}
+        AGENTIC_ARCHIVE: ${{ steps.release.outputs.archive }}
+      run: |
+        set -euo pipefail
+        root="$(mktemp -d "$RUNNER_TEMP/agentic-go.XXXXXX")"
+        url="https://github.com/ashwingopalsamy/agentic-go/releases/download/v${AGENTIC_VERSION}/${AGENTIC_ARCHIVE}"
+        curl --fail --location --silent --show-error "$url" -o "$root/$AGENTIC_ARCHIVE"
+        curl --fail --location --silent --show-error "https://github.com/ashwingopalsamy/agentic-go/releases/download/v${AGENTIC_VERSION}/checksums.txt" -o "$root/checksums.txt"
+        bash "$GITHUB_ACTION_PATH/scripts/action-checksum.sh" "$root/checksums.txt" "$root/$AGENTIC_ARCHIVE"
+        tar -xzf "$root/$AGENTIC_ARCHIVE" -C "$root"
+        [ -x "$root/agentic-go" ] || { echo "agentic-go: archive does not contain an executable agentic-go binary" >&2; exit 2; }
+        echo "$root" >> "$GITHUB_PATH"
+    - name: Resolve comparison base
+      id: base
+      shell: bash
+      env:
+        AGENTIC_BASE_INPUT: ${{ inputs.base }}
+      run: node "$GITHUB_ACTION_PATH/scripts/action-base.mjs" "$AGENTIC_BASE_INPUT" "${GITHUB_EVENT_PATH:-}" "${GITHUB_BASE_REF:-}"
+    - name: Verify change
+      id: verify
+      shell: bash
+      env:
+        AGENTIC_BASE: ${{ steps.base.outputs.base }}
+        AGENTIC_PACKAGE: ${{ inputs.package }}
+        AGENTIC_RACE: ${{ inputs.race }}
+        AGENTIC_FAIL_ON: ${{ inputs.fail-on }}
+        AGENTIC_COVERAGE: ${{ inputs.min-changed-coverage }}
+        AGENTIC_MAX_PACKAGES: ${{ inputs.max-packages }}
+      run: |
+        bash "$GITHUB_ACTION_PATH/scripts/action-verify.sh" "$AGENTIC_BASE" "$AGENTIC_PACKAGE" "$AGENTIC_RACE" "$AGENTIC_FAIL_ON" "$AGENTIC_COVERAGE" "$AGENTIC_MAX_PACKAGES" "${{ inputs.enforce }}"

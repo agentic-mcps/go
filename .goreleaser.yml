@@ -27,9 +27,18 @@ builds:
       - arm64
 
 archives:
-  - formats:
+  - id: agentic-go
+    ids:
+      - agentic-go
+    formats:
       - tar.gz
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "agentic-go_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: agentic-go-vet
+    ids:
+      - agentic-go-vet
+    formats:
+      - tar.gz
+    name_template: "agentic-go-vet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: checksums.txt
