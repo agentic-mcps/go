@@ -85,7 +85,7 @@ func (a *Analyzer) Analyze(ctx context.Context, options Options) (Analysis, erro
 	if err != nil {
 		return Analysis{}, err
 	}
-	return analysis, nil
+	return a.computeImpact(callCtx, analysis, options)
 }
 
 func normalizeOptions(options *Options) error {
