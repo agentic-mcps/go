@@ -38,16 +38,16 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 11 {
-		t.Fatalf("len(tools/list) = %d, want 11", len(listed.Tools))
+	if len(listed.Tools) != 13 {
+		t.Fatalf("len(tools/list) = %d, want 13", len(listed.Tools))
 	}
 
 	resources, err := clientSession.ListResources(ctx, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resources.Resources) != 5 {
-		t.Fatalf("len(resources/list) = %d, want 5", len(resources.Resources))
+	if len(resources.Resources) != 6 {
+		t.Fatalf("len(resources/list) = %d, want 6", len(resources.Resources))
 	}
 	wantResources := map[string]bool{
 		"agentic-go://module":         false,
@@ -55,6 +55,7 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		"agentic-go://analysis-rules": false,
 		traceSummaryURI:               false,
 		capabilitiesURI:               false,
+		changeContractCurrentURI:      false,
 	}
 	templates, err := clientSession.ListResourceTemplates(ctx, nil)
 	if err != nil {
@@ -79,10 +80,10 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(prompts.Prompts) != 4 {
-		t.Fatalf("len(prompts/list) = %d, want 4", len(prompts.Prompts))
+	if len(prompts.Prompts) != 6 {
+		t.Fatalf("len(prompts/list) = %d, want 6", len(prompts.Prompts))
 	}
-	wantPrompts := map[string]bool{"audit-package": false, "pre-commit-check": false, "bisect-flake": false, "verify-change": false}
+	wantPrompts := map[string]bool{"audit-package": false, "pre-commit-check": false, "bisect-flake": false, "verify-change": false, "understand-change": false, "resume-change": false}
 	for _, prompt := range prompts.Prompts {
 		if _, ok := wantPrompts[prompt.Name]; !ok {
 			t.Fatalf("unexpected prompt %q", prompt.Name)
@@ -136,6 +137,36 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		annotations := tool.Annotations
 		if annotations == nil || !annotations.ReadOnlyHint || !annotations.IdempotentHint || annotations.DestructiveHint == nil || *annotations.DestructiveHint || annotations.OpenWorldHint == nil || *annotations.OpenWorldHint {
 			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
+		}
+	}
+	for _, name := range []string{"go_begin_change", "go_checkpoint_change"} {
+		tool := listedTool(t, listed.Tools, name)
+		annotations := tool.Annotations
+		if annotations == nil || annotations.ReadOnlyHint || annotations.IdempotentHint || annotations.DestructiveHint == nil || *annotations.DestructiveHint || annotations.OpenWorldHint == nil || *annotations.OpenWorldHint {
+			t.Fatalf("unexpected %s annotations: %+v", name, annotations)
+		}
+		for _, phrase := range []string{"private", "does not edit source"} {
+			if !strings.Contains(tool.Description, phrase) {
+				t.Errorf("%s description %q missing %q", name, tool.Description, phrase)
+			}
+		}
+	}
+	beginSchema, err := json.Marshal(listedTool(t, listed.Tools, "go_begin_change").InputSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{`"base"`, `"goal"`, `"package"`, `"focused_paths"`, `"focused_packages"`, `"focused_symbols"`, `"allowed_paths"`, `"policies"`} {
+		if !strings.Contains(string(beginSchema), field) {
+			t.Fatalf("go_begin_change input schema %s missing %s", beginSchema, field)
+		}
+	}
+	checkpointSchema, err := json.Marshal(listedTool(t, listed.Tools, "go_checkpoint_change").InputSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{`"contract_id"`, `"expected_snapshot_id"`, `"decisions"`, `"unresolved_questions"`} {
+		if !strings.Contains(string(checkpointSchema), field) {
+			t.Fatalf("go_checkpoint_change input schema %s missing %s", checkpointSchema, field)
 		}
 	}
 	for _, field := range []string{`"base"`, `"package"`, `"race"`, `"fail_on"`, `"min_changed_coverage"`, `"max_packages"`} {

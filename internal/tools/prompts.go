@@ -13,12 +13,14 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterPrompts registers the four workflow prompts.
+// RegisterPrompts registers the six workflow prompts.
 func RegisterPrompts(server *mcp.Server) {
 	server.AddPrompt(&mcp.Prompt{Name: "audit-package", Description: "Combine concurrency and error-handling audit findings for a Go package.", Arguments: requiredArgs("package", "Go package import path or ./relative/path")}, promptHandler("audit-package", []string{"package"}, auditPackageTemplate))
 	server.AddPrompt(&mcp.Prompt{Name: "pre-commit-check", Description: "Run tests, race detection, and coverage checks before committing a Go package.", Arguments: []*mcp.PromptArgument{{Name: "package", Description: "Go package import path or ./relative/path", Required: true}, {Name: "coverage_threshold", Description: "Minimum required overall coverage percentage", Required: true}}}, promptHandler("pre-commit-check", []string{"package", "coverage_threshold"}, preCommitTemplate))
 	server.AddPrompt(&mcp.Prompt{Name: "bisect-flake", Description: "Investigate flaky Go tests and correlate them with race reports.", Arguments: []*mcp.PromptArgument{{Name: "package", Description: "Go package import path or ./relative/path", Required: true}, {Name: "runs", Description: "Number of repeated flake-finder runs", Required: true}}}, promptHandler("bisect-flake", []string{"package", "runs"}, bisectFlakeTemplate))
 	server.AddPrompt(&mcp.Prompt{Name: "verify-change", Description: "Verify a local Go change once and interpret its source-grounded report.", Arguments: requiredArgs("base", "Local commit or ref to compare with HEAD and the final worktree")}, promptHandler("verify-change", []string{"base"}, verifyChangeTemplate))
+	server.AddPrompt(&mcp.Prompt{Name: "understand-change", Description: "Begin a private Change Contract and orient an agent before editing.", Arguments: []*mcp.PromptArgument{{Name: "base", Required: true}, {Name: "goal", Required: true}}}, promptHandler("understand-change", []string{"base", "goal"}, understandChangeTemplate))
+	server.AddPrompt(&mcp.Prompt{Name: "resume-change", Description: "Resume from the current private Change Contract and checkpoint before editing.", Arguments: nil}, promptHandler("resume-change", nil, resumeChangeTemplate))
 }
 
 func requiredArgs(name, description string) []*mcp.PromptArgument {
@@ -85,3 +87,8 @@ Call go_flake_finder with package="{{.package}}" and runs={{.runs}}. For each na
 
 var verifyChangeTemplate = template.Must(template.New("verify-change").Parse(`Verify the current Go repository change against base {{.base}}.
 Call go_verify_change exactly once with base="{{.base}}". Treat the returned policy result as automation state, not a safety verdict. Summarize the changed surface, affected packages, executed evidence, introduced findings, change-grounded risk guidance, and explicit uncertainties. Distinguish failed checks from unavailable evidence, retain source locations, and do not infer absence of risk from an absent trigger.`))
+
+var understandChangeTemplate = template.Must(template.New("understand-change").Parse(`Begin a private change contract for base {{.base}} and goal "{{.goal}}".
+Call go_begin_change exactly once with base="{{.base}}" and goal="{{.goal}}". Then use source-grounded context to understand the workspace before editing. The contract does not edit source.`))
+var resumeChangeTemplate = template.Must(template.New("resume-change").Parse(`Read agentic-go://change-contract/current before continuing.
+Inspect the current private Change Contract and call go_checkpoint_change exactly once with its contract_id and expected_snapshot_id. Treat stale snapshots and policy violations as signals to stop and reorient before editing.`))

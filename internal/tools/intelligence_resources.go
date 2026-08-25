@@ -11,20 +11,38 @@ import (
 )
 
 const capabilitiesURI = "agentic-go://capabilities"
+const changeContractCurrentURI = "agentic-go://change-contract/current"
 
 type intelligenceResourceService interface {
 	Capabilities() intelligence.Capabilities
 	ReadArtifact(context.Context, string, int64) (intelligence.ArtifactChunk, error)
+	CurrentChangeContract(context.Context) (intelligence.ChangeContract, error)
 }
 
 // RegisterIntelligenceResources publishes effective semantic capabilities and
 // snapshot-bound Context Pack detail artifacts.
 func RegisterIntelligenceResources(server *mcp.Server, runtime *Runtime) {
 	server.AddResource(&mcp.Resource{Name: "capabilities", Description: "Effective pinned-gopls capabilities and compact Context Pack limits.", URI: capabilitiesURI, MIMEType: "application/json"}, runtime.capabilitiesResource)
+	server.AddResource(&mcp.Resource{Name: "current-change-contract", Description: "The active private Change Contract for the current workspace.", URI: changeContractCurrentURI, MIMEType: "application/json"}, runtime.currentChangeContractResource)
 	server.AddResourceTemplate(&mcp.ResourceTemplate{
 		Name: "artifact", Description: "Reads one bounded chunk using the opaque cursor returned by a Context Pack.",
 		URITemplate: "agentic-go://artifact/{id}", MIMEType: "application/json",
 	}, runtime.artifactResource)
+}
+
+func (r *Runtime) currentChangeContractResource(ctx context.Context, request *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+	if err := resourceURI(request, changeContractCurrentURI); err != nil {
+		return nil, err
+	}
+	service, err := r.requireIntelligenceResources()
+	if err != nil {
+		return nil, err
+	}
+	contract, err := service.CurrentChangeContract(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("reading current change contract: %w", err)
+	}
+	return jsonResource(changeContractCurrentURI, contract)
 }
 
 func (r *Runtime) requireIntelligenceResources() (intelligenceResourceService, error) {
