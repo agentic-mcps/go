@@ -95,12 +95,22 @@ func TestRefactorRecoveryRestoresOnlyJournaledPostimages(t *testing.T) {
 	if err := os.WriteFile(second, []byte("old second\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	plan := refactorPlan{ID: "rfp_" + strings.Repeat("f", 64), RepositoryID: repositoryID, Files: []refactorFileEdit{
-		{Path: "first.go", PreimageDigest: digestBytes([]byte("old first\n")), PostimageDigest: digestBytes([]byte("new first\n")), Preimage: []byte("old first\n"), Postimage: []byte("new first\n")},
-		{Path: "second.go", PreimageDigest: digestBytes([]byte("old second\n")), PostimageDigest: digestBytes([]byte("new second\n")), Preimage: []byte("old second\n"), Postimage: []byte("new second\n")},
-	}}
+	plan, err := store.SavePlan(context.Background(), refactorPlan{
+		SchemaVersion: refactorPlanSchemaVersion, RepositoryID: repositoryID, Operation: RefactorFormat,
+		Snapshot: SnapshotRef{ID: "sha256:" + strings.Repeat("f", 64), RepositoryID: repositoryID},
+		Files: []refactorFileEdit{
+			{Path: "first.go", PreimageDigest: digestBytes([]byte("old first\n")), PostimageDigest: digestBytes([]byte("new first\n")), Preimage: []byte("old first\n"), Postimage: []byte("new first\n")},
+			{Path: "second.go", PreimageDigest: digestBytes([]byte("old second\n")), PostimageDigest: digestBytes([]byte("new second\n")), Preimage: []byte("old second\n"), Postimage: []byte("new second\n")},
+		}, Diff: "diff",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := store.BeginRecovery(context.Background(), plan); err != nil {
 		t.Fatal(err)
+	}
+	if err := store.BeginRecovery(context.Background(), plan); !errors.Is(err, ErrRefactorRecoveryRequired) {
+		t.Fatalf("second BeginRecovery() error = %v, want ErrRefactorRecoveryRequired", err)
 	}
 	recovered, err := store.Recover(context.Background(), repositoryID, root)
 	if err != nil {
@@ -132,9 +142,16 @@ func TestRefactorRecoveryRefusesDivergedFilesWithoutMutation(t *testing.T) {
 	if err := os.WriteFile(path, []byte("user edit\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	plan := refactorPlan{ID: "rfp_" + strings.Repeat("2", 64), RepositoryID: repositoryID, Files: []refactorFileEdit{{
-		Path: "value.go", PreimageDigest: digestBytes([]byte("old\n")), PostimageDigest: digestBytes([]byte("new\n")), Preimage: []byte("old\n"), Postimage: []byte("new\n"),
-	}}}
+	plan, err := store.SavePlan(context.Background(), refactorPlan{
+		SchemaVersion: refactorPlanSchemaVersion, RepositoryID: repositoryID, Operation: RefactorFormat,
+		Snapshot: SnapshotRef{ID: "sha256:" + strings.Repeat("2", 64), RepositoryID: repositoryID},
+		Files: []refactorFileEdit{{
+			Path: "value.go", PreimageDigest: digestBytes([]byte("old\n")), PostimageDigest: digestBytes([]byte("new\n")), Preimage: []byte("old\n"), Postimage: []byte("new\n"),
+		}}, Diff: "diff",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := store.BeginRecovery(context.Background(), plan); err != nil {
 		t.Fatal(err)
 	}

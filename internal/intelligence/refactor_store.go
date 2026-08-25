@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 )
@@ -157,7 +158,7 @@ func (s *RefactorStore) BeginRecovery(ctx context.Context, plan refactorPlan) er
 	if err := contextError(ctx); err != nil {
 		return err
 	}
-	if !validRepositoryID(plan.RepositoryID) || !validRefactorPlanID(plan.ID) || len(plan.Files) == 0 {
+	if err := validateRefactorPlan(plan, true); err != nil {
 		return ErrRefactorPlanCorrupt
 	}
 	if _, err := s.Pending(ctx, plan.RepositoryID); err == nil {
@@ -174,7 +175,10 @@ func (s *RefactorStore) BeginRecovery(ctx context.Context, plan refactorPlan) er
 	if err != nil {
 		return fmt.Errorf("encoding refactor recovery journal: %w", err)
 	}
-	if err := atomicWrite(s.recoveryPath(plan.RepositoryID), append(encoded, '\n')); err != nil {
+	if err := atomicCreateExclusive(s.recoveryPath(plan.RepositoryID), append(encoded, '\n')); err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return ErrRefactorRecoveryRequired
+		}
 		return fmt.Errorf("persisting refactor recovery journal: %w", err)
 	}
 	return contextError(ctx)
@@ -204,6 +208,11 @@ func (s *RefactorStore) Pending(ctx context.Context, repositoryID string) (refac
 			return refactorRecovery{}, ErrRefactorPlanCorrupt
 		}
 	}
+	for index := 1; index < len(journal.Files); index++ {
+		if journal.Files[index-1].Path >= journal.Files[index].Path {
+			return refactorRecovery{}, ErrRefactorPlanCorrupt
+		}
+	}
 	return journal, contextError(ctx)
 }
 
@@ -222,6 +231,10 @@ func (s *RefactorStore) Recover(ctx context.Context, repositoryID, root string) 
 	journal, err := s.Pending(ctx, repositoryID)
 	if err != nil {
 		return 0, err
+	}
+	plan, err := s.LoadPlan(ctx, repositoryID, journal.PlanID)
+	if err != nil || !reflect.DeepEqual(plan.Files, journal.Files) {
+		return 0, ErrRefactorPlanCorrupt
 	}
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
@@ -370,6 +383,34 @@ func atomicReplace(path string, contents []byte, mode os.FileMode) error {
 		return err
 	}
 	if err := os.Rename(tmpName, path); err != nil {
+		return err
+	}
+	return syncDirectory(filepath.Dir(path))
+}
+
+func atomicCreateExclusive(path string, contents []byte) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".agentic-go-journal-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+	defer func() { _ = os.Remove(tmpName) }()
+	if err = tmp.Chmod(0o600); err == nil {
+		_, err = tmp.Write(contents)
+	}
+	if err == nil {
+		err = tmp.Sync()
+	}
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		return err
+	}
+	if err := os.Link(tmpName, path); err != nil {
+		return err
+	}
+	if err := os.Remove(tmpName); err != nil {
 		return err
 	}
 	return syncDirectory(filepath.Dir(path))
