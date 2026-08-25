@@ -331,6 +331,10 @@ func newContractTestCoreWithStore(t *testing.T, root, contractRoot string) *Core
 	if err != nil {
 		t.Fatal(err)
 	}
+	refactors, err := NewRefactorStore(filepath.Join(t.TempDir(), "refactors"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	changes, err := changeimpact.New(snapshots.workspace, snapshots.runner)
 	if err != nil {
 		t.Fatal(err)
@@ -339,7 +343,7 @@ func newContractTestCoreWithStore(t *testing.T, root, contractRoot string) *Core
 		identity: SemanticIdentity{Version: "v0.21.0", Capabilities: CapabilityManifest{Diagnostics: true}},
 		reader:   &fakeSemanticReader{diagnostics: []Diagnostic{}},
 	}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, changes, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, refactors, changes, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}

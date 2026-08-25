@@ -41,7 +41,11 @@ func TestPinnedGoplsNormalizedIntelligenceContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, provider, artifacts, contracts, fakeChangeAnalyzer{}, fakeVerifier{})
+	refactors, err := NewRefactorStore(filepath.Join(t.TempDir(), "refactors"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, provider, artifacts, contracts, refactors, fakeChangeAnalyzer{}, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}

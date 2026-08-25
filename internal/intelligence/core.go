@@ -35,14 +35,17 @@ type storedSearch struct {
 // Core assembles adapter-independent intelligence from snapshot, semantic,
 // change-discovery, artifact, and verification infrastructure.
 type Core struct {
-	workspace *workspace.Workspace
-	runner    *execution.Runner
-	snapshots *Snapshotter
-	semantic  semanticProvider
-	artifacts *ArtifactStore
-	contracts *ContractStore
-	changes   verification.ChangeAnalyzer
-	verifier  verifier
+	workspace     *workspace.Workspace
+	runner        *execution.Runner
+	snapshots     *Snapshotter
+	semantic      semanticProvider
+	mutator       semanticMutator
+	artifacts     *ArtifactStore
+	contracts     *ContractStore
+	refactors     *RefactorStore
+	changes       verification.ChangeAnalyzer
+	verifier      verifier
+	refactorWrite func(string, []byte, os.FileMode) error
 }
 
 // NewCore constructs the supported pinned-gopls intelligence service. The
@@ -70,7 +73,11 @@ func NewCore(
 	if err != nil {
 		return nil, err
 	}
-	return newCore(ws, runner, snapshots, semantic, artifacts, contracts, changes, verify)
+	refactors, err := NewRefactorStore("")
+	if err != nil {
+		return nil, err
+	}
+	return newCore(ws, runner, snapshots, semantic, artifacts, contracts, refactors, changes, verify)
 }
 
 func newCore(
@@ -80,6 +87,7 @@ func newCore(
 	semantic semanticProvider,
 	artifacts *ArtifactStore,
 	contracts *ContractStore,
+	refactors *RefactorStore,
 	changes verification.ChangeAnalyzer,
 	verify verifier,
 ) (*Core, error) {
@@ -96,14 +104,21 @@ func newCore(
 		return nil, fmt.Errorf("artifact store is nil")
 	case contracts == nil:
 		return nil, fmt.Errorf("contract store is nil")
+	case refactors == nil:
+		return nil, fmt.Errorf("refactor store is nil")
 	case changes == nil:
 		return nil, fmt.Errorf("change analyzer is nil")
 	case verify == nil:
 		return nil, fmt.Errorf("verification engine is nil")
 	}
+	mutator, ok := semantic.(semanticMutator)
+	if !ok {
+		return nil, fmt.Errorf("semantic provider does not support guarded refactoring")
+	}
 	return &Core{
 		workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
-		artifacts: artifacts, contracts: contracts, changes: changes, verifier: verify,
+		mutator: mutator, artifacts: artifacts, contracts: contracts, refactors: refactors,
+		changes: changes, verifier: verify, refactorWrite: atomicReplace,
 	}, nil
 }
 

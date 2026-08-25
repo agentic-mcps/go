@@ -48,6 +48,7 @@ type refactorPlan struct {
 	Snapshot      SnapshotRef        `json:"snapshot"`
 	Files         []refactorFileEdit `json:"files"`
 	Diff          string             `json:"diff"`
+	DiffTruncated bool               `json:"diff_truncated"`
 }
 
 type refactorRecovery struct {

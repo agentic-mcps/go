@@ -12,9 +12,11 @@ import (
 )
 
 type fakeSemanticProvider struct {
-	reader   *fakeSemanticReader
-	identity SemanticIdentity
-	reads    int
+	reader        *fakeSemanticReader
+	identity      SemanticIdentity
+	refactorEdits []semanticFileEdits
+	refactorErr   error
+	reads         int
 }
 
 func (p *fakeSemanticProvider) Identity() SemanticIdentity { return p.identity }
@@ -225,11 +227,16 @@ func newTestCore(t *testing.T, snapshots *Snapshotter, reader *fakeSemanticReade
 	if err != nil {
 		t.Fatal(err)
 	}
+	refactors, err := NewRefactorStore(filepath.Join(t.TempDir(), "refactors"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	semantic := &fakeSemanticProvider{identity: SemanticIdentity{Version: "v0.21.0", Capabilities: CapabilityManifest{
 		WorkspaceSymbol: true, DocumentSymbol: true, Hover: true, Definition: true,
 		TypeDefinition: true, References: true, Implementation: true, Diagnostics: true,
+		Rename: true, Formatting: true, CodeAction: true,
 	}}, reader: reader}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, fakeChangeAnalyzer{}, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, refactors, fakeChangeAnalyzer{}, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}

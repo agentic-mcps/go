@@ -414,12 +414,20 @@ type RefactorRequest struct {
 //
 //nolint:govet // field order is the public JSON schema order.
 type RefactorResult struct {
-	PlanID        string        `json:"plan_id"`
-	Operation     string        `json:"operation"`
-	Snapshot      SnapshotRef   `json:"snapshot"`
-	Applied       bool          `json:"applied"`
-	Diff          string        `json:"diff"`
-	AffectedFiles []string      `json:"affected_files"`
-	Risks         []RiskArea    `json:"risks"`
-	Uncertainties []Uncertainty `json:"uncertainties"`
+	PlanID        string             `json:"plan_id"`
+	Operation     string             `json:"operation"`
+	Snapshot      SnapshotRef        `json:"snapshot"`
+	Applied       bool               `json:"applied"`
+	Diff          string             `json:"diff"`
+	AffectedFiles []string           `json:"affected_files"`
+	Preimages     []RefactorPreimage `json:"preimages"`
+	Risks         []RiskArea         `json:"risks"`
+	Uncertainties []Uncertainty      `json:"uncertainties"`
+}
+
+// RefactorPreimage binds one preview target to the content that may be
+// replaced by an explicitly approved apply.
+type RefactorPreimage struct {
+	Path   string `json:"path"`
+	Digest string `json:"digest"`
 }
