@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Bounded verification-report detail with explicit totals and truncation flags;
+  policy evaluates full evidence and findings, and the full impacted closure
+  drives planning and execution, before adapter display limits.
+
 - Change verification through `agentic-go verify`, the root GitHub Action, and
   the additive `go_verify_change` MCP tool, all sharing the
   `agentic.verify/v1alpha1` report contract.

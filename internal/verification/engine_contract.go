@@ -12,10 +12,10 @@ type ChangeOptions struct {
 // SourceFile retains the content used to derive one changed-file record. It is
 // an internal handoff from language-specific discovery to verification checks.
 type SourceFile struct {
-	Change         ChangedFile
 	BaseContent    []byte
 	CurrentContent []byte
 	Edits          []LineEdit
+	Change         ChangedFile
 }
 
 // LineEdit retains the paired zero-context hunk coordinates required to map
@@ -43,14 +43,14 @@ type ExecutionTarget struct {
 // ChangeAnalysis is the complete discovery handoff consumed by Engine.
 type ChangeAnalysis struct {
 	Repository       Repository
-	Change           Change
-	Impact           Impact
 	Files            []SourceFile
 	Packages         []ExecutionTarget
 	Uncertainties    []Uncertainty
 	Risks            []RiskArea
-	Complete         bool
+	Change           Change
+	Impact           Impact
 	ObservedPackages int
+	Complete         bool
 }
 
 // ChangeAnalyzer discovers the final source snapshot and affected unit closure.

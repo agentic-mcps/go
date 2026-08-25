@@ -11,6 +11,20 @@ import (
 // SchemaVersion identifies the portable v0.2 report contract.
 const SchemaVersion = "agentic.verify/v1alpha1"
 
+const (
+	maxVisibleChangedFiles         = 15
+	maxVisibleChangedRanges        = 5
+	maxVisibleChangedDeclarations  = 20
+	maxVisibleImpactedPackages     = 20
+	maxVisibleCheckTargets         = 20
+	maxVisibleTestPackages         = 20
+	maxVisibleNonpassingTests      = 20
+	maxVisibleFindings             = 50
+	maxVisibleCoverageRanges       = 20
+	maxVisibleRiskLocations        = 5
+	maxVisibleUncertaintyLocations = 5
+)
+
 // Severity is the portable importance of a finding.
 type Severity string
 
@@ -109,78 +123,112 @@ type Repository struct {
 }
 
 // ChangedFile is one path in the final change snapshot.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type ChangedFile struct {
-	Path          string      `json:"path"`
-	PreviousPath  string      `json:"previous_path,omitempty"`
-	Change        ChangeKind  `json:"change"`
-	BaseRanges    []LineRange `json:"base_ranges"`
-	CurrentRanges []LineRange `json:"current_ranges"`
+	Path                   string      `json:"path"`
+	PreviousPath           string      `json:"previous_path,omitempty"`
+	Change                 ChangeKind  `json:"change"`
+	BaseRanges             []LineRange `json:"base_ranges"`
+	BaseRangesTotal        int         `json:"base_ranges_total"`
+	BaseRangesTruncated    bool        `json:"base_ranges_truncated"`
+	CurrentRanges          []LineRange `json:"current_ranges"`
+	CurrentRangesTotal     int         `json:"current_ranges_total"`
+	CurrentRangesTruncated bool        `json:"current_ranges_truncated"`
 }
 
 // ChangedDeclaration is one source declaration intersecting a changed range.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type ChangedDeclaration struct {
-	BaseLocation    *Location  `json:"base_location,omitempty"`
-	CurrentLocation *Location  `json:"current_location,omitempty"`
 	Kind            string     `json:"kind"`
 	Package         string     `json:"package"`
 	Name            string     `json:"name"`
 	Change          ChangeKind `json:"change"`
+	BaseLocation    *Location  `json:"base_location,omitempty"`
+	CurrentLocation *Location  `json:"current_location,omitempty"`
 }
 
 // Change contains the source facts in a change snapshot.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type Change struct {
-	Files        []ChangedFile        `json:"files"`
-	Declarations []ChangedDeclaration `json:"declarations"`
+	Files                 []ChangedFile        `json:"files"`
+	FilesTotal            int                  `json:"files_total"`
+	FilesTruncated        bool                 `json:"files_truncated"`
+	Declarations          []ChangedDeclaration `json:"declarations"`
+	DeclarationsTotal     int                  `json:"declarations_total"`
+	DeclarationsTruncated bool                 `json:"declarations_truncated"`
 }
 
 // ImpactedPackage is one directly changed or reverse-dependent Go package.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type ImpactedPackage struct {
 	Kind     string   `json:"kind"`
 	ID       string   `json:"id"`
-	Reasons  []string `json:"reasons"`
 	Distance int      `json:"distance"`
+	Reasons  []string `json:"reasons"`
 }
 
 // Impact contains the conservative package closure for a change.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type Impact struct {
-	Packages []ImpactedPackage `json:"packages"`
+	Packages          []ImpactedPackage `json:"packages"`
+	PackagesTotal     int               `json:"packages_total"`
+	PackagesTruncated bool              `json:"packages_truncated"`
 }
 
 // Check is one semantic operation in a verification plan.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type Check struct {
-	ID       string    `json:"id"`
-	Kind     CheckKind `json:"kind"`
-	Reason   string    `json:"reason"`
-	Targets  []string  `json:"targets"`
-	Required bool      `json:"required"`
+	ID               string    `json:"id"`
+	Kind             CheckKind `json:"kind"`
+	Required         bool      `json:"required"`
+	Targets          []string  `json:"targets"`
+	TargetsTotal     int       `json:"targets_total"`
+	TargetsTruncated bool      `json:"targets_truncated"`
+	Reason           string    `json:"reason"`
 }
 
 // TestPackageSummary aggregates terminal test outcomes for one package.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type TestPackageSummary struct {
 	Package string `json:"package"`
 	Status  string `json:"status"`
-	Output  string `json:"output,omitempty"`
 	Passed  int    `json:"passed"`
 	Failed  int    `json:"failed"`
 	Skipped int    `json:"skipped"`
+	Output  string `json:"output,omitempty"`
 }
 
 // TestCaseSummary is a retained failed or skipped test case.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type TestCaseSummary struct {
 	Package  string  `json:"package"`
 	Name     string  `json:"name"`
 	Status   string  `json:"status"`
-	Output   string  `json:"output,omitempty"`
 	ElapsedS float64 `json:"elapsed_s"`
+	Output   string  `json:"output,omitempty"`
 }
 
 // TestSummary contains bounded test evidence without passing test records.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type TestSummary struct {
-	Packages   []TestPackageSummary `json:"packages"`
-	Nonpassing []TestCaseSummary    `json:"nonpassing"`
-	Passed     int                  `json:"passed"`
-	Failed     int                  `json:"failed"`
-	Skipped    int                  `json:"skipped"`
+	Passed              int                  `json:"passed"`
+	Failed              int                  `json:"failed"`
+	Skipped             int                  `json:"skipped"`
+	Packages            []TestPackageSummary `json:"packages"`
+	PackagesTotal       int                  `json:"packages_total"`
+	PackagesTruncated   bool                 `json:"packages_truncated"`
+	Nonpassing          []TestCaseSummary    `json:"nonpassing"`
+	NonpassingTotal     int                  `json:"nonpassing_total"`
+	NonpassingTruncated bool                 `json:"nonpassing_truncated"`
 }
 
 // SourceRange is a workspace-relative source range with a statement count.
@@ -194,11 +242,13 @@ type SourceRange struct {
 }
 
 // CoverageSummary contains statement-weighted coverage of changed code.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type CoverageSummary struct {
-	Uncovered          []SourceRange `json:"uncovered"`
 	TotalStatements    int           `json:"total_statements"`
 	CoveredStatements  int           `json:"covered_statements"`
 	Percent            float64       `json:"percent"`
+	Uncovered          []SourceRange `json:"uncovered"`
 	UncoveredTotal     int           `json:"uncovered_total"`
 	UncoveredTruncated bool          `json:"uncovered_truncated"`
 }
@@ -219,17 +269,19 @@ type RaceSummary struct {
 }
 
 // Evidence records the outcome of one planned check.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type Evidence struct {
+	CheckID    string           `json:"check_id"`
+	Kind       CheckKind        `json:"kind"`
+	Status     EvidenceStatus   `json:"status"`
+	DurationMS int64            `json:"duration_ms"`
+	Summary    string           `json:"summary"`
+	Error      string           `json:"error,omitempty"`
 	Tests      *TestSummary     `json:"tests,omitempty"`
 	Coverage   *CoverageSummary `json:"coverage,omitempty"`
 	Analysis   *AnalysisSummary `json:"analysis,omitempty"`
 	Race       *RaceSummary     `json:"race,omitempty"`
-	CheckID    string           `json:"check_id"`
-	Kind       CheckKind        `json:"kind"`
-	Status     EvidenceStatus   `json:"status"`
-	Summary    string           `json:"summary"`
-	Error      string           `json:"error,omitempty"`
-	DurationMS int64            `json:"duration_ms"`
 }
 
 // Finding is an observed issue produced by executed evidence.
@@ -245,43 +297,57 @@ type Finding struct {
 }
 
 // RiskArea is a change-grounded reason for focused review or another check.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type RiskArea struct {
-	Code      string     `json:"code"`
-	Reason    string     `json:"reason"`
-	Guidance  string     `json:"guidance"`
-	Locations []Location `json:"locations"`
+	Code               string     `json:"code"`
+	Reason             string     `json:"reason"`
+	Guidance           string     `json:"guidance"`
+	Locations          []Location `json:"locations"`
+	LocationsTotal     int        `json:"locations_total"`
+	LocationsTruncated bool       `json:"locations_truncated"`
 }
 
 // Uncertainty is a known limit on a report's conclusion.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type Uncertainty struct {
-	Code      string     `json:"code"`
-	Message   string     `json:"message"`
-	CheckID   string     `json:"check_id,omitempty"`
-	Locations []Location `json:"locations"`
+	Code               string     `json:"code"`
+	Message            string     `json:"message"`
+	CheckID            string     `json:"check_id,omitempty"`
+	Locations          []Location `json:"locations"`
+	LocationsTotal     int        `json:"locations_total"`
+	LocationsTruncated bool       `json:"locations_truncated"`
 }
 
 // PolicyResult is the report's automation result, not a safety verdict.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type PolicyResult struct {
 	Status           ResultStatus `json:"status"`
-	Summary          string       `json:"summary"`
 	ExitCode         int          `json:"exit_code"`
 	BlockingFindings int          `json:"blocking_findings"`
 	IncompleteChecks int          `json:"incomplete_checks"`
+	Summary          string       `json:"summary"`
 }
 
 // Report is the portable result shared by every delivery adapter.
+//
+//nolint:govet // Preserve the canonical JSON field order.
 type Report struct {
-	Provider      Provider      `json:"provider"`
-	SchemaVersion string        `json:"schema_version"`
-	Repository    Repository    `json:"repository"`
-	Change        Change        `json:"change"`
-	Impact        Impact        `json:"impact"`
-	Plan          []Check       `json:"plan"`
-	Evidence      []Evidence    `json:"evidence"`
-	Findings      []Finding     `json:"findings"`
-	Risks         []RiskArea    `json:"risks"`
-	Uncertainties []Uncertainty `json:"uncertainties"`
-	Result        PolicyResult  `json:"result"`
+	SchemaVersion     string        `json:"schema_version"`
+	Provider          Provider      `json:"provider"`
+	Repository        Repository    `json:"repository"`
+	Change            Change        `json:"change"`
+	Impact            Impact        `json:"impact"`
+	Plan              []Check       `json:"plan"`
+	Evidence          []Evidence    `json:"evidence"`
+	Findings          []Finding     `json:"findings"`
+	FindingsTotal     int           `json:"findings_total"`
+	FindingsTruncated bool          `json:"findings_truncated"`
+	Risks             []RiskArea    `json:"risks"`
+	Uncertainties     []Uncertainty `json:"uncertainties"`
+	Result            PolicyResult  `json:"result"`
 }
 
 // FailOn controls which introduced analyzer severities block policy.
@@ -330,6 +396,7 @@ func (r *Report) Finalize(policy Policy) error {
 		return err
 	}
 	r.initializeCollections()
+	r.aggregateLocalizedFacts()
 	r.sortCollections()
 
 	evidence := make(map[string]Evidence, len(r.Evidence))
@@ -370,6 +437,7 @@ func (r *Report) Finalize(policy Policy) error {
 		r.Result.ExitCode = 0
 		r.Result.Summary = "requested verification completed without blocking findings"
 	}
+	r.truncateDetails()
 	return nil
 }
 
@@ -483,6 +551,14 @@ func (r *Report) initializeCollections() {
 
 func (r *Report) sortCollections() {
 	sort.Slice(r.Change.Files, func(i, j int) bool { return r.Change.Files[i].Path < r.Change.Files[j].Path })
+	for index := range r.Change.Files {
+		sort.Slice(r.Change.Files[index].BaseRanges, func(i, j int) bool {
+			return lineRangeSortKey(r.Change.Files[index].BaseRanges[i]) < lineRangeSortKey(r.Change.Files[index].BaseRanges[j])
+		})
+		sort.Slice(r.Change.Files[index].CurrentRanges, func(i, j int) bool {
+			return lineRangeSortKey(r.Change.Files[index].CurrentRanges[i]) < lineRangeSortKey(r.Change.Files[index].CurrentRanges[j])
+		})
+	}
 	sort.Slice(r.Change.Declarations, func(i, j int) bool {
 		left := r.Change.Declarations[i].Package + "\x00" + r.Change.Declarations[i].Name
 		right := r.Change.Declarations[j].Package + "\x00" + r.Change.Declarations[j].Name
@@ -522,10 +598,106 @@ func (r *Report) sortCollections() {
 		right := findingSortKey(r.Findings[j])
 		return left < right
 	})
+	for index := range r.Risks {
+		r.Risks[index].Locations = sortAndDeduplicateLocations(r.Risks[index].Locations)
+	}
 	sort.Slice(r.Risks, func(i, j int) bool { return riskSortKey(r.Risks[i]) < riskSortKey(r.Risks[j]) })
+	for index := range r.Uncertainties {
+		r.Uncertainties[index].Locations = sortAndDeduplicateLocations(r.Uncertainties[index].Locations)
+	}
 	sort.Slice(r.Uncertainties, func(i, j int) bool {
 		return uncertaintySortKey(r.Uncertainties[i]) < uncertaintySortKey(r.Uncertainties[j])
 	})
+}
+
+func (r *Report) aggregateLocalizedFacts() {
+	risks := make([]RiskArea, 0, len(r.Risks))
+	riskIndexes := make(map[string]int, len(r.Risks))
+	for _, item := range r.Risks {
+		key := strings.Join([]string{item.Code, item.Reason, item.Guidance}, "\x00")
+		index, exists := riskIndexes[key]
+		if !exists {
+			item.Locations = append(make([]Location, 0, len(item.Locations)), item.Locations...)
+			riskIndexes[key] = len(risks)
+			risks = append(risks, item)
+			continue
+		}
+		risks[index].Locations = append(risks[index].Locations, item.Locations...)
+	}
+	r.Risks = risks
+
+	uncertainties := make([]Uncertainty, 0, len(r.Uncertainties))
+	uncertaintyIndexes := make(map[string]int, len(r.Uncertainties))
+	for _, item := range r.Uncertainties {
+		key := strings.Join([]string{item.Code, item.CheckID, item.Message}, "\x00")
+		index, exists := uncertaintyIndexes[key]
+		if !exists {
+			item.Locations = append(make([]Location, 0, len(item.Locations)), item.Locations...)
+			uncertaintyIndexes[key] = len(uncertainties)
+			uncertainties = append(uncertainties, item)
+			continue
+		}
+		uncertainties[index].Locations = append(uncertainties[index].Locations, item.Locations...)
+	}
+	r.Uncertainties = uncertainties
+}
+
+func (r *Report) truncateDetails() {
+	for index := range r.Change.Files {
+		file := &r.Change.Files[index]
+		file.BaseRanges, file.BaseRangesTotal, file.BaseRangesTruncated = boundDetails(file.BaseRanges, maxVisibleChangedRanges)
+		file.CurrentRanges, file.CurrentRangesTotal, file.CurrentRangesTruncated = boundDetails(file.CurrentRanges, maxVisibleChangedRanges)
+	}
+	r.Change.Files, r.Change.FilesTotal, r.Change.FilesTruncated = boundDetails(r.Change.Files, maxVisibleChangedFiles)
+	r.Change.Declarations, r.Change.DeclarationsTotal, r.Change.DeclarationsTruncated = boundDetails(r.Change.Declarations, maxVisibleChangedDeclarations)
+	r.Impact.Packages, r.Impact.PackagesTotal, r.Impact.PackagesTruncated = boundDetails(r.Impact.Packages, maxVisibleImpactedPackages)
+
+	for index := range r.Plan {
+		check := &r.Plan[index]
+		check.Targets, check.TargetsTotal, check.TargetsTruncated = boundDetails(check.Targets, maxVisibleCheckTargets)
+	}
+	for index := range r.Evidence {
+		if tests := r.Evidence[index].Tests; tests != nil {
+			tests.Packages, tests.PackagesTotal, tests.PackagesTruncated = boundDetails(tests.Packages, maxVisibleTestPackages)
+			tests.Nonpassing, tests.NonpassingTotal, tests.NonpassingTruncated = boundDetails(tests.Nonpassing, maxVisibleNonpassingTests)
+		}
+		if coverage := r.Evidence[index].Coverage; coverage != nil {
+			coverage.Uncovered, coverage.UncoveredTotal, coverage.UncoveredTruncated = boundDetails(coverage.Uncovered, maxVisibleCoverageRanges)
+		}
+	}
+	r.Findings, r.FindingsTotal, r.FindingsTruncated = boundDetails(r.Findings, maxVisibleFindings)
+	for index := range r.Risks {
+		risk := &r.Risks[index]
+		risk.Locations, risk.LocationsTotal, risk.LocationsTruncated = boundDetails(risk.Locations, maxVisibleRiskLocations)
+	}
+	for index := range r.Uncertainties {
+		uncertainty := &r.Uncertainties[index]
+		uncertainty.Locations, uncertainty.LocationsTotal, uncertainty.LocationsTruncated = boundDetails(uncertainty.Locations, maxVisibleUncertaintyLocations)
+	}
+}
+
+func boundDetails[T any](items []T, limit int) ([]T, int, bool) {
+	total := len(items)
+	if total <= limit {
+		return items, total, false
+	}
+	visible := make([]T, limit)
+	copy(visible, items[:limit])
+	return visible, total, true
+}
+
+func sortAndDeduplicateLocations(locations []Location) []Location {
+	sort.Slice(locations, func(i, j int) bool { return locationSortKey(locations[i]) < locationSortKey(locations[j]) })
+	if len(locations) < 2 {
+		return locations
+	}
+	result := locations[:1]
+	for _, item := range locations[1:] {
+		if item != result[len(result)-1] {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 func findingSortKey(item Finding) string {
@@ -554,4 +726,12 @@ func uncertaintySortKey(item Uncertainty) string {
 
 func sourceRangeSortKey(item SourceRange) string {
 	return fmt.Sprintf("%s:%09d:%09d:%09d:%09d", item.File, item.StartLine, item.StartCol, item.EndLine, item.EndCol)
+}
+
+func lineRangeSortKey(item LineRange) string {
+	return fmt.Sprintf("%09d:%09d", item.Start, item.End)
+}
+
+func locationSortKey(item Location) string {
+	return fmt.Sprintf("%s:%09d:%09d", item.File, item.Line, item.Col)
 }

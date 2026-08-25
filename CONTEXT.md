@@ -54,3 +54,13 @@ The report's automation state: requested evidence passed policy, blocking
 findings were observed, or required evidence was incomplete.
 _Avoid_: Safety verdict, confidence score
 
+## Bounded report detail
+
+The report evaluates complete evidence and findings before truncating any
+display collection. Adapters must preserve and expose each collection's total
+and truncation flag; omitted records are not evidence of safety. The full
+impacted closure still drives planning and execution before display
+truncation. The caps are 15 changed files, 5 base/current ranges per changed
+file, 20 declarations, 20 impacted packages, 20 check targets, 20 test package
+summaries, 20 nonpassing tests, 50 findings, 5 locations per risk or
+uncertainty, and 20 uncovered coverage ranges.

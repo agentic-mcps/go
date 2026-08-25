@@ -57,11 +57,22 @@ machine-readable authority. Collections are non-null and deterministically
 ordered, source locations are workspace-relative, and reports contain no
 absolute workspace or run-cache paths. Result precedence is `incomplete`, then
 `findings`, then `pass`; `pass` means only that requested checks completed
-without policy-blocking evidence.
+without policy-blocking evidence. Bounded collections expose an integer total
+and boolean truncated field adjacent to the collection. The display caps are
+15 changed files, 5 base/current ranges per changed file, 20 changed
+declarations, 20 impacted packages, 20 check targets, 20 test package
+summaries, 20 nonpassing tests, 50 findings, 5 locations per risk or
+uncertainty, and 20 uncovered coverage ranges. Policy evaluates the complete
+evidence and findings, and the full impacted closure drives planning and
+execution, before display truncation; adapters must expose totals and
+truncation and must not infer safety from omitted records.
 
 The v0.2 MCP inventory is eight tools, four resources, and four prompts. The
 additive `go_verify_change` tool is the MCP adapter for the report; the seven
-v0.1 tool schemas and behavior remain compatible. MCP remains stdio-only.
+v0.1 tool schemas and behavior remain compatible. The tool's
+`structuredContent` is authoritative; its text content is a concise status
+fallback rather than a duplicate JSON serialization, so coding clients do not
+spend their output budget twice. MCP remains stdio-only.
 
 Verification may compile and run trusted repository code with the caller's
 privileges. Workspace containment, symlink resolution, cancellation,

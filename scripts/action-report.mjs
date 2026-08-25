@@ -14,7 +14,15 @@ if (process.env.GITHUB_STEP_SUMMARY) {
   const packages = report.impact?.packages ?? [];
   const direct = packages.filter((item) => item.distance === 0).length;
   const reverse = packages.filter((item) => item.distance > 0).length;
-  const lines = [`## agentic-go verification: ${result}`, '', report.result?.summary ?? 'No summary provided.', '', `Change: ${report.change?.files?.length ?? 0} files, ${report.change?.declarations?.length ?? 0} declarations`, `Impact: ${direct} direct, ${reverse} reverse-dependent packages`, `Evidence: ${(report.evidence ?? []).map((item) => `${item.kind}:${item.status}`).join(', ') || 'none'}`, `Findings: ${report.findings?.length ?? 0}`, `Risks: ${report.risks?.length ?? 0}`, `Uncertainties: ${report.uncertainties?.length ?? 0}`];
+  const files = report.change?.files ?? [];
+  const declarations = report.change?.declarations ?? [];
+  const findings = report.findings ?? [];
+  const total = (value, visible) => value ?? visible.length;
+  const shown = (value, truncated, visible) => `${total(value, visible)}${truncated ? ` (${visible.length} shown)` : ''}`;
+  const impact = report.impact?.packages_truncated
+    ? `Impact: ${total(report.impact?.packages_total, packages)} packages (${packages.length} shown; visible: ${direct} direct, ${reverse} reverse-dependent)`
+    : `Impact: ${direct} direct, ${reverse} reverse-dependent packages`;
+  const lines = [`## agentic-go verification: ${result}`, '', report.result?.summary ?? 'No summary provided.', '', `Change: ${shown(report.change?.files_total, report.change?.files_truncated, files)} files, ${shown(report.change?.declarations_total, report.change?.declarations_truncated, declarations)} declarations`, impact, `Evidence: ${(report.evidence ?? []).map((item) => `${item.kind}:${item.status}`).join(', ') || 'none'}`, `Findings: ${shown(report.findings_total, report.findings_truncated, findings)}`, `Risks: ${report.risks?.length ?? 0}`, `Uncertainties: ${report.uncertainties?.length ?? 0}`];
   fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
 }
 const commandEscape = (value) => String(value).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');

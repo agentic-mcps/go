@@ -244,7 +244,10 @@ func renderTextReport(writer io.Writer, report verification.Report) error {
 	if err := write("Base: %s (%s)\nMerge-base: %s\nSnapshot: %s\n", report.Repository.RequestedBase, shortCommit(report.Repository.BaseCommit), shortCommit(report.Repository.MergeBaseCommit), report.Repository.SnapshotID); err != nil {
 		return err
 	}
-	if err := write("Change: %d files, %d declarations\nImpact: %d packages\n\nEvidence:\n", len(report.Change.Files), len(report.Change.Declarations), len(report.Impact.Packages)); err != nil {
+	files := boundedCount(report.Change.FilesTotal, len(report.Change.Files), report.Change.FilesTruncated)
+	declarations := boundedCount(report.Change.DeclarationsTotal, len(report.Change.Declarations), report.Change.DeclarationsTruncated)
+	packages := boundedCount(report.Impact.PackagesTotal, len(report.Impact.Packages), report.Impact.PackagesTruncated)
+	if err := write("Change: %s files, %s declarations\nImpact: %s packages\n\nEvidence:\n", files, declarations, packages); err != nil {
 		return err
 	}
 	for _, evidence := range report.Evidence {
@@ -253,7 +256,11 @@ func renderTextReport(writer io.Writer, report verification.Report) error {
 		}
 	}
 	if len(report.Findings) > 0 {
-		if err := write("\nFindings:\n"); err != nil {
+		heading := "\nFindings:\n"
+		if report.FindingsTruncated {
+			heading = fmt.Sprintf("\nFindings (%d total; %d shown):\n", report.FindingsTotal, len(report.Findings))
+		}
+		if err := write("%s", heading); err != nil {
 			return err
 		}
 		for _, finding := range report.Findings {
@@ -287,6 +294,16 @@ func renderTextReport(writer io.Writer, report verification.Report) error {
 		}
 	}
 	return write("\n%s. A passing report does not prove the change safe.\n", report.Result.Summary)
+}
+
+func boundedCount(total, visible int, truncated bool) string {
+	if total < visible {
+		total = visible
+	}
+	if truncated {
+		return fmt.Sprintf("%d (%d shown)", total, visible)
+	}
+	return fmt.Sprintf("%d", total)
 }
 
 func shortCommit(value string) string {

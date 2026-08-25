@@ -64,7 +64,20 @@ func (r *Runtime) verifyChange(ctx context.Context, _ *mcp.CallToolRequest, inpu
 		return nil, verification.Report{}, fmt.Errorf("verifying change: %w", err)
 	}
 	r.recordVerifyTrace(input, started, report, trace.ErrorNone)
-	return nil, report, nil
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: verifyChangeTextSummary(report)}}}, report, nil
+}
+
+func verifyChangeTextSummary(report verification.Report) string {
+	return fmt.Sprintf(
+		"agentic-go verification %s (exit %d): %d changed files, %d changed declarations, %d affected packages, %d findings; the canonical %s report is in structuredContent",
+		report.Result.Status,
+		report.Result.ExitCode,
+		report.Change.FilesTotal,
+		report.Change.DeclarationsTotal,
+		report.Impact.PackagesTotal,
+		report.FindingsTotal,
+		report.SchemaVersion,
+	)
 }
 
 func normalizeVerifyChangeInput(input *VerifyChangeInput) error {
@@ -113,7 +126,15 @@ func (r *Runtime) recordVerifyTrace(input VerifyChangeInput, started time.Time, 
 	summary := ""
 	counts := make(map[string]int)
 	if kind == trace.ErrorNone {
-		summary = fmt.Sprintf("%s: %d affected packages, %d findings", report.Result.Status, len(report.Impact.Packages), len(report.Findings))
+		packageTotal := report.Impact.PackagesTotal
+		if packageTotal < len(report.Impact.Packages) {
+			packageTotal = len(report.Impact.Packages)
+		}
+		findingTotal := report.FindingsTotal
+		if findingTotal < len(report.Findings) {
+			findingTotal = len(report.Findings)
+		}
+		summary = fmt.Sprintf("%s: %d affected packages, %d findings", report.Result.Status, packageTotal, findingTotal)
 		for _, finding := range report.Findings {
 			counts[string(finding.Severity)]++
 		}

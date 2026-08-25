@@ -120,11 +120,6 @@ func (e *Engine) changedCoverage(analysis ChangeAnalysis, blocks []parser.Covera
 			EndLine: block.endLine, EndCol: block.endCol, Statements: statements,
 		})
 	}
-	result.UncoveredTotal = len(result.Uncovered)
-	if len(result.Uncovered) > maxUncoveredRanges {
-		result.Uncovered = result.Uncovered[:maxUncoveredRanges]
-		result.UncoveredTruncated = true
-	}
 	if result.TotalStatements > 0 {
 		result.Percent = 100 * float64(result.CoveredStatements) / float64(result.TotalStatements)
 	} else if len(changed) > 0 {

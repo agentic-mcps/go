@@ -153,8 +153,10 @@ the MCP process `PATH`, requires Go 1.25 or newer, and uses
 agentic-go also speaks stdio MCP for local coding agents. The v0.2 inventory is
 eight tools, four resources, and four prompts. The seven v0.1 tools retain
 their contracts; the additive `go_verify_change` tool returns the same report
-as the CLI and declares execution annotations so supporting clients can gate
-approval. The `verify-change` prompt invokes that operation once rather than
+as the CLI in authoritative `structuredContent`, with only a concise text
+fallback to avoid duplicating the report in client context. It declares
+execution annotations so supporting clients can gate approval. The
+`verify-change` prompt invokes that operation once rather than
 asking an agent to reconstruct a report from low-level tools.
 
 ## Analyzer CLI

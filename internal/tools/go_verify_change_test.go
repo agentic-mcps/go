@@ -60,6 +60,13 @@ func TestVerifyChangeToolReturnsCanonicalReport(t *testing.T) {
 	if called.IsError {
 		t.Fatalf("tools/call returned an MCP tool error: %+v", called.Content)
 	}
+	if len(called.Content) != 1 {
+		t.Fatalf("content blocks = %d, want one concise fallback", len(called.Content))
+	}
+	text, ok := called.Content[0].(*mcp.TextContent)
+	if !ok || !strings.Contains(text.Text, "report is in structuredContent") || len(text.Text) > 512 {
+		t.Fatalf("text fallback = %#v, want concise structured-content guidance", called.Content[0])
+	}
 	encoded, err := json.Marshal(called.StructuredContent)
 	if err != nil {
 		t.Fatal(err)

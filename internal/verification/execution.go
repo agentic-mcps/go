@@ -18,7 +18,6 @@ import (
 
 const (
 	verificationTestTimeout = 60 * time.Second
-	maxUncoveredRanges      = 200
 	maxCoverageProfileSize  = 8 << 20
 )
 

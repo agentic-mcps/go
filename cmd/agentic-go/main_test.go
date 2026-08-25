@@ -100,6 +100,32 @@ func TestRenderTextDoesNotClaimSafety(t *testing.T) {
 	}
 }
 
+func TestRenderTextDisclosesBoundedDetails(t *testing.T) {
+	report := verification.NewReport("0.2.0-test", verification.Repository{RequestedBase: "main"})
+	report.Change.Files = []verification.ChangedFile{{Path: "visible.go"}}
+	report.Change.FilesTotal = 3
+	report.Change.FilesTruncated = true
+	report.Change.Declarations = []verification.ChangedDeclaration{{Name: "Visible"}}
+	report.Change.DeclarationsTotal = 2
+	report.Change.DeclarationsTruncated = true
+	report.Findings = []verification.Finding{{Severity: verification.SeverityError, Message: "visible finding"}}
+	report.FindingsTotal = 4
+	report.FindingsTruncated = true
+
+	var output bytes.Buffer
+	if err := renderTextReport(&output, report); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"Change: 3 (1 shown) files, 2 (1 shown) declarations",
+		"Findings (4 total; 1 shown):",
+	} {
+		if !strings.Contains(output.String(), want) {
+			t.Fatalf("text output %q does not contain %q", output.String(), want)
+		}
+	}
+}
+
 func cliRepository(t *testing.T) string {
 	t.Helper()
 	repository := t.TempDir()

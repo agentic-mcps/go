@@ -13,6 +13,8 @@
     "plan",
     "evidence",
     "findings",
+    "findings_total",
+    "findings_truncated",
     "risks",
     "uncertainties",
     "result"
@@ -33,8 +35,11 @@
     },
     "findings": {
       "type": "array",
+      "maxItems": 50,
       "items": { "$ref": "#/$defs/finding" }
     },
+    "findings_total": { "type": "integer", "minimum": 0 },
+    "findings_truncated": { "type": "boolean" },
     "risks": {
       "type": "array",
       "items": { "$ref": "#/$defs/risk" }
@@ -102,19 +107,25 @@
     "changed_file": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "change", "base_ranges", "current_ranges"],
+      "required": ["path", "change", "base_ranges", "base_ranges_total", "base_ranges_truncated", "current_ranges", "current_ranges_total", "current_ranges_truncated"],
       "properties": {
         "path": { "type": "string", "minLength": 1 },
         "previous_path": { "type": "string", "minLength": 1 },
         "change": { "$ref": "#/$defs/change_kind" },
         "base_ranges": {
           "type": "array",
+          "maxItems": 5,
           "items": { "$ref": "#/$defs/line_range" }
         },
+        "base_ranges_total": { "type": "integer", "minimum": 0 },
+        "base_ranges_truncated": { "type": "boolean" },
         "current_ranges": {
           "type": "array",
+          "maxItems": 5,
           "items": { "$ref": "#/$defs/line_range" }
-        }
+        },
+        "current_ranges_total": { "type": "integer", "minimum": 0 },
+        "current_ranges_truncated": { "type": "boolean" }
       }
     },
     "changed_declaration": {
@@ -139,16 +150,22 @@
     "change": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["files", "declarations"],
+      "required": ["files", "files_total", "files_truncated", "declarations", "declarations_total", "declarations_truncated"],
       "properties": {
         "files": {
           "type": "array",
+          "maxItems": 15,
           "items": { "$ref": "#/$defs/changed_file" }
         },
+        "files_total": { "type": "integer", "minimum": 0 },
+        "files_truncated": { "type": "boolean" },
         "declarations": {
           "type": "array",
+          "maxItems": 20,
           "items": { "$ref": "#/$defs/changed_declaration" }
-        }
+        },
+        "declarations_total": { "type": "integer", "minimum": 0 },
+        "declarations_truncated": { "type": "boolean" }
       }
     },
     "impacted_package": {
@@ -177,12 +194,15 @@
     "impact": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["packages"],
+      "required": ["packages", "packages_total", "packages_truncated"],
       "properties": {
         "packages": {
           "type": "array",
+          "maxItems": 20,
           "items": { "$ref": "#/$defs/impacted_package" }
-        }
+        },
+        "packages_total": { "type": "integer", "minimum": 0 },
+        "packages_truncated": { "type": "boolean" }
       }
     },
     "check_kind": {
@@ -197,15 +217,18 @@
     "check": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "kind", "required", "targets", "reason"],
+      "required": ["id", "kind", "required", "targets", "targets_total", "targets_truncated", "reason"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "kind": { "$ref": "#/$defs/check_kind" },
         "required": { "type": "boolean" },
         "targets": {
           "type": "array",
+          "maxItems": 20,
           "items": { "type": "string", "minLength": 1 }
         },
+        "targets_total": { "type": "integer", "minimum": 0 },
+        "targets_truncated": { "type": "boolean" },
         "reason": { "type": "string" }
       }
     },
@@ -237,19 +260,25 @@
     "test_summary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["passed", "failed", "skipped", "packages", "nonpassing"],
+      "required": ["passed", "failed", "skipped", "packages", "packages_total", "packages_truncated", "nonpassing", "nonpassing_total", "nonpassing_truncated"],
       "properties": {
         "passed": { "type": "integer", "minimum": 0 },
         "failed": { "type": "integer", "minimum": 0 },
         "skipped": { "type": "integer", "minimum": 0 },
         "packages": {
           "type": "array",
+          "maxItems": 20,
           "items": { "$ref": "#/$defs/test_package" }
         },
+        "packages_total": { "type": "integer", "minimum": 0 },
+        "packages_truncated": { "type": "boolean" },
         "nonpassing": {
           "type": "array",
+          "maxItems": 20,
           "items": { "$ref": "#/$defs/test_case" }
-        }
+        },
+        "nonpassing_total": { "type": "integer", "minimum": 0 },
+        "nonpassing_truncated": { "type": "boolean" }
       }
     },
     "source_range": {
@@ -282,6 +311,7 @@
         "percent": { "type": "number", "minimum": 0, "maximum": 100 },
         "uncovered": {
           "type": "array",
+          "maxItems": 20,
           "items": { "$ref": "#/$defs/source_range" }
         },
         "uncovered_total": { "type": "integer", "minimum": 0 },
@@ -344,29 +374,35 @@
     "risk": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["code", "reason", "guidance", "locations"],
+      "required": ["code", "reason", "guidance", "locations", "locations_total", "locations_truncated"],
       "properties": {
         "code": { "type": "string", "minLength": 1 },
         "reason": { "type": "string" },
         "guidance": { "type": "string" },
         "locations": {
           "type": "array",
+          "maxItems": 5,
           "items": { "$ref": "#/$defs/location" }
-        }
+        },
+        "locations_total": { "type": "integer", "minimum": 0 },
+        "locations_truncated": { "type": "boolean" }
       }
     },
     "uncertainty": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["code", "message", "locations"],
+      "required": ["code", "message", "locations", "locations_total", "locations_truncated"],
       "properties": {
         "code": { "type": "string", "minLength": 1 },
         "message": { "type": "string" },
         "check_id": { "type": "string" },
         "locations": {
           "type": "array",
+          "maxItems": 5,
           "items": { "$ref": "#/$defs/location" }
-        }
+        },
+        "locations_total": { "type": "integer", "minimum": 0 },
+        "locations_truncated": { "type": "boolean" }
       }
     },
     "result": {
