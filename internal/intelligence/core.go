@@ -40,6 +40,7 @@ type Core struct {
 	snapshots *Snapshotter
 	semantic  semanticProvider
 	artifacts *ArtifactStore
+	contracts *ContractStore
 	changes   verification.ChangeAnalyzer
 	verifier  verifier
 }
@@ -65,7 +66,11 @@ func NewCore(
 	if err != nil {
 		return nil, err
 	}
-	return newCore(ws, runner, snapshots, semantic, artifacts, changes, verify)
+	contracts, err := NewContractStore("")
+	if err != nil {
+		return nil, err
+	}
+	return newCore(ws, runner, snapshots, semantic, artifacts, contracts, changes, verify)
 }
 
 func newCore(
@@ -74,6 +79,7 @@ func newCore(
 	snapshots *Snapshotter,
 	semantic semanticProvider,
 	artifacts *ArtifactStore,
+	contracts *ContractStore,
 	changes verification.ChangeAnalyzer,
 	verify verifier,
 ) (*Core, error) {
@@ -88,6 +94,8 @@ func newCore(
 		return nil, fmt.Errorf("semantic provider is nil")
 	case artifacts == nil:
 		return nil, fmt.Errorf("artifact store is nil")
+	case contracts == nil:
+		return nil, fmt.Errorf("contract store is nil")
 	case changes == nil:
 		return nil, fmt.Errorf("change analyzer is nil")
 	case verify == nil:
@@ -95,7 +103,7 @@ func newCore(
 	}
 	return &Core{
 		workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
-		artifacts: artifacts, changes: changes, verifier: verify,
+		artifacts: artifacts, contracts: contracts, changes: changes, verifier: verify,
 	}, nil
 }
 

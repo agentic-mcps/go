@@ -221,11 +221,15 @@ func newTestCore(t *testing.T, snapshots *Snapshotter, reader *fakeSemanticReade
 	if err != nil {
 		t.Fatal(err)
 	}
+	contracts, err := NewContractStore(filepath.Join(t.TempDir(), "contracts"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	semantic := &fakeSemanticProvider{identity: SemanticIdentity{Version: "v0.21.0", Capabilities: CapabilityManifest{
 		WorkspaceSymbol: true, DocumentSymbol: true, Hover: true, Definition: true,
 		TypeDefinition: true, References: true, Implementation: true, Diagnostics: true,
 	}}, reader: reader}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, fakeChangeAnalyzer{}, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, fakeChangeAnalyzer{}, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}

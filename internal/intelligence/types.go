@@ -383,14 +383,18 @@ type PolicyViolation struct {
 //
 //nolint:govet // field order is the public JSON schema order.
 type Checkpoint struct {
-	ContractID       string            `json:"contract_id"`
-	Previous         SnapshotRef       `json:"previous"`
-	Current          SnapshotRef       `json:"current"`
-	AffectedPackages []string          `json:"affected_packages"`
-	Diagnostics      []Diagnostic      `json:"diagnostics"`
-	Violations       []PolicyViolation `json:"violations"`
-	Uncertainties    []Uncertainty     `json:"uncertainties"`
-	RecordedAt       time.Time         `json:"recorded_at"`
+	ID                string            `json:"id"`
+	ContractID        string            `json:"contract_id"`
+	Previous          SnapshotRef       `json:"previous"`
+	Current           SnapshotRef       `json:"current"`
+	AffectedPackages  []string          `json:"affected_packages"`
+	AffectedTotal     int               `json:"affected_packages_total"`
+	AffectedTruncated bool              `json:"affected_packages_truncated"`
+	Diagnostics       []Diagnostic      `json:"diagnostics"`
+	Violations        []PolicyViolation `json:"violations"`
+	Uncertainties     []Uncertainty     `json:"uncertainties"`
+	Complete          bool              `json:"complete"`
+	RecordedAt        time.Time         `json:"recorded_at"`
 }
 
 // RefactorRequest previews or applies one deterministic semantic operation.
