@@ -35,3 +35,28 @@ type semanticProvider interface {
 	Read(context.Context, SnapshotRef, func(semanticReader) error) error
 	Identity() SemanticIdentity
 }
+
+// semanticMutator asks a language provider for source edits without applying
+// them. The provider wire format is normalized before crossing this seam.
+type semanticMutator interface {
+	Refactor(context.Context, SnapshotRef, semanticRefactorRequest) ([]semanticFileEdits, error)
+}
+
+type semanticRefactorRequest struct {
+	Operation string
+	File      string
+	Position  Position
+	NewName   string
+	Files     []string
+}
+
+type semanticFileEdits struct {
+	Path  string
+	Edits []semanticTextEdit
+}
+
+type semanticTextEdit struct {
+	Start   int
+	End     int
+	NewText string
+}

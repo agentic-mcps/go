@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
@@ -15,8 +16,15 @@ import (
 type fakeGoplsRPC struct {
 	responses map[string]json.RawMessage
 	notifies  []goplsNotification
+	requests  []goplsRequest
 	restarts  int
 	caps      gopls.Capabilities
+}
+
+type goplsRequest struct {
+	params     any
+	method     string
+	idempotent bool
 }
 
 type goplsNotification struct {
@@ -24,12 +32,111 @@ type goplsNotification struct {
 	method string
 }
 
-func (f *fakeGoplsRPC) Request(_ context.Context, method string, _ any, out any, _ bool) error {
+func (f *fakeGoplsRPC) Request(_ context.Context, method string, params any, out any, idempotent bool) error {
+	f.requests = append(f.requests, goplsRequest{method: method, params: params, idempotent: idempotent})
 	response, ok := f.responses[method]
 	if !ok {
 		return errors.New("unexpected request: " + method)
 	}
 	return json.Unmarshal(response, out)
+}
+
+func TestGoplsMutatorNormalizesUTF16RenameWithoutMutationRetry(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	writeSnapshotFile(t, root, "unicode.go", "package fixture\n\nvar πValue = 1\n")
+	rpc := &fakeGoplsRPC{responses: map[string]json.RawMessage{
+		"textDocument/rename": json.RawMessage(`{"changes":{"` + fileURI(snapshots.workspace.Root(), "unicode.go") + `":[{"range":{"start":{"line":2,"character":4},"end":{"line":2,"character":10}},"newText":"πRenamed"}]}}`),
+	}}
+	provider, err := newGoplsProvider(rpc, snapshots.workspace, snapshots)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := snapshots.Capture(context.Background(), SnapshotRequest{Semantic: provider.Identity()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	edits, err := provider.Refactor(context.Background(), snapshot, semanticRefactorRequest{
+		Operation: RefactorRename, File: "unicode.go", Position: Position{Line: 2, Character: 4}, NewName: "πRenamed",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(edits) != 1 || edits[0].Path != "unicode.go" || len(edits[0].Edits) != 1 || edits[0].Edits[0].Start != 21 || edits[0].Edits[0].End != 28 {
+		t.Fatalf("normalized edits = %#v", edits)
+	}
+	if len(rpc.requests) != 1 || rpc.requests[0].method != "textDocument/rename" || rpc.requests[0].idempotent {
+		t.Fatalf("requests = %#v", rpc.requests)
+	}
+	encoded, err := json.Marshal(rpc.requests[0].params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(encoded), `"newName":"πRenamed"`) {
+		t.Fatalf("rename params = %s", encoded)
+	}
+}
+
+func TestGoplsMutatorRejectsOverlapsAndResourceOperations(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	writeSnapshotFile(t, root, "value.go", "package fixture\n\nvar Value = 1\n")
+	for name, response := range map[string]string{
+		"overlap":  `{"changes":{"` + fileURI(snapshots.workspace.Root(), "value.go") + `":[{"range":{"start":{"line":2,"character":4},"end":{"line":2,"character":9}},"newText":"First"},{"range":{"start":{"line":2,"character":5},"end":{"line":2,"character":9}},"newText":"Second"}]}}`,
+		"resource": `{"documentChanges":[{"kind":"create","uri":"` + fileURI(snapshots.workspace.Root(), "created.go") + `"}]}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			rpc := &fakeGoplsRPC{responses: map[string]json.RawMessage{"textDocument/rename": json.RawMessage(response)}}
+			provider, err := newGoplsProvider(rpc, snapshots.workspace, snapshots)
+			if err != nil {
+				t.Fatal(err)
+			}
+			snapshot, err := snapshots.Capture(context.Background(), SnapshotRequest{Semantic: provider.Identity()})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = provider.Refactor(context.Background(), snapshot, semanticRefactorRequest{Operation: RefactorRename, File: "value.go", NewName: "Changed"})
+			if err == nil {
+				t.Fatal("Refactor() accepted unsafe workspace edit")
+			}
+		})
+	}
+}
+
+func TestGoplsMutatorRequestsFormattingAndAllowedCodeActions(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	writeSnapshotFile(t, root, "value.go", "package fixture\n\nvar Value=1\n")
+	for operation, testCase := range map[string]struct{ method, response string }{
+		RefactorFormat:          {"textDocument/formatting", `[{"range":{"start":{"line":2,"character":9},"end":{"line":2,"character":9}},"newText":" "}]`},
+		RefactorOrganizeImports: {"textDocument/codeAction", `[{"title":"Organize Imports","kind":"source.organizeImports","edit":{"changes":{"` + fileURI(snapshots.workspace.Root(), "value.go") + `":[{"range":{"start":{"line":2,"character":9},"end":{"line":2,"character":9}},"newText":" "}]}}}]`},
+		RefactorFixAll:          {"textDocument/codeAction", `[{"title":"Fix all","kind":"source.fixAll","edit":{"changes":{"` + fileURI(snapshots.workspace.Root(), "value.go") + `":[{"range":{"start":{"line":2,"character":9},"end":{"line":2,"character":9}},"newText":" "}]}}}]`},
+	} {
+		t.Run(operation, func(t *testing.T) {
+			rpc := &fakeGoplsRPC{responses: map[string]json.RawMessage{testCase.method: json.RawMessage(testCase.response)}}
+			provider, err := newGoplsProvider(rpc, snapshots.workspace, snapshots)
+			if err != nil {
+				t.Fatal(err)
+			}
+			snapshot, err := snapshots.Capture(context.Background(), SnapshotRequest{Semantic: provider.Identity()})
+			if err != nil {
+				t.Fatal(err)
+			}
+			edits, err := provider.Refactor(context.Background(), snapshot, semanticRefactorRequest{Operation: operation, Files: []string{"value.go"}})
+			if err != nil || len(edits) != 1 || len(edits[0].Edits) != 1 {
+				t.Fatalf("edits=%#v error=%v", edits, err)
+			}
+			if len(rpc.requests) != 1 || rpc.requests[0].method != testCase.method || rpc.requests[0].idempotent {
+				t.Fatalf("requests = %#v", rpc.requests)
+			}
+			if testCase.method == "textDocument/codeAction" {
+				encoded, marshalErr := json.Marshal(rpc.requests[0].params)
+				if marshalErr != nil || !strings.Contains(string(encoded), `"only":["source.`) {
+					t.Fatalf("code action params = %s, %v", encoded, marshalErr)
+				}
+			}
+		})
+	}
 }
 
 func (f *fakeGoplsRPC) Notify(method string, params any) error {
