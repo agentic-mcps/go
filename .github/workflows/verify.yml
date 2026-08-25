@@ -46,6 +46,30 @@ jobs:
       - name: Staticcheck
         run: '"$(go env GOPATH)/bin/staticcheck" ./...'
 
+  gopls-contract:
+    name: gopls contract / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+        with:
+          go-version: "1.27.x"
+          cache: true
+      - name: Build pinned sidecar
+        run: |
+          go mod download golang.org/x/tools/gopls@v0.21.0
+          gopls_source="$(go env GOMODCACHE)/golang.org/x/tools/gopls@v0.21.0"
+          (cd "$gopls_source" && GOTELEMETRY=off go build -mod=readonly -trimpath -ldflags='-X main.version=v0.21.0' -o "$RUNNER_TEMP/agentic-go-gopls" .)
+      - name: Run LSP contract
+        env:
+          AGENTIC_GO_GOPLS: ${{ runner.temp }}/agentic-go-gopls
+          GOTELEMETRY: "off"
+        run: go test ./internal/gopls -run '^TestPinnedSidecarContract$' -count=1
+
   golangci-lint:
     name: golangci-lint
     runs-on: ubuntu-latest
