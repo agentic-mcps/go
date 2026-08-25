@@ -19,7 +19,7 @@ type WorkspaceBriefInput struct {
 
 // SearchInput selects a page of workspace symbols.
 type SearchInput struct {
-	Query              string `json:"query" jsonschema:"required symbol query"`
+	Query              string `json:"query" jsonschema:"workspace symbol query"`
 	Package            string `json:"package,omitempty" jsonschema:"optional Go package scope"`
 	Limit              int    `json:"limit,omitempty" jsonschema:"maximum 100; default 20"`
 	Cursor             string `json:"cursor,omitempty" jsonschema:"snapshot-bound continuation cursor"`
