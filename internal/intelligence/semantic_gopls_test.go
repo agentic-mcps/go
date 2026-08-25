@@ -118,7 +118,9 @@ func TestGoplsProviderRestartsForConfigurationAndDoesNotAdvanceOnFailure(t *test
 }
 
 func TestGoplsReaderNormalizesSymbolsLocationsAndDiagnostics(t *testing.T) {
-	root := t.TempDir()
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	root = snapshots.workspace.Root()
 	if err := os.WriteFile(filepath.Join(root, "value.go"), []byte("package sample\n\nfunc Value() {}\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +132,7 @@ func TestGoplsReaderNormalizesSymbolsLocationsAndDiagnostics(t *testing.T) {
 		"textDocument/references":     json.RawMessage(`[{"uri":"file:///outside/value.go","range":{"start":{"line":0,"character":0},"end":{"line":0,"character":1}}}]`),
 		"textDocument/diagnostic":     json.RawMessage(`{"kind":"full","items":[{"range":{"start":{"line":2,"character":0},"end":{"line":2,"character":5}},"severity":2,"code":"unused","source":"compiler","message":"example"}]}`),
 	}}
-	reader := &goplsReader{p: &goplsProvider{manager: rpc, root: root}, snapshot: SnapshotRef{ID: "snapshot"}}
+	reader := &goplsReader{p: &goplsProvider{manager: rpc, root: root, workspace: snapshots.workspace}, snapshot: SnapshotRef{ID: "snapshot", Scope: "./..."}}
 	search, err := reader.Search(context.Background(), "Value")
 	if err != nil {
 		t.Fatal(err)
@@ -164,5 +166,42 @@ func TestGoplsReaderNormalizesSymbolsLocationsAndDiagnostics(t *testing.T) {
 	wantDiagnostic := Diagnostic{Source: "compiler", Code: "unused", Severity: "warning", Message: "example", Location: Location{File: "value.go", Line: 3, Column: 1, EndLine: 3, EndColumn: 6}}
 	if !reflect.DeepEqual(diagnostics, []Diagnostic{wantDiagnostic}) {
 		t.Fatalf("diagnostics=%#v want %#v", diagnostics, wantDiagnostic)
+	}
+}
+
+func TestGoplsReaderConvertsUTF16RangesToUTF8ByteColumns(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	root = snapshots.workspace.Root()
+	if err := os.WriteFile(filepath.Join(root, "unicode.go"), []byte("package sample\n\nvar πValue = 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	reader := &goplsReader{p: &goplsProvider{root: root, workspace: snapshots.workspace}}
+	location, err := reader.sourceLocation("unicode.go", rpcRange{
+		Start: rpcPos{Line: 2, Character: 4},
+		End:   rpcPos{Line: 2, Character: 10},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if location.Column != 5 || location.EndColumn != 12 {
+		t.Fatalf("location = %#v, want UTF-8 byte columns 5..12", location)
+	}
+}
+
+func TestGoplsReaderRejectsSymlinkedLocationOutsideWorkspace(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	outside := filepath.Join(t.TempDir(), "outside.go")
+	if err := os.WriteFile(outside, []byte("package outside\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(snapshots.workspace.Root(), "escape.go")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Fatal(err)
+	}
+	reader := &goplsReader{p: &goplsProvider{root: snapshots.workspace.Root(), workspace: snapshots.workspace}}
+	if file, ok := reader.file(fileURI(snapshots.workspace.Root(), "escape.go")); ok {
+		t.Fatalf("outside symlink accepted as %q", file)
 	}
 }

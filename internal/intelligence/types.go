@@ -40,7 +40,7 @@ type Provider struct {
 	Version string `json:"version"`
 }
 
-// Location is a workspace-relative, one-based source range.
+// Location is a workspace-relative, one-based UTF-8 byte source range.
 type Location struct {
 	File      string `json:"file"`
 	Line      int    `json:"line"`
@@ -101,6 +101,21 @@ type GuidanceRef struct {
 	Digest string `json:"digest"`
 }
 
+// ChangeContext is a compact, language-neutral view of local change impact.
+type ChangeContext struct {
+	Files                  []string `json:"files"`
+	FilesTotal             int      `json:"files_total"`
+	Declarations           []string `json:"declarations"`
+	DeclarationsTotal      int      `json:"declarations_total"`
+	DirectUnits            []string `json:"direct_units"`
+	DirectUnitsTotal       int      `json:"direct_units_total"`
+	ReverseDependents      []string `json:"reverse_dependents"`
+	ReverseDependentsTotal int      `json:"reverse_dependents_total"`
+	ObservedUnits          int      `json:"observed_units"`
+	Truncated              bool     `json:"truncated"`
+	Complete               bool     `json:"complete"`
+}
+
 // SymbolRef is an opaque snapshot-bound Go symbol identity.
 type SymbolRef string
 
@@ -135,6 +150,7 @@ type ContextPack struct {
 	Symbols       []SymbolMatch    `json:"symbols"`
 	Diagnostics   []Diagnostic     `json:"diagnostics"`
 	Guidance      []GuidanceRef    `json:"guidance"`
+	Change        *ChangeContext   `json:"change,omitempty"`
 	Risks         []RiskArea       `json:"risks"`
 	Uncertainties []Uncertainty    `json:"uncertainties"`
 	Totals        ContextTotals    `json:"totals"`
@@ -148,7 +164,6 @@ type BriefRequest struct {
 	Scope              string
 	ExpectedSnapshotID string
 	MaxBytes           int
-	Cursor             string
 }
 
 // SearchRequest selects a deterministic page of workspace symbols.
@@ -181,7 +196,8 @@ type SourcePosition struct {
 
 // SymbolFacets selects optional expensive symbol relationships.
 type SymbolFacets struct {
-	CallHierarchy bool `json:"call_hierarchy"`
+	CallHierarchy  bool `json:"call_hierarchy"`
+	TypeDefinition bool `json:"type_definition"`
 }
 
 // SymbolRequest resolves a stable ref or a compatibility source position.
@@ -222,21 +238,22 @@ type CallSet struct {
 
 // SymbolContext contains default source-grounded facets for one Go symbol.
 type SymbolContext struct {
-	SchemaVersion   string        `json:"schema_version"`
-	Provider        Provider      `json:"provider"`
-	Snapshot        SnapshotRef   `json:"snapshot"`
-	Symbol          SymbolMatch   `json:"symbol"`
-	Hover           string        `json:"hover"`
-	Definitions     LocationSet   `json:"definitions"`
-	TypeDefinitions LocationSet   `json:"type_definitions"`
-	References      LocationSet   `json:"references"`
-	Implementations SymbolSet     `json:"implementations"`
-	RelatedTests    LocationSet   `json:"related_tests"`
-	Diagnostics     []Diagnostic  `json:"diagnostics"`
-	Calls           CallSet       `json:"calls"`
-	Uncertainties   []Uncertainty `json:"uncertainties"`
-	Truncated       bool          `json:"truncated"`
-	NextCursor      string        `json:"next_cursor,omitempty"`
+	SchemaVersion    string        `json:"schema_version"`
+	Provider         Provider      `json:"provider"`
+	Snapshot         SnapshotRef   `json:"snapshot"`
+	Symbol           SymbolMatch   `json:"symbol"`
+	Hover            string        `json:"hover"`
+	Definitions      LocationSet   `json:"definitions"`
+	TypeDefinitions  LocationSet   `json:"type_definitions"`
+	References       LocationSet   `json:"references"`
+	Implementations  SymbolSet     `json:"implementations"`
+	RelatedTests     LocationSet   `json:"related_tests"`
+	Diagnostics      []Diagnostic  `json:"diagnostics"`
+	DiagnosticsTotal int           `json:"diagnostics_total"`
+	Calls            CallSet       `json:"calls"`
+	Uncertainties    []Uncertainty `json:"uncertainties"`
+	Truncated        bool          `json:"truncated"`
+	NextCursor       string        `json:"next_cursor,omitempty"`
 }
 
 // PolicyMode is the structural response to one machine-checkable change.

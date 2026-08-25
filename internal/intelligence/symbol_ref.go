@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var errInvalidSymbolRef = errors.New("invalid symbol reference")
@@ -14,6 +15,8 @@ var errInvalidSymbolRef = errors.New("invalid symbol reference")
 type symbolIdentity struct {
 	Version    int      `json:"v"`
 	SnapshotID string   `json:"snapshot"`
+	Base       string   `json:"base,omitempty"`
+	Scope      string   `json:"scope"`
 	Path       string   `json:"path"`
 	Position   Position `json:"position"`
 	Kind       string   `json:"kind"`
@@ -28,6 +31,9 @@ type Position struct {
 }
 
 func encodeSymbolRef(identity symbolIdentity) (SymbolRef, error) {
+	if identity.Scope == "" {
+		identity.Scope = "./..."
+	}
 	if identity.SnapshotID == "" || identity.Path == "" || identity.Kind == "" || identity.Qualified == "" || identity.Position.Line < 0 || identity.Position.Character < 0 {
 		return "", errInvalidSymbolRef
 	}
@@ -71,7 +77,7 @@ func decodeSymbolRef(ref SymbolRef) (symbolIdentity, error) {
 		return symbolIdentity{}, errInvalidSymbolRef
 	}
 	clean, cleanErr := cleanSnapshotPath(identity.Path)
-	if cleanErr != nil || clean != identity.Path || identity.SnapshotID == "" || identity.Kind == "" || identity.Qualified == "" || identity.Position.Line < 0 || identity.Position.Character < 0 {
+	if cleanErr != nil || clean != identity.Path || identity.SnapshotID == "" || identity.Scope == "" || strings.HasPrefix(identity.Scope, "-") || strings.ContainsRune(identity.Scope, 0) || identity.Kind == "" || identity.Qualified == "" || identity.Position.Line < 0 || identity.Position.Character < 0 {
 		return symbolIdentity{}, errInvalidSymbolRef
 	}
 	identity.Digest = digest

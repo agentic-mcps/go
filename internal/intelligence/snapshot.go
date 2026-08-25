@@ -188,17 +188,17 @@ func (s *Snapshotter) capture(ctx context.Context, request SnapshotRequest) (Sna
 	}
 	identity.Write(capabilities)
 	state.ref.ID = fmt.Sprintf("sha256:%x", identity.Sum(nil))
-	s.remember(state.ref.ID, state.records)
+	s.remember(state.ref, state.records)
 	return state.ref, nil
 }
 
-func (s *Snapshotter) remember(id string, records []contentRecord) {
+func (s *Snapshotter) remember(ref SnapshotRef, records []contentRecord) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, exists := s.manifests[id]; !exists {
-		s.order = append(s.order, id)
+	if _, exists := s.manifests[ref.ID]; !exists {
+		s.order = append(s.order, ref.ID)
 	}
-	s.manifests[id] = append([]contentRecord(nil), records...)
+	s.manifests[ref.ID] = append([]contentRecord(nil), records...)
 	for len(s.order) > 32 {
 		delete(s.manifests, s.order[0])
 		s.order = s.order[1:]

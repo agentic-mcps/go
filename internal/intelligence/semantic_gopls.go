@@ -7,6 +7,7 @@ import (
 	"go/parser"
 	"go/token"
 	"net/url"
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -15,6 +16,11 @@ import (
 
 	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+)
+
+const (
+	maxImplementationResolution = 100
+	maxCallHierarchyRoots       = 20
 )
 
 type goplsRPC interface {
@@ -217,28 +223,57 @@ func (r *goplsReader) file(uri string) (string, bool) {
 		return "", false
 	}
 	path := filepath.Clean(filepath.FromSlash(parsed.Path))
-	relative, err := filepath.Rel(r.p.root, path)
-	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+	relative, err := r.p.workspace.Relative(path)
+	if err != nil {
 		return "", false
 	}
-	return filepath.ToSlash(relative), true
+	return relative, true
 }
 
-func (r *goplsReader) location(raw rpcLocation) (Location, bool) {
+func (r *goplsReader) location(raw rpcLocation) (Location, bool, error) {
 	uri, sourceRange := raw.URI, raw.Range
 	if raw.TargetURI != "" {
 		uri, sourceRange = raw.TargetURI, raw.TargetSelectionRange
 	}
 	file, ok := r.file(uri)
 	if !ok {
-		return Location{}, false
+		return Location{}, false, nil
 	}
-	return normalizeLocation(file, sourceRange), true
+	location, err := r.sourceLocation(file, sourceRange)
+	return location, true, err
 }
 
-func normalizeLocation(file string, sourceRange rpcRange) Location {
-	return Location{File: file, Line: sourceRange.Start.Line + 1, Column: sourceRange.Start.Character + 1,
-		EndLine: sourceRange.End.Line + 1, EndColumn: sourceRange.End.Character + 1}
+func (r *goplsReader) sourceLocation(file string, sourceRange rpcRange) (Location, error) {
+	absolute, err := r.p.workspace.Resolve(file)
+	if err != nil {
+		return Location{}, fmt.Errorf("containing semantic location %s: %w", file, err)
+	}
+	contents, err := os.ReadFile(absolute)
+	if err != nil {
+		return Location{}, fmt.Errorf("reading semantic location %s: %w", file, err)
+	}
+	start, err := gopls.OffsetForPosition(contents, gopls.Position(sourceRange.Start))
+	if err != nil {
+		return Location{}, fmt.Errorf("converting semantic location start for %s: %w", file, err)
+	}
+	end, err := gopls.OffsetForPosition(contents, gopls.Position(sourceRange.End))
+	if err != nil {
+		return Location{}, fmt.Errorf("converting semantic location end for %s: %w", file, err)
+	}
+	line, column := byteLineColumn(contents, start)
+	endLine, endColumn := byteLineColumn(contents, end)
+	return Location{File: file, Line: line, Column: column, EndLine: endLine, EndColumn: endColumn}, nil
+}
+
+func byteLineColumn(contents []byte, offset int) (int, int) {
+	line, lineStart := 1, 0
+	for index, value := range contents[:offset] {
+		if value == '\n' {
+			line++
+			lineStart = index + 1
+		}
+	}
+	return line, offset - lineStart + 1
 }
 
 func (r *goplsReader) symbol(name string, kind int, packageName, file string, sourceRange rpcRange) (SymbolMatch, error) {
@@ -247,13 +282,18 @@ func (r *goplsReader) symbol(name string, kind int, packageName, file string, so
 		qualified = packageName + "." + name
 	}
 	ref, err := encodeSymbolRef(symbolIdentity{SnapshotID: r.snapshot.ID, Path: file,
+		Base: r.snapshot.RequestedBase, Scope: r.snapshot.Scope,
 		Position: Position{Line: sourceRange.Start.Line, Character: sourceRange.Start.Character},
 		Kind:     normalizedSymbolKind(kind), Package: packageName, Qualified: qualified})
 	if err != nil {
 		return SymbolMatch{}, err
 	}
+	location, err := r.sourceLocation(file, sourceRange)
+	if err != nil {
+		return SymbolMatch{}, err
+	}
 	return SymbolMatch{Ref: ref, Kind: normalizedSymbolKind(kind), Name: name, Qualified: qualified,
-		Package: packageName, Location: normalizeLocation(file, sourceRange)}, nil
+		Package: packageName, Location: location}, nil
 }
 
 func (r *goplsReader) Search(ctx context.Context, query string) (semanticSymbols, error) {
@@ -263,12 +303,16 @@ func (r *goplsReader) Search(ctx context.Context, query string) (semanticSymbols
 	}
 	result := semanticSymbols{Items: []SymbolMatch{}}
 	for _, candidate := range raw {
-		file, ok := r.file(candidate.Location.URI)
+		uri, sourceRange := candidate.Location.URI, candidate.Location.Range
+		if candidate.Location.TargetURI != "" {
+			uri, sourceRange = candidate.Location.TargetURI, candidate.Location.TargetSelectionRange
+		}
+		file, ok := r.file(uri)
 		if !ok {
 			result.Omitted++
 			continue
 		}
-		match, err := r.symbol(candidate.Name, candidate.Kind, candidate.ContainerName, file, candidate.Location.Range)
+		match, err := r.symbol(candidate.Name, candidate.Kind, candidate.ContainerName, file, sourceRange)
 		if err != nil {
 			return semanticSymbols{}, err
 		}
@@ -350,7 +394,10 @@ func (r *goplsReader) locations(ctx context.Context, method, file string, positi
 	}
 	result := semanticLocations{Items: []Location{}}
 	for _, candidate := range locations {
-		location, ok := r.location(candidate)
+		location, ok, locationErr := r.location(candidate)
+		if locationErr != nil {
+			return semanticLocations{}, locationErr
+		}
 		if !ok {
 			result.Omitted++
 			continue
@@ -398,7 +445,12 @@ func (r *goplsReader) Implementations(ctx context.Context, file string, position
 		return semanticSymbols{}, err
 	}
 	result := semanticSymbols{Items: []SymbolMatch{}, Omitted: locations.Omitted}
-	for _, location := range locations.Items {
+	limit := len(locations.Items)
+	if limit > maxImplementationResolution {
+		result.Omitted += limit - maxImplementationResolution
+		limit = maxImplementationResolution
+	}
+	for _, location := range locations.Items[:limit] {
 		match, symbolErr := r.SymbolAt(ctx, location.File, Position{Line: location.Line - 1, Character: location.Column - 1})
 		if symbolErr != nil {
 			result.Omitted++
@@ -429,9 +481,13 @@ func (r *goplsReader) Diagnostics(ctx context.Context, file string) ([]Diagnosti
 		if source == "" {
 			source = "gopls"
 		}
+		location, locationErr := r.sourceLocation(file, item.Range)
+		if locationErr != nil {
+			return nil, locationErr
+		}
 		result = append(result, Diagnostic{Source: source, Code: diagnosticCode(item.Code),
 			Severity: diagnosticSeverity(item.Severity), Message: item.Message,
-			Location: normalizeLocation(file, item.Range)})
+			Location: location})
 	}
 	sort.Slice(result, func(i, j int) bool {
 		left, right := result[i], result[j]
@@ -476,7 +532,12 @@ func (r *goplsReader) Calls(ctx context.Context, file string, position Position)
 		return semanticCalls{}, err
 	}
 	result := semanticCalls{Items: []CallEdge{}}
-	for _, item := range prepared {
+	limit := len(prepared)
+	if limit > maxCallHierarchyRoots {
+		result.Omitted += limit - maxCallHierarchyRoots
+		limit = maxCallHierarchyRoots
+	}
+	for _, item := range prepared[:limit] {
 		var incoming []struct {
 			From rpcCallItem `json:"from"`
 		}

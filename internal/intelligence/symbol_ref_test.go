@@ -9,7 +9,7 @@ import (
 
 func TestSymbolRefRoundTripAndSnapshotBinding(t *testing.T) {
 	want := symbolIdentity{
-		SnapshotID: "sha256:snapshot", Path: "pkg/value.go", Position: Position{Line: 4, Character: 7},
+		SnapshotID: "sha256:snapshot", Base: "main", Scope: "./pkg/...", Path: "pkg/value.go", Position: Position{Line: 4, Character: 7},
 		Kind: "go.function", Package: "example.test/pkg", Qualified: "example.test/pkg.Value",
 	}
 	ref, err := encodeSymbolRef(want)
@@ -20,7 +20,7 @@ func TestSymbolRefRoundTripAndSnapshotBinding(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.SnapshotID != want.SnapshotID || got.Path != want.Path || got.Position != want.Position || got.Qualified != want.Qualified {
+	if got.SnapshotID != want.SnapshotID || got.Base != want.Base || got.Scope != want.Scope || got.Path != want.Path || got.Position != want.Position || got.Qualified != want.Qualified {
 		t.Fatalf("decoded identity = %#v", got)
 	}
 	if err := requireSymbolSnapshot(got, SnapshotRef{ID: want.SnapshotID}); err != nil {

@@ -73,6 +73,9 @@ func inventoryPackages(ctx context.Context, ws *workspace.Workspace, runner *exe
 	packages := make([]inventoryPackage, 0)
 	seen := make(map[string]bool)
 	for {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		var item inventoryList
 		if err := decoder.Decode(&item); err != nil {
 			if errors.Is(err, io.EOF) {
@@ -100,15 +103,18 @@ func inventoryPackages(ctx context.Context, ws *workspace.Workspace, runner *exe
 	return packages, nil
 }
 
-func summarizeInventory(ws *workspace.Workspace, packages []inventoryPackage) ([]PackageSummary, []ModuleSummary, error) {
+func summarizeInventory(ctx context.Context, ws *workspace.Workspace, packages []inventoryPackage) ([]PackageSummary, []ModuleSummary, error) {
 	result := make([]PackageSummary, 0, len(packages))
 	modules := make(map[string]ModuleSummary)
 	for _, p := range packages {
+		if err := ctx.Err(); err != nil {
+			return nil, nil, err
+		}
 		rel, err := ws.Relative(p.Dir)
 		if err != nil {
 			return nil, nil, err
 		}
-		exported, generated, constrained, err := exportedInventory(p.Dir, append(append([]string{}, p.GoFiles...), p.CgoFiles...))
+		exported, generated, constrained, err := exportedInventory(ctx, p.Dir, append(append([]string{}, p.GoFiles...), p.CgoFiles...))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -129,10 +135,13 @@ func summarizeInventory(ws *workspace.Workspace, packages []inventoryPackage) ([
 	return result, ms, nil
 }
 
-func exportedInventory(dir string, files []string) ([]string, bool, bool, error) {
+func exportedInventory(ctx context.Context, dir string, files []string) ([]string, bool, bool, error) {
 	set := map[string]bool{}
 	generated, constrained := false, false
 	for _, name := range files {
+		if err := ctx.Err(); err != nil {
+			return nil, false, false, err
+		}
 		path := filepath.Join(dir, name)
 		data, err := os.ReadFile(path)
 		if err != nil {
@@ -204,9 +213,12 @@ func formatInventoryNode(node any) (string, error) {
 	return strings.TrimSpace(output.String()), nil
 }
 
-func inventoryGuidance(ws *workspace.Workspace) ([]GuidanceRef, error) {
+func inventoryGuidance(ctx context.Context, ws *workspace.Workspace) ([]GuidanceRef, error) {
 	refs := make([]GuidanceRef, 0)
 	err := filepath.WalkDir(ws.Root(), func(path string, d fs.DirEntry, err error) error {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return ctxErr
+		}
 		if err != nil {
 			return err
 		}

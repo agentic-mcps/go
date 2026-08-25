@@ -1,6 +1,8 @@
 package intelligence
 
 import (
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,7 +17,7 @@ func TestExportedInventory(t *testing.T) {
 	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
 		t.Fatal(err)
 	}
-	got, generated, constrained, err := exportedInventory(dir, []string{"sample.go"})
+	got, generated, constrained, err := exportedInventory(context.Background(), dir, []string{"sample.go"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +53,7 @@ func TestInventoryGuidanceIsRelativeAndHasDigest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	refs, err := inventoryGuidance(ws)
+	refs, err := inventoryGuidance(context.Background(), ws)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,5 +62,13 @@ func TestInventoryGuidanceIsRelativeAndHasDigest(t *testing.T) {
 	}
 	if refs[0].Digest == "" || len(refs[0].Digest) != 64 {
 		t.Fatalf("digest = %q", refs[0].Digest)
+	}
+}
+
+func TestExportedInventoryStopsOnCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, _, _, err := exportedInventory(ctx, t.TempDir(), []string{"missing.go"}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("exportedInventory() error = %v, want context.Canceled", err)
 	}
 }
