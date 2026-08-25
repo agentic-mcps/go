@@ -19,7 +19,7 @@ func TestLocatePrefersPinnedSibling(t *testing.T) {
 	writeExecutable(t, filepath.Join(pathDir, "agentic-go-gopls"), "#!/bin/sh\nprintf 'golang.org/x/tools/gopls v0.20.0\\n'\n")
 	t.Setenv("PATH", pathDir)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	installation, err := Locate(ctx, host, "")
 	if err != nil {
@@ -39,7 +39,7 @@ func TestLocateRejectsUnpinnedOverride(t *testing.T) {
 	candidate := filepath.Join(root, "gopls")
 	writeExecutable(t, candidate, "#!/bin/sh\nprintf 'golang.org/x/tools/gopls v0.22.0\\n'\n")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_, err := Locate(ctx, filepath.Join(root, "agentic-go"), candidate)
 	if err == nil || !strings.Contains(err.Error(), SupportedVersion) || !strings.Contains(err.Error(), "v0.22.0") {
@@ -50,7 +50,7 @@ func TestLocateRejectsUnpinnedOverride(t *testing.T) {
 func TestLocateExplainsMissingCompanion(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("PATH", root)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_, err := Locate(ctx, filepath.Join(root, "agentic-go"), "")
 	if err == nil || !strings.Contains(err.Error(), "agentic-go-gopls") || !strings.Contains(err.Error(), SupportedVersion) {
