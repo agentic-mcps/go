@@ -68,6 +68,9 @@ func (e *Engine) changedCoverage(analysis ChangeAnalysis, blocks []parser.Covera
 	unique := make(map[string]normalizedBlock)
 	uncertainties := make([]Uncertainty, 0)
 	for _, block := range blocks {
+		if block.Statements == 0 {
+			continue
+		}
 		file, err := e.coverageFile(analysis.Packages, block.File)
 		if err != nil {
 			uncertainties = append(uncertainties, Uncertainty{

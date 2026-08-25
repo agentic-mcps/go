@@ -51,6 +51,9 @@ func ParseCoverage(r io.Reader) (CoverageReport, error) {
 	}
 	byFile := make(map[string][]CoverageBlock)
 	for _, b := range blocks {
+		if b.Statements == 0 {
+			continue
+		}
 		byFile[b.File] = append(byFile[b.File], b)
 	}
 
@@ -92,7 +95,11 @@ func ParseCoverage(r io.Reader) (CoverageReport, error) {
 		files = append(files, CoverageFile{File: file, Percent: 100 * float64(hit) / float64(statements), Gaps: gaps})
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].File < files[j].File })
-	return CoverageReport{Files: files, OverallPercent: 100 * float64(covered) / float64(total)}, nil
+	overallPercent := float64(0)
+	if total > 0 {
+		overallPercent = 100 * float64(covered) / float64(total)
+	}
+	return CoverageReport{Files: files, OverallPercent: overallPercent}, nil
 }
 
 // ParseCoverageBlocks parses and validates a Go coverage profile, returning
@@ -167,7 +174,7 @@ func parseCoverageBlock(fields []string) (CoverageBlock, error) {
 		return CoverageBlock{}, errors.New("range ends before it starts")
 	}
 	statements, err := parseUint(fields[1])
-	if err != nil || statements == 0 {
+	if err != nil {
 		return CoverageBlock{}, errors.New("invalid statements")
 	}
 	count, err := parseUint(fields[2])

@@ -35,6 +35,35 @@ func TestParseCoverageBlocksIncludesCoveredAndUncoveredAtomicBlocks(t *testing.T
 	}
 }
 
+func TestParseCoverageAcceptsCompilerZeroStatementBlocks(t *testing.T) {
+	input := "mode: atomic\npkg/file.go:1.1,1.1 0 0\npkg/file.go:2.1,2.5 1 1\n"
+	blocks, err := ParseCoverageBlocks(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(blocks) != 2 || blocks[0].Statements != 0 {
+		t.Fatalf("blocks = %+v, want retained zero-statement compiler block", blocks)
+	}
+
+	report, err := ParseCoverage(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Files) != 1 || report.Files[0].Percent != 100 || report.OverallPercent != 100 {
+		t.Fatalf("report = %+v, want zero-statement block excluded from totals", report)
+	}
+}
+
+func TestParseCoverageZeroStatementOnlyProfileIsFinite(t *testing.T) {
+	report, err := ParseCoverage(strings.NewReader("mode: atomic\npkg/file.go:1.1,1.1 0 0\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Files) != 0 || report.OverallPercent != 0 {
+		t.Fatalf("report = %+v, want empty finite coverage", report)
+	}
+}
+
 func TestParseCoverageBlocksPreservesErrors(t *testing.T) {
 	for _, input := range []string{"", "mode: atomic\n", "mode: nope\na.go:1.1,1.2 1 0\n", "mode: atomic\na.go:1.1,1.2 -1 0\n"} {
 		if _, err := ParseCoverageBlocks(strings.NewReader(input)); err == nil {
