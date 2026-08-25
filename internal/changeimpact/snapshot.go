@@ -124,6 +124,7 @@ func (a *Analyzer) snapshot(ctx context.Context, options Options) (Analysis, err
 			return Analysis{}, fmt.Errorf("parsing line changes for %q: %w", path, parseErr)
 		}
 		file.Change.BaseRanges, file.Change.CurrentRanges = hunkRanges(hunks)
+		file.Edits = lineEdits(hunks)
 		files = append(files, file)
 	}
 
@@ -281,6 +282,17 @@ func hunkRanges(hunks []Hunk) ([]verification.LineRange, []verification.LineRang
 		}
 	}
 	return base, current
+}
+
+func lineEdits(hunks []Hunk) []verification.LineEdit {
+	edits := make([]verification.LineEdit, 0, len(hunks))
+	for _, hunk := range hunks {
+		edits = append(edits, verification.LineEdit{
+			BaseStart: hunk.OldStart, BaseCount: hunk.OldCount,
+			CurrentStart: hunk.NewStart, CurrentCount: hunk.NewCount,
+		})
+	}
+	return edits
 }
 
 func parseUntracked(data []byte, workspaceRelative string) ([]string, error) {

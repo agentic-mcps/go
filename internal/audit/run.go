@@ -19,11 +19,21 @@ import (
 
 // Run loads and executes analyzers against a contained workspace pattern.
 func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer) (result finding.AuditResult, err error) {
+	return RunPatterns(ctx, ws, []string{pattern}, analyzers)
+}
+
+// RunPatterns loads and executes analyzers against explicit contained package
+// patterns in one package-loading pass.
+func RunPatterns(ctx context.Context, ws string, patterns []string, analyzers []*analysis.Analyzer) (result finding.AuditResult, err error) {
+	if len(patterns) == 0 {
+		return finding.AuditResult{}, fmt.Errorf("no package patterns supplied")
+	}
+	label := strings.Join(patterns, ", ")
 	started := time.Now()
 	defer func() {
 		if r := recover(); r != nil {
 			result = finding.AuditResult{}
-			err = fmt.Errorf("analyzing %s: panic in analyzer predicate: %v", pattern, r)
+			err = fmt.Errorf("analyzing %s: panic in analyzer predicate: %v", label, r)
 		}
 	}()
 
@@ -37,28 +47,28 @@ func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer
 			packages.NeedTypesSizes | packages.NeedTypesInfo | packages.NeedSyntax,
 		Tests: true,
 	}
-	pkgs, loadErr := packages.Load(cfg, pattern)
+	pkgs, loadErr := packages.Load(cfg, patterns...)
 	if loadErr != nil {
-		return finding.AuditResult{}, fmt.Errorf("loading packages for %s: %w", pattern, loadErr)
+		return finding.AuditResult{}, fmt.Errorf("loading packages for %s: %w", label, loadErr)
 	}
 	if err := packageErrors(pkgs); err != nil {
-		return finding.AuditResult{}, fmt.Errorf("loading packages for %s: %w", pattern, err)
+		return finding.AuditResult{}, fmt.Errorf("loading packages for %s: %w", label, err)
 	}
 	pkgs = dedupeTestVariants(pkgs)
 	if err := ctx.Err(); err != nil {
-		return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", pattern, err)
+		return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", label, err)
 	}
 
 	graph, analyzeErr := checker.Analyze(analyzers, pkgs, &checker.Options{Sequential: true})
 	if analyzeErr != nil {
-		return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", pattern, analyzeErr)
+		return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", label, analyzeErr)
 	}
 	if err := ctx.Err(); err != nil {
-		return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", pattern, err)
+		return finding.AuditResult{}, fmt.Errorf("running analysis for %s: %w", label, err)
 	}
 	result = collect(graph, ws, pkgs)
 	if err := ctx.Err(); err != nil {
-		return finding.AuditResult{}, fmt.Errorf("collecting analysis for %s: %w", pattern, err)
+		return finding.AuditResult{}, fmt.Errorf("collecting analysis for %s: %w", label, err)
 	}
 	result.DurationMS = time.Since(started).Milliseconds()
 	return result, nil

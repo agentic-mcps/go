@@ -15,6 +15,16 @@ type SourceFile struct {
 	Change         ChangedFile
 	BaseContent    []byte
 	CurrentContent []byte
+	Edits          []LineEdit
+}
+
+// LineEdit retains the paired zero-context hunk coordinates required to map
+// unchanged base locations into the final snapshot.
+type LineEdit struct {
+	BaseStart    int
+	BaseCount    int
+	CurrentStart int
+	CurrentCount int
 }
 
 // ExecutionTarget is one language-native unit that can be verified. Absolute
@@ -45,4 +55,5 @@ type ChangeAnalysis struct {
 // engine without introducing a general plugin abstraction.
 type ChangeAnalyzer interface {
 	Analyze(context.Context, ChangeOptions) (ChangeAnalysis, error)
+	MaterializeBase(context.Context, Repository, string) (string, error)
 }

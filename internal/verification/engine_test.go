@@ -102,6 +102,38 @@ func TestValue(t *testing.T) {
 	}
 }
 
+func TestEngineSuppressesMappedBaselineFindings(t *testing.T) {
+	repository := verificationRepository(t, map[string]string{
+		"go.mod": "module example.test/verify\n\ngo 1.25.0\n",
+		"errors.go": `package verify
+
+func Existing(err error) { _ = err }
+
+func Changed(err error) {}
+`,
+	})
+	base := verificationGit(t, repository, "rev-parse", "HEAD")
+	verificationWrite(t, repository, "errors.go", `package verify
+
+func Existing(err error) { _ = err }
+
+func Changed(err error) { _ = err }
+`)
+
+	report := verifyRepository(t, repository, verification.Request{Base: base, FailOn: verification.FailOnNone})
+	errorsEvidence := evidenceByKind(t, report, verification.CheckErrors)
+	if errorsEvidence.Status != verification.EvidencePassed || errorsEvidence.Analysis == nil {
+		t.Fatalf("error analysis evidence = %#v", errorsEvidence)
+	}
+	want := verification.AnalysisSummary{Base: 1, Current: 2, Introduced: 1, Existing: 1}
+	if *errorsEvidence.Analysis != want {
+		t.Fatalf("error analysis = %#v, want %#v", *errorsEvidence.Analysis, want)
+	}
+	if len(report.Findings) != 1 || report.Findings[0].Baseline != verification.BaselineIntroduced || report.Findings[0].Location == nil || report.Findings[0].Location.File != "errors.go" {
+		t.Fatalf("primary findings = %#v, want one introduced finding", report.Findings)
+	}
+}
+
 func verifyRepository(t *testing.T, repository string, request verification.Request) verification.Report {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

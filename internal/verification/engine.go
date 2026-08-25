@@ -76,7 +76,7 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 	report.Uncertainties = append(report.Uncertainties, analysis.Uncertainties...)
 	targets := executionTargetIDs(analysis.Packages)
 	direct := directTargetIDs(analysis.Packages)
-	report.Plan = executionPlan(targets, request.Race)
+	report.Plan = verificationPlan(targets, request.Race)
 
 	if analysis.Complete {
 		outcome, runErr := e.runAffectedChecks(callCtx, analysis, request, direct)
@@ -84,12 +84,22 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 			if errors.Is(runErr, context.Canceled) || errors.Is(runErr, context.DeadlineExceeded) {
 				return Report{}, runErr
 			}
-			report.Evidence = failedExecutionEvidence(report.Plan, runErr)
+			report.Evidence = append(report.Evidence, failedExecutionEvidence(executionChecks(targets, request.Race), runErr)...)
 		} else {
-			report.Evidence = outcome.Evidence
+			report.Evidence = append(report.Evidence, outcome.Evidence...)
 			report.Findings = append(report.Findings, outcome.Findings...)
 			report.Uncertainties = append(report.Uncertainties, outcome.Uncertainties...)
 		}
+		analyzerOutcome, analyzerErr := e.runAnalyzerChecks(callCtx, analysis)
+		if analyzerErr != nil {
+			if errors.Is(analyzerErr, context.Canceled) || errors.Is(analyzerErr, context.DeadlineExceeded) {
+				return Report{}, analyzerErr
+			}
+			return Report{}, fmt.Errorf("materializing analyzer baseline: %w", analyzerErr)
+		}
+		report.Evidence = append(report.Evidence, analyzerOutcome.Evidence...)
+		report.Findings = append(report.Findings, analyzerOutcome.Findings...)
+		report.Uncertainties = append(report.Uncertainties, analyzerOutcome.Uncertainties...)
 	}
 	if request.MinChangedCoverage != nil {
 		applyCoveragePolicy(&report, *request.MinChangedCoverage)
@@ -120,7 +130,16 @@ func normalizeRequest(request *Request) error {
 	return policy.normalize()
 }
 
-func executionPlan(targets []string, race bool) []Check {
+func verificationPlan(targets []string, race bool) []Check {
+	checks := executionChecks(targets, race)
+	checks = append(checks,
+		Check{ID: "concurrency", Kind: CheckConcurrency, Required: true, Targets: append([]string(nil), targets...), Reason: "compare calibrated concurrency findings with the merge-base"},
+		Check{ID: "errors", Kind: CheckErrors, Required: true, Targets: append([]string(nil), targets...), Reason: "compare calibrated error-handling findings with the merge-base"},
+	)
+	return checks
+}
+
+func executionChecks(targets []string, race bool) []Check {
 	checks := []Check{
 		{ID: "tests", Kind: CheckTests, Required: true, Targets: append([]string(nil), targets...), Reason: "run package tests for the complete affected closure"},
 		{ID: "coverage", Kind: CheckCoverage, Required: true, Targets: append([]string(nil), targets...), Reason: "measure executed statements intersecting changed source"},

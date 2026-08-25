@@ -150,6 +150,52 @@ func TestSnapshotRejectsOptionLikeBase(t *testing.T) {
 	}
 }
 
+func TestMaterializeBaseLeavesTargetWorktreeUntouched(t *testing.T) {
+	repository := newRepository(t, map[string]string{
+		"go.mod":  "module example.test/change\n\ngo 1.25.0\n",
+		"main.go": "package change\n\nconst Version = 1\n",
+	})
+	base := git(t, repository, "rev-parse", "HEAD")
+	writeFile(t, repository, "main.go", "package change\n\nconst Version = 2\n")
+	before := git(t, repository, "status", "--porcelain=v1")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	ws, err := workspace.Open(ctx, repository)
+	if err != nil {
+		t.Fatalf("open workspace: %v", err)
+	}
+	runner, err := execution.New(ws, execution.Config{Timeout: 30 * time.Second})
+	if err != nil {
+		t.Fatalf("new runner: %v", err)
+	}
+	analyzer, err := changeimpact.New(ws, runner)
+	if err != nil {
+		t.Fatalf("new analyzer: %v", err)
+	}
+	analysis, err := analyzer.Analyze(ctx, changeimpact.Options{Base: base})
+	if err != nil {
+		t.Fatalf("analyze: %v", err)
+	}
+	materialized, err := analyzer.MaterializeBase(ctx, analysis.Repository, t.TempDir())
+	if err != nil {
+		t.Fatalf("materialize base: %v", err)
+	}
+	content, err := os.ReadFile(filepath.Join(materialized, "main.go"))
+	if err != nil {
+		t.Fatalf("read materialized source: %v", err)
+	}
+	if !strings.Contains(string(content), "Version = 1") {
+		t.Fatalf("materialized content = %q, want base version", content)
+	}
+	if _, err := os.Stat(filepath.Join(materialized, ".git")); !os.IsNotExist(err) {
+		t.Fatalf("materialized base contains persistent Git metadata: %v", err)
+	}
+	if after := git(t, repository, "status", "--porcelain=v1"); after != before {
+		t.Fatalf("worktree status changed: before %q after %q", before, after)
+	}
+}
+
 func analyze(t *testing.T, repository string, options changeimpact.Options) changeimpact.Analysis {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

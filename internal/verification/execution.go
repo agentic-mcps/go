@@ -38,7 +38,7 @@ type affectedRun struct {
 func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis, request Request, direct []string) (executionOutcome, error) {
 	if len(analysis.Packages) == 0 {
 		evidence := make([]Evidence, 0, 3)
-		for _, check := range executionPlan([]string{}, request.Race) {
+		for _, check := range executionChecks([]string{}, request.Race) {
 			evidence = append(evidence, Evidence{
 				CheckID: check.ID, Kind: check.Kind, Status: EvidenceSkipped,
 				Summary: "no active affected packages to execute",
