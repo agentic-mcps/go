@@ -215,12 +215,84 @@ func TestEvaluateCheckpointPoliciesReportsFocusModulesAndLimit(t *testing.T) {
 		codes = append(codes, violation.Code)
 	}
 	sort.Strings(codes)
-	want := []string{"cross_module_change", "exported_api_change", "generated_file_change", "outside_focus"}
+	want := []string{"cross_module_change", "generated_file_change", "outside_focus"}
 	if !reflect.DeepEqual(codes, want) {
 		t.Fatalf("violation codes = %v, want %v", codes, want)
 	}
-	if len(uncertainties) != 1 || uncertainties[0].Code != "package_limit" {
+	if !containsUncertainty(uncertainties, "package_limit") || !containsUncertainty(uncertainties, "exported_api_unknown") {
 		t.Fatalf("uncertainties = %#v", uncertainties)
+	}
+}
+
+func containsUncertainty(uncertainties []Uncertainty, code string) bool {
+	for _, uncertainty := range uncertainties {
+		if uncertainty.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func TestEvaluateCheckpointPoliciesOnlyReportsExportedAPIShapeChanges(t *testing.T) {
+	base := []byte("package fixture\n\nfunc Exported(v int) int { return v }\n")
+	bodyOnly := []byte("package fixture\n\nfunc Exported(v int) int { return v + 1 }\n")
+	changedSignature := []byte("package fixture\n\nfunc Exported(v string) int { return len(v) }\n")
+	makeAnalysis := func(current []byte) verification.ChangeAnalysis {
+		return verification.ChangeAnalysis{Change: verification.Change{Declarations: []verification.ChangedDeclaration{{Kind: "function", Package: "example.test/fixture", Name: "Exported", Change: verification.ChangeModified, BaseLocation: &verification.Location{File: "main.go", Line: 3}, CurrentLocation: &verification.Location{File: "main.go", Line: 3}}}}, Files: []verification.SourceFile{{Change: verification.ChangedFile{Path: "main.go", Change: verification.ChangeModified}, BaseContent: base, CurrentContent: current}}}
+	}
+	contract := ChangeContract{Policies: DefaultStructuralPolicies()}
+	violations, _ := evaluateCheckpointPolicies(contract, makeAnalysis(bodyOnly))
+	for _, violation := range violations {
+		if violation.Code == "exported_api_change" {
+			t.Fatalf("body-only edit reported API change: %#v", violations)
+		}
+	}
+	violations, _ = evaluateCheckpointPolicies(contract, makeAnalysis(changedSignature))
+	found := false
+	for _, violation := range violations {
+		if violation.Code == "exported_api_change" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("signature change did not report exported API change")
+	}
+}
+
+func TestDeclarationShapeTracksExportedSurface(t *testing.T) {
+	tests := []struct {
+		name        string
+		declaration verification.ChangedDeclaration
+		base        string
+		current     string
+		wantChange  bool
+	}{
+		{name: "function body", declaration: verification.ChangedDeclaration{Kind: "function", Name: "Exported", Change: verification.ChangeModified}, base: "func Exported(v int) int { return v }", current: "func Exported(v int) int { return v + 1 }"},
+		{name: "function signature", declaration: verification.ChangedDeclaration{Kind: "function", Name: "Exported", Change: verification.ChangeModified}, base: "func Exported(v int) int { return v }", current: "func Exported(v string) int { return len(v) }", wantChange: true},
+		{name: "method body", declaration: verification.ChangedDeclaration{Kind: "method", Name: "Widget.Value", Change: verification.ChangeModified}, base: "type Widget struct{}\nfunc (Widget) Value() int { return 1 }", current: "type Widget struct{}\nfunc (Widget) Value() int { return 2 }"},
+		{name: "method receiver", declaration: verification.ChangedDeclaration{Kind: "method", Name: "Widget.Value", Change: verification.ChangeModified}, base: "type Widget struct{}\nfunc (Widget) Value() int { return 1 }", current: "type Widget struct{}\nfunc (*Widget) Value() int { return 1 }", wantChange: true},
+		{name: "type shape", declaration: verification.ChangedDeclaration{Kind: "type", Name: "Widget", Change: verification.ChangeModified}, base: "type Widget struct{ Value int }", current: "type Widget struct{ Value string }", wantChange: true},
+		{name: "field shape", declaration: verification.ChangedDeclaration{Kind: "field", Name: "Widget.Value", Change: verification.ChangeModified}, base: "type Widget struct{ Value int }", current: "type Widget struct{ Value string }", wantChange: true},
+		{name: "inferred variable", declaration: verification.ChangedDeclaration{Kind: "variable", Name: "Value", Change: verification.ChangeModified}, base: "var Value = 1", current: "var Value = \"one\"", wantChange: true},
+		{name: "constant value", declaration: verification.ChangedDeclaration{Kind: "constant", Name: "Value", Change: verification.ChangeModified}, base: "const Value = 1", current: "const Value = 2", wantChange: true},
+		{name: "exported addition", declaration: verification.ChangedDeclaration{Kind: "function", Name: "Added", Change: verification.ChangeAdded}, current: "func Added() {}", wantChange: true},
+		{name: "exported deletion", declaration: verification.ChangedDeclaration{Kind: "function", Name: "Removed", Change: verification.ChangeDeleted}, base: "func Removed() {}", wantChange: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			declaration := test.declaration
+			declaration.BaseLocation = &verification.Location{File: "main.go", Line: 3}
+			declaration.CurrentLocation = &verification.Location{File: "main.go", Line: 3}
+			before, beforeErr := declarationShape([]byte("package fixture\n"+test.base+"\n"), declaration, true)
+			after, afterErr := declarationShape([]byte("package fixture\n"+test.current+"\n"), declaration, false)
+			if beforeErr != nil || afterErr != nil {
+				t.Fatalf("shape errors: before=%v after=%v", beforeErr, afterErr)
+			}
+			changed := before.Exported != after.Exported || before.Shape != after.Shape
+			if changed != test.wantChange {
+				t.Fatalf("shape change = %v, want %v; before=%#v after=%#v", changed, test.wantChange, before, after)
+			}
+		})
 	}
 }
 

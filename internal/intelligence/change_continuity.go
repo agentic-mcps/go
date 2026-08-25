@@ -7,6 +7,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -245,18 +248,9 @@ func evaluateCheckpointPolicies(contract ChangeContract, analysis verification.C
 		}
 	}
 
-	exportedLocations := []Location{}
-	for _, declaration := range analysis.Change.Declarations {
-		name := declaration.Name
-		if index := strings.LastIndex(name, "."); index >= 0 {
-			name = name[index+1:]
-		}
-		if ast.IsExported(name) {
-			exportedLocations = append(exportedLocations, declarationLocation(declaration))
-		}
-	}
+	exportedLocations, exportedUncertainties := exportedAPIChanges(analysis)
 	violations = appendViolation(violations, "exported_api_change", contract.Policies.ExportedAPI,
-		"exported Go declarations changed", exportedLocations)
+		"exported Go API shape changed", exportedLocations)
 
 	dependencyLocations := []Location{}
 	generatedLocations := []Location{}
@@ -296,7 +290,7 @@ func evaluateCheckpointPolicies(contract ChangeContract, analysis verification.C
 			"directly affected packages span multiple Go modules", []Location{})
 	}
 
-	uncertainties := []Uncertainty{}
+	uncertainties := append([]Uncertainty{}, exportedUncertainties...)
 	if !analysis.Complete && !hasVerificationUncertainty(analysis.Uncertainties, "package_limit") {
 		uncertainties = append(uncertainties, Uncertainty{
 			Code: "package_limit", Message: fmt.Sprintf("affected package closure contains %d packages, exceeding the contract limit of %d", analysis.ObservedPackages, checkpointPackageLimit), Locations: []Location{},
@@ -304,6 +298,186 @@ func evaluateCheckpointPolicies(contract ChangeContract, analysis verification.C
 	}
 	sort.Slice(violations, func(i, j int) bool { return violations[i].Code < violations[j].Code })
 	return violations, uncertainties
+}
+
+// exportedAPIChanges compares declaration shapes, rather than declaration
+// ranges. A body-only edit to an exported function is not an API change.
+func exportedAPIChanges(analysis verification.ChangeAnalysis) ([]Location, []Uncertainty) {
+	locations := []Location{}
+	uncertainties := []Uncertainty{}
+	for _, declaration := range analysis.Change.Declarations {
+		file := sourceForDeclaration(analysis.Files, declaration)
+		if file == nil {
+			if declarationNameExported(declaration.Name) {
+				uncertainties = append(uncertainties, Uncertainty{Code: "exported_api_unknown", Message: "changed exported declaration source was unavailable while determining API shape", Locations: []Location{declarationLocation(declaration)}})
+			}
+			continue
+		}
+		before, beforeErr := declarationShape(file.BaseContent, declaration, true)
+		after, afterErr := declarationShape(file.CurrentContent, declaration, false)
+		if beforeErr != nil || afterErr != nil {
+			if declarationNameExported(declaration.Name) {
+				uncertainties = append(uncertainties, Uncertainty{Code: "exported_api_unknown", Message: "could not determine whether a changed exported Go declaration altered API shape", Locations: []Location{declarationLocation(declaration)}})
+			}
+			continue
+		}
+		if before.Exported || after.Exported {
+			if before.Exported != after.Exported || before.Shape != after.Shape {
+				locations = append(locations, declarationLocation(declaration))
+			}
+		}
+	}
+	sort.Slice(locations, func(i, j int) bool {
+		if locations[i].File != locations[j].File {
+			return locations[i].File < locations[j].File
+		}
+		if locations[i].Line != locations[j].Line {
+			return locations[i].Line < locations[j].Line
+		}
+		return locations[i].Column < locations[j].Column
+	})
+	return locations, dedupeUncertainties(uncertainties)
+}
+
+type declarationShapeInfo struct {
+	Exported bool
+	Shape    string
+}
+
+func sourceForDeclaration(files []verification.SourceFile, declaration verification.ChangedDeclaration) *verification.SourceFile {
+	for i := range files {
+		path := ""
+		if declaration.CurrentLocation != nil {
+			path = declaration.CurrentLocation.File
+		}
+		if declaration.BaseLocation != nil && path == "" {
+			path = declaration.BaseLocation.File
+		}
+		if files[i].Change.Path == path || files[i].Change.PreviousPath == path {
+			return &files[i]
+		}
+	}
+	return nil
+}
+
+func declarationShape(content []byte, declaration verification.ChangedDeclaration, base bool) (declarationShapeInfo, error) {
+	if len(content) == 0 {
+		if declarationAbsentOnSide(declaration.Change, base) {
+			return declarationShapeInfo{}, nil
+		}
+		return declarationShapeInfo{}, fmt.Errorf("declaration source is empty")
+	}
+	path := ""
+	if declaration.CurrentLocation != nil {
+		path = declaration.CurrentLocation.File
+	}
+	if base && declaration.BaseLocation != nil {
+		path = declaration.BaseLocation.File
+	}
+	file, err := parser.ParseFile(token.NewFileSet(), path, content, 0)
+	if err != nil {
+		return declarationShapeInfo{}, err
+	}
+	owner, name := declarationOwnerAndName(declaration.Name)
+	for _, item := range file.Decls {
+		switch d := item.(type) {
+		case *ast.FuncDecl:
+			if d.Name.Name != name {
+				continue
+			}
+			if declaration.Kind == "function" && d.Recv == nil {
+				shape, shapeErr := nodeText(d.Type)
+				return declarationShapeInfo{Exported: ast.IsExported(name), Shape: shape}, shapeErr
+			}
+			if declaration.Kind == "method" && d.Recv != nil && len(d.Recv.List) > 0 && receiverTypeName(d.Recv.List[0].Type) == owner {
+				receiver, receiverErr := nodeText(d.Recv.List[0].Type)
+				functionType, typeErr := nodeText(d.Type)
+				if receiverErr != nil || typeErr != nil {
+					return declarationShapeInfo{}, fmt.Errorf("formatting method shape")
+				}
+				return declarationShapeInfo{Exported: ast.IsExported(name), Shape: receiver + " " + functionType}, nil
+			}
+		case *ast.GenDecl:
+			for _, spec := range d.Specs {
+				switch s := spec.(type) {
+				case *ast.TypeSpec:
+					if declaration.Kind == "type" && s.Name.Name == name {
+						shape, shapeErr := nodeText(s)
+						return declarationShapeInfo{Exported: ast.IsExported(name), Shape: shape}, shapeErr
+					}
+					if declaration.Kind == "field" && s.Name.Name == owner {
+						structure, ok := s.Type.(*ast.StructType)
+						if !ok {
+							continue
+						}
+						for _, field := range structure.Fields.List {
+							for _, fieldName := range field.Names {
+								if fieldName.Name == name {
+									shape, shapeErr := nodeText(field.Type)
+									if field.Tag != nil {
+										shape += " " + field.Tag.Value
+									}
+									return declarationShapeInfo{Exported: ast.IsExported(name), Shape: shape}, shapeErr
+								}
+							}
+						}
+					}
+				case *ast.ValueSpec:
+					if declaration.Kind == "variable" || declaration.Kind == "constant" {
+						for _, n := range s.Names {
+							if n.Name == name {
+								shape, shapeErr := nodeText(s)
+								return declarationShapeInfo{Exported: ast.IsExported(name), Shape: d.Tok.String() + " " + shape}, shapeErr
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if declarationAbsentOnSide(declaration.Change, base) {
+		return declarationShapeInfo{}, nil
+	}
+	return declarationShapeInfo{}, fmt.Errorf("declaration %q was not found", declaration.Name)
+}
+
+func declarationAbsentOnSide(change verification.ChangeKind, base bool) bool {
+	return (base && (change == verification.ChangeAdded || change == verification.ChangeUntracked)) || (!base && change == verification.ChangeDeleted)
+}
+
+func declarationOwnerAndName(qualified string) (string, string) {
+	if index := strings.LastIndex(qualified, "."); index >= 0 {
+		return qualified[:index], qualified[index+1:]
+	}
+	return "", qualified
+}
+
+func declarationNameExported(name string) bool {
+	_, name = declarationOwnerAndName(name)
+	return ast.IsExported(name)
+}
+
+func receiverTypeName(expression ast.Expr) string {
+	switch item := expression.(type) {
+	case *ast.Ident:
+		return item.Name
+	case *ast.StarExpr:
+		return receiverTypeName(item.X)
+	case *ast.IndexExpr:
+		return receiverTypeName(item.X)
+	case *ast.IndexListExpr:
+		return receiverTypeName(item.X)
+	default:
+		return ""
+	}
+}
+
+func nodeText(node ast.Node) (string, error) {
+	var buf bytes.Buffer
+	if err := format.Node(&buf, token.NewFileSet(), node); err != nil {
+		return "", err
+	}
+	return strings.Join(strings.Fields(buf.String()), " "), nil
 }
 
 func normalizeContractPaths(c *Core, paths []string) ([]string, error) {
