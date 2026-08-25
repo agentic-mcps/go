@@ -32,6 +32,7 @@ type IntelligenceService interface {
 	Symbol(context.Context, intelligence.SymbolRequest) (intelligence.SymbolContext, error)
 	Begin(context.Context, intelligence.BeginRequest) (intelligence.ChangeContract, error)
 	Checkpoint(context.Context, intelligence.CheckpointRequest) (intelligence.Checkpoint, error)
+	Refactor(context.Context, intelligence.RefactorRequest) (intelligence.RefactorResult, error)
 }
 
 // NewRuntime validates the dependencies shared by every tool registration.
@@ -81,6 +82,7 @@ func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterSearch(server, runtime)
 	RegisterSymbolContext(server, runtime)
 	RegisterChangeTools(server, runtime)
+	RegisterRefactor(server, runtime)
 	RegisterResources(server, runtime)
 	RegisterPrompts(server)
 }

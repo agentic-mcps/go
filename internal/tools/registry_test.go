@@ -38,8 +38,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(listed.Tools) != 13 {
-		t.Fatalf("len(tools/list) = %d, want 13", len(listed.Tools))
+	if len(listed.Tools) != 14 {
+		t.Fatalf("len(tools/list) = %d, want 14", len(listed.Tools))
 	}
 
 	resources, err := clientSession.ListResources(ctx, nil)
@@ -149,6 +149,25 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 			if !strings.Contains(tool.Description, phrase) {
 				t.Errorf("%s description %q missing %q", name, tool.Description, phrase)
 			}
+		}
+	}
+	refactorTool := listedTool(t, listed.Tools, "go_refactor")
+	refactorAnnotations := refactorTool.Annotations
+	if refactorAnnotations == nil || refactorAnnotations.ReadOnlyHint || refactorAnnotations.IdempotentHint || refactorAnnotations.DestructiveHint == nil || !*refactorAnnotations.DestructiveHint || refactorAnnotations.OpenWorldHint == nil || *refactorAnnotations.OpenWorldHint {
+		t.Fatalf("unexpected go_refactor annotations: %+v", refactorAnnotations)
+	}
+	for _, phrase := range []string{"explicitly approved", "contained", "does not stage"} {
+		if !strings.Contains(refactorTool.Description, phrase) {
+			t.Errorf("go_refactor description %q missing %q", refactorTool.Description, phrase)
+		}
+	}
+	refactorSchema, err := json.Marshal(refactorTool.InputSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{`"operation"`, `"symbol_ref"`, `"new_name"`, `"files"`, `"plan_id"`, `"expected_snapshot_id"`, `"apply"`} {
+		if !strings.Contains(string(refactorSchema), field) {
+			t.Fatalf("go_refactor input schema %s missing %s", refactorSchema, field)
 		}
 	}
 	beginSchema, err := json.Marshal(listedTool(t, listed.Tools, "go_begin_change").InputSchema)

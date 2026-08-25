@@ -15,6 +15,7 @@ type fakeIntelligence struct { //nolint:govet // Test requests are grouped by op
 	symbol     intelligence.SymbolRequest
 	begin      intelligence.BeginRequest
 	checkpoint intelligence.CheckpointRequest
+	refactor   intelligence.RefactorRequest
 }
 
 func (f *fakeIntelligence) Brief(_ context.Context, request intelligence.BriefRequest) (intelligence.ContextPack, error) {
@@ -40,6 +41,11 @@ func (f *fakeIntelligence) Begin(_ context.Context, request intelligence.BeginRe
 func (f *fakeIntelligence) Checkpoint(_ context.Context, request intelligence.CheckpointRequest) (intelligence.Checkpoint, error) {
 	f.checkpoint = request
 	return intelligence.Checkpoint{ID: "cp_1", ContractID: request.ContractID, Current: intelligence.SnapshotRef{ID: "snap-checkpoint"}, Complete: true, AffectedPackages: []string{}, Diagnostics: []intelligence.Diagnostic{}, Violations: []intelligence.PolicyViolation{}, Uncertainties: []intelligence.Uncertainty{}}, nil
+}
+
+func (f *fakeIntelligence) Refactor(_ context.Context, request intelligence.RefactorRequest) (intelligence.RefactorResult, error) {
+	f.refactor = request
+	return intelligence.RefactorResult{PlanID: "rfp_1", Snapshot: intelligence.SnapshotRef{ID: "snap-refactor"}, AffectedFiles: []string{"main.go"}, Preimages: []intelligence.RefactorPreimage{}, Risks: []intelligence.RiskArea{}, Uncertainties: []intelligence.Uncertainty{}}, nil
 }
 
 func (*fakeIntelligence) Capabilities() intelligence.Capabilities {
@@ -106,6 +112,27 @@ func TestChangeToolsMapRequestsAndReturnCanonicalResults(t *testing.T) {
 	}
 	if fake.checkpoint.ContractID != "chg_1" || fake.checkpoint.ExpectedSnapshot != "snap-begin" || len(fake.checkpoint.Decisions) != 1 {
 		t.Fatalf("checkpoint request = %#v", fake.checkpoint)
+	}
+}
+
+func TestRefactorToolMapsPreviewAndApply(t *testing.T) {
+	fake := &fakeIntelligence{}
+	runtime := testIntelligenceRuntime(fake)
+	if _, got, err := runtime.refactor(context.Background(), nil, RefactorInput{
+		Operation: intelligence.RefactorRename, SymbolRef: "symbol", NewName: "Renamed", ExpectedSnapshotID: "snap-refactor",
+	}); err != nil || got.PlanID != "rfp_1" {
+		t.Fatalf("preview = %#v, err %v", got, err)
+	}
+	if fake.refactor.Operation != intelligence.RefactorRename || fake.refactor.NewName != "Renamed" || fake.refactor.Apply {
+		t.Fatalf("preview request = %#v", fake.refactor)
+	}
+	if _, _, err := runtime.refactor(context.Background(), nil, RefactorInput{
+		PlanID: "rfp_1", ExpectedSnapshotID: "snap-refactor", Apply: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if !fake.refactor.Apply || fake.refactor.PlanID != "rfp_1" {
+		t.Fatalf("apply request = %#v", fake.refactor)
 	}
 }
 
