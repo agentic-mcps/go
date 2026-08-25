@@ -250,6 +250,13 @@ See the [protocol contracts](docs/contracts.md) and
 
 ## Evidence
 
+The [v0.2.0 change-verification evidence](validation/v0.2.0/summary.md) records
+contract goldens, CLI and stdio MCP dogfood, the complete release matrix, and
+three reviewed historical changes from grpc-go, Prometheus client_golang, and
+Echo. The samples demonstrate reverse impact, changed coverage, analyzer
+baselining, and a bounded-output limitation; they are implementation evidence,
+not an adoption claim.
+
 The active analyzer rules have positive and near-miss fixtures. The v0.1.0
 offline calibration report covers 10 pinned repositories and 467 reviewed
 findings, with 0% observed false positives in that corpus. This is
@@ -262,7 +269,8 @@ sanitized reports, classifications, limitations, and reproduction command.
 - [v0.2.0 release scope](docs/v0.2.0-release-scope.md): the current executable specification
 - [v0.1.0 release scope](docs/v0.1.0-release-scope.md): the compatibility baseline
 - [Protocol contracts](docs/contracts.md): shared types, limits, and invariants
-- [Validation evidence](validation/v0.1.0/summary.md): external calibration record
+- [v0.2.0 evidence](validation/v0.2.0/summary.md): change-verification reports and release gates
+- [v0.1.0 evidence](validation/v0.1.0/summary.md): external analyzer calibration record
 - [Contributing](CONTRIBUTING.md): review and change expectations
 - [Security](SECURITY.md): safe usage and private vulnerability reports
 
