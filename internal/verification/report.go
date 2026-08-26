@@ -3,13 +3,16 @@
 package verification
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 )
 
-// SchemaVersion identifies the portable v0.2 report contract.
-const SchemaVersion = "agentic.verify/v1alpha1"
+// SchemaVersion identifies the pre-freeze unified verification contract.
+const SchemaVersion = "agentic.verify/v1beta1"
 
 const (
 	maxVisibleChangedFiles         = 15
@@ -21,6 +24,8 @@ const (
 	maxVisibleNonpassingTests      = 20
 	maxVisibleFindings             = 50
 	maxVisibleCoverageRanges       = 20
+	maxVisibleDiagnostics          = 50
+	maxVisibleContractViolations   = 50
 	maxVisibleRiskLocations        = 5
 	maxVisibleUncertaintyLocations = 5
 )
@@ -67,6 +72,8 @@ const (
 	CheckRace        CheckKind = "go.race"
 	CheckConcurrency CheckKind = "go.analysis.concurrency"
 	CheckErrors      CheckKind = "go.analysis.errors"
+	CheckDiagnostics CheckKind = "go.diagnostics"
+	CheckContract    CheckKind = "go.contract"
 )
 
 // BaselineState describes how an analyzer diagnostic compares with the base.
@@ -109,6 +116,49 @@ type LineRange struct {
 type Provider struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
+}
+
+// ProviderCapability records one effective implementation and its normalized
+// portable capabilities.
+type ProviderCapability struct {
+	Name         string   `json:"name"`
+	Version      string   `json:"version"`
+	Capabilities []string `json:"capabilities"`
+}
+
+// SnapshotTransition records one exact immutable checkpoint edge.
+type SnapshotTransition struct {
+	CheckpointID string `json:"checkpoint_id"`
+	PreviousID   string `json:"previous_id"`
+	CurrentID    string `json:"current_id"`
+}
+
+// SnapshotLineage binds verification evidence to the semantic snapshot and
+// optional Change Contract lineage observed by the intelligence service.
+type SnapshotLineage struct {
+	CurrentID       string               `json:"current_id"`
+	ExpectedID      string               `json:"expected_id,omitempty"`
+	ContractInitial string               `json:"contract_initial,omitempty"`
+	ContractLatest  string               `json:"contract_latest,omitempty"`
+	Transitions     []SnapshotTransition `json:"transitions"`
+}
+
+// ProvenanceReference records a source-grounded context or deterministic
+// refactor operation that preceded verification in this service process.
+type ProvenanceReference struct {
+	Kind             string `json:"kind"`
+	Operation        string `json:"operation"`
+	Reference        string `json:"reference,omitempty"`
+	InputSnapshotID  string `json:"input_snapshot_id"`
+	OutputSnapshotID string `json:"output_snapshot_id"`
+	Applied          bool   `json:"applied,omitempty"`
+}
+
+// Provenance retains bounded context and refactor lineage without source
+// contents, prompts, goals, or absolute paths.
+type Provenance struct {
+	Context   []ProvenanceReference `json:"context"`
+	Refactors []ProvenanceReference `json:"refactors"`
 }
 
 // Repository identifies the compared repository state without absolute paths.
@@ -268,20 +318,60 @@ type RaceSummary struct {
 	Conflicts int `json:"conflicts"`
 }
 
+// Diagnostic records one normalized compiler or semantic-provider
+// observation at a workspace-relative location.
+type Diagnostic struct {
+	Source   string   `json:"source"`
+	Code     string   `json:"code,omitempty"`
+	Severity string   `json:"severity"`
+	Message  string   `json:"message"`
+	Location Location `json:"location"`
+}
+
+// DiagnosticSummary contains bounded current-snapshot semantic evidence.
+// Diagnostics are evidence only until a base comparison can classify them.
+type DiagnosticSummary struct {
+	Items     []Diagnostic `json:"items"`
+	Total     int          `json:"total"`
+	Errors    int          `json:"errors"`
+	Warnings  int          `json:"warnings"`
+	Truncated bool         `json:"truncated"`
+}
+
+// ContractViolation is one normalized machine-checkable contract deviation.
+type ContractViolation struct {
+	Code      string     `json:"code"`
+	Policy    string     `json:"policy"`
+	Message   string     `json:"message"`
+	Locations []Location `json:"locations"`
+}
+
+// ContractSummary records optional Change Contract compliance evidence.
+type ContractSummary struct {
+	ContractID          string              `json:"contract_id"`
+	Violations          []ContractViolation `json:"violations"`
+	ViolationsTotal     int                 `json:"violations_total"`
+	ViolationsTruncated bool                `json:"violations_truncated"`
+	Forbidden           int                 `json:"forbidden"`
+	Warnings            int                 `json:"warnings"`
+}
+
 // Evidence records the outcome of one planned check.
 //
 //nolint:govet // Preserve the canonical JSON field order.
 type Evidence struct {
-	CheckID    string           `json:"check_id"`
-	Kind       CheckKind        `json:"kind"`
-	Status     EvidenceStatus   `json:"status"`
-	DurationMS int64            `json:"duration_ms"`
-	Summary    string           `json:"summary"`
-	Error      string           `json:"error,omitempty"`
-	Tests      *TestSummary     `json:"tests,omitempty"`
-	Coverage   *CoverageSummary `json:"coverage,omitempty"`
-	Analysis   *AnalysisSummary `json:"analysis,omitempty"`
-	Race       *RaceSummary     `json:"race,omitempty"`
+	CheckID     string             `json:"check_id"`
+	Kind        CheckKind          `json:"kind"`
+	Status      EvidenceStatus     `json:"status"`
+	DurationMS  int64              `json:"duration_ms"`
+	Summary     string             `json:"summary"`
+	Error       string             `json:"error,omitempty"`
+	Tests       *TestSummary       `json:"tests,omitempty"`
+	Coverage    *CoverageSummary   `json:"coverage,omitempty"`
+	Analysis    *AnalysisSummary   `json:"analysis,omitempty"`
+	Race        *RaceSummary       `json:"race,omitempty"`
+	Diagnostics *DiagnosticSummary `json:"diagnostics,omitempty"`
+	Contract    *ContractSummary   `json:"contract,omitempty"`
 }
 
 // Finding is an observed issue produced by executed evidence.
@@ -335,19 +425,23 @@ type PolicyResult struct {
 //
 //nolint:govet // Preserve the canonical JSON field order.
 type Report struct {
-	SchemaVersion     string        `json:"schema_version"`
-	Provider          Provider      `json:"provider"`
-	Repository        Repository    `json:"repository"`
-	Change            Change        `json:"change"`
-	Impact            Impact        `json:"impact"`
-	Plan              []Check       `json:"plan"`
-	Evidence          []Evidence    `json:"evidence"`
-	Findings          []Finding     `json:"findings"`
-	FindingsTotal     int           `json:"findings_total"`
-	FindingsTruncated bool          `json:"findings_truncated"`
-	Risks             []RiskArea    `json:"risks"`
-	Uncertainties     []Uncertainty `json:"uncertainties"`
-	Result            PolicyResult  `json:"result"`
+	SchemaVersion     string               `json:"schema_version"`
+	ID                string               `json:"id"`
+	Provider          Provider             `json:"provider"`
+	Providers         []ProviderCapability `json:"providers"`
+	Repository        Repository           `json:"repository"`
+	Snapshot          SnapshotLineage      `json:"snapshot"`
+	Provenance        Provenance           `json:"provenance"`
+	Change            Change               `json:"change"`
+	Impact            Impact               `json:"impact"`
+	Plan              []Check              `json:"plan"`
+	Evidence          []Evidence           `json:"evidence"`
+	Findings          []Finding            `json:"findings"`
+	FindingsTotal     int                  `json:"findings_total"`
+	FindingsTruncated bool                 `json:"findings_truncated"`
+	Risks             []RiskArea           `json:"risks"`
+	Uncertainties     []Uncertainty        `json:"uncertainties"`
+	Result            PolicyResult         `json:"result"`
 }
 
 // FailOn controls which introduced analyzer severities block policy.
@@ -372,7 +466,12 @@ func NewReport(providerVersion string, repository Repository) Report {
 	return Report{
 		SchemaVersion: SchemaVersion,
 		Provider:      Provider{Name: "agentic-go", Version: providerVersion},
+		Providers:     make([]ProviderCapability, 0),
 		Repository:    repository,
+		Snapshot:      SnapshotLineage{Transitions: make([]SnapshotTransition, 0)},
+		Provenance: Provenance{
+			Context: make([]ProvenanceReference, 0), Refactors: make([]ProvenanceReference, 0),
+		},
 		Change: Change{
 			Files:        make([]ChangedFile, 0),
 			Declarations: make([]ChangedDeclaration, 0),
@@ -438,6 +537,20 @@ func (r *Report) Finalize(policy Policy) error {
 		r.Result.Summary = "requested verification completed without blocking findings"
 	}
 	r.truncateDetails()
+	if err := r.assignID(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Report) assignID() error {
+	r.ID = ""
+	encoded, err := json.Marshal(r)
+	if err != nil {
+		return fmt.Errorf("encoding verification identity: %w", err)
+	}
+	digest := sha256.Sum256(encoded)
+	r.ID = "verify_" + hex.EncodeToString(digest[:])
 	return nil
 }
 
@@ -457,6 +570,9 @@ func (p *Policy) normalize() error {
 }
 
 func (p Policy) blocks(item Finding) bool {
+	if item.Kind == string(CheckContract) {
+		return item.Severity == SeverityError
+	}
 	if item.Baseline != "" && item.Baseline != BaselineIntroduced {
 		return false
 	}
@@ -482,6 +598,23 @@ func severityRank(value Severity) int {
 }
 
 func (r *Report) initializeCollections() {
+	if r.Providers == nil {
+		r.Providers = make([]ProviderCapability, 0)
+	}
+	for index := range r.Providers {
+		if r.Providers[index].Capabilities == nil {
+			r.Providers[index].Capabilities = make([]string, 0)
+		}
+	}
+	if r.Snapshot.Transitions == nil {
+		r.Snapshot.Transitions = make([]SnapshotTransition, 0)
+	}
+	if r.Provenance.Context == nil {
+		r.Provenance.Context = make([]ProvenanceReference, 0)
+	}
+	if r.Provenance.Refactors == nil {
+		r.Provenance.Refactors = make([]ProvenanceReference, 0)
+	}
 	if r.Change.Files == nil {
 		r.Change.Files = make([]ChangedFile, 0)
 	}
@@ -525,6 +658,19 @@ func (r *Report) initializeCollections() {
 		}
 	}
 	for index := range r.Evidence {
+		if diagnostics := r.Evidence[index].Diagnostics; diagnostics != nil && diagnostics.Items == nil {
+			diagnostics.Items = make([]Diagnostic, 0)
+		}
+		if contract := r.Evidence[index].Contract; contract != nil {
+			if contract.Violations == nil {
+				contract.Violations = make([]ContractViolation, 0)
+			}
+			for violationIndex := range contract.Violations {
+				if contract.Violations[violationIndex].Locations == nil {
+					contract.Violations[violationIndex].Locations = make([]Location, 0)
+				}
+			}
+		}
 		if tests := r.Evidence[index].Tests; tests != nil {
 			if tests.Packages == nil {
 				tests.Packages = make([]TestPackageSummary, 0)
@@ -550,6 +696,22 @@ func (r *Report) initializeCollections() {
 }
 
 func (r *Report) sortCollections() {
+	sort.Slice(r.Providers, func(i, j int) bool {
+		return r.Providers[i].Name+"\x00"+r.Providers[i].Version < r.Providers[j].Name+"\x00"+r.Providers[j].Version
+	})
+	for index := range r.Providers {
+		sort.Strings(r.Providers[index].Capabilities)
+		r.Providers[index].Capabilities = dedupeSortedStrings(r.Providers[index].Capabilities)
+	}
+	sort.Slice(r.Snapshot.Transitions, func(i, j int) bool {
+		return snapshotTransitionSortKey(r.Snapshot.Transitions[i]) < snapshotTransitionSortKey(r.Snapshot.Transitions[j])
+	})
+	sort.Slice(r.Provenance.Context, func(i, j int) bool {
+		return provenanceSortKey(r.Provenance.Context[i]) < provenanceSortKey(r.Provenance.Context[j])
+	})
+	sort.Slice(r.Provenance.Refactors, func(i, j int) bool {
+		return provenanceSortKey(r.Provenance.Refactors[i]) < provenanceSortKey(r.Provenance.Refactors[j])
+	})
 	sort.Slice(r.Change.Files, func(i, j int) bool { return r.Change.Files[i].Path < r.Change.Files[j].Path })
 	for index := range r.Change.Files {
 		sort.Slice(r.Change.Files[index].BaseRanges, func(i, j int) bool {
@@ -579,6 +741,19 @@ func (r *Report) sortCollections() {
 	}
 	sort.Slice(r.Evidence, func(i, j int) bool { return r.Evidence[i].CheckID < r.Evidence[j].CheckID })
 	for index := range r.Evidence {
+		if diagnostics := r.Evidence[index].Diagnostics; diagnostics != nil {
+			sort.Slice(diagnostics.Items, func(i, j int) bool {
+				return diagnosticSortKey(diagnostics.Items[i]) < diagnosticSortKey(diagnostics.Items[j])
+			})
+		}
+		if contract := r.Evidence[index].Contract; contract != nil {
+			for violationIndex := range contract.Violations {
+				contract.Violations[violationIndex].Locations = sortAndDeduplicateLocations(contract.Violations[violationIndex].Locations)
+			}
+			sort.Slice(contract.Violations, func(i, j int) bool {
+				return contractViolationSortKey(contract.Violations[i]) < contractViolationSortKey(contract.Violations[j])
+			})
+		}
 		if tests := r.Evidence[index].Tests; tests != nil {
 			sort.Slice(tests.Packages, func(i, j int) bool { return tests.Packages[i].Package < tests.Packages[j].Package })
 			sort.Slice(tests.Nonpassing, func(i, j int) bool {
@@ -657,6 +832,12 @@ func (r *Report) truncateDetails() {
 		check.Targets, check.TargetsTotal, check.TargetsTruncated = boundDetails(check.Targets, maxVisibleCheckTargets)
 	}
 	for index := range r.Evidence {
+		if diagnostics := r.Evidence[index].Diagnostics; diagnostics != nil {
+			diagnostics.Items, diagnostics.Total, diagnostics.Truncated = boundDetails(diagnostics.Items, maxVisibleDiagnostics)
+		}
+		if contract := r.Evidence[index].Contract; contract != nil {
+			contract.Violations, contract.ViolationsTotal, contract.ViolationsTruncated = boundDetails(contract.Violations, maxVisibleContractViolations)
+		}
 		if tests := r.Evidence[index].Tests; tests != nil {
 			tests.Packages, tests.PackagesTotal, tests.PackagesTruncated = boundDetails(tests.Packages, maxVisibleTestPackages)
 			tests.Nonpassing, tests.NonpassingTotal, tests.NonpassingTruncated = boundDetails(tests.Nonpassing, maxVisibleNonpassingTests)
@@ -674,6 +855,36 @@ func (r *Report) truncateDetails() {
 		uncertainty := &r.Uncertainties[index]
 		uncertainty.Locations, uncertainty.LocationsTotal, uncertainty.LocationsTruncated = boundDetails(uncertainty.Locations, maxVisibleUncertaintyLocations)
 	}
+}
+
+func snapshotTransitionSortKey(item SnapshotTransition) string {
+	return strings.Join([]string{item.CheckpointID, item.PreviousID, item.CurrentID}, "\x00")
+}
+
+func provenanceSortKey(item ProvenanceReference) string {
+	return strings.Join([]string{item.Kind, item.Operation, item.Reference, item.InputSnapshotID, item.OutputSnapshotID, fmt.Sprint(item.Applied)}, "\x00")
+}
+
+func diagnosticSortKey(item Diagnostic) string {
+	return strings.Join([]string{item.Location.File, fmt.Sprintf("%010d", item.Location.Line), fmt.Sprintf("%010d", item.Location.Col), item.Severity, item.Source, item.Code, item.Message}, "\x00")
+}
+
+func contractViolationSortKey(item ContractViolation) string {
+	location := ""
+	if len(item.Locations) > 0 {
+		location = locationSortKey(item.Locations[0])
+	}
+	return strings.Join([]string{item.Code, item.Policy, item.Message, location}, "\x00")
+}
+
+func dedupeSortedStrings(items []string) []string {
+	result := items[:0]
+	for _, item := range items {
+		if len(result) == 0 || result[len(result)-1] != item {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 func boundDetails[T any](items []T, limit int) ([]T, int, bool) {

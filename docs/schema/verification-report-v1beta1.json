@@ -1,12 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "agentic.verify/v1alpha1",
+  "$id": "agentic.verify/v1beta1",
   "title": "Agentic verification report",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "id",
     "provider",
+    "providers",
+    "snapshot",
+    "provenance",
     "repository",
     "change",
     "impact",
@@ -20,8 +24,12 @@
     "result"
   ],
   "properties": {
-    "schema_version": { "const": "agentic.verify/v1alpha1" },
+    "schema_version": { "const": "agentic.verify/v1beta1" },
+    "id": { "type": "string", "pattern": "^verify_[0-9a-f]{64}$" },
     "provider": { "$ref": "#/$defs/provider" },
+    "providers": { "type": "array", "items": { "$ref": "#/$defs/provider_capability" } },
+    "snapshot": { "$ref": "#/$defs/snapshot" },
+    "provenance": { "$ref": "#/$defs/provenance" },
     "repository": { "$ref": "#/$defs/repository" },
     "change": { "$ref": "#/$defs/change" },
     "impact": { "$ref": "#/$defs/impact" },
@@ -211,7 +219,7 @@
         "go.coverage",
         "go.race",
         "go.analysis.concurrency",
-        "go.analysis.errors"
+        "go.analysis.errors", "go.diagnostics", "go.contract"
       ]
     },
     "check": {
@@ -416,6 +424,12 @@
         "incomplete_checks": { "type": "integer", "minimum": 0 },
         "summary": { "type": "string" }
       }
-    }
+    },
+
+    "provider_capability": {"type":"object","additionalProperties":false,"required":["name","version","capabilities"],"properties":{"name":{"type":"string"},"version":{"type":"string"},"capabilities":{"type":"array","items":{"type":"string"}}}},
+    "snapshot_transition": {"type":"object","additionalProperties":false,"required":["checkpoint_id","previous_id","current_id"],"properties":{"checkpoint_id":{"type":"string"},"previous_id":{"type":"string"},"current_id":{"type":"string"}}},
+    "snapshot": {"type":"object","additionalProperties":false,"required":["current_id","transitions"],"properties":{"current_id":{"type":"string"},"expected_id":{"type":"string"},"contract_initial":{"type":"string"},"contract_latest":{"type":"string"},"transitions":{"type":"array","items":{"$ref":"#/$defs/snapshot_transition"}}}},
+    "provenance_reference": {"type":"object","additionalProperties":false,"required":["kind","operation","input_snapshot_id","output_snapshot_id"],"properties":{"kind":{"type":"string"},"operation":{"type":"string"},"reference":{"type":"string"},"input_snapshot_id":{"type":"string"},"output_snapshot_id":{"type":"string"},"applied":{"type":"boolean"}}},
+    "provenance": {"type":"object","additionalProperties":false,"required":["context","refactors"],"properties":{"context":{"type":"array","items":{"$ref":"#/$defs/provenance_reference"}},"refactors":{"type":"array","items":{"$ref":"#/$defs/provenance_reference"}}}}
   }
 }

@@ -1,11 +1,81 @@
 {
-  "schema_version": "agentic.verify/v1alpha1",
-  "provider": {"name": "agentic-go", "version": "0.2.0"},
-  "repository": {"requested_base": "origin/main", "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "merge_base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "snapshot_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "workspace": ".", "dirty": false},
-  "change": {"files": [], "files_total": 0, "files_truncated": false, "declarations": [], "declarations_total": 0, "declarations_truncated": false},
-  "impact": {"packages": [], "packages_total": 0, "packages_truncated": false},
-  "plan": [{"id": "tests", "kind": "go.test", "required": true, "targets": [], "targets_total": 0, "targets_truncated": false, "reason": "verify affected packages"}],
-  "evidence": [{"check_id": "tests", "kind": "go.test", "status": "error", "duration_ms": 10, "summary": "test execution unavailable", "error": "package graph exceeded the execution deadline"}], "findings": [], "findings_total": 0, "findings_truncated": false,
-  "risks": [], "uncertainties": [{"code": "deadline", "message": "the required test check did not complete", "check_id": "tests", "locations": [], "locations_total": 0, "locations_truncated": false}],
-  "result": {"status": "incomplete", "exit_code": 2, "blocking_findings": 0, "incomplete_checks": 1, "summary": "verification incomplete: 1 required checks unavailable"}
+  "schema_version": "agentic.verify/v1beta1",
+  "id": "verify_241ce59cde2a088488c364a72b21010c68fbca75bbbf9aaebc4c48e890c98c13",
+  "provider": {
+    "name": "agentic-go",
+    "version": "0.2.0"
+  },
+  "providers": [],
+  "repository": {
+    "requested_base": "origin/main",
+    "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "merge_base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "snapshot_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "workspace": ".",
+    "dirty": false
+  },
+  "snapshot": {
+    "current_id": "",
+    "transitions": []
+  },
+  "provenance": {
+    "context": [],
+    "refactors": []
+  },
+  "change": {
+    "files": [],
+    "files_total": 0,
+    "files_truncated": false,
+    "declarations": [],
+    "declarations_total": 0,
+    "declarations_truncated": false
+  },
+  "impact": {
+    "packages": [],
+    "packages_total": 0,
+    "packages_truncated": false
+  },
+  "plan": [
+    {
+      "id": "tests",
+      "kind": "go.test",
+      "required": true,
+      "targets": [],
+      "targets_total": 0,
+      "targets_truncated": false,
+      "reason": "verify affected packages"
+    }
+  ],
+  "evidence": [
+    {
+      "check_id": "tests",
+      "kind": "go.test",
+      "status": "error",
+      "duration_ms": 10,
+      "summary": "test execution unavailable",
+      "error": "package graph exceeded the execution deadline"
+    }
+  ],
+  "findings": [],
+  "findings_total": 0,
+  "findings_truncated": false,
+  "risks": [],
+  "uncertainties": [
+    {
+      "code": "deadline",
+      "message": "the required test check did not complete",
+      "check_id": "tests",
+      "locations": [],
+      "locations_total": 0,
+      "locations_truncated": false
+    }
+  ],
+  "result": {
+    "status": "incomplete",
+    "exit_code": 2,
+    "blocking_findings": 0,
+    "incomplete_checks": 1,
+    "summary": "verification incomplete: 1 required checks unavailable"
+  }
 }

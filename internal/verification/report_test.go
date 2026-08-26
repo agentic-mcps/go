@@ -287,7 +287,7 @@ func TestFinalizeBoundsPortableDetailsAfterPolicy(t *testing.T) {
 }
 
 func TestPublishedSchemaMatchesReportVersion(t *testing.T) {
-	path := filepath.Join("..", "..", "docs", "schema", "verification-report-v1alpha1.json")
+	path := filepath.Join("..", "..", "docs", "schema", "verification-report-v1beta1.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read published schema: %v", err)
@@ -303,7 +303,7 @@ func TestPublishedSchemaMatchesReportVersion(t *testing.T) {
 	if schema.ID != verification.SchemaVersion {
 		t.Fatalf("schema id = %q, want %q", schema.ID, verification.SchemaVersion)
 	}
-	want := []string{"schema_version", "provider", "repository", "change", "impact", "plan", "evidence", "findings", "findings_total", "findings_truncated", "risks", "uncertainties", "result"}
+	want := []string{"schema_version", "id", "provider", "providers", "snapshot", "provenance", "repository", "change", "impact", "plan", "evidence", "findings", "findings_total", "findings_truncated", "risks", "uncertainties", "result"}
 	if !reflect.DeepEqual(schema.Required, want) {
 		t.Fatalf("required fields = %v, want %v", schema.Required, want)
 	}

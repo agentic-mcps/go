@@ -1,12 +1,252 @@
 {
-  "schema_version": "agentic.verify/v1alpha1",
-  "provider": {"name": "agentic-go", "version": "0.2.0"},
-  "repository": {"requested_base": "origin/main", "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "merge_base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "snapshot_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "workspace": ".", "dirty": false},
-  "change": {"files": [{"path": "pkg/cache/cache.go", "change": "modified", "base_ranges": [{"start": 18, "end": 18}], "base_ranges_total": 1, "base_ranges_truncated": false, "current_ranges": [{"start": 18, "end": 19}], "current_ranges_total": 1, "current_ranges_truncated": false}], "files_total": 1, "files_truncated": false, "declarations": [{"kind": "function", "package": "example.com/service/pkg/cache", "name": "Put", "change": "modified", "current_location": {"file": "pkg/cache/cache.go", "line": 18}}], "declarations_total": 1, "declarations_truncated": false},
-  "impact": {"packages": [{"kind": "go.package", "id": "example.com/service/pkg/cache", "distance": 0, "reasons": ["changed_source"]}, {"kind": "go.package", "id": "example.com/service/internal/store", "distance": 1, "reasons": ["reverse_import"]}], "packages_total": 2, "packages_truncated": false},
-  "plan": [{"id": "concurrency", "kind": "go.analysis.concurrency", "required": true, "targets": ["example.com/service/internal/store", "example.com/service/pkg/cache"], "targets_total": 2, "targets_truncated": false, "reason": "inspect affected concurrency"}, {"id": "coverage", "kind": "go.coverage", "required": true, "targets": ["example.com/service/internal/store", "example.com/service/pkg/cache"], "targets_total": 2, "targets_truncated": false, "reason": "measure changed statements"}, {"id": "errors", "kind": "go.analysis.errors", "required": true, "targets": ["example.com/service/internal/store", "example.com/service/pkg/cache"], "targets_total": 2, "targets_truncated": false, "reason": "inspect affected error flow"}, {"id": "tests", "kind": "go.test", "required": true, "targets": ["example.com/service/internal/store", "example.com/service/pkg/cache"], "targets_total": 2, "targets_truncated": false, "reason": "verify affected packages"}],
-  "evidence": [{"check_id": "concurrency", "kind": "go.analysis.concurrency", "status": "passed", "duration_ms": 30, "summary": "no calibrated concurrency findings", "analysis": {"base": 0, "current": 0, "introduced": 0, "existing": 0, "resolved": 0, "unknown": 0}}, {"check_id": "coverage", "kind": "go.coverage", "status": "passed", "duration_ms": 140, "summary": "changed statements covered", "coverage": {"total_statements": 10, "covered_statements": 10, "percent": 100, "uncovered": [], "uncovered_total": 0, "uncovered_truncated": false}}, {"check_id": "errors", "kind": "go.analysis.errors", "status": "passed", "duration_ms": 30, "summary": "no calibrated error findings", "analysis": {"base": 0, "current": 0, "introduced": 0, "existing": 0, "resolved": 0, "unknown": 0}}, {"check_id": "tests", "kind": "go.test", "status": "passed", "duration_ms": 120, "summary": "2 packages passed", "tests": {"passed": 8, "failed": 0, "skipped": 0, "packages": [{"package": "example.com/service/internal/store", "status": "ok", "passed": 3, "failed": 0, "skipped": 0}, {"package": "example.com/service/pkg/cache", "status": "ok", "passed": 5, "failed": 0, "skipped": 0}], "packages_total": 2, "packages_truncated": false, "nonpassing": [], "nonpassing_total": 0, "nonpassing_truncated": false}}],
-  "findings": [], "findings_total": 0, "findings_truncated": false,
-  "risks": [{"code": "error_flow_change", "reason": "the modified cache write returns an error", "guidance": "review propagation and caller handling", "locations": [{"file": "pkg/cache/cache.go", "line": 19}], "locations_total": 1, "locations_truncated": false}], "uncertainties": [{"code": "external_consumers", "message": "consumers outside the selected workspace were not analyzed", "locations": [], "locations_total": 0, "locations_truncated": false}],
-  "result": {"status": "pass", "exit_code": 0, "blocking_findings": 0, "incomplete_checks": 0, "summary": "requested verification completed without blocking findings"}
+  "schema_version": "agentic.verify/v1beta1",
+  "id": "verify_1008527cfb5a5780b99c4383cb96774f01ef4a861027ea4caa0a1bc8329b3ef2",
+  "provider": {
+    "name": "agentic-go",
+    "version": "0.2.0"
+  },
+  "providers": [],
+  "repository": {
+    "requested_base": "origin/main",
+    "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "merge_base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "snapshot_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "workspace": ".",
+    "dirty": false
+  },
+  "snapshot": {
+    "current_id": "",
+    "transitions": []
+  },
+  "provenance": {
+    "context": [],
+    "refactors": []
+  },
+  "change": {
+    "files": [
+      {
+        "path": "pkg/cache/cache.go",
+        "change": "modified",
+        "base_ranges": [
+          {
+            "start": 18,
+            "end": 18
+          }
+        ],
+        "base_ranges_total": 1,
+        "base_ranges_truncated": false,
+        "current_ranges": [
+          {
+            "start": 18,
+            "end": 19
+          }
+        ],
+        "current_ranges_total": 1,
+        "current_ranges_truncated": false
+      }
+    ],
+    "files_total": 1,
+    "files_truncated": false,
+    "declarations": [
+      {
+        "kind": "function",
+        "package": "example.com/service/pkg/cache",
+        "name": "Put",
+        "change": "modified",
+        "current_location": {
+          "file": "pkg/cache/cache.go",
+          "line": 18
+        }
+      }
+    ],
+    "declarations_total": 1,
+    "declarations_truncated": false
+  },
+  "impact": {
+    "packages": [
+      {
+        "kind": "go.package",
+        "id": "example.com/service/pkg/cache",
+        "distance": 0,
+        "reasons": [
+          "changed_source"
+        ]
+      },
+      {
+        "kind": "go.package",
+        "id": "example.com/service/internal/store",
+        "distance": 1,
+        "reasons": [
+          "reverse_import"
+        ]
+      }
+    ],
+    "packages_total": 2,
+    "packages_truncated": false
+  },
+  "plan": [
+    {
+      "id": "concurrency",
+      "kind": "go.analysis.concurrency",
+      "required": true,
+      "targets": [
+        "example.com/service/internal/store",
+        "example.com/service/pkg/cache"
+      ],
+      "targets_total": 2,
+      "targets_truncated": false,
+      "reason": "inspect affected concurrency"
+    },
+    {
+      "id": "coverage",
+      "kind": "go.coverage",
+      "required": true,
+      "targets": [
+        "example.com/service/internal/store",
+        "example.com/service/pkg/cache"
+      ],
+      "targets_total": 2,
+      "targets_truncated": false,
+      "reason": "measure changed statements"
+    },
+    {
+      "id": "errors",
+      "kind": "go.analysis.errors",
+      "required": true,
+      "targets": [
+        "example.com/service/internal/store",
+        "example.com/service/pkg/cache"
+      ],
+      "targets_total": 2,
+      "targets_truncated": false,
+      "reason": "inspect affected error flow"
+    },
+    {
+      "id": "tests",
+      "kind": "go.test",
+      "required": true,
+      "targets": [
+        "example.com/service/internal/store",
+        "example.com/service/pkg/cache"
+      ],
+      "targets_total": 2,
+      "targets_truncated": false,
+      "reason": "verify affected packages"
+    }
+  ],
+  "evidence": [
+    {
+      "check_id": "concurrency",
+      "kind": "go.analysis.concurrency",
+      "status": "passed",
+      "duration_ms": 30,
+      "summary": "no calibrated concurrency findings",
+      "analysis": {
+        "base": 0,
+        "current": 0,
+        "introduced": 0,
+        "existing": 0,
+        "resolved": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "check_id": "coverage",
+      "kind": "go.coverage",
+      "status": "passed",
+      "duration_ms": 140,
+      "summary": "changed statements covered",
+      "coverage": {
+        "total_statements": 10,
+        "covered_statements": 10,
+        "percent": 100,
+        "uncovered": [],
+        "uncovered_total": 0,
+        "uncovered_truncated": false
+      }
+    },
+    {
+      "check_id": "errors",
+      "kind": "go.analysis.errors",
+      "status": "passed",
+      "duration_ms": 30,
+      "summary": "no calibrated error findings",
+      "analysis": {
+        "base": 0,
+        "current": 0,
+        "introduced": 0,
+        "existing": 0,
+        "resolved": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "check_id": "tests",
+      "kind": "go.test",
+      "status": "passed",
+      "duration_ms": 120,
+      "summary": "2 packages passed",
+      "tests": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "packages": [
+          {
+            "package": "example.com/service/internal/store",
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "package": "example.com/service/pkg/cache",
+            "status": "ok",
+            "passed": 5,
+            "failed": 0,
+            "skipped": 0
+          }
+        ],
+        "packages_total": 2,
+        "packages_truncated": false,
+        "nonpassing": [],
+        "nonpassing_total": 0,
+        "nonpassing_truncated": false
+      }
+    }
+  ],
+  "findings": [],
+  "findings_total": 0,
+  "findings_truncated": false,
+  "risks": [
+    {
+      "code": "error_flow_change",
+      "reason": "the modified cache write returns an error",
+      "guidance": "review propagation and caller handling",
+      "locations": [
+        {
+          "file": "pkg/cache/cache.go",
+          "line": 19
+        }
+      ],
+      "locations_total": 1,
+      "locations_truncated": false
+    }
+  ],
+  "uncertainties": [
+    {
+      "code": "external_consumers",
+      "message": "consumers outside the selected workspace were not analyzed",
+      "locations": [],
+      "locations_total": 0,
+      "locations_truncated": false
+    }
+  ],
+  "result": {
+    "status": "pass",
+    "exit_code": 0,
+    "blocking_findings": 0,
+    "incomplete_checks": 0,
+    "summary": "requested verification completed without blocking findings"
+  }
 }
