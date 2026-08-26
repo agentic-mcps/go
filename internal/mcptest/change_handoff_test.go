@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -26,6 +27,7 @@ type handoffContract struct {
 	FocusedSymbols      []string          `json:"focused_symbols"`
 	AllowedPaths        []string          `json:"allowed_paths"`
 	Checkpoints         []json.RawMessage `json:"checkpoints"`
+	LatestVerification  string            `json:"latest_verification"`
 }
 
 func TestSubprocessChangeHandoff(t *testing.T) {
@@ -90,6 +92,33 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 		t.Fatalf("checkpoint lineage was not persisted across processes: %#v", handoff)
 	}
 	assertContractCollections(t, handoff)
+	verified := callHandoffTool(ctx, t, third, "go_verify_change", map[string]any{
+		"base": "HEAD", "package": "./...", "fail_on": "none",
+		"contract_id": handoff.ID, "expected_snapshot_id": handoff.LatestSnapshot.ID,
+	})
+	if verified.IsError {
+		t.Fatalf("unified verification error: %#v", verified.Content)
+	}
+	var report verification.Report
+	if err := json.Unmarshal(mustJSON(t, verified.StructuredContent), &report); err != nil {
+		t.Fatal(err)
+	}
+	cleanupHandoffVerification(t, handoff.RepositoryID, report.ID)
+	if report.ID == "" || report.Snapshot.CurrentID != handoff.LatestSnapshot.ID || report.Result.Status != verification.ResultPass {
+		t.Fatalf("unified verification = %#v", report)
+	}
+	latest, err := third.ReadResource(ctx, &mcp.ReadResourceParams{URI: "agentic-go://verification/latest"})
+	if err != nil || len(latest.Contents) != 1 {
+		t.Fatalf("latest verification resource error=%v result=%#v", err, latest)
+	}
+	var latestReport verification.Report
+	if err := json.Unmarshal([]byte(latest.Contents[0].Text), &latestReport); err != nil || latestReport.ID != report.ID {
+		t.Fatalf("latest verification = %q, error %v", latestReport.ID, err)
+	}
+	linked := readHandoffContract(ctx, t, third)
+	if linked.LatestVerification != report.ID {
+		t.Fatalf("contract verification link = %q, want %q", linked.LatestVerification, report.ID)
+	}
 	if err := third.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +132,25 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	if string(output) != " M value.go\n" {
 		t.Fatalf("unexpected worktree pollution: %q", output)
 	}
+}
+
+func cleanupHandoffVerification(t *testing.T, repositoryID, reportID string) {
+	t.Helper()
+	cache, err := os.UserCacheDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repositoryDirectory := filepath.Join(cache, "agentic-go", "verifications", strings.TrimPrefix(repositoryID, "sha256:"))
+	t.Cleanup(func() {
+		for _, name := range []string{reportID + ".json", "latest.json"} {
+			if err := os.Remove(filepath.Join(repositoryDirectory, name)); err != nil && !os.IsNotExist(err) {
+				t.Errorf("remove test verification %s: %v", name, err)
+			}
+		}
+		if err := os.Remove(repositoryDirectory); err != nil && !os.IsNotExist(err) {
+			t.Errorf("remove empty test verification directory: %v", err)
+		}
+	})
 }
 
 func handoffRepository(ctx context.Context, t *testing.T) string {

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
+	"github.com/ashwingopalsamy/agentic-go/internal/trace"
 	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -152,6 +153,21 @@ func TestRefactorToolMapsPreviewAndApply(t *testing.T) {
 	}
 	if !fake.refactor.Apply || fake.refactor.PlanID != "rfp_1" {
 		t.Fatalf("apply request = %#v", fake.refactor)
+	}
+}
+
+func TestVerifyChangeUsesUnifiedIntelligenceService(t *testing.T) {
+	fake := &fakeIntelligence{}
+	runtime := &Runtime{intelligence: fake, tracer: &trace.Tracer{}}
+	_, report, err := runtime.verifyChange(context.Background(), nil, VerifyChangeInput{
+		Base: "HEAD", Package: "./...", FailOn: verification.FailOnNone, MaxPackages: 200,
+		ContractID: "chg_123", ExpectedSnapshotID: "sha256:123",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.ID == "" || fake.verify.ContractID != "chg_123" || fake.verify.ExpectedSnapshotID != "sha256:123" {
+		t.Fatalf("report=%#v request=%#v", report, fake.verify)
 	}
 }
 
