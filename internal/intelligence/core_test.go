@@ -90,8 +90,14 @@ func (fakeChangeAnalyzer) MaterializeBase(context.Context, verification.Reposito
 
 type fakeVerifier struct{}
 
-func (fakeVerifier) Verify(context.Context, verification.Request) (verification.Report, error) {
-	return verification.Report{}, nil
+func (fakeVerifier) Collect(_ context.Context, request verification.Request) (verification.Collection, error) {
+	return verification.Collection{
+		Report: verification.NewReport("test", verification.Repository{RequestedBase: request.Base}),
+		Analysis: verification.ChangeAnalysis{
+			Change: verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}},
+		},
+		Policy: verification.Policy{FailOn: request.FailOn, MinChangedCoverage: request.MinChangedCoverage},
+	}, nil
 }
 
 func TestCoreSearchPaginatesStableSnapshotBoundSymbols(t *testing.T) {
@@ -236,11 +242,20 @@ func newTestCore(t *testing.T, snapshots *Snapshotter, reader *fakeSemanticReade
 		TypeDefinition: true, References: true, Implementation: true, Diagnostics: true,
 		Rename: true, Formatting: true, CodeAction: true,
 	}}, reader: reader}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, refactors, fakeChangeAnalyzer{}, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, refactors, newTestVerificationStore(t), fakeChangeAnalyzer{}, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return core
+}
+
+func newTestVerificationStore(t *testing.T) *VerificationStore {
+	t.Helper()
+	store, err := NewVerificationStore(filepath.Join(t.TempDir(), "verifications"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return store
 }
 
 func TestSourcePositionRejectsSplitUTF8Encoding(t *testing.T) {

@@ -132,6 +132,26 @@ func TestFinalizeAppliesPolicyPrecedence(t *testing.T) {
 			},
 			want: verification.ResultIncomplete, wantExit: 2,
 		},
+		{
+			name:   "contract warning remains advisory",
+			policy: verification.Policy{FailOn: verification.FailOnInfo},
+			mutate: func(report *verification.Report) {
+				report.Findings = append(report.Findings, verification.Finding{
+					Kind: string(verification.CheckContract), Severity: verification.SeverityWarning,
+				})
+			},
+			want: verification.ResultPass,
+		},
+		{
+			name:   "forbidden contract violation always blocks",
+			policy: verification.Policy{FailOn: verification.FailOnNone},
+			mutate: func(report *verification.Report) {
+				report.Findings = append(report.Findings, verification.Finding{
+					Kind: string(verification.CheckContract), Severity: verification.SeverityError,
+				})
+			},
+			want: verification.ResultFindings, wantExit: 1,
+		},
 	}
 
 	for _, test := range tests {
@@ -179,11 +199,13 @@ func TestFinalizeOrdersPortableCollections(t *testing.T) {
 func TestFinalizeInitializesNestedEvidenceCollections(t *testing.T) {
 	report := verification.NewReport("0.2.0", verification.Repository{})
 	report.Evidence = append(report.Evidence, verification.Evidence{
-		CheckID:  "tests",
-		Kind:     verification.CheckTests,
-		Status:   verification.EvidencePassed,
-		Tests:    &verification.TestSummary{},
-		Coverage: &verification.CoverageSummary{},
+		CheckID:     "tests",
+		Kind:        verification.CheckTests,
+		Status:      verification.EvidencePassed,
+		Tests:       &verification.TestSummary{},
+		Coverage:    &verification.CoverageSummary{},
+		Diagnostics: &verification.DiagnosticSummary{},
+		Contract:    &verification.ContractSummary{Violations: []verification.ContractViolation{{Code: "scope"}}},
 	})
 	report.Risks = append(report.Risks, verification.RiskArea{Code: "empty"})
 	report.Uncertainties = append(report.Uncertainties, verification.Uncertainty{Code: "empty"})
@@ -196,6 +218,9 @@ func TestFinalizeInitializesNestedEvidenceCollections(t *testing.T) {
 	}
 	if report.Evidence[0].Coverage.Uncovered == nil {
 		t.Fatalf("coverage evidence contains nil uncovered collection")
+	}
+	if report.Evidence[0].Diagnostics.Items == nil || report.Evidence[0].Contract.Violations == nil || report.Evidence[0].Contract.Violations[0].Locations == nil {
+		t.Fatalf("unified evidence contains nil collections: %#v", report.Evidence[0])
 	}
 	if report.Risks[0].Locations == nil || report.Uncertainties[0].Locations == nil {
 		t.Fatalf("localized facts contain nil collections: risks=%#v uncertainties=%#v", report.Risks, report.Uncertainties)

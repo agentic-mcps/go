@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
@@ -24,7 +25,7 @@ const (
 )
 
 type verifier interface {
-	Verify(context.Context, verification.Request) (verification.Report, error)
+	Collect(context.Context, verification.Request) (verification.Collection, error)
 }
 
 type storedSearch struct {
@@ -43,9 +44,12 @@ type Core struct {
 	artifacts     *ArtifactStore
 	contracts     *ContractStore
 	refactors     *RefactorStore
+	verifications *VerificationStore
 	changes       verification.ChangeAnalyzer
 	verifier      verifier
 	refactorWrite func(string, []byte, os.FileMode) error
+	provenanceMu  sync.Mutex
+	provenance    []verification.ProvenanceReference
 }
 
 // NewCore constructs the supported pinned-gopls intelligence service. The
@@ -77,7 +81,11 @@ func NewCore(
 	if err != nil {
 		return nil, err
 	}
-	return newCore(ws, runner, snapshots, semantic, artifacts, contracts, refactors, changes, verify)
+	verifications, err := NewVerificationStore("")
+	if err != nil {
+		return nil, err
+	}
+	return newCore(ws, runner, snapshots, semantic, artifacts, contracts, refactors, verifications, changes, verify)
 }
 
 func newCore(
@@ -88,6 +96,7 @@ func newCore(
 	artifacts *ArtifactStore,
 	contracts *ContractStore,
 	refactors *RefactorStore,
+	verifications *VerificationStore,
 	changes verification.ChangeAnalyzer,
 	verify verifier,
 ) (*Core, error) {
@@ -106,6 +115,8 @@ func newCore(
 		return nil, fmt.Errorf("contract store is nil")
 	case refactors == nil:
 		return nil, fmt.Errorf("refactor store is nil")
+	case verifications == nil:
+		return nil, fmt.Errorf("verification store is nil")
 	case changes == nil:
 		return nil, fmt.Errorf("change analyzer is nil")
 	case verify == nil:
@@ -117,7 +128,7 @@ func newCore(
 	}
 	return &Core{
 		workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
-		mutator: mutator, artifacts: artifacts, contracts: contracts, refactors: refactors,
+		mutator: mutator, artifacts: artifacts, contracts: contracts, refactors: refactors, verifications: verifications,
 		changes: changes, verifier: verify, refactorWrite: atomicReplace,
 	}, nil
 }
@@ -216,11 +227,13 @@ func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult,
 	if _, err := c.snapshots.Validate(ctx, snapshot); err != nil {
 		return SearchResult{}, err
 	}
-	return SearchResult{
+	result := SearchResult{
 		SchemaVersion: ContextSchemaVersion, Provider: c.provider(), Snapshot: snapshot,
 		Matches: page, Total: len(matches), Truncated: end < len(matches), NextCursor: next,
 		Uncertainties: uncertainties,
-	}, nil
+	}
+	c.recordContextProvenance("search", result.Snapshot)
+	return result, nil
 }
 
 // Symbol returns default semantic facets for a stable ref or compatibility
@@ -383,6 +396,7 @@ func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext
 	if _, err := c.snapshots.Validate(ctx, snapshot); err != nil {
 		return SymbolContext{}, err
 	}
+	c.recordContextProvenance("symbol", result.Snapshot)
 	return result, nil
 }
 
@@ -494,12 +508,8 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 	if _, err := c.snapshots.Validate(ctx, snapshot); err != nil {
 		return ContextPack{}, err
 	}
+	c.recordContextProvenance("brief", result.Snapshot)
 	return result, nil
-}
-
-// Verify delegates executed change evidence to the established verification engine.
-func (c *Core) Verify(ctx context.Context, request verification.Request) (verification.Report, error) {
-	return c.verifier.Verify(ctx, request)
 }
 
 func (c *Core) capture(ctx context.Context, base, scope, expected string) (SnapshotRef, error) {

@@ -340,10 +340,12 @@ type DiagnosticSummary struct {
 
 // ContractViolation is one normalized machine-checkable contract deviation.
 type ContractViolation struct {
-	Code      string     `json:"code"`
-	Policy    string     `json:"policy"`
-	Message   string     `json:"message"`
-	Locations []Location `json:"locations"`
+	Code               string     `json:"code"`
+	Policy             string     `json:"policy"`
+	Message            string     `json:"message"`
+	Locations          []Location `json:"locations"`
+	LocationsTotal     int        `json:"locations_total"`
+	LocationsTruncated bool       `json:"locations_truncated"`
 }
 
 // ContractSummary records optional Change Contract compliance evidence.
@@ -551,6 +553,22 @@ func (r *Report) assignID() error {
 	}
 	digest := sha256.Sum256(encoded)
 	r.ID = "verify_" + hex.EncodeToString(digest[:])
+	return nil
+}
+
+// ValidateID verifies that a report carries the exact content address assigned
+// by Finalize without mutating the caller's value.
+func (r Report) ValidateID() error {
+	if r.SchemaVersion != SchemaVersion || !strings.HasPrefix(r.ID, "verify_") || len(r.ID) != len("verify_")+sha256.Size*2 {
+		return fmt.Errorf("verification report identity is invalid")
+	}
+	want := r.ID
+	if err := r.assignID(); err != nil {
+		return err
+	}
+	if r.ID != want {
+		return fmt.Errorf("verification report identity does not match its content")
+	}
 	return nil
 }
 
@@ -836,6 +854,10 @@ func (r *Report) truncateDetails() {
 			diagnostics.Items, diagnostics.Total, diagnostics.Truncated = boundDetails(diagnostics.Items, maxVisibleDiagnostics)
 		}
 		if contract := r.Evidence[index].Contract; contract != nil {
+			for violationIndex := range contract.Violations {
+				violation := &contract.Violations[violationIndex]
+				violation.Locations, violation.LocationsTotal, violation.LocationsTruncated = boundDetails(violation.Locations, maxVisibleUncertaintyLocations)
+			}
 			contract.Violations, contract.ViolationsTotal, contract.ViolationsTruncated = boundDetails(contract.Violations, maxVisibleContractViolations)
 		}
 		if tests := r.Evidence[index].Tests; tests != nil {

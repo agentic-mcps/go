@@ -361,7 +361,9 @@
         "tests": { "$ref": "#/$defs/test_summary" },
         "coverage": { "$ref": "#/$defs/coverage_summary" },
         "analysis": { "$ref": "#/$defs/analysis_summary" },
-        "race": { "$ref": "#/$defs/race_summary" }
+        "race": { "$ref": "#/$defs/race_summary" },
+        "diagnostics": { "$ref": "#/$defs/diagnostic_summary" },
+        "contract": { "$ref": "#/$defs/contract_summary" }
       }
     },
     "finding": {
@@ -426,6 +428,10 @@
       }
     },
 
+    "diagnostic": {"type":"object","additionalProperties":false,"required":["source","severity","message","location"],"properties":{"source":{"type":"string"},"code":{"type":"string"},"severity":{"type":"string"},"message":{"type":"string"},"location":{"$ref":"#/$defs/location"}}},
+    "diagnostic_summary": {"type":"object","additionalProperties":false,"required":["items","total","errors","warnings","truncated"],"properties":{"items":{"type":"array","maxItems":50,"items":{"$ref":"#/$defs/diagnostic"}},"total":{"type":"integer","minimum":0},"errors":{"type":"integer","minimum":0},"warnings":{"type":"integer","minimum":0},"truncated":{"type":"boolean"}}},
+    "contract_violation": {"type":"object","additionalProperties":false,"required":["code","policy","message","locations","locations_total","locations_truncated"],"properties":{"code":{"type":"string"},"policy":{"enum":["warn","forbid"]},"message":{"type":"string"},"locations":{"type":"array","maxItems":5,"items":{"$ref":"#/$defs/location"}},"locations_total":{"type":"integer","minimum":0},"locations_truncated":{"type":"boolean"}}},
+    "contract_summary": {"type":"object","additionalProperties":false,"required":["contract_id","violations","violations_total","violations_truncated","forbidden","warnings"],"properties":{"contract_id":{"type":"string"},"violations":{"type":"array","maxItems":50,"items":{"$ref":"#/$defs/contract_violation"}},"violations_total":{"type":"integer","minimum":0},"violations_truncated":{"type":"boolean"},"forbidden":{"type":"integer","minimum":0},"warnings":{"type":"integer","minimum":0}}},
     "provider_capability": {"type":"object","additionalProperties":false,"required":["name","version","capabilities"],"properties":{"name":{"type":"string"},"version":{"type":"string"},"capabilities":{"type":"array","items":{"type":"string"}}}},
     "snapshot_transition": {"type":"object","additionalProperties":false,"required":["checkpoint_id","previous_id","current_id"],"properties":{"checkpoint_id":{"type":"string"},"previous_id":{"type":"string"},"current_id":{"type":"string"}}},
     "snapshot": {"type":"object","additionalProperties":false,"required":["current_id","transitions"],"properties":{"current_id":{"type":"string"},"expected_id":{"type":"string"},"contract_initial":{"type":"string"},"contract_latest":{"type":"string"},"transitions":{"type":"array","items":{"$ref":"#/$defs/snapshot_transition"}}}},

@@ -46,7 +46,7 @@ func TestPinnedGoplsNormalizedIntelligenceContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, provider, artifacts, contracts, refactors, fakeChangeAnalyzer{}, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, provider, artifacts, contracts, refactors, newTestVerificationStore(t), fakeChangeAnalyzer{}, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestPinnedGoplsGuardedRefactorContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, provider, artifacts, contracts, refactors, fakeChangeAnalyzer{}, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, provider, artifacts, contracts, refactors, newTestVerificationStore(t), fakeChangeAnalyzer{}, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -25,10 +25,18 @@ func (c *Core) Refactor(ctx context.Context, request RefactorRequest) (RefactorR
 	if strings.TrimSpace(request.ExpectedSnapshotID) == "" {
 		return RefactorResult{}, fmt.Errorf("expected snapshot ID is required")
 	}
+	var result RefactorResult
+	var err error
 	if request.Apply {
-		return c.applyRefactor(ctx, request)
+		result, err = c.applyRefactor(ctx, request)
+	} else {
+		result, err = c.previewRefactor(ctx, request)
 	}
-	return c.previewRefactor(ctx, request)
+	if err != nil {
+		return RefactorResult{}, err
+	}
+	c.recordRefactorProvenance(result, request.ExpectedSnapshotID)
+	return result, nil
 }
 
 func (c *Core) previewRefactor(ctx context.Context, request RefactorRequest) (RefactorResult, error) {

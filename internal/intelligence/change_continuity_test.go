@@ -343,7 +343,7 @@ func newContractTestCoreWithStore(t *testing.T, root, contractRoot string) *Core
 		identity: SemanticIdentity{Version: "v0.21.0", Capabilities: CapabilityManifest{Diagnostics: true}},
 		reader:   &fakeSemanticReader{diagnostics: []Diagnostic{}},
 	}
-	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, refactors, changes, fakeVerifier{})
+	core, err := newCore(snapshots.workspace, snapshots.runner, snapshots, semantic, artifacts, contracts, refactors, newTestVerificationStore(t), changes, fakeVerifier{})
 	if err != nil {
 		t.Fatal(err)
 	}
