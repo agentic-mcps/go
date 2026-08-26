@@ -25,8 +25,19 @@ type Request struct {
 	Base               string
 	Package            string
 	FailOn             FailOn
+	ContractID         string
+	ExpectedSnapshotID string
 	MaxPackages        int
 	Race               bool
+}
+
+// Collection retains the unfinalized report and its private analysis handoff
+// so the intelligence layer can attach snapshot-consistent semantic evidence
+// before policy evaluation and detail truncation.
+type Collection struct {
+	Report   Report
+	Analysis ChangeAnalysis
+	Policy   Policy
 }
 
 // Engine assembles one portable report from injected change discovery and the
@@ -59,8 +70,22 @@ func NewEngine(ws *workspace.Workspace, runner *execution.Runner, analyzer Chang
 // the report policy. Caller cancellation and the shared deadline remain request
 // errors; ordinary check failures are represented in the report.
 func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
-	if err := normalizeRequest(&request); err != nil {
+	collection, err := e.Collect(ctx, request)
+	if err != nil {
 		return Report{}, err
+	}
+	if err := collection.Report.Finalize(collection.Policy); err != nil {
+		return Report{}, err
+	}
+	return collection.Report, nil
+}
+
+// Collect runs the established change, execution, and analyzer evidence path
+// without finalizing the portable report. Callers must finalize exactly once
+// after attaching any additional neutral evidence.
+func (e *Engine) Collect(ctx context.Context, request Request) (Collection, error) {
+	if err := normalizeRequest(&request); err != nil {
+		return Collection{}, err
 	}
 	callCtx, cancel := e.runner.Deadline(ctx)
 	defer cancel()
@@ -69,7 +94,7 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 		Base: request.Base, Package: request.Package, MaxPackages: request.MaxPackages,
 	})
 	if err != nil {
-		return Report{}, err
+		return Collection{}, err
 	}
 	report := NewReport(e.providerVersion, analysis.Repository)
 	report.Change = analysis.Change
@@ -84,7 +109,7 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 		outcome, runErr := e.runAffectedChecks(callCtx, analysis, request, direct)
 		if runErr != nil {
 			if errors.Is(runErr, context.Canceled) || errors.Is(runErr, context.DeadlineExceeded) {
-				return Report{}, runErr
+				return Collection{}, runErr
 			}
 			roots := []string{e.workspace.Root()}
 			if cache, cacheErr := os.UserCacheDir(); cacheErr == nil {
@@ -99,9 +124,9 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 		analyzerOutcome, analyzerErr := e.runAnalyzerChecks(callCtx, analysis)
 		if analyzerErr != nil {
 			if errors.Is(analyzerErr, context.Canceled) || errors.Is(analyzerErr, context.DeadlineExceeded) {
-				return Report{}, analyzerErr
+				return Collection{}, analyzerErr
 			}
-			return Report{}, fmt.Errorf("running analyzer comparison: %w", analyzerErr)
+			return Collection{}, fmt.Errorf("running analyzer comparison: %w", analyzerErr)
 		}
 		report.Evidence = append(report.Evidence, analyzerOutcome.Evidence...)
 		report.Findings = append(report.Findings, analyzerOutcome.Findings...)
@@ -110,10 +135,10 @@ func (e *Engine) Verify(ctx context.Context, request Request) (Report, error) {
 	if request.MinChangedCoverage != nil {
 		applyCoveragePolicy(&report, *request.MinChangedCoverage)
 	}
-	if err := report.Finalize(Policy{FailOn: request.FailOn, MinChangedCoverage: request.MinChangedCoverage}); err != nil {
-		return Report{}, err
-	}
-	return report, nil
+	return Collection{
+		Report: report, Analysis: analysis,
+		Policy: Policy{FailOn: request.FailOn, MinChangedCoverage: request.MinChangedCoverage},
+	}, nil
 }
 
 func normalizeRequest(request *Request) error {
