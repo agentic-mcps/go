@@ -7,18 +7,21 @@ import (
 	"strings"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
+	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const (
 	capabilitiesURI          = "agentic-go://capabilities"
 	changeContractCurrentURI = "agentic-go://change-contract/current"
+	verificationLatestURI    = "agentic-go://verification/latest"
 )
 
 type intelligenceResourceService interface {
 	Capabilities() intelligence.Capabilities
 	ReadArtifact(context.Context, string, int64) (intelligence.ArtifactChunk, error)
 	CurrentChangeContract(context.Context) (intelligence.ChangeContract, error)
+	CurrentVerification(context.Context) (verification.Report, error)
 }
 
 // RegisterIntelligenceResources publishes effective semantic capabilities and
@@ -26,10 +29,26 @@ type intelligenceResourceService interface {
 func RegisterIntelligenceResources(server *mcp.Server, runtime *Runtime) {
 	server.AddResource(&mcp.Resource{Name: "capabilities", Description: "Effective pinned-gopls capabilities and compact Context Pack limits.", URI: capabilitiesURI, MIMEType: "application/json"}, runtime.capabilitiesResource)
 	server.AddResource(&mcp.Resource{Name: "current-change-contract", Description: "The active private Change Contract for the current workspace.", URI: changeContractCurrentURI, MIMEType: "application/json"}, runtime.currentChangeContractResource)
+	server.AddResource(&mcp.Resource{Name: "latest-verification", Description: "The latest private finalized verification report for the current workspace.", URI: verificationLatestURI, MIMEType: "application/json"}, runtime.latestVerificationResource)
 	server.AddResourceTemplate(&mcp.ResourceTemplate{
 		Name: "artifact", Description: "Reads one bounded chunk using the opaque cursor returned by a Context Pack.",
 		URITemplate: "agentic-go://artifact/{id}", MIMEType: "application/json",
 	}, runtime.artifactResource)
+}
+
+func (r *Runtime) latestVerificationResource(ctx context.Context, request *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+	if err := resourceURI(request, verificationLatestURI); err != nil {
+		return nil, err
+	}
+	service, err := r.requireIntelligenceResources()
+	if err != nil {
+		return nil, err
+	}
+	report, err := service.CurrentVerification(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("reading latest verification: %w", err)
+	}
+	return jsonResource(verificationLatestURI, report)
 }
 
 func (r *Runtime) currentChangeContractResource(ctx context.Context, request *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {

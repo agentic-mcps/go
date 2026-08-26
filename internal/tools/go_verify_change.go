@@ -24,6 +24,8 @@ type VerifyChangeInput struct {
 	FailOn             verification.FailOn `json:"fail_on,omitempty" jsonschema:"blocking analyzer severity: error, warning, info, or none; default error"`
 	MinChangedCoverage *float64            `json:"min_changed_coverage,omitempty" jsonschema:"optional changed-statement coverage minimum from 0 through 100"`
 	MaxPackages        int                 `json:"max_packages,omitempty" jsonschema:"maximum affected package closure; default 200, maximum 500"`
+	ContractID         string              `json:"contract_id,omitempty" jsonschema:"optional private Change Contract evaluated against the exact verification snapshot"`
+	ExpectedSnapshotID string              `json:"expected_snapshot_id,omitempty" jsonschema:"optional exact semantic snapshot required for this verification"`
 }
 
 // RegisterVerifyChange registers the approval-gated verification adapter.
@@ -46,19 +48,28 @@ func (r *Runtime) verifyChange(ctx context.Context, _ *mcp.CallToolRequest, inpu
 		r.recordVerifyTrace(input, started, verification.Report{}, trace.ErrorInvalidInput)
 		return nil, verification.Report{}, fmt.Errorf("validating input: %w", err)
 	}
-	engine, err := r.newVerificationEngine()
-	if err != nil {
-		r.recordVerifyTrace(input, started, verification.Report{}, trace.ErrorInternal)
-		return nil, verification.Report{}, fmt.Errorf("setting up verification: %w", err)
-	}
-	report, err := engine.Verify(ctx, verification.Request{
+	request := verification.Request{
 		Base:               input.Base,
 		Package:            input.Package,
 		Race:               input.Race,
 		FailOn:             input.FailOn,
 		MinChangedCoverage: input.MinChangedCoverage,
 		MaxPackages:        input.MaxPackages,
-	})
+		ContractID:         input.ContractID,
+		ExpectedSnapshotID: input.ExpectedSnapshotID,
+	}
+	var report verification.Report
+	var err error
+	if r.intelligence != nil {
+		report, err = r.intelligence.Verify(ctx, request)
+	} else {
+		engine, setupErr := r.newVerificationEngine()
+		if setupErr != nil {
+			r.recordVerifyTrace(input, started, verification.Report{}, trace.ErrorInternal)
+			return nil, verification.Report{}, fmt.Errorf("setting up verification: %w", setupErr)
+		}
+		report, err = engine.Verify(ctx, request)
+	}
 	if err != nil {
 		r.recordVerifyTrace(input, started, verification.Report{}, classifyTraceError(err))
 		return nil, verification.Report{}, fmt.Errorf("verifying change: %w", err)
@@ -112,6 +123,12 @@ func normalizeVerifyChangeInput(input *VerifyChangeInput) error {
 	}
 	if input.MaxPackages == 0 {
 		input.MaxPackages = 200
+	}
+	if input.ContractID != "" && invalidSingleArgument(input.ContractID) {
+		return fmt.Errorf("contract_id is invalid: use one private contract ID without whitespace")
+	}
+	if input.ExpectedSnapshotID != "" && invalidSingleArgument(input.ExpectedSnapshotID) {
+		return fmt.Errorf("expected_snapshot_id is invalid: use one snapshot ID without whitespace")
 	}
 	return nil
 }

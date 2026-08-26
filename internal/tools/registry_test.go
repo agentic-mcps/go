@@ -46,8 +46,8 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resources.Resources) != 6 {
-		t.Fatalf("len(resources/list) = %d, want 6", len(resources.Resources))
+	if len(resources.Resources) != 7 {
+		t.Fatalf("len(resources/list) = %d, want 7", len(resources.Resources))
 	}
 	wantResources := map[string]bool{
 		"agentic-go://module":         false,
@@ -56,6 +56,7 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 		traceSummaryURI:               false,
 		capabilitiesURI:               false,
 		changeContractCurrentURI:      false,
+		verificationLatestURI:         false,
 	}
 	templates, err := clientSession.ListResourceTemplates(ctx, nil)
 	if err != nil {
@@ -188,7 +189,7 @@ func TestRegistryAndStructuredProtocolResult(t *testing.T) {
 			t.Fatalf("go_checkpoint_change input schema %s missing %s", checkpointSchema, field)
 		}
 	}
-	for _, field := range []string{`"base"`, `"package"`, `"race"`, `"fail_on"`, `"min_changed_coverage"`, `"max_packages"`} {
+	for _, field := range []string{`"base"`, `"package"`, `"race"`, `"fail_on"`, `"min_changed_coverage"`, `"max_packages"`, `"contract_id"`, `"expected_snapshot_id"`} {
 		if !strings.Contains(string(verifySchema), field) {
 			t.Fatalf("go_verify_change input schema %s missing %s", verifySchema, field)
 		}

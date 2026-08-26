@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
+	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -16,6 +17,7 @@ type fakeIntelligence struct { //nolint:govet // Test requests are grouped by op
 	begin      intelligence.BeginRequest
 	checkpoint intelligence.CheckpointRequest
 	refactor   intelligence.RefactorRequest
+	verify     verification.Request
 }
 
 func (f *fakeIntelligence) Brief(_ context.Context, request intelligence.BriefRequest) (intelligence.ContextPack, error) {
@@ -48,6 +50,15 @@ func (f *fakeIntelligence) Refactor(_ context.Context, request intelligence.Refa
 	return intelligence.RefactorResult{PlanID: "rfp_1", Snapshot: intelligence.SnapshotRef{ID: "snap-refactor"}, AffectedFiles: []string{"main.go"}, Preimages: []intelligence.RefactorPreimage{}, Risks: []intelligence.RiskArea{}, Uncertainties: []intelligence.Uncertainty{}}, nil
 }
 
+func (f *fakeIntelligence) Verify(_ context.Context, request verification.Request) (verification.Report, error) {
+	f.verify = request
+	report := verification.NewReport("test", verification.Repository{})
+	if err := report.Finalize(verification.Policy{}); err != nil {
+		return verification.Report{}, err
+	}
+	return report, nil
+}
+
 func (*fakeIntelligence) Capabilities() intelligence.Capabilities {
 	return intelligence.Capabilities{ContextSchema: intelligence.ContextSchemaVersion}
 }
@@ -58,6 +69,14 @@ func (*fakeIntelligence) ReadArtifact(_ context.Context, cursor string, _ int64)
 
 func (*fakeIntelligence) CurrentChangeContract(context.Context) (intelligence.ChangeContract, error) {
 	return intelligence.ChangeContract{ID: "chg_current", Goal: "private goal", Checkpoints: []intelligence.CheckpointRef{}}, nil
+}
+
+func (*fakeIntelligence) CurrentVerification(context.Context) (verification.Report, error) {
+	report := verification.NewReport("test", verification.Repository{})
+	if err := report.Finalize(verification.Policy{}); err != nil {
+		return verification.Report{}, err
+	}
+	return report, nil
 }
 
 func testIntelligenceRuntime(service IntelligenceService) *Runtime {
@@ -196,5 +215,13 @@ func TestIntelligenceResourcesReturnCapabilitiesAndArtifactChunks(t *testing.T) 
 	var contract intelligence.ChangeContract
 	if decodeErr := json.Unmarshal([]byte(contractResource.Contents[0].Text), &contract); decodeErr != nil || contract.ID != "chg_current" || contract.Goal != "private goal" {
 		t.Fatalf("current contract = %#v, error %v", contract, decodeErr)
+	}
+	latest, err := runtime.latestVerificationResource(context.Background(), &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: verificationLatestURI}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var report verification.Report
+	if decodeErr := json.Unmarshal([]byte(latest.Contents[0].Text), &report); decodeErr != nil || report.ID == "" {
+		t.Fatalf("latest verification = %#v, error %v", report, decodeErr)
 	}
 }

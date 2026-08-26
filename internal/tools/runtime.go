@@ -12,6 +12,7 @@ import (
 	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
 	"github.com/ashwingopalsamy/agentic-go/internal/trace"
+	"github.com/ashwingopalsamy/agentic-go/internal/verification"
 	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -33,6 +34,7 @@ type IntelligenceService interface {
 	Begin(context.Context, intelligence.BeginRequest) (intelligence.ChangeContract, error)
 	Checkpoint(context.Context, intelligence.CheckpointRequest) (intelligence.Checkpoint, error)
 	Refactor(context.Context, intelligence.RefactorRequest) (intelligence.RefactorResult, error)
+	Verify(context.Context, verification.Request) (verification.Report, error)
 }
 
 // NewRuntime validates the dependencies shared by every tool registration.
