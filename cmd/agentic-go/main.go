@@ -170,6 +170,17 @@ type optionalPercentage struct {
 	value float64
 }
 
+type verificationService interface {
+	Verify(context.Context, verification.Request) (verification.Report, error)
+}
+
+type verificationServiceFactory func(
+	context.Context,
+	*workspace.Workspace,
+	*execution.Runner,
+	*changeimpact.Analyzer,
+) (verificationService, func(), error)
+
 func (p *optionalPercentage) String() string {
 	if p == nil || !p.set {
 		return ""
@@ -187,6 +198,10 @@ func (p *optionalPercentage) Set(value string) error {
 }
 
 func runVerify(args []string, stdout, stderr io.Writer) int {
+	return runVerifyWithFactory(args, stdout, stderr, newUnifiedVerificationService)
+}
+
+func runVerifyWithFactory(args []string, stdout, stderr io.Writer, factory verificationServiceFactory) int {
 	flags := flag.NewFlagSet("agentic-go verify", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	base := flags.String("base", "", "required local commit or ref")
@@ -246,18 +261,19 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "agentic-go verify: change analysis setup failed: %v\n", err)
 		return 2
 	}
-	engine, err := verification.NewEngine(ws, runner, impact, version)
+	service, closeService, err := factory(ctx, ws, runner, impact)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "agentic-go verify: verification setup failed: %v\n", err)
 		return 2
 	}
+	defer closeService()
 	request := verification.Request{
 		Base: *base, Package: *packagePattern, Race: *race, FailOn: threshold, MaxPackages: *maxPackages,
 	}
 	if minimumCoverage.set {
 		request.MinChangedCoverage = &minimumCoverage.value
 	}
-	report, err := engine.Verify(ctx, request)
+	report, err := service.Verify(ctx, request)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "agentic-go verify: %v\n", err)
 		return 2
@@ -274,6 +290,39 @@ func runVerify(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	return report.Result.ExitCode
+}
+
+func newUnifiedVerificationService(
+	ctx context.Context,
+	ws *workspace.Workspace,
+	runner *execution.Runner,
+	impact *changeimpact.Analyzer,
+) (verificationService, func(), error) {
+	engine, err := verification.NewEngine(ws, runner, impact, version)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	installation, err := gopls.Locate(ctx, "", "")
+	if err != nil {
+		return nil, func() {}, fmt.Errorf("semantic sidecar preflight failed: %w", err)
+	}
+	manager, err := gopls.NewManager(ctx, gopls.Config{Command: installation.Path, Args: []string{"serve"}, Workspace: ws.Root()})
+	if err != nil {
+		return nil, func() {}, fmt.Errorf("semantic sidecar setup failed: %w", err)
+	}
+	service, err := intelligence.NewCore(ws, runner, manager, impact, engine)
+	if err != nil {
+		closeCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_ = manager.Close(closeCtx)
+		return nil, func() {}, err
+	}
+	closeService := func() {
+		closeCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_ = manager.Close(closeCtx)
+	}
+	return service, closeService, nil
 }
 
 func renderTextReport(writer io.Writer, report verification.Report) error {

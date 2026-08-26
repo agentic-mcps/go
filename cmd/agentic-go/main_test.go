@@ -11,8 +11,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ashwingopalsamy/agentic-go/internal/changeimpact"
+	"github.com/ashwingopalsamy/agentic-go/internal/execution"
 	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
 	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
 )
 
 func TestRunVerifyValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
@@ -125,7 +128,7 @@ func TestRunVerifyWritesCanonicalJSONAndPolicyExit(t *testing.T) {
 	cliWrite(t, repository, "value.go", "package fixture\n\nfunc value() int { return 2 }\n")
 
 	var stdout, stderr bytes.Buffer
-	exit := runVerify([]string{"--workspace", repository, "--base", base, "--format", "json"}, &stdout, &stderr)
+	exit := runVerifyWithFactory([]string{"--workspace", repository, "--base", base, "--format", "json"}, &stdout, &stderr, testVerificationService)
 	if exit != 0 {
 		t.Fatalf("exit = %d, stderr=%q stdout=%q", exit, stderr.String(), stdout.String())
 	}
@@ -142,7 +145,7 @@ func TestRunVerifyWritesCanonicalJSONAndPolicyExit(t *testing.T) {
 
 	stdout.Reset()
 	stderr.Reset()
-	exit = runVerify([]string{"--workspace", repository, "--base", base, "--format", "json", "--min-changed-coverage", "100"}, &stdout, &stderr)
+	exit = runVerifyWithFactory([]string{"--workspace", repository, "--base", base, "--format", "json", "--min-changed-coverage", "100"}, &stdout, &stderr, testVerificationService)
 	if exit != 1 {
 		t.Fatalf("coverage-policy exit = %d, want 1; stderr=%q stdout=%q", exit, stderr.String(), stdout.String())
 	}
@@ -152,6 +155,16 @@ func TestRunVerifyWritesCanonicalJSONAndPolicyExit(t *testing.T) {
 	if report.Result.Status != verification.ResultFindings {
 		t.Fatalf("policy status = %s, want findings", report.Result.Status)
 	}
+}
+
+func testVerificationService(
+	_ context.Context,
+	ws *workspace.Workspace,
+	runner *execution.Runner,
+	impact *changeimpact.Analyzer,
+) (verificationService, func(), error) {
+	engine, err := verification.NewEngine(ws, runner, impact, "test")
+	return engine, func() {}, err
 }
 
 func TestRenderTextDoesNotClaimSafety(t *testing.T) {
