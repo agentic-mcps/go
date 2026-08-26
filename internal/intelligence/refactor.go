@@ -44,8 +44,8 @@ func (c *Core) previewRefactor(ctx context.Context, request RefactorRequest) (Re
 		base, scope = identity.Base, identity.Scope
 		semanticRequest.File, semanticRequest.Position = identity.Path, identity.Position
 	}
-	if err := c.requireRefactorCapability(request.Operation); err != nil {
-		return RefactorResult{}, err
+	if capabilityErr := c.requireRefactorCapability(request.Operation); capabilityErr != nil {
+		return RefactorResult{}, capabilityErr
 	}
 	snapshot, err := c.capture(ctx, base, scope, request.ExpectedSnapshotID)
 	if err != nil {
@@ -56,21 +56,22 @@ func (c *Core) previewRefactor(ctx context.Context, request RefactorRequest) (Re
 		if decodeErr != nil {
 			return RefactorResult{}, decodeErr
 		}
-		if err := requireSymbolSnapshot(identity, snapshot); err != nil {
-			return RefactorResult{}, err
+		if snapshotErr := requireSymbolSnapshot(identity, snapshot); snapshotErr != nil {
+			return RefactorResult{}, snapshotErr
 		}
 	}
-	if _, err := c.refactors.Pending(ctx, snapshot.RepositoryID); err == nil {
-		return RefactorResult{}, ErrRefactorRecoveryRequired
-	} else if !errors.Is(err, ErrRefactorRecoveryNotFound) {
-		return RefactorResult{}, err
+	_, pendingErr := c.refactors.pending(ctx, snapshot.RepositoryID)
+	if pendingErr == nil {
+		return RefactorResult{}, errRefactorRecoveryRequired
+	} else if !errors.Is(pendingErr, errRefactorRecoveryNotFound) {
+		return RefactorResult{}, pendingErr
 	}
 	semanticEdits, err := c.mutator.Refactor(ctx, snapshot, semanticRequest)
 	if err != nil {
 		return RefactorResult{}, err
 	}
-	if _, err := c.snapshots.Validate(ctx, snapshot); err != nil {
-		return RefactorResult{}, err
+	if _, snapshotErr := c.snapshots.Validate(ctx, snapshot); snapshotErr != nil {
+		return RefactorResult{}, snapshotErr
 	}
 	plan, uncertainties, err := c.buildRefactorPlan(ctx, snapshot, request.Operation, semanticEdits)
 	if err != nil {
@@ -79,10 +80,10 @@ func (c *Core) previewRefactor(ctx context.Context, request RefactorRequest) (Re
 	if len(plan.Files) == 0 {
 		return emptyRefactorResult(request.Operation, snapshot), nil
 	}
-	if _, err := c.snapshots.Validate(ctx, snapshot); err != nil {
-		return RefactorResult{}, err
+	if _, snapshotErr := c.snapshots.Validate(ctx, snapshot); snapshotErr != nil {
+		return RefactorResult{}, snapshotErr
 	}
-	plan, err = c.refactors.SavePlan(ctx, plan)
+	plan, err = c.refactors.savePlan(ctx, plan)
 	if err != nil {
 		return RefactorResult{}, err
 	}
@@ -97,48 +98,49 @@ func (c *Core) applyRefactor(ctx context.Context, request RefactorRequest) (Refa
 	if err != nil {
 		return RefactorResult{}, err
 	}
-	plan, err := c.refactors.LoadPlan(ctx, observed.RepositoryID, request.PlanID)
+	plan, err := c.refactors.loadPlan(ctx, observed.RepositoryID, request.PlanID)
 	if err != nil {
 		return RefactorResult{}, err
 	}
 	if request.ExpectedSnapshotID != plan.Snapshot.ID {
 		return RefactorResult{}, fmt.Errorf("%w: plan expects %s, caller supplied %s", ErrSnapshotChanged, plan.Snapshot.ID, request.ExpectedSnapshotID)
 	}
-	if _, err := c.snapshots.Validate(ctx, plan.Snapshot); err != nil {
-		return RefactorResult{}, err
+	if _, snapshotErr := c.snapshots.Validate(ctx, plan.Snapshot); snapshotErr != nil {
+		return RefactorResult{}, snapshotErr
 	}
-	if _, err := c.refactors.Pending(ctx, plan.RepositoryID); err == nil {
-		return RefactorResult{}, ErrRefactorRecoveryRequired
-	} else if !errors.Is(err, ErrRefactorRecoveryNotFound) {
-		return RefactorResult{}, err
+	_, pendingErr := c.refactors.pending(ctx, plan.RepositoryID)
+	if pendingErr == nil {
+		return RefactorResult{}, errRefactorRecoveryRequired
+	} else if !errors.Is(pendingErr, errRefactorRecoveryNotFound) {
+		return RefactorResult{}, pendingErr
 	}
 	targets, err := c.validateRefactorPreimages(ctx, plan)
 	if err != nil {
 		return RefactorResult{}, err
 	}
-	if err := c.refactors.BeginRecovery(ctx, plan); err != nil {
-		return RefactorResult{}, err
+	if journalErr := c.refactors.beginRecovery(ctx, plan); journalErr != nil {
+		return RefactorResult{}, journalErr
 	}
 	rollback := func(cause error) (RefactorResult, error) {
-		_, recoverErr := c.refactors.Recover(context.Background(), plan.RepositoryID, c.workspace.Root())
+		_, recoverErr := c.refactors.recover(context.Background(), plan.RepositoryID, c.workspace.Root())
 		if recoverErr != nil {
-			return RefactorResult{}, fmt.Errorf("%w: apply failed: %v; rollback failed: %v", ErrRefactorRecoveryRequired, cause, recoverErr)
+			return RefactorResult{}, fmt.Errorf("%w: apply failed: %v; rollback failed: %v", errRefactorRecoveryRequired, cause, recoverErr)
 		}
 		return RefactorResult{}, cause
 	}
 	for index, file := range plan.Files {
-		if err := contextError(ctx); err != nil {
-			return rollback(err)
+		if contextErr := contextError(ctx); contextErr != nil {
+			return rollback(contextErr)
 		}
-		current, err := os.ReadFile(targets[index])
-		if err != nil {
-			return rollback(fmt.Errorf("reading refactor preimage %s: %w", file.Path, err))
+		current, readErr := os.ReadFile(targets[index])
+		if readErr != nil {
+			return rollback(fmt.Errorf("reading refactor preimage %s: %w", file.Path, readErr))
 		}
 		if digestBytes(current) != file.PreimageDigest {
 			return rollback(fmt.Errorf("%w: preimage changed for %s", ErrSnapshotChanged, file.Path))
 		}
-		if err := c.refactorWrite(targets[index], file.Postimage, os.FileMode(file.Mode)); err != nil {
-			return rollback(fmt.Errorf("applying refactor to %s: %w", file.Path, err))
+		if writeErr := c.refactorWrite(targets[index], file.Postimage, os.FileMode(file.Mode)); writeErr != nil {
+			return rollback(fmt.Errorf("applying refactor to %s: %w", file.Path, writeErr))
 		}
 	}
 	appliedSnapshot, err := c.snapshots.Capture(ctx, SnapshotRequest{
@@ -147,8 +149,8 @@ func (c *Core) applyRefactor(ctx context.Context, request RefactorRequest) (Refa
 	if err != nil {
 		return rollback(err)
 	}
-	if err := c.refactors.CompleteRecovery(ctx, plan.RepositoryID); err != nil {
-		return RefactorResult{}, fmt.Errorf("%w: refactor applied but recovery journal could not be cleared: %v", ErrRefactorRecoveryRequired, err)
+	if clearErr := c.refactors.completeRecovery(ctx, plan.RepositoryID); clearErr != nil {
+		return RefactorResult{}, fmt.Errorf("%w: refactor applied but recovery journal could not be cleared: %v", errRefactorRecoveryRequired, clearErr)
 	}
 	return refactorResult(plan, appliedSnapshot, true, []Uncertainty{}), nil
 }

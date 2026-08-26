@@ -45,9 +45,9 @@ type semanticMutator interface {
 type semanticRefactorRequest struct {
 	Operation string
 	File      string
-	Position  Position
 	NewName   string
 	Files     []string
+	Position  Position
 }
 
 type semanticFileEdits struct {
@@ -56,7 +56,7 @@ type semanticFileEdits struct {
 }
 
 type semanticTextEdit struct {
+	NewText string
 	Start   int
 	End     int
-	NewText string
 }

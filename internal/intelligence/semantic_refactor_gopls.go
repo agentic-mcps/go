@@ -12,8 +12,8 @@ import (
 )
 
 type rpcTextEdit struct {
-	Range   rpcRange
 	NewText string
+	Range   rpcRange
 }
 
 type rpcWorkspaceEdit struct {

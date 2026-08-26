@@ -10,8 +10,11 @@ import (
 )
 
 const (
-	RefactorRecoveryClean     = "clean"
-	RefactorRecoveryRequired  = "recovery_required"
+	// RefactorRecoveryClean means no recovery journal exists.
+	RefactorRecoveryClean = "clean"
+	// RefactorRecoveryRequired means an interrupted apply must be resolved.
+	RefactorRecoveryRequired = "recovery_required"
+	// RefactorRecoveryRecovered means guarded preimages were restored.
 	RefactorRecoveryRecovered = "recovered"
 )
 
@@ -45,15 +48,16 @@ func RecoverGuardedRefactor(
 	if err != nil {
 		return RefactorRecoveryResult{}, fmt.Errorf("identifying refactor repository: %w", err)
 	}
-	if _, err := store.Pending(ctx, observed.RepositoryID); errors.Is(err, ErrRefactorRecoveryNotFound) {
+	_, pendingErr := store.pending(ctx, observed.RepositoryID)
+	if errors.Is(pendingErr, errRefactorRecoveryNotFound) {
 		return RefactorRecoveryResult{Status: RefactorRecoveryClean}, nil
-	} else if err != nil {
-		return RefactorRecoveryResult{}, err
+	} else if pendingErr != nil {
+		return RefactorRecoveryResult{}, pendingErr
 	}
 	if !recoverState {
 		return RefactorRecoveryResult{Status: RefactorRecoveryRequired}, nil
 	}
-	recovered, err := store.Recover(ctx, observed.RepositoryID, ws.Root())
+	recovered, err := store.recover(ctx, observed.RepositoryID, ws.Root())
 	if err != nil {
 		return RefactorRecoveryResult{}, err
 	}

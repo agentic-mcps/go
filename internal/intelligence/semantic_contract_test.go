@@ -155,10 +155,10 @@ func TestPinnedGoplsGuardedRefactorContract(t *testing.T) {
 		}
 		current = applied.Snapshot
 	}
-	if _, err := core.Refactor(ctx, RefactorRequest{
+	if _, fixErr := core.Refactor(ctx, RefactorRequest{
 		Operation: RefactorFixAll, Files: []string{"format.go"}, ExpectedSnapshotID: current.ID,
-	}); err != nil {
-		t.Fatalf("fix-all preview: %v", err)
+	}); fixErr != nil {
+		t.Fatalf("fix-all preview: %v", fixErr)
 	}
 
 	renamedSource, err := os.ReadFile(filepath.Join(root, "rename.go"))

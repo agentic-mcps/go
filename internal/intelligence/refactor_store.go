@@ -18,37 +18,41 @@ const (
 	refactorPlanSchemaVersion     = "agentic.refactor.plan/v1alpha1"
 	refactorRecoverySchemaVersion = "agentic.refactor.recovery/v1alpha1"
 
-	RefactorRename          = "rename"
-	RefactorFormat          = "format"
+	// RefactorRename identifies a guarded symbol rename.
+	RefactorRename = "rename"
+	// RefactorFormat identifies guarded document formatting.
+	RefactorFormat = "format"
+	// RefactorOrganizeImports identifies a guarded import organization action.
 	RefactorOrganizeImports = "organize_imports"
-	RefactorFixAll          = "fix_all"
+	// RefactorFixAll identifies guarded source.fixAll actions.
+	RefactorFixAll = "fix_all"
 )
 
 var (
-	ErrRefactorPlanNotFound     = errors.New("refactor plan not found")
-	ErrRefactorPlanCorrupt      = errors.New("refactor plan is corrupt")
-	ErrRefactorRecoveryRequired = errors.New("refactor recovery is required")
-	ErrRefactorRecoveryNotFound = errors.New("refactor recovery not found")
-	ErrRefactorRecoveryDiverged = errors.New("refactor recovery target diverged")
+	errRefactorPlanNotFound     = errors.New("refactor plan not found")
+	errRefactorPlanCorrupt      = errors.New("refactor plan is corrupt")
+	errRefactorRecoveryRequired = errors.New("refactor recovery is required")
+	errRefactorRecoveryNotFound = errors.New("refactor recovery not found")
+	errRefactorRecoveryDiverged = errors.New("refactor recovery target diverged")
 )
 
 type refactorFileEdit struct {
 	Path            string `json:"path"`
-	Mode            uint32 `json:"mode"`
 	PreimageDigest  string `json:"preimage_digest"`
 	PostimageDigest string `json:"postimage_digest"`
 	Preimage        []byte `json:"preimage"`
 	Postimage       []byte `json:"postimage"`
+	Mode            uint32 `json:"mode"`
 }
 
 type refactorPlan struct {
+	Snapshot      SnapshotRef        `json:"snapshot"`
 	SchemaVersion string             `json:"schema_version"`
 	ID            string             `json:"id"`
 	RepositoryID  string             `json:"repository_id"`
 	Operation     string             `json:"operation"`
-	Snapshot      SnapshotRef        `json:"snapshot"`
-	Files         []refactorFileEdit `json:"files"`
 	Diff          string             `json:"diff"`
+	Files         []refactorFileEdit `json:"files"`
 	DiffTruncated bool               `json:"diff_truncated"`
 }
 
@@ -65,6 +69,8 @@ type RefactorStore struct {
 	root string
 }
 
+// NewRefactorStore creates private plan and recovery storage. An empty root
+// uses the platform user cache directory.
 func NewRefactorStore(root string) (*RefactorStore, error) {
 	if root == "" {
 		cache, err := os.UserCacheDir()
@@ -88,30 +94,30 @@ func NewRefactorStore(root string) (*RefactorStore, error) {
 	return &RefactorStore{root: absolute}, nil
 }
 
-func (s *RefactorStore) SavePlan(ctx context.Context, plan refactorPlan) (refactorPlan, error) {
+func (s *RefactorStore) savePlan(ctx context.Context, plan refactorPlan) (refactorPlan, error) {
 	if err := contextError(ctx); err != nil {
 		return refactorPlan{}, err
 	}
 	plan.ID = ""
 	plan.Files = append([]refactorFileEdit(nil), plan.Files...)
 	sort.Slice(plan.Files, func(i, j int) bool { return plan.Files[i].Path < plan.Files[j].Path })
-	if err := validateRefactorPlan(plan, false); err != nil {
-		return refactorPlan{}, err
+	if validationErr := validateRefactorPlan(plan, false); validationErr != nil {
+		return refactorPlan{}, validationErr
 	}
 	encoded, err := json.Marshal(plan)
 	if err != nil {
 		return refactorPlan{}, fmt.Errorf("encoding refactor plan identity: %w", err)
 	}
 	plan.ID = "rfp_" + hex.EncodeToString(hashBytes(encoded))
-	if err := validateRefactorPlan(plan, true); err != nil {
-		return refactorPlan{}, err
+	if validationErr := validateRefactorPlan(plan, true); validationErr != nil {
+		return refactorPlan{}, validationErr
 	}
 	repositoryDir := filepath.Join(s.root, "plans", strings.TrimPrefix(plan.RepositoryID, "sha256:"))
-	if err := os.MkdirAll(repositoryDir, 0o700); err != nil {
-		return refactorPlan{}, fmt.Errorf("creating refactor plan directory: %w", err)
+	if mkdirErr := os.MkdirAll(repositoryDir, 0o700); mkdirErr != nil {
+		return refactorPlan{}, fmt.Errorf("creating refactor plan directory: %w", mkdirErr)
 	}
-	if err := os.Chmod(repositoryDir, 0o700); err != nil {
-		return refactorPlan{}, fmt.Errorf("securing refactor plan directory: %w", err)
+	if chmodErr := os.Chmod(repositoryDir, 0o700); chmodErr != nil {
+		return refactorPlan{}, fmt.Errorf("securing refactor plan directory: %w", chmodErr)
 	}
 	encoded, err = json.MarshalIndent(plan, "", "  ")
 	if err != nil {
@@ -123,47 +129,47 @@ func (s *RefactorStore) SavePlan(ctx context.Context, plan refactorPlan) (refact
 	return plan, contextError(ctx)
 }
 
-func (s *RefactorStore) LoadPlan(ctx context.Context, repositoryID, planID string) (refactorPlan, error) {
+func (s *RefactorStore) loadPlan(ctx context.Context, repositoryID, planID string) (refactorPlan, error) {
 	if err := contextError(ctx); err != nil {
 		return refactorPlan{}, err
 	}
 	if !validRepositoryID(repositoryID) || !validRefactorPlanID(planID) {
-		return refactorPlan{}, ErrRefactorPlanNotFound
+		return refactorPlan{}, errRefactorPlanNotFound
 	}
 	encoded, err := os.ReadFile(s.planPath(repositoryID, planID))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return refactorPlan{}, ErrRefactorPlanNotFound
+			return refactorPlan{}, errRefactorPlanNotFound
 		}
 		return refactorPlan{}, fmt.Errorf("reading refactor plan: %w", err)
 	}
 	var plan refactorPlan
-	if err := json.Unmarshal(encoded, &plan); err != nil {
-		return refactorPlan{}, fmt.Errorf("%w: decoding JSON", ErrRefactorPlanCorrupt)
+	if decodeErr := json.Unmarshal(encoded, &plan); decodeErr != nil {
+		return refactorPlan{}, fmt.Errorf("%w: decoding JSON", errRefactorPlanCorrupt)
 	}
 	if plan.ID != planID || plan.RepositoryID != repositoryID || validateRefactorPlan(plan, true) != nil {
-		return refactorPlan{}, ErrRefactorPlanCorrupt
+		return refactorPlan{}, errRefactorPlanCorrupt
 	}
 	want := plan.ID
 	plan.ID = ""
 	identity, err := json.Marshal(plan)
 	if err != nil || want != "rfp_"+hex.EncodeToString(hashBytes(identity)) {
-		return refactorPlan{}, ErrRefactorPlanCorrupt
+		return refactorPlan{}, errRefactorPlanCorrupt
 	}
 	plan.ID = want
 	return plan, contextError(ctx)
 }
 
-func (s *RefactorStore) BeginRecovery(ctx context.Context, plan refactorPlan) error {
+func (s *RefactorStore) beginRecovery(ctx context.Context, plan refactorPlan) error {
 	if err := contextError(ctx); err != nil {
 		return err
 	}
-	if err := validateRefactorPlan(plan, true); err != nil {
-		return ErrRefactorPlanCorrupt
+	if validationErr := validateRefactorPlan(plan, true); validationErr != nil {
+		return errRefactorPlanCorrupt
 	}
-	if _, err := s.Pending(ctx, plan.RepositoryID); err == nil {
-		return ErrRefactorRecoveryRequired
-	} else if !errors.Is(err, ErrRefactorRecoveryNotFound) {
+	if _, err := s.pending(ctx, plan.RepositoryID); err == nil {
+		return errRefactorRecoveryRequired
+	} else if !errors.Is(err, errRefactorRecoveryNotFound) {
 		return err
 	}
 	journal := refactorRecovery{
@@ -177,46 +183,46 @@ func (s *RefactorStore) BeginRecovery(ctx context.Context, plan refactorPlan) er
 	}
 	if err := atomicCreateExclusive(s.recoveryPath(plan.RepositoryID), append(encoded, '\n')); err != nil {
 		if errors.Is(err, os.ErrExist) {
-			return ErrRefactorRecoveryRequired
+			return errRefactorRecoveryRequired
 		}
 		return fmt.Errorf("persisting refactor recovery journal: %w", err)
 	}
 	return contextError(ctx)
 }
 
-func (s *RefactorStore) Pending(ctx context.Context, repositoryID string) (refactorRecovery, error) {
+func (s *RefactorStore) pending(ctx context.Context, repositoryID string) (refactorRecovery, error) {
 	if err := contextError(ctx); err != nil {
 		return refactorRecovery{}, err
 	}
 	if !validRepositoryID(repositoryID) {
-		return refactorRecovery{}, ErrRefactorRecoveryNotFound
+		return refactorRecovery{}, errRefactorRecoveryNotFound
 	}
 	encoded, err := os.ReadFile(s.recoveryPath(repositoryID))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return refactorRecovery{}, ErrRefactorRecoveryNotFound
+			return refactorRecovery{}, errRefactorRecoveryNotFound
 		}
 		return refactorRecovery{}, fmt.Errorf("reading refactor recovery journal: %w", err)
 	}
 	var journal refactorRecovery
 	if err := json.Unmarshal(encoded, &journal); err != nil || journal.SchemaVersion != refactorRecoverySchemaVersion ||
 		journal.RepositoryID != repositoryID || !validRefactorPlanID(journal.PlanID) || len(journal.Files) == 0 {
-		return refactorRecovery{}, ErrRefactorPlanCorrupt
+		return refactorRecovery{}, errRefactorPlanCorrupt
 	}
 	for _, file := range journal.Files {
 		if err := validateRefactorFile(file); err != nil {
-			return refactorRecovery{}, ErrRefactorPlanCorrupt
+			return refactorRecovery{}, errRefactorPlanCorrupt
 		}
 	}
 	for index := 1; index < len(journal.Files); index++ {
 		if journal.Files[index-1].Path >= journal.Files[index].Path {
-			return refactorRecovery{}, ErrRefactorPlanCorrupt
+			return refactorRecovery{}, errRefactorPlanCorrupt
 		}
 	}
 	return journal, contextError(ctx)
 }
 
-func (s *RefactorStore) CompleteRecovery(ctx context.Context, repositoryID string) error {
+func (s *RefactorStore) completeRecovery(ctx context.Context, repositoryID string) error {
 	if err := contextError(ctx); err != nil {
 		return err
 	}
@@ -227,14 +233,14 @@ func (s *RefactorStore) CompleteRecovery(ctx context.Context, repositoryID strin
 	return syncDirectory(filepath.Join(s.root, "recovery"))
 }
 
-func (s *RefactorStore) Recover(ctx context.Context, repositoryID, root string) (int, error) {
-	journal, err := s.Pending(ctx, repositoryID)
+func (s *RefactorStore) recover(ctx context.Context, repositoryID, root string) (int, error) {
+	journal, err := s.pending(ctx, repositoryID)
 	if err != nil {
 		return 0, err
 	}
-	plan, err := s.LoadPlan(ctx, repositoryID, journal.PlanID)
+	plan, err := s.loadPlan(ctx, repositoryID, journal.PlanID)
 	if err != nil || !reflect.DeepEqual(plan.Files, journal.Files) {
-		return 0, ErrRefactorPlanCorrupt
+		return 0, errRefactorPlanCorrupt
 	}
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
@@ -242,8 +248,8 @@ func (s *RefactorStore) Recover(ctx context.Context, repositoryID, root string) 
 	}
 	type recoveryTarget struct {
 		path  string
-		file  refactorFileEdit
 		state string
+		file  refactorFileEdit
 	}
 	targets := make([]recoveryTarget, 0, len(journal.Files))
 	for _, file := range journal.Files {
@@ -252,7 +258,7 @@ func (s *RefactorStore) Recover(ctx context.Context, repositoryID, root string) 
 		}
 		path, err := containedExistingPath(root, file.Path)
 		if err != nil {
-			return 0, fmt.Errorf("%w: %s", ErrRefactorRecoveryDiverged, file.Path)
+			return 0, fmt.Errorf("%w: %s", errRefactorRecoveryDiverged, file.Path)
 		}
 		contents, err := os.ReadFile(path)
 		if err != nil {
@@ -266,7 +272,7 @@ func (s *RefactorStore) Recover(ctx context.Context, repositoryID, root string) 
 		case file.PostimageDigest:
 			state = "postimage"
 		default:
-			return 0, fmt.Errorf("%w: %s no longer matches its guarded preimage or postimage", ErrRefactorRecoveryDiverged, file.Path)
+			return 0, fmt.Errorf("%w: %s no longer matches its guarded preimage or postimage", errRefactorRecoveryDiverged, file.Path)
 		}
 		targets = append(targets, recoveryTarget{path: path, file: file, state: state})
 	}
@@ -283,7 +289,7 @@ func (s *RefactorStore) Recover(ctx context.Context, repositoryID, root string) 
 		}
 		recovered++
 	}
-	if err := s.CompleteRecovery(ctx, repositoryID); err != nil {
+	if err := s.completeRecovery(ctx, repositoryID); err != nil {
 		return recovered, err
 	}
 	return recovered, nil
@@ -300,20 +306,20 @@ func (s *RefactorStore) recoveryPath(repositoryID string) string {
 func validateRefactorPlan(plan refactorPlan, requireID bool) error {
 	if plan.SchemaVersion != refactorPlanSchemaVersion || !validRepositoryID(plan.RepositoryID) ||
 		plan.Snapshot.ID == "" || plan.Snapshot.RepositoryID != plan.RepositoryID || len(plan.Files) == 0 || plan.Files == nil {
-		return ErrRefactorPlanCorrupt
+		return errRefactorPlanCorrupt
 	}
 	if requireID && !validRefactorPlanID(plan.ID) {
-		return ErrRefactorPlanCorrupt
+		return errRefactorPlanCorrupt
 	}
 	switch plan.Operation {
 	case RefactorRename, RefactorFormat, RefactorOrganizeImports, RefactorFixAll:
 	default:
-		return ErrRefactorPlanCorrupt
+		return errRefactorPlanCorrupt
 	}
 	previous := ""
 	for _, file := range plan.Files {
 		if err := validateRefactorFile(file); err != nil || (previous != "" && file.Path <= previous) {
-			return ErrRefactorPlanCorrupt
+			return errRefactorPlanCorrupt
 		}
 		previous = file.Path
 	}
@@ -323,10 +329,10 @@ func validateRefactorPlan(plan refactorPlan, requireID bool) error {
 func validateRefactorFile(file refactorFileEdit) error {
 	clean := filepath.ToSlash(filepath.Clean(filepath.FromSlash(file.Path)))
 	if file.Path == "" || filepath.IsAbs(file.Path) || clean != file.Path || clean == ".." || strings.HasPrefix(clean, "../") {
-		return ErrRefactorPlanCorrupt
+		return errRefactorPlanCorrupt
 	}
 	if file.PreimageDigest != digestBytes(file.Preimage) || file.PostimageDigest != digestBytes(file.Postimage) || file.PreimageDigest == file.PostimageDigest {
-		return ErrRefactorPlanCorrupt
+		return errRefactorPlanCorrupt
 	}
 	return nil
 }

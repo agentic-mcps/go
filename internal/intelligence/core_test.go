@@ -12,10 +12,10 @@ import (
 )
 
 type fakeSemanticProvider struct {
-	reader        *fakeSemanticReader
-	identity      SemanticIdentity
-	refactorEdits []semanticFileEdits
 	refactorErr   error
+	reader        *fakeSemanticReader
+	refactorEdits []semanticFileEdits
+	identity      SemanticIdentity
 	reads         int
 }
 

@@ -94,7 +94,7 @@ func TestCoreRefactorApplyWritesExactPlanAndClearsJournal(t *testing.T) {
 	if string(contents) != "package fixture\n\nvar Value =1\n" {
 		t.Fatalf("main.go = %q", contents)
 	}
-	if _, err := core.refactors.Pending(context.Background(), snapshot.RepositoryID); !errors.Is(err, ErrRefactorRecoveryNotFound) {
+	if _, err := core.refactors.pending(context.Background(), snapshot.RepositoryID); !errors.Is(err, errRefactorRecoveryNotFound) {
 		t.Fatalf("recovery journal remains: %v", err)
 	}
 }
@@ -185,7 +185,7 @@ func TestCoreRefactorRollsBackPartialMultiFileApply(t *testing.T) {
 			t.Fatalf("%s = %q, %v", path, contents, readErr)
 		}
 	}
-	if _, err := core.refactors.Pending(context.Background(), snapshot.RepositoryID); !errors.Is(err, ErrRefactorRecoveryNotFound) {
+	if _, err := core.refactors.pending(context.Background(), snapshot.RepositoryID); !errors.Is(err, errRefactorRecoveryNotFound) {
 		t.Fatalf("journal remains after rollback: %v", err)
 	}
 }

@@ -26,14 +26,14 @@ func TestRefactorStorePersistsContentAddressedPlan(t *testing.T) {
 		}},
 		Diff: "--- a/value.go\n+++ b/value.go\n",
 	}
-	saved, err := store.SavePlan(context.Background(), plan)
+	saved, err := store.savePlan(context.Background(), plan)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.HasPrefix(saved.ID, "rfp_") || len(saved.ID) != len("rfp_")+64 {
 		t.Fatalf("plan ID = %q", saved.ID)
 	}
-	loaded, err := store.LoadPlan(context.Background(), repositoryID, saved.ID)
+	loaded, err := store.loadPlan(context.Background(), repositoryID, saved.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestRefactorStoreRejectsTamperedPlan(t *testing.T) {
 		t.Fatal(err)
 	}
 	repositoryID := "sha256:" + strings.Repeat("c", 64)
-	plan, err := store.SavePlan(context.Background(), refactorPlan{
+	plan, err := store.savePlan(context.Background(), refactorPlan{
 		SchemaVersion: refactorPlanSchemaVersion,
 		RepositoryID:  repositoryID,
 		Operation:     RefactorFormat,
@@ -75,8 +75,8 @@ func TestRefactorStoreRejectsTamperedPlan(t *testing.T) {
 	if err := os.WriteFile(path, data, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.LoadPlan(context.Background(), repositoryID, plan.ID); !errors.Is(err, ErrRefactorPlanCorrupt) {
-		t.Fatalf("LoadPlan() error = %v, want ErrRefactorPlanCorrupt", err)
+	if _, err := store.loadPlan(context.Background(), repositoryID, plan.ID); !errors.Is(err, errRefactorPlanCorrupt) {
+		t.Fatalf("loadPlan() error = %v, want errRefactorPlanCorrupt", err)
 	}
 }
 
@@ -89,13 +89,13 @@ func TestRefactorRecoveryRestoresOnlyJournaledPostimages(t *testing.T) {
 	repositoryID := "sha256:" + strings.Repeat("e", 64)
 	first := filepath.Join(root, "first.go")
 	second := filepath.Join(root, "second.go")
-	if err := os.WriteFile(first, []byte("new first\n"), 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(first, []byte("new first\n"), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
-	if err := os.WriteFile(second, []byte("old second\n"), 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(second, []byte("old second\n"), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
-	plan, err := store.SavePlan(context.Background(), refactorPlan{
+	plan, err := store.savePlan(context.Background(), refactorPlan{
 		SchemaVersion: refactorPlanSchemaVersion, RepositoryID: repositoryID, Operation: RefactorFormat,
 		Snapshot: SnapshotRef{ID: "sha256:" + strings.Repeat("f", 64), RepositoryID: repositoryID},
 		Files: []refactorFileEdit{
@@ -106,13 +106,13 @@ func TestRefactorRecoveryRestoresOnlyJournaledPostimages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := store.BeginRecovery(context.Background(), plan); err != nil {
-		t.Fatal(err)
+	if beginErr := store.beginRecovery(context.Background(), plan); beginErr != nil {
+		t.Fatal(beginErr)
 	}
-	if err := store.BeginRecovery(context.Background(), plan); !errors.Is(err, ErrRefactorRecoveryRequired) {
-		t.Fatalf("second BeginRecovery() error = %v, want ErrRefactorRecoveryRequired", err)
+	if beginErr := store.beginRecovery(context.Background(), plan); !errors.Is(beginErr, errRefactorRecoveryRequired) {
+		t.Fatalf("second beginRecovery() error = %v, want errRefactorRecoveryRequired", beginErr)
 	}
-	recovered, err := store.Recover(context.Background(), repositoryID, root)
+	recovered, err := store.recover(context.Background(), repositoryID, root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,8 +126,8 @@ func TestRefactorRecoveryRestoresOnlyJournaledPostimages(t *testing.T) {
 	if string(contents) != "old first\n" {
 		t.Fatalf("first.go = %q", contents)
 	}
-	if _, err := store.Pending(context.Background(), repositoryID); !errors.Is(err, ErrRefactorRecoveryNotFound) {
-		t.Fatalf("Pending() error = %v, want clean recovery state", err)
+	if _, pendingErr := store.pending(context.Background(), repositoryID); !errors.Is(pendingErr, errRefactorRecoveryNotFound) {
+		t.Fatalf("pending() error = %v, want clean recovery state", pendingErr)
 	}
 }
 
@@ -139,10 +139,10 @@ func TestRefactorRecoveryRefusesDivergedFilesWithoutMutation(t *testing.T) {
 	}
 	repositoryID := "sha256:" + strings.Repeat("1", 64)
 	path := filepath.Join(root, "value.go")
-	if err := os.WriteFile(path, []byte("user edit\n"), 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(path, []byte("user edit\n"), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
-	plan, err := store.SavePlan(context.Background(), refactorPlan{
+	plan, err := store.savePlan(context.Background(), refactorPlan{
 		SchemaVersion: refactorPlanSchemaVersion, RepositoryID: repositoryID, Operation: RefactorFormat,
 		Snapshot: SnapshotRef{ID: "sha256:" + strings.Repeat("2", 64), RepositoryID: repositoryID},
 		Files: []refactorFileEdit{{
@@ -152,11 +152,11 @@ func TestRefactorRecoveryRefusesDivergedFilesWithoutMutation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := store.BeginRecovery(context.Background(), plan); err != nil {
-		t.Fatal(err)
+	if beginErr := store.beginRecovery(context.Background(), plan); beginErr != nil {
+		t.Fatal(beginErr)
 	}
-	if _, err := store.Recover(context.Background(), repositoryID, root); !errors.Is(err, ErrRefactorRecoveryDiverged) {
-		t.Fatalf("Recover() error = %v, want ErrRefactorRecoveryDiverged", err)
+	if _, recoverErr := store.recover(context.Background(), repositoryID, root); !errors.Is(recoverErr, errRefactorRecoveryDiverged) {
+		t.Fatalf("recover() error = %v, want errRefactorRecoveryDiverged", recoverErr)
 	}
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -165,7 +165,7 @@ func TestRefactorRecoveryRefusesDivergedFilesWithoutMutation(t *testing.T) {
 	if string(contents) != "user edit\n" {
 		t.Fatalf("diverged file mutated to %q", contents)
 	}
-	if _, err := store.Pending(context.Background(), repositoryID); err != nil {
-		t.Fatalf("journal was discarded: %v", err)
+	if _, pendingErr := store.pending(context.Background(), repositoryID); pendingErr != nil {
+		t.Fatalf("journal was discarded: %v", pendingErr)
 	}
 }
