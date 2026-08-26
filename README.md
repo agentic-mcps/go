@@ -24,7 +24,7 @@ not embed an LLM or an agent runtime.
 
 ## Keep an agent oriented
 
-The current v0.6 development workflow starts with compact semantic context,
+The current v0.7 development workflow starts with compact semantic context,
 retains structural continuity while an agent edits, can apply a reviewed
 deterministic refactor, and ends with executed change evidence:
 
@@ -75,7 +75,9 @@ agentic-go verify --base origin/main --package ./... --format text
 | `--min-changed-coverage` | unset | Inclusive changed-statement threshold, `0..100` |
 | `--max-packages` | `200` | Affected-package limit, `1..500` |
 
-JSON uses the versioned `agentic.verify/v1alpha1` contract. Exit status is `0`
+JSON uses the versioned `agentic.verify/v1beta1` contract. The
+[alpha-to-beta migration guide](docs/verification-report-v1beta1-migration.md)
+describes the additive evidence and identity changes. Exit status is `0`
 for `pass`, `1` for policy `findings`, and `2` for `incomplete` or an execution
 error. A passing report means requested checks completed without policy-blocking
 evidence; it does not mean the change is safe.
@@ -212,8 +214,8 @@ diverged user edits.
 
 ## MCP adapter
 
-agentic-go also speaks stdio MCP for local coding agents. The current v0.6
-development inventory is 14 tools, six fixed resources, one artifact resource
+agentic-go also speaks stdio MCP for local coding agents. The current v0.7
+development inventory is 14 tools, seven fixed resources, one artifact resource
 template, and six prompts. Earlier tool contracts remain compatible. Change
 Contracts are private same-machine user-cache state, preserve exact snapshot
 lineage, and reject stale checkpoints. Goal and decision prose is context only
@@ -223,6 +225,11 @@ The two continuity tools persist private state but do not edit source.
 `go_refactor` previews or applies one deterministic, snapshot-bound plan.
 `go_verify_change` returns the same report as the CLI with only a concise text
 fallback, and supporting clients can approval-gate its trusted-code execution.
+The report records the exact semantic snapshot, provider capabilities,
+compiler and gopls diagnostic evidence, bounded context and refactor
+provenance, and optional Change Contract compliance. Current-only diagnostics
+remain explicit evidence and uncertainty; they are not mislabeled as newly
+introduced defects without a comparable baseline.
 
 Use `agentic-go contract export --output <workspace-relative-path>` for an
 explicit 0600, contained, non-overwriting workspace copy. Normal operation

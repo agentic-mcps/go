@@ -56,11 +56,18 @@ Change Request
 - `cmd/agentic-go`, the root Action, and MCP tools adapt the same report. MCP
   types, workflow concepts, and adapter names do not enter the engine.
 
-The report begins at `agentic.verify/v1alpha1`. Go-specific entities use
+The report began at `agentic.verify/v1alpha1` for v0.2 and currently evolves as
+`agentic.verify/v1beta1`. Go-specific entities use
 namespaced kinds such as `go.package`; top-level concepts remain portable so a
 future TypeScript implementation can produce the same semantics. Extraction
 into an organization-level specification waits until a second implementation
 exists and proves the common boundary.
+
+In v0.7 the CLI and MCP adapters invoke the same unified report path. The
+report adds semantic and compiler diagnostics, exact snapshot lineage,
+bounded context and refactor provenance, provider capabilities, and optional
+Change Contract compliance. These additions preserve the existing result and
+exit-status semantics.
 
 ## v0.1 trust seed
 

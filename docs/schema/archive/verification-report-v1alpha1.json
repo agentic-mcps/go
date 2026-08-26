@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.verify/v1alpha1",
+  "title": "Agentic verification report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provider",
+    "repository",
+    "change",
+    "impact",
+    "plan",
+    "evidence",
+    "findings",
+    "findings_total",
+    "findings_truncated",
+    "risks",
+    "uncertainties",
+    "result"
+  ],
+  "properties": {
+    "schema_version": { "const": "agentic.verify/v1alpha1" },
+    "provider": { "$ref": "#/$defs/provider" },
+    "repository": { "$ref": "#/$defs/repository" },
+    "change": { "$ref": "#/$defs/change" },
+    "impact": { "$ref": "#/$defs/impact" },
+    "plan": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/check" }
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "findings_total": { "type": "integer", "minimum": 0 },
+    "findings_truncated": { "type": "boolean" },
+    "risks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/risk" }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/uncertainty" }
+    },
+    "result": { "$ref": "#/$defs/result" }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested_base",
+        "base_commit",
+        "merge_base_commit",
+        "head_commit",
+        "snapshot_id",
+        "workspace",
+        "dirty"
+      ],
+      "properties": {
+        "requested_base": { "type": "string" },
+        "base_commit": { "type": "string" },
+        "merge_base_commit": { "type": "string" },
+        "head_commit": { "type": "string" },
+        "snapshot_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "workspace": { "type": "string" },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "line"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "col": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "line_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 1 },
+        "end": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "change_kind": {
+      "enum": ["added", "modified", "deleted", "renamed", "untracked"]
+    },
+    "changed_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "change", "base_ranges", "base_ranges_total", "base_ranges_truncated", "current_ranges", "current_ranges_total", "current_ranges_truncated"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "previous_path": { "type": "string", "minLength": 1 },
+        "change": { "$ref": "#/$defs/change_kind" },
+        "base_ranges": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/line_range" }
+        },
+        "base_ranges_total": { "type": "integer", "minimum": 0 },
+        "base_ranges_truncated": { "type": "boolean" },
+        "current_ranges": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/line_range" }
+        },
+        "current_ranges_total": { "type": "integer", "minimum": 0 },
+        "current_ranges_truncated": { "type": "boolean" }
+      }
+    },
+    "changed_declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "package", "name", "change"],
+      "properties": {
+        "kind": {
+          "enum": ["function", "method", "type", "variable", "constant", "field"]
+        },
+        "package": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "change": { "$ref": "#/$defs/change_kind" },
+        "base_location": { "$ref": "#/$defs/location" },
+        "current_location": { "$ref": "#/$defs/location" }
+      },
+      "anyOf": [
+        { "required": ["base_location"] },
+        { "required": ["current_location"] }
+      ]
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "files_total", "files_truncated", "declarations", "declarations_total", "declarations_truncated"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "maxItems": 15,
+          "items": { "$ref": "#/$defs/changed_file" }
+        },
+        "files_total": { "type": "integer", "minimum": 0 },
+        "files_truncated": { "type": "boolean" },
+        "declarations": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/changed_declaration" }
+        },
+        "declarations_total": { "type": "integer", "minimum": 0 },
+        "declarations_truncated": { "type": "boolean" }
+      }
+    },
+    "impacted_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "distance", "reasons"],
+      "properties": {
+        "kind": { "const": "go.package" },
+        "id": { "type": "string", "minLength": 1 },
+        "distance": { "type": "integer", "minimum": 0 },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "changed_source",
+              "embedded_file",
+              "module_metadata",
+              "workspace_metadata",
+              "reverse_import"
+            ]
+          }
+        }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packages", "packages_total", "packages_truncated"],
+      "properties": {
+        "packages": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/impacted_package" }
+        },
+        "packages_total": { "type": "integer", "minimum": 0 },
+        "packages_truncated": { "type": "boolean" }
+      }
+    },
+    "check_kind": {
+      "enum": [
+        "go.test",
+        "go.coverage",
+        "go.race",
+        "go.analysis.concurrency",
+        "go.analysis.errors"
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "required", "targets", "targets_total", "targets_truncated", "reason"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/check_kind" },
+        "required": { "type": "boolean" },
+        "targets": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "targets_total": { "type": "integer", "minimum": 0 },
+        "targets_truncated": { "type": "boolean" },
+        "reason": { "type": "string" }
+      }
+    },
+    "test_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "status", "passed", "failed", "skipped"],
+      "properties": {
+        "package": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["ok", "FAIL", "skip"] },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "output": { "type": "string" }
+      }
+    },
+    "test_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "name", "status", "elapsed_s"],
+      "properties": {
+        "package": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pass", "fail", "skip"] },
+        "elapsed_s": { "type": "number", "minimum": 0 },
+        "output": { "type": "string" }
+      }
+    },
+    "test_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "failed", "skipped", "packages", "packages_total", "packages_truncated", "nonpassing", "nonpassing_total", "nonpassing_truncated"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "packages": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/test_package" }
+        },
+        "packages_total": { "type": "integer", "minimum": 0 },
+        "packages_truncated": { "type": "boolean" },
+        "nonpassing": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/test_case" }
+        },
+        "nonpassing_total": { "type": "integer", "minimum": 0 },
+        "nonpassing_truncated": { "type": "boolean" }
+      }
+    },
+    "source_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "start_line", "end_line", "statements"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "start_col": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "end_col": { "type": "integer", "minimum": 1 },
+        "statements": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "coverage_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_statements",
+        "covered_statements",
+        "percent",
+        "uncovered",
+        "uncovered_total",
+        "uncovered_truncated"
+      ],
+      "properties": {
+        "total_statements": { "type": "integer", "minimum": 0 },
+        "covered_statements": { "type": "integer", "minimum": 0 },
+        "percent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "uncovered": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/source_range" }
+        },
+        "uncovered_total": { "type": "integer", "minimum": 0 },
+        "uncovered_truncated": { "type": "boolean" }
+      }
+    },
+    "analysis_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base", "current", "introduced", "existing", "resolved", "unknown"],
+      "properties": {
+        "base": { "type": "integer", "minimum": 0 },
+        "current": { "type": "integer", "minimum": 0 },
+        "introduced": { "type": "integer", "minimum": 0 },
+        "existing": { "type": "integer", "minimum": 0 },
+        "resolved": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "race_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conflicts"],
+      "properties": {
+        "conflicts": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "kind", "status", "duration_ms", "summary"],
+      "properties": {
+        "check_id": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/check_kind" },
+        "status": { "enum": ["passed", "failed", "skipped", "error"] },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string" },
+        "error": { "type": "string" },
+        "tests": { "$ref": "#/$defs/test_summary" },
+        "coverage": { "$ref": "#/$defs/coverage_summary" },
+        "analysis": { "$ref": "#/$defs/analysis_summary" },
+        "race": { "$ref": "#/$defs/race_summary" }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "severity", "message"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "rule": { "type": "string" },
+        "severity": { "enum": ["error", "warning", "info"] },
+        "message": { "type": "string" },
+        "suggestion": { "type": "string" },
+        "location": { "$ref": "#/$defs/location" },
+        "check_id": { "type": "string" },
+        "baseline": { "enum": ["introduced", "existing", "resolved", "unknown"] }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "reason", "guidance", "locations", "locations_total", "locations_truncated"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string" },
+        "guidance": { "type": "string" },
+        "locations": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/location" }
+        },
+        "locations_total": { "type": "integer", "minimum": 0 },
+        "locations_truncated": { "type": "boolean" }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "locations", "locations_total", "locations_truncated"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" },
+        "check_id": { "type": "string" },
+        "locations": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/location" }
+        },
+        "locations_total": { "type": "integer", "minimum": 0 },
+        "locations_truncated": { "type": "boolean" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "exit_code", "blocking_findings", "incomplete_checks", "summary"],
+      "properties": {
+        "status": { "enum": ["pass", "findings", "incomplete"] },
+        "exit_code": { "enum": [0, 1, 2] },
+        "blocking_findings": { "type": "integer", "minimum": 0 },
+        "incomplete_checks": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string" }
+      }
+    }
+  }
+}

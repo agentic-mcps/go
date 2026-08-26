@@ -76,6 +76,13 @@ from a valid journal whose targets still match their recorded preimages or
 postimages; it refuses diverged files instead of overwriting user edits.
 Refactoring does not stage, commit, or change Git history.
 
+Unified verification reports are stored privately under
+`os.UserCacheDir()/agentic-go/verifications`. They contain workspace-relative
+locations, snapshot identities, diagnostics, findings, and source-derived
+provenance, but no source contents, opaque Change Contract goal prose, or
+absolute workspace path. Writes are atomic per report and latest pointer, with
+0700 directories and 0600 files. Treat this cache as local development data.
+
 ## Supported releases
 
 Security fixes target the latest published release. The pre-release branch is

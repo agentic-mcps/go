@@ -33,7 +33,7 @@ GOTOOLCHAIN=local go test ./internal/verification \
 ```
 
 All three fixtures also validated against
-[`agentic.verify/v1alpha1`](../../docs/schema/verification-report-v1alpha1.json)
+[`agentic.verify/v1alpha1`](../../docs/schema/archive/verification-report-v1alpha1.json)
 with the repository's existing JSON Schema 2020-12 implementation.
 
 ## Agentic-go dogfood

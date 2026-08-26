@@ -52,14 +52,14 @@ the change snapshot, affected-package closure, verification plan, executed
 evidence, findings, risk facts, and explicit uncertainties. The CLI, composite
 GitHub Action, and MCP server transport or render that report; they must not
 duplicate policy or ask a caller to reconstruct it from low-level results.
-The checked-in [JSON Schema](schema/verification-report-v1alpha1.json) is the
-machine-readable authority. Collections are non-null and deterministically
-ordered, source locations are workspace-relative, and reports contain no
-absolute workspace or run-cache paths. Result precedence is `incomplete`, then
-`findings`, then `pass`; `pass` means only that requested checks completed
-without policy-blocking evidence. Bounded collections expose an integer total
-and boolean truncated field adjacent to the collection. The display caps are
-15 changed files, 5 base/current ranges per changed file, 20 changed
+The frozen [v0.2 JSON Schema](schema/archive/verification-report-v1alpha1.json)
+is the machine-readable authority for that release. Collections are non-null
+and deterministically ordered, source locations are workspace-relative, and
+reports contain no absolute workspace or run-cache paths. Result precedence is
+`incomplete`, then `findings`, then `pass`; `pass` means only that requested
+checks completed without policy-blocking evidence. Bounded collections expose
+an integer total and boolean truncated field adjacent to the collection. The
+display caps are 15 changed files, 5 base/current ranges per changed file, 20 changed
 declarations, 20 impacted packages, 20 check targets, 20 test package
 summaries, 20 nonpassing tests, 50 findings, 5 locations per risk or
 uncertainty, and 20 uncovered coverage ranges. Policy evaluates the complete
@@ -128,10 +128,10 @@ adapters. Raw gopls responses are never public product types.
 
 ## v0.5 Change Contract boundary
 
-The v0.5 development surface adds `go_begin_change` and
+The v0.5 development surface added `go_begin_change` and
 `go_checkpoint_change`, the fixed
 `agentic-go://change-contract/current` resource, and the `understand-change`
-and `resume-change` prompts. The live inventory is 13 tools, six fixed
+and `resume-change` prompts. Its milestone inventory was 13 tools, six fixed
 resources, one artifact resource template, and six prompts. Existing tool,
 resource, and prompt contracts remain additive and compatible.
 
@@ -174,7 +174,7 @@ That evidence is structural guidance, not a universal Go compatibility proof.
 
 ## v0.6 Guarded Refactoring boundary
 
-The v0.6 development surface adds `go_refactor`. The live inventory is 14
+The v0.6 development surface added `go_refactor`. Its milestone inventory was 14
 tools, six fixed resources, one artifact resource template, and six prompts.
 Existing tool, resource, and prompt contracts remain additive and compatible.
 
@@ -208,6 +208,39 @@ recorded states. Any third state is treated as user divergence, no target is
 overwritten, and the journal remains for explicit resolution. Recovery
 journals are private 0600 state under
 `os.UserCacheDir()/agentic-go/refactors/recovery/`.
+
+## v0.7 Unified Verification boundary
+
+The current report schema is `agentic.verify/v1beta1`. Its checked-in
+[JSON Schema](schema/verification-report-v1beta1.json) is the machine-readable
+authority, and the
+[migration guide](verification-report-v1beta1-migration.md) records the
+intentional changes from the frozen alpha contract. Current adapters emit beta
+only and must branch on `schema_version`; alpha is not maintained as a parallel
+output mode.
+
+CLI `verify` and production MCP `go_verify_change` calls use the same
+intelligence service and finalized report. The report records its
+content-addressed ID, exact semantic snapshot lineage, effective provider
+capabilities, bounded context and refactor provenance, compiler and gopls
+diagnostic evidence, and optional Change Contract compliance. Collections
+remain non-null, deterministic, bounded, and finalized exactly once.
+
+`go.diagnostics` records current-snapshot semantic evidence. Without
+equivalent base diagnostics, current diagnostics are not called introduced
+findings; the report states the baseline limitation as uncertainty.
+`go.contract` records structural policy observations from the exact current
+contract lineage. A `forbid` violation blocks regardless of analyzer severity
+policy. A `warn` observation remains advisory. Goal, decision, and unresolved
+question prose is neither interpreted nor copied into report provenance.
+
+Successful reports are written atomically as private 0600 files under
+`os.UserCacheDir()/agentic-go/verifications/<repository-id>/`. A separate
+atomic latest pointer backs `agentic-go://verification/latest`. The current
+contract is linked to the finalized report ID after persistence. These files
+contain workspace-relative evidence, not source contents or absolute workspace
+paths. Per-file atomicity does not imply a transaction across report and
+contract stores.
 
 ## Module
 
@@ -1034,7 +1067,7 @@ Release inventories come from their canonical scope and are asserted against
 Tagged v0.1.0 has seven tools, four resources, and four prompts. The v0.2.0
 target adds `go_verify_change`, v0.4 adds three semantic context tools, v0.5
 adds two continuity tools, and v0.6 adds guarded refactoring. The current local
-development inventory is 14 tools, six fixed resources, one resource template,
+development inventory is 14 tools, seven fixed resources, one resource template,
 and six prompts.
 
 | Tool | Release |
@@ -1056,7 +1089,8 @@ and six prompts.
 
 The live resources are `agentic-go://module`, `agentic-go://packages`,
 `agentic-go://analysis-rules`, `agentic-go://trace-summary`,
-`agentic-go://capabilities`, and `agentic-go://change-contract/current`. The
+`agentic-go://capabilities`, `agentic-go://change-contract/current`, and
+`agentic-go://verification/latest`. The
 `agentic-go://artifact/{id}` resource template reads snapshot-bound overflow
 detail. The live prompts are `audit-package`, `pre-commit-check`,
 `bisect-flake`, `verify-change`, `understand-change`, and `resume-change`.

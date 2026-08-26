@@ -10,18 +10,22 @@ and their implementation status live in
 recorded in [`decision-memo.md`](decision-memo.md); [`plan.md`](plan.md) is the
 concise product plan and routing summary.
 
-## v0.2.0 implementation specification
+## Verification report contracts
 
 - [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) — change-aware
   whole-package verification, changed-statement coverage, analyzer baselining,
   risk guidance, and CLI/Action/MCP adapters
-- [`schema/verification-report-v1alpha1.json`](schema/verification-report-v1alpha1.json)
-  — portable machine-readable report contract
+- [`schema/verification-report-v1beta1.json`](schema/verification-report-v1beta1.json)
+  - current portable machine-readable report contract
+- [`verification-report-v1beta1-migration.md`](verification-report-v1beta1-migration.md)
+  - alpha-to-beta migration guide and report goldens
+- [`schema/archive/verification-report-v1alpha1.json`](schema/archive/verification-report-v1alpha1.json)
+  - frozen v0.2 report contract
 - [`../CONTEXT.md`](../CONTEXT.md) and
   [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
   — shared language and the durable product-boundary decision
 
-## v0.3 through v0.5 implementation contracts
+## v0.3 through v0.7 implementation contracts
 
 - [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md): staged sidecar, semantic,
   continuity, refactor, evaluation, and contract-freeze authority
@@ -45,8 +49,8 @@ concise product plan and routing summary.
 
 ## Deferred roadmap specifications
 
-The v0.5 Change Contract milestone is implemented locally. The v0.6 and later
-portions of the v1 roadmap remain future authority. They do not silently
+The v0.7 unified verification milestone is implemented locally. The v0.8 and
+later portions of the v1 roadmap remain future authority. They do not silently
 expand the current development surface.
 
 - [`phase-4a-index.md`](phase-4a-index.md)

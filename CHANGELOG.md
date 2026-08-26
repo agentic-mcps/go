@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Unified `agentic.verify/v1beta1` reports with content-addressed identity,
+  semantic snapshot lineage, provider capabilities, diagnostics, provenance,
+  and optional Change Contract compliance.
+- Private finalized-report storage and the
+  `agentic-go://verification/latest` resource.
 - Private Change Contracts with exact snapshot lineage, structural
   checkpoints, explicit contained export, two continuity tools, one current
   contract resource, and two handoff prompts.
@@ -30,8 +35,8 @@ All notable changes to this project are documented here. The format follows
   drives planning and execution, before adapter display limits.
 
 - Change verification through `agentic-go verify`, the root GitHub Action, and
-  the additive `go_verify_change` MCP tool, all sharing the
-  `agentic.verify/v1alpha1` report contract.
+  the additive `go_verify_change` MCP tool. The v0.2 compatibility baseline
+  used the frozen `agentic.verify/v1alpha1` report contract.
 - Stdio MCP server with eight tools (the seven v0.1 tools remain compatible):
   `go_test_structured`, `go_race_report`, `go_coverage_gaps`,
   `go_benchmark_diff`, `go_flake_finder`, `go_audit_concurrency`, and
