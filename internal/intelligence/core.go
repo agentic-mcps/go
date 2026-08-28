@@ -33,23 +33,27 @@ type storedSearch struct {
 	Omitted int           `json:"omitted"`
 }
 
-// Core assembles adapter-independent intelligence from snapshot, semantic,
-// change-discovery, artifact, and verification infrastructure.
+// Core is safe for concurrent read-only use. It assembles adapter-independent
+// intelligence from snapshot, semantic, change-discovery, artifact, and
+// verification infrastructure. Change Contract mutation is serialized within
+// one process; callers must not mutate the same contract from separate Core
+// processes concurrently.
 type Core struct {
-	workspace     *workspace.Workspace
-	runner        *execution.Runner
-	snapshots     *Snapshotter
-	semantic      semanticProvider
-	mutator       semanticMutator
-	artifacts     *ArtifactStore
-	contracts     *ContractStore
-	refactors     *RefactorStore
-	verifications *VerificationStore
 	changes       verification.ChangeAnalyzer
 	verifier      verifier
+	mutator       semanticMutator
+	semantic      semanticProvider
+	snapshots     *Snapshotter
+	artifacts     *ArtifactStore
+	runner        *execution.Runner
+	verifications *VerificationStore
+	contracts     *ContractStore
+	workspace     *workspace.Workspace
+	refactors     *RefactorStore
 	refactorWrite func(string, []byte, os.FileMode) error
-	provenanceMu  sync.Mutex
+	stateGate     chan struct{}
 	provenance    []verification.ProvenanceReference
+	provenanceMu  sync.Mutex
 }
 
 // NewCore constructs the supported pinned-gopls intelligence service. The
@@ -129,8 +133,17 @@ func newCore(
 	return &Core{
 		workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
 		mutator: mutator, artifacts: artifacts, contracts: contracts, refactors: refactors, verifications: verifications,
-		changes: changes, verifier: verify, refactorWrite: atomicReplace,
+		changes: changes, verifier: verify, refactorWrite: atomicReplace, stateGate: make(chan struct{}, 1),
 	}, nil
+}
+
+func (c *Core) lockStateMutation(ctx context.Context) (func(), error) {
+	select {
+	case c.stateGate <- struct{}{}:
+		return func() { <-c.stateGate }, nil
+	case <-ctx.Done():
+		return nil, contextError(ctx)
+	}
 }
 
 // Search returns one deterministic page of snapshot-bound workspace symbols.

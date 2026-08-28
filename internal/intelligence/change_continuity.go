@@ -91,6 +91,11 @@ func (c *Core) Begin(ctx context.Context, request BeginRequest) (ChangeContract,
 func (c *Core) Checkpoint(ctx context.Context, request CheckpointRequest) (Checkpoint, error) {
 	ctx, cancel := c.runner.Deadline(ctx)
 	defer cancel()
+	release, err := c.lockStateMutation(ctx)
+	if err != nil {
+		return Checkpoint{}, err
+	}
+	defer release()
 	if !validContractID(request.ContractID) {
 		return Checkpoint{}, fmt.Errorf("contract_id is invalid")
 	}

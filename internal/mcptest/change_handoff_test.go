@@ -20,6 +20,7 @@ type handoffContract struct {
 	LatestSnapshot struct {
 		ID string `json:"id"`
 	} `json:"latest_snapshot"`
+	LatestVerification  string            `json:"latest_verification"`
 	Decisions           []json.RawMessage `json:"decisions"`
 	UnresolvedQuestions []string          `json:"unresolved_questions"`
 	FocusedPaths        []string          `json:"focused_paths"`
@@ -27,7 +28,6 @@ type handoffContract struct {
 	FocusedSymbols      []string          `json:"focused_symbols"`
 	AllowedPaths        []string          `json:"allowed_paths"`
 	Checkpoints         []json.RawMessage `json:"checkpoints"`
-	LatestVerification  string            `json:"latest_verification"`
 }
 
 func TestSubprocessChangeHandoff(t *testing.T) {
@@ -112,15 +112,15 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 		t.Fatalf("latest verification resource error=%v result=%#v", err, latest)
 	}
 	var latestReport verification.Report
-	if err := json.Unmarshal([]byte(latest.Contents[0].Text), &latestReport); err != nil || latestReport.ID != report.ID {
-		t.Fatalf("latest verification = %q, error %v", latestReport.ID, err)
+	if decodeErr := json.Unmarshal([]byte(latest.Contents[0].Text), &latestReport); decodeErr != nil || latestReport.ID != report.ID {
+		t.Fatalf("latest verification = %q, error %v", latestReport.ID, decodeErr)
 	}
 	linked := readHandoffContract(ctx, t, third)
 	if linked.LatestVerification != report.ID {
 		t.Fatalf("contract verification link = %q, want %q", linked.LatestVerification, report.ID)
 	}
-	if err := third.Close(); err != nil {
-		t.Fatal(err)
+	if closeErr := third.Close(); closeErr != nil {
+		t.Fatal(closeErr)
 	}
 
 	status := exec.CommandContext(ctx, "git", "status", "--porcelain=v1")

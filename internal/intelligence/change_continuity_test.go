@@ -46,6 +46,22 @@ func TestCoreBeginPersistsNormalizedContract(t *testing.T) {
 	}
 }
 
+func TestCoreStateMutationGateHonorsCancellation(t *testing.T) {
+	root := snapshotRepository(t)
+	core := newContractTestCore(t, root)
+	release, err := core.lockStateMutation(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := core.lockStateMutation(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("mutation gate error = %v, want context cancellation", err)
+	}
+}
+
 func TestChangeContractResumesAcrossFreshCores(t *testing.T) {
 	root := snapshotRepository(t)
 	contractRoot := filepath.Join(t.TempDir(), "contracts")

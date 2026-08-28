@@ -36,8 +36,8 @@ type Request struct {
 // before policy evaluation and detail truncation.
 type Collection struct {
 	Report   Report
-	Analysis ChangeAnalysis
 	Policy   Policy
+	Analysis ChangeAnalysis
 }
 
 // Engine assembles one portable report from injected change discovery and the

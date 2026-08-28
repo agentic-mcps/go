@@ -239,7 +239,7 @@ func TestFinalizeBoundsPortableDetailsAfterPolicy(t *testing.T) {
 	packages := make([]verification.TestPackageSummary, 250)
 	nonpassing := make([]verification.TestCaseSummary, 250)
 	uncovered := make([]verification.SourceRange, 250)
-	for index := 0; index < 250; index++ {
+	for index := range 250 {
 		path := fmt.Sprintf("pkg/file-%03d.go", index)
 		location := verification.Location{File: path, Line: index + 1}
 		locations[index] = location

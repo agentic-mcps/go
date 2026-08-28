@@ -20,6 +20,13 @@ const maximumProvenanceReferences = 64
 func (c *Core) Verify(ctx context.Context, request verification.Request) (verification.Report, error) {
 	ctx, cancel := c.runner.Deadline(ctx)
 	defer cancel()
+	if request.ContractID != "" {
+		release, err := c.lockStateMutation(ctx)
+		if err != nil {
+			return verification.Report{}, err
+		}
+		defer release()
+	}
 	if strings.TrimSpace(request.Base) == "" {
 		return verification.Report{}, fmt.Errorf("base is required")
 	}
@@ -138,9 +145,10 @@ func (c *Core) attachDiagnosticEvidence(ctx context.Context, report *verificatio
 	errorsCount, warnings := 0, 0
 	for _, item := range diagnostics {
 		severity := strings.ToLower(item.Severity)
-		if severity == "error" {
+		switch severity {
+		case "error":
 			errorsCount++
-		} else if severity == "warning" {
+		case "warning":
 			warnings++
 		}
 		items = append(items, verification.Diagnostic{
@@ -234,12 +242,18 @@ func verificationProviders(snapshot SnapshotRef, agenticVersion string) []verifi
 		name    string
 		enabled bool
 	}{
-		{"call_hierarchy", snapshot.Capabilities.CallHierarchy}, {"code_action", snapshot.Capabilities.CodeAction},
-		{"definition", snapshot.Capabilities.Definition}, {"diagnostics", snapshot.Capabilities.Diagnostics},
-		{"document_symbol", snapshot.Capabilities.DocumentSymbol}, {"formatting", snapshot.Capabilities.Formatting},
-		{"hover", snapshot.Capabilities.Hover}, {"implementation", snapshot.Capabilities.Implementation},
-		{"references", snapshot.Capabilities.References}, {"rename", snapshot.Capabilities.Rename},
-		{"type_definition", snapshot.Capabilities.TypeDefinition}, {"workspace_symbol", snapshot.Capabilities.WorkspaceSymbol},
+		{"call_hierarchy", snapshot.Capabilities.CallHierarchy},
+		{"code_action", snapshot.Capabilities.CodeAction},
+		{"definition", snapshot.Capabilities.Definition},
+		{"diagnostics", snapshot.Capabilities.Diagnostics},
+		{"document_symbol", snapshot.Capabilities.DocumentSymbol},
+		{"formatting", snapshot.Capabilities.Formatting},
+		{"hover", snapshot.Capabilities.Hover},
+		{"implementation", snapshot.Capabilities.Implementation},
+		{"references", snapshot.Capabilities.References},
+		{"rename", snapshot.Capabilities.Rename},
+		{"type_definition", snapshot.Capabilities.TypeDefinition},
+		{"workspace_symbol", snapshot.Capabilities.WorkspaceSymbol},
 	}
 	for _, value := range values {
 		if value.enabled {

@@ -62,25 +62,25 @@ func (s *VerificationStore) Save(ctx context.Context, repositoryID string, repor
 		return ErrVerificationCorrupt
 	}
 	repositoryDir := filepath.Join(s.root, strings.TrimPrefix(repositoryID, "sha256:"))
-	if err := os.MkdirAll(repositoryDir, 0o700); err != nil {
-		return fmt.Errorf("creating verification repository directory: %w", err)
+	if mkdirErr := os.MkdirAll(repositoryDir, 0o700); mkdirErr != nil {
+		return fmt.Errorf("creating verification repository directory: %w", mkdirErr)
 	}
-	if err := os.Chmod(repositoryDir, 0o700); err != nil {
-		return fmt.Errorf("securing verification repository directory: %w", err)
+	if chmodErr := os.Chmod(repositoryDir, 0o700); chmodErr != nil {
+		return fmt.Errorf("securing verification repository directory: %w", chmodErr)
 	}
 	encoded, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
 		return fmt.Errorf("encoding verification report: %w", err)
 	}
-	if err := atomicWrite(filepath.Join(repositoryDir, report.ID+".json"), append(encoded, '\n')); err != nil {
-		return fmt.Errorf("persisting verification report: %w", err)
+	if writeErr := atomicWrite(filepath.Join(repositoryDir, report.ID+".json"), append(encoded, '\n')); writeErr != nil {
+		return fmt.Errorf("persisting verification report: %w", writeErr)
 	}
 	pointer, err := json.Marshal(latestVerification{ID: report.ID})
 	if err != nil {
 		return fmt.Errorf("encoding latest verification pointer: %w", err)
 	}
-	if err := atomicWrite(filepath.Join(repositoryDir, "latest.json"), append(pointer, '\n')); err != nil {
-		return fmt.Errorf("persisting latest verification pointer: %w", err)
+	if writeErr := atomicWrite(filepath.Join(repositoryDir, "latest.json"), append(pointer, '\n')); writeErr != nil {
+		return fmt.Errorf("persisting latest verification pointer: %w", writeErr)
 	}
 	return contextError(ctx)
 }
@@ -102,7 +102,7 @@ func (s *VerificationStore) Current(ctx context.Context, repositoryID string) (v
 		return verification.Report{}, fmt.Errorf("reading latest verification pointer: %w", err)
 	}
 	var pointer latestVerification
-	if err := json.Unmarshal(pointerBytes, &pointer); err != nil || !validVerificationID(pointer.ID) {
+	if decodeErr := json.Unmarshal(pointerBytes, &pointer); decodeErr != nil || !validVerificationID(pointer.ID) {
 		return verification.Report{}, ErrVerificationCorrupt
 	}
 	reportBytes, err := os.ReadFile(filepath.Join(repositoryDir, pointer.ID+".json"))
@@ -113,7 +113,7 @@ func (s *VerificationStore) Current(ctx context.Context, repositoryID string) (v
 		return verification.Report{}, fmt.Errorf("reading verification report: %w", err)
 	}
 	var report verification.Report
-	if err := json.Unmarshal(reportBytes, &report); err != nil || report.ID != pointer.ID || report.ValidateID() != nil {
+	if decodeErr := json.Unmarshal(reportBytes, &report); decodeErr != nil || report.ID != pointer.ID || report.ValidateID() != nil {
 		return verification.Report{}, ErrVerificationCorrupt
 	}
 	return report, contextError(ctx)

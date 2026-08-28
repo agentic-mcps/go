@@ -22,11 +22,11 @@ func TestVerificationStorePersistsPrivateContentAddressedReport(t *testing.T) {
 	repositoryID := "sha256:" + strings.Repeat("a", 64)
 	report := verification.NewReport("0.7.0-test", verification.Repository{})
 	report.Snapshot.CurrentID = "sha256:" + strings.Repeat("b", 64)
-	if err := report.Finalize(verification.Policy{}); err != nil {
-		t.Fatal(err)
+	if finalizeErr := report.Finalize(verification.Policy{}); finalizeErr != nil {
+		t.Fatal(finalizeErr)
 	}
-	if err := store.Save(context.Background(), repositoryID, report); err != nil {
-		t.Fatal(err)
+	if saveErr := store.Save(context.Background(), repositoryID, report); saveErr != nil {
+		t.Fatal(saveErr)
 	}
 	current, err := store.Current(context.Background(), repositoryID)
 	if err != nil {
@@ -54,16 +54,16 @@ func TestVerificationStoreRejectsTamperedAndMissingState(t *testing.T) {
 		t.Fatal(err)
 	}
 	repositoryID := "sha256:" + strings.Repeat("c", 64)
-	if _, err := store.Current(context.Background(), repositoryID); !errors.Is(err, ErrVerificationNotFound) {
-		t.Fatalf("missing Current() error = %v", err)
+	if _, currentErr := store.Current(context.Background(), repositoryID); !errors.Is(currentErr, ErrVerificationNotFound) {
+		t.Fatalf("missing Current() error = %v", currentErr)
 	}
 	report := verification.NewReport("0.7.0-test", verification.Repository{})
 	report.Snapshot.CurrentID = "sha256:" + strings.Repeat("d", 64)
-	if err := report.Finalize(verification.Policy{}); err != nil {
-		t.Fatal(err)
+	if finalizeErr := report.Finalize(verification.Policy{}); finalizeErr != nil {
+		t.Fatal(finalizeErr)
 	}
-	if err := store.Save(context.Background(), repositoryID, report); err != nil {
-		t.Fatal(err)
+	if saveErr := store.Save(context.Background(), repositoryID, report); saveErr != nil {
+		t.Fatal(saveErr)
 	}
 	path := filepath.Join(root, strings.TrimPrefix(repositoryID, "sha256:"), report.ID+".json")
 	data, err := os.ReadFile(path)
@@ -71,10 +71,10 @@ func TestVerificationStoreRejectsTamperedAndMissingState(t *testing.T) {
 		t.Fatal(err)
 	}
 	data = bytes.Replace(data, []byte(`"status": "pass"`), []byte(`"status": "findings"`), 1)
-	if err := os.WriteFile(path, data, 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(path, data, 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
-	if _, err := store.Current(context.Background(), repositoryID); !errors.Is(err, ErrVerificationCorrupt) {
-		t.Fatalf("tampered Current() error = %v", err)
+	if _, currentErr := store.Current(context.Background(), repositoryID); !errors.Is(currentErr, ErrVerificationCorrupt) {
+		t.Fatalf("tampered Current() error = %v", currentErr)
 	}
 }
