@@ -13,10 +13,14 @@ import (
 )
 
 const (
-	TaskSchema       = "agentic.eval.task/v1alpha1"
-	ResultSchema     = "agentic.eval.result/v1alpha1"
+	// TaskSchema identifies the task manifest contract.
+	TaskSchema = "agentic.eval.task/v1alpha1"
+	// ResultSchema identifies the candidate score contract.
+	ResultSchema = "agentic.eval.result/v1alpha1"
+	// TranscriptSchema identifies the MCP replay input contract.
 	TranscriptSchema = "agentic.eval.transcript/v1alpha1"
-	ReplaySchema     = "agentic.eval.replay/v1alpha1"
+	// ReplaySchema identifies the MCP replay result contract.
+	ReplaySchema = "agentic.eval.replay/v1alpha1"
 )
 
 var (
@@ -24,10 +28,10 @@ var (
 	shaPattern = regexp.MustCompile(`^[0-9a-f]{40}$`)
 )
 
+// Task defines one pinned historical change and its acceptance contract.
 type Task struct {
 	SchemaVersion string     `json:"schema_version"`
 	ID            string     `json:"id"`
-	Pilot         bool       `json:"pilot"`
 	Repository    Repository `json:"repository"`
 	Prompt        string     `json:"prompt"`
 	Scope         Scope      `json:"scope"`
@@ -35,8 +39,10 @@ type Task struct {
 	Acceptance    []Command  `json:"acceptance"`
 	Invariants    []string   `json:"invariants"`
 	Exercises     []string   `json:"exercises"`
+	Pilot         bool       `json:"pilot"`
 }
 
+// Repository identifies the adjacent upstream commits used by a task.
 type Repository struct {
 	Name   string `json:"name"`
 	URL    string `json:"url"`
@@ -44,21 +50,25 @@ type Repository struct {
 	Target string `json:"target"`
 }
 
+// Scope defines the candidate workspace, packages, and permitted paths.
 type Scope struct {
 	Workspace    string   `json:"workspace"`
 	Packages     []string `json:"packages"`
 	AllowedPaths []string `json:"allowed_paths"`
 }
 
+// Oracle defines upstream files overlaid only inside the scoring clone.
 type Oracle struct {
 	OverlayPaths []string `json:"overlay_paths"`
 }
 
+// Command defines one bounded argv-based acceptance command.
 type Command struct {
 	Argv           []string `json:"argv"`
 	TimeoutSeconds int      `json:"timeout_seconds"`
 }
 
+// LoadTask strictly decodes and validates one task manifest.
 func LoadTask(path string) (Task, error) {
 	var task Task
 	if err := decodeStrict(path, &task); err != nil {
@@ -70,6 +80,7 @@ func LoadTask(path string) (Task, error) {
 	return task, nil
 }
 
+// LoadTasks validates the complete eight-task corpus and its transcripts.
 func LoadTasks(root string) ([]Task, error) {
 	paths, err := filepath.Glob(filepath.Join(root, "*", "task.json"))
 	if err != nil {
@@ -112,6 +123,7 @@ func LoadTasks(root string) ([]Task, error) {
 	return tasks, nil
 }
 
+// Validate checks one task's portable and safety-critical invariants.
 func (t Task) Validate() error {
 	if t.SchemaVersion != TaskSchema {
 		return fmt.Errorf("schema_version must be %q", TaskSchema)

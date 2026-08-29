@@ -16,39 +16,44 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// Transcript defines a deterministic sequence of MCP tool calls.
 type Transcript struct {
 	SchemaVersion string      `json:"schema_version"`
 	TaskID        string      `json:"task_id"`
 	Operations    []Operation `json:"operations"`
 }
 
+// Operation defines one expected MCP tool call and transport outcome.
 type Operation struct {
-	Tool        string         `json:"tool"`
 	Arguments   map[string]any `json:"arguments"`
+	Tool        string         `json:"tool"`
 	ExpectError bool           `json:"expect_error"`
 }
 
+// ReplayResult records a complete deterministic transcript replay.
 type ReplayResult struct {
 	SchemaVersion string       `json:"schema_version"`
 	TaskID        string       `json:"task_id"`
 	Status        string       `json:"status"`
 	ServerSHA256  string       `json:"server_sha256"`
 	Calls         []ReplayCall `json:"calls"`
-	Measurements  Measurements `json:"measurements"`
 	Uncertainties []string     `json:"uncertainties"`
+	Measurements  Measurements `json:"measurements"`
 }
 
+// ReplayCall records one MCP operation and its bounded result artifact.
 type ReplayCall struct {
-	Sequence     int    `json:"sequence"`
 	Tool         string `json:"tool"`
 	Status       string `json:"status"`
-	DurationMS   int64  `json:"duration_ms"`
-	ResultBytes  int64  `json:"result_bytes"`
 	ResultSHA256 string `json:"result_sha256"`
 	Artifact     string `json:"artifact,omitempty"`
 	Error        string `json:"error,omitempty"`
+	Sequence     int    `json:"sequence"`
+	DurationMS   int64  `json:"duration_ms"`
+	ResultBytes  int64  `json:"result_bytes"`
 }
 
+// LoadTranscript strictly decodes and validates one replay transcript.
 func LoadTranscript(path string) (Transcript, error) {
 	var transcript Transcript
 	if err := decodeStrict(path, &transcript); err != nil {
@@ -65,6 +70,7 @@ func LoadTranscript(path string) (Transcript, error) {
 	return transcript, nil
 }
 
+// Replay runs one checked-in transcript against a stdio MCP server.
 func Replay(ctx context.Context, transcript Transcript, server, workspace, artifacts string) (ReplayResult, error) {
 	started := time.Now()
 	result := ReplayResult{
@@ -87,8 +93,8 @@ func Replay(ctx context.Context, transcript Transcript, server, workspace, artif
 	if err != nil {
 		return result, err
 	}
-	if err := os.MkdirAll(artifacts, 0o755); err != nil {
-		return result, err
+	if mkdirErr := os.MkdirAll(artifacts, 0o755); mkdirErr != nil {
+		return result, mkdirErr
 	}
 	command := exec.Command(serverPath)
 	command.Dir = workspacePath
@@ -151,6 +157,7 @@ func Replay(ctx context.Context, transcript Transcript, server, workspace, artif
 	return result, nil
 }
 
+// WriteReplayResult atomically writes one replay summary.
 func WriteReplayResult(path string, result ReplayResult) error {
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {

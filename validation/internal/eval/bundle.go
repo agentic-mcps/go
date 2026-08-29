@@ -16,6 +16,7 @@ import (
 	"strings"
 )
 
+// BundleRecord identifies one deterministic private fixture bundle.
 type BundleRecord struct {
 	TaskID         string `json:"task_id"`
 	Repository     string `json:"repository"`
@@ -28,6 +29,7 @@ type BundleRecord struct {
 	GitVersion     string `json:"git_version"`
 }
 
+// PrepareAll prepares deterministic bundles for every supplied task.
 func PrepareAll(ctx context.Context, tasks []Task, sourceRoot, outputRoot string) ([]BundleRecord, error) {
 	if sourceRoot == "" || outputRoot == "" {
 		return nil, errors.New("source and output roots are required")
@@ -47,11 +49,12 @@ func PrepareAll(ctx context.Context, tasks []Task, sourceRoot, outputRoot string
 	return records, nil
 }
 
+// Prepare builds one deterministic two-commit fixture bundle.
 func Prepare(ctx context.Context, task Task, source, outputRoot string) (BundleRecord, error) {
 	var record BundleRecord
-	root, err := filepath.EvalSymlinks(source)
-	if err != nil {
-		return record, err
+	root, evalErr := filepath.EvalSymlinks(source)
+	if evalErr != nil {
+		return record, evalErr
 	}
 	gotRoot, err := commandText(ctx, "", nil, "git", "-C", root, "rev-parse", "--show-toplevel")
 	if err != nil || gotRoot != root {
@@ -76,28 +79,28 @@ func Prepare(ctx context.Context, task Task, source, outputRoot string) (BundleR
 	}
 	defer func() { _ = os.RemoveAll(tmp) }()
 	fixture := filepath.Join(tmp, "fixture")
-	if err := os.Mkdir(fixture, 0o755); err != nil {
-		return record, err
+	if mkdirErr := os.Mkdir(fixture, 0o755); mkdirErr != nil {
+		return record, mkdirErr
 	}
-	if _, err := commandText(ctx, fixture, nil, "git", "init", "--quiet", "--initial-branch=base"); err != nil {
-		return record, err
+	if _, initErr := commandText(ctx, fixture, nil, "git", "init", "--quiet", "--initial-branch=base"); initErr != nil {
+		return record, initErr
 	}
-	if err := materializeArchive(ctx, root, task.Repository.Base, fixture); err != nil {
-		return record, fmt.Errorf("materialize base: %w", err)
+	if materializeErr := materializeArchive(ctx, root, task.Repository.Base, fixture); materializeErr != nil {
+		return record, fmt.Errorf("materialize base: %w", materializeErr)
 	}
 	baseMessage := "fixture: base snapshot\n\nUpstream-Commit: " + task.Repository.Base
 	baseFixture, err := fixtureCommit(ctx, fixture, baseMessage, "2000-01-01T00:00:01Z")
 	if err != nil {
 		return record, err
 	}
-	if _, err := commandText(ctx, fixture, nil, "git", "switch", "--quiet", "-c", "target"); err != nil {
-		return record, err
+	if _, switchErr := commandText(ctx, fixture, nil, "git", "switch", "--quiet", "-c", "target"); switchErr != nil {
+		return record, switchErr
 	}
-	if err := clearFixture(fixture); err != nil {
-		return record, err
+	if clearErr := clearFixture(fixture); clearErr != nil {
+		return record, clearErr
 	}
-	if err := materializeArchive(ctx, root, task.Repository.Target, fixture); err != nil {
-		return record, fmt.Errorf("materialize target: %w", err)
+	if materializeErr := materializeArchive(ctx, root, task.Repository.Target, fixture); materializeErr != nil {
+		return record, fmt.Errorf("materialize target: %w", materializeErr)
 	}
 	targetMessage := "fixture: target snapshot\n\nUpstream-Commit: " + task.Repository.Target
 	targetFixture, err := fixtureCommit(ctx, fixture, targetMessage, "2000-01-01T00:00:02Z")
@@ -105,8 +108,8 @@ func Prepare(ctx context.Context, task Task, source, outputRoot string) (BundleR
 		return record, err
 	}
 	bundleTmp := filepath.Join(tmp, task.ID+".bundle")
-	if _, err := commandText(ctx, fixture, nil, "git", "-c", "pack.threads=1", "-c", "pack.window=0", "-c", "pack.depth=0", "bundle", "create", bundleTmp, "refs/heads/base", "refs/heads/target"); err != nil {
-		return record, fmt.Errorf("create bundle: %w", err)
+	if _, bundleErr := commandText(ctx, fixture, nil, "git", "-c", "pack.threads=1", "-c", "pack.window=0", "-c", "pack.depth=0", "bundle", "create", bundleTmp, "refs/heads/base", "refs/heads/target"); bundleErr != nil {
+		return record, fmt.Errorf("create bundle: %w", bundleErr)
 	}
 	digest, err := fileSHA256(bundleTmp)
 	if err != nil {
@@ -114,8 +117,8 @@ func Prepare(ctx context.Context, task Task, source, outputRoot string) (BundleR
 	}
 	name := task.ID + "-" + digest + ".bundle"
 	final := filepath.Join(outputRoot, name)
-	if err := installImmutable(bundleTmp, final); err != nil {
-		return record, err
+	if installErr := installImmutable(bundleTmp, final); installErr != nil {
+		return record, installErr
 	}
 	gitVersion, _ := commandText(ctx, "", nil, "git", "version")
 	record = BundleRecord{
@@ -135,6 +138,7 @@ func Prepare(ctx context.Context, task Task, source, outputRoot string) (BundleR
 	return record, nil
 }
 
+// Setup clones one fixture base into a new candidate workspace.
 func Setup(ctx context.Context, task Task, bundle, workspace string) error {
 	if _, err := os.Stat(workspace); err == nil {
 		return fmt.Errorf("workspace already exists: %s", workspace)
@@ -181,8 +185,8 @@ func materializeArchive(ctx context.Context, source, commit, destination string)
 	}
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
-	if err := cmd.Start(); err != nil {
-		return err
+	if startErr := cmd.Start(); startErr != nil {
+		return startErr
 	}
 	tarReader := tar.NewReader(stdout)
 	for {
@@ -195,14 +199,14 @@ func materializeArchive(ctx context.Context, source, commit, destination string)
 			return nextErr
 		}
 		name := filepath.Clean(filepath.FromSlash(header.Name))
-		if err := validateRelativePath(name); err != nil {
+		if validateErr := validateRelativePath(name); validateErr != nil {
 			_ = cmd.Process.Kill()
-			return err
+			return validateErr
 		}
 		path := filepath.Join(destination, name)
-		if err := ensureContained(destination, path); err != nil {
+		if containmentErr := ensureContained(destination, path); containmentErr != nil {
 			_ = cmd.Process.Kill()
-			return err
+			return containmentErr
 		}
 		switch header.Typeflag {
 		case tar.TypeXHeader, tar.TypeXGlobalHeader:

@@ -61,9 +61,9 @@ func run(ctx context.Context, args []string) error {
 			}
 			tasks = selected
 		}
-		ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
+		boundedCtx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 		defer cancel()
-		records, err := validation.PrepareAll(ctx, tasks, *sources, *output)
+		records, err := validation.PrepareAll(boundedCtx, tasks, *sources, *output)
 		if err != nil {
 			return err
 		}

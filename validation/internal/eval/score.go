@@ -25,6 +25,7 @@ const (
 	gitOutputCap     = 64 << 20
 )
 
+// Result records structural and behavioral scoring for one candidate.
 type Result struct {
 	SchemaVersion   string          `json:"schema_version"`
 	TaskID          string          `json:"task_id"`
@@ -32,29 +33,32 @@ type Result struct {
 	ChangedPaths    []string        `json:"changed_paths"`
 	UnexpectedPaths []string        `json:"unexpected_paths"`
 	Commands        []CommandResult `json:"commands"`
-	Measurements    Measurements    `json:"measurements"`
 	Uncertainties   []string        `json:"uncertainties"`
+	Measurements    Measurements    `json:"measurements"`
 }
 
+// CommandResult records one bounded acceptance-command execution.
 type CommandResult struct {
-	Argv         []string `json:"argv"`
 	Status       string   `json:"status"`
+	StdoutSHA256 string   `json:"stdout_sha256"`
+	StderrSHA256 string   `json:"stderr_sha256"`
+	Argv         []string `json:"argv"`
 	ExitCode     int      `json:"exit_code"`
 	DurationMS   int64    `json:"duration_ms"`
 	StdoutBytes  int64    `json:"stdout_bytes"`
 	StderrBytes  int64    `json:"stderr_bytes"`
-	StdoutSHA256 string   `json:"stdout_sha256"`
-	StderrSHA256 string   `json:"stderr_sha256"`
 	Truncated    bool     `json:"truncated"`
 }
 
+// Measurements records neutral execution and context-cost measurements.
 type Measurements struct {
+	ModelTokens *int  `json:"model_tokens,omitempty"`
 	DurationMS  int64 `json:"duration_ms"`
 	ToolCalls   int   `json:"tool_calls"`
 	ResultBytes int64 `json:"result_bytes"`
-	ModelTokens *int  `json:"model_tokens,omitempty"`
 }
 
+// Score evaluates one candidate without modifying its workspace.
 func Score(ctx context.Context, task Task, bundle, workspace string) (Result, error) {
 	started := time.Now()
 	result := Result{
@@ -121,6 +125,7 @@ func Score(ctx context.Context, task Task, bundle, workspace string) (Result, er
 	return result, nil
 }
 
+// WriteResult atomically writes one candidate score.
 func WriteResult(path string, result Result) error {
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
@@ -307,9 +312,9 @@ func runAcceptance(parent context.Context, workspace string, command Command) Co
 }
 
 type digestWriter struct {
-	mu        sync.Mutex
 	hash      hash.Hash
 	prefix    []byte
+	mu        sync.Mutex
 	total     int64
 	limit     int64
 	truncated bool

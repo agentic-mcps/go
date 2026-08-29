@@ -12,22 +12,25 @@ import (
 	"time"
 )
 
+// QualificationSchema identifies the task-qualification result contract.
 const QualificationSchema = "agentic.eval.qualification/v1alpha1"
 
 const scopeProbePath = ".agentic-go-eval-scope-probe"
 
+// Qualification records the three states required for a sound task oracle.
 type Qualification struct {
 	SchemaVersion string   `json:"schema_version"`
 	TaskID        string   `json:"task_id"`
 	Status        string   `json:"status"`
 	BundleSHA256  string   `json:"bundle_sha256"`
+	Failures      []string `json:"failures"`
 	NoOp          Result   `json:"no_op"`
 	Reference     Result   `json:"reference"`
 	ScopeProbe    Result   `json:"scope_probe"`
 	DurationMS    int64    `json:"duration_ms"`
-	Failures      []string `json:"failures"`
 }
 
+// Qualify proves that behavior and scope checks discriminate independently.
 func Qualify(ctx context.Context, task Task, bundle, source string) (Qualification, error) {
 	started := time.Now()
 	qualification := Qualification{
@@ -49,8 +52,8 @@ func Qualify(ctx context.Context, task Task, bundle, source string) (Qualificati
 	}
 	defer func() { _ = os.RemoveAll(root) }()
 	workspace := filepath.Join(root, "workspace")
-	if err := Setup(ctx, task, bundle, workspace); err != nil {
-		return qualification, err
+	if setupErr := Setup(ctx, task, bundle, workspace); setupErr != nil {
+		return qualification, setupErr
 	}
 	qualification.NoOp, err = Score(ctx, task, bundle, workspace)
 	if err != nil {
@@ -59,8 +62,8 @@ func Qualify(ctx context.Context, task Task, bundle, source string) (Qualificati
 	if !oracleDiscriminates(qualification.NoOp) {
 		qualification.Failures = append(qualification.Failures, "oracle does not fail on the fixture base")
 	}
-	if err := applyReference(ctx, task, source, workspace); err != nil {
-		return qualification, err
+	if applyErr := applyReference(ctx, task, source, workspace); applyErr != nil {
+		return qualification, applyErr
 	}
 	qualification.Reference, err = Score(ctx, task, bundle, workspace)
 	if err != nil {
@@ -70,8 +73,8 @@ func Qualify(ctx context.Context, task Task, bundle, source string) (Qualificati
 		qualification.Failures = append(qualification.Failures, "historical reference change does not pass")
 	}
 	probe := filepath.Join(workspace, scopeProbePath)
-	if err := os.WriteFile(probe, []byte("qualification scope probe\n"), 0o600); err != nil {
-		return qualification, err
+	if writeErr := os.WriteFile(probe, []byte("qualification scope probe\n"), 0o600); writeErr != nil {
+		return qualification, writeErr
 	}
 	qualification.ScopeProbe, err = Score(ctx, task, bundle, workspace)
 	if err != nil {
@@ -87,6 +90,7 @@ func Qualify(ctx context.Context, task Task, bundle, source string) (Qualificati
 	return qualification, nil
 }
 
+// WriteQualification atomically writes one qualification result.
 func WriteQualification(path string, qualification Qualification) error {
 	data, err := json.MarshalIndent(qualification, "", "  ")
 	if err != nil {
