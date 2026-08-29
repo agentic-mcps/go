@@ -36,7 +36,7 @@ Workspace Brief -> Begin Change -> Search / Symbol Context
 
 `go_workspace_brief` returns package layout, exported APIs, diagnostics,
 repository guidance hashes, optional change impact, risks, and explicit
-uncertainty in a bounded `agentic.context/v1alpha1` Context Pack. `go_search`
+uncertainty in a bounded `agentic.context/v1` Context Pack. `go_search`
 returns stable Symbol Refs. `go_symbol_context` uses those refs for hover,
 definitions, reference totals, implementations, related tests, diagnostics,
 and optional call hierarchy without trusting stale line numbers.
@@ -75,9 +75,9 @@ agentic-go verify --base origin/main --package ./... --format text
 | `--min-changed-coverage` | unset | Inclusive changed-statement threshold, `0..100` |
 | `--max-packages` | `200` | Affected-package limit, `1..500` |
 
-JSON uses the versioned `agentic.verify/v1beta1` contract. The
-[alpha-to-beta migration guide](docs/verification-report-v1beta1-migration.md)
-describes the additive evidence and identity changes. Exit status is `0`
+JSON uses the frozen `agentic.verify/v1` contract. The
+[v1 schema migration guide](docs/v1-schema-migration.md) describes pre-freeze
+compatibility and identity changes. Exit status is `0`
 for `pass`, `1` for policy `findings`, and `2` for `incomplete` or an execution
 error. A passing report means requested checks completed without policy-blocking
 evidence; it does not mean the change is safe.

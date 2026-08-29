@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.change/v1",
+  "title": "Agentic Change Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "id", "repository_id", "goal", "base", "scope",
+    "initial_snapshot", "latest_snapshot", "focused_paths", "focused_packages",
+    "focused_symbols", "allowed_paths", "policies", "decisions",
+    "unresolved_questions", "checkpoints", "active", "created_at", "updated_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "agentic.change/v1" },
+    "id": { "type": "string", "pattern": "^chg_[0-9a-f]{64}$" },
+    "repository_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "goal": { "type": "string", "minLength": 1 },
+    "base": { "type": "string", "minLength": 1 },
+    "scope": { "type": "string", "minLength": 1 },
+    "initial_snapshot": { "$ref": "#/$defs/snapshot" },
+    "latest_snapshot": { "$ref": "#/$defs/snapshot" },
+    "focused_paths": { "type": "array", "items": { "$ref": "#/$defs/relativePath" } },
+    "focused_packages": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "focused_symbols": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "allowed_paths": { "type": "array", "items": { "$ref": "#/$defs/relativePath" } },
+    "policies": { "$ref": "#/$defs/policies" },
+    "decisions": { "type": "array", "items": { "$ref": "#/$defs/decision" } },
+    "unresolved_questions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "checkpoints": { "type": "array", "items": { "$ref": "#/$defs/checkpointRef" } },
+    "latest_verification": { "type": "string", "minLength": 1 },
+    "active": { "type": "boolean" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\.\\.(?:/|$))" }
+    },
+    "policy": { "enum": ["allow", "warn", "forbid"] },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outside_allowed_paths", "outside_focus", "exported_api", "dependency",
+        "cross_module", "generated_file", "test_deletion"
+      ],
+      "properties": {
+        "outside_allowed_paths": { "$ref": "#/$defs/policy" },
+        "outside_focus": { "$ref": "#/$defs/policy" },
+        "exported_api": { "$ref": "#/$defs/policy" },
+        "dependency": { "$ref": "#/$defs/policy" },
+        "cross_module": { "$ref": "#/$defs/policy" },
+        "generated_file": { "$ref": "#/$defs/policy" },
+        "test_deletion": { "$ref": "#/$defs/policy" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "created_at"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "checkpointRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "previous_snapshot_id", "current_snapshot_id", "recorded_at"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^cp_[0-9a-f]{64}$" },
+        "previous_snapshot_id": { "type": "string", "minLength": 1 },
+        "current_snapshot_id": { "type": "string", "minLength": 1 },
+        "recorded_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace_symbol", "hover", "definition", "type_definition", "references",
+        "implementation", "document_symbol", "call_hierarchy", "diagnostics",
+        "rename", "formatting", "code_action"
+      ],
+      "properties": {
+        "workspace_symbol": { "type": "boolean" },
+        "hover": { "type": "boolean" },
+        "definition": { "type": "boolean" },
+        "type_definition": { "type": "boolean" },
+        "references": { "type": "boolean" },
+        "implementation": { "type": "boolean" },
+        "document_symbol": { "type": "boolean" },
+        "call_hierarchy": { "type": "boolean" },
+        "diagnostics": { "type": "boolean" },
+        "rename": { "type": "boolean" },
+        "formatting": { "type": "boolean" },
+        "code_action": { "type": "boolean" }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["goos", "goarch", "cgo_enabled", "goflags", "tags", "workspace"],
+      "properties": {
+        "goos": { "type": "string" },
+        "goarch": { "type": "string" },
+        "cgo_enabled": { "type": "boolean" },
+        "goflags": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "workspace": { "type": "string" }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "repository_id", "workspace", "head_commit", "content_digest",
+        "go_version", "gopls_version", "capabilities", "build", "scope"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "repository_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "workspace": { "type": "string" },
+        "requested_base": { "type": "string" },
+        "base_commit": { "type": "string" },
+        "merge_base_commit": { "type": "string" },
+        "head_commit": { "type": "string", "minLength": 1 },
+        "content_digest": { "type": "string", "minLength": 1 },
+        "go_version": { "type": "string", "minLength": 1 },
+        "gopls_version": { "type": "string", "minLength": 1 },
+        "capabilities": { "$ref": "#/$defs/capabilities" },
+        "build": { "$ref": "#/$defs/build" },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

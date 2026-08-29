@@ -1,0 +1,91 @@
+{
+  "schema_version": "agentic.change/v1",
+  "id": "chg_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "repository_id": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "goal": "preserve deterministic handoff",
+  "base": "main",
+  "scope": "./...",
+  "initial_snapshot": {
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "repository_id": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "workspace": ".",
+    "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+    "content_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "go_version": "go1.27.0",
+    "gopls_version": "v0.21.0",
+    "capabilities": {
+      "workspace_symbol": false,
+      "hover": false,
+      "definition": false,
+      "type_definition": false,
+      "references": false,
+      "implementation": false,
+      "document_symbol": false,
+      "call_hierarchy": false,
+      "diagnostics": false,
+      "rename": false,
+      "formatting": false,
+      "code_action": false
+    },
+    "build": {
+      "goos": "darwin",
+      "goarch": "arm64",
+      "cgo_enabled": true,
+      "goflags": "",
+      "tags": [],
+      "workspace": "."
+    },
+    "scope": "./..."
+  },
+  "latest_snapshot": {
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "repository_id": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "workspace": ".",
+    "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+    "content_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "go_version": "go1.27.0",
+    "gopls_version": "v0.21.0",
+    "capabilities": {
+      "workspace_symbol": false,
+      "hover": false,
+      "definition": false,
+      "type_definition": false,
+      "references": false,
+      "implementation": false,
+      "document_symbol": false,
+      "call_hierarchy": false,
+      "diagnostics": false,
+      "rename": false,
+      "formatting": false,
+      "code_action": false
+    },
+    "build": {
+      "goos": "darwin",
+      "goarch": "arm64",
+      "cgo_enabled": true,
+      "goflags": "",
+      "tags": [],
+      "workspace": "."
+    },
+    "scope": "./..."
+  },
+  "focused_paths": [],
+  "focused_packages": [],
+  "focused_symbols": [],
+  "allowed_paths": [],
+  "policies": {
+    "outside_allowed_paths": "forbid",
+    "outside_focus": "warn",
+    "exported_api": "warn",
+    "dependency": "warn",
+    "cross_module": "warn",
+    "generated_file": "forbid",
+    "test_deletion": "warn"
+  },
+  "decisions": [],
+  "unresolved_questions": [],
+  "checkpoints": [],
+  "active": true,
+  "created_at": "2026-08-29T12:00:00Z",
+  "updated_at": "2026-08-29T12:00:00Z"
+}

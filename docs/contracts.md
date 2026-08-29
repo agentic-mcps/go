@@ -106,8 +106,8 @@ resources, one artifact resource template, and four prompts. The three
 intelligence tools are read-only, non-destructive, idempotent, and closed-world.
 Existing eight tool contracts remain unchanged.
 
-`agentic.context/v1alpha1` is the compact semantic contract. The checked-in
-[JSON Schema](schema/context-pack-v1alpha1.json) is authoritative. Every result
+`agentic.context/v1` is the frozen compact semantic contract. The checked-in
+[JSON Schema](schema/context-pack-v1.json) is authoritative. Every result
 records its observed Snapshot Ref, uses workspace-relative locations with
 one-based UTF-8 byte columns, keeps collections non-null and deterministic, and
 reports omitted external or dynamic relationships as uncertainty. LSP UTF-16
@@ -135,8 +135,8 @@ and `resume-change` prompts. Its milestone inventory was 13 tools, six fixed
 resources, one artifact resource template, and six prompts. Existing tool,
 resource, and prompt contracts remain additive and compatible.
 
-`agentic.change/v1alpha1` is the private continuity contract. The checked-in
-[JSON Schema](schema/change-contract-v1alpha1.json) is authoritative. A Change
+`agentic.change/v1` is the frozen private continuity contract. The checked-in
+[JSON Schema](schema/change-contract-v1.json) is authoritative. A Change
 Contract records the caller's opaque goal, local base, package scope, focused
 paths, packages and Symbol Refs, optional allowed paths, structural policies,
 decisions, unresolved questions, exact Snapshot Ref lineage, and latest
@@ -211,13 +211,11 @@ journals are private 0600 state under
 
 ## v0.7 Unified Verification boundary
 
-The current report schema is `agentic.verify/v1beta1`. Its checked-in
-[JSON Schema](schema/verification-report-v1beta1.json) is the machine-readable
-authority, and the
-[migration guide](verification-report-v1beta1-migration.md) records the
-intentional changes from the frozen alpha contract. Current adapters emit beta
-only and must branch on `schema_version`; alpha is not maintained as a parallel
-output mode.
+The frozen report schema is `agentic.verify/v1`. Its checked-in
+[JSON Schema](schema/verification-report-v1.json) is the machine-readable
+authority. The [v1 migration guide](v1-schema-migration.md) records upgrade and
+archive behavior. Current adapters emit v1 only and consumers must branch on
+`schema_version`; older schemas are not maintained as parallel output modes.
 
 CLI `verify` and production MCP `go_verify_change` calls use the same
 intelligence service and finalized report. The report records its

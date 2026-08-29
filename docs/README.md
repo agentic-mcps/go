@@ -15,10 +15,12 @@ concise product plan and routing summary.
 - [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) — change-aware
   whole-package verification, changed-statement coverage, analyzer baselining,
   risk guidance, and CLI/Action/MCP adapters
-- [`schema/verification-report-v1beta1.json`](schema/verification-report-v1beta1.json)
+- [`schema/verification-report-v1.json`](schema/verification-report-v1.json)
   - current portable machine-readable report contract
+- [`v1-schema-migration.md`](v1-schema-migration.md)
+  - pre-freeze schema and private-state migration guide
 - [`verification-report-v1beta1-migration.md`](verification-report-v1beta1-migration.md)
-  - alpha-to-beta migration guide and report goldens
+  - historical alpha-to-beta migration guide
 - [`schema/archive/verification-report-v1alpha1.json`](schema/archive/verification-report-v1alpha1.json)
   - frozen v0.2 report contract
 - [`../CONTEXT.md`](../CONTEXT.md) and
@@ -29,9 +31,9 @@ concise product plan and routing summary.
 
 - [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md): staged sidecar, semantic,
   continuity, refactor, evaluation, and contract-freeze authority
-- [`schema/context-pack-v1alpha1.json`](schema/context-pack-v1alpha1.json):
+- [`schema/context-pack-v1.json`](schema/context-pack-v1.json):
   compact snapshot-bound semantic context contract
-- [`schema/change-contract-v1alpha1.json`](schema/change-contract-v1alpha1.json):
+- [`schema/change-contract-v1.json`](schema/change-contract-v1.json):
   snapshot-bound Change Contract and Checkpoint contract
 - [`adr/0002-context-pack-boundary.md`](adr/0002-context-pack-boundary.md):
   why Context Packs and the intelligence service, not raw gopls or MCP, form

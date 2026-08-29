@@ -312,7 +312,7 @@ func TestFinalizeBoundsPortableDetailsAfterPolicy(t *testing.T) {
 }
 
 func TestPublishedSchemaMatchesReportVersion(t *testing.T) {
-	path := filepath.Join("..", "..", "docs", "schema", "verification-report-v1beta1.json")
+	path := filepath.Join("..", "..", "docs", "schema", "verification-report-v1.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read published schema: %v", err)

@@ -113,7 +113,7 @@ func (s *VerificationStore) Current(ctx context.Context, repositoryID string) (v
 		return verification.Report{}, fmt.Errorf("reading verification report: %w", err)
 	}
 	var report verification.Report
-	if decodeErr := json.Unmarshal(reportBytes, &report); decodeErr != nil || report.ID != pointer.ID || report.ValidateID() != nil {
+	if decodeErr := json.Unmarshal(reportBytes, &report); decodeErr != nil || report.ID != pointer.ID || report.ValidateStoredID() != nil {
 		return verification.Report{}, ErrVerificationCorrupt
 	}
 	return report, contextError(ctx)

@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	// ContextSchemaVersion identifies the pre-freeze Context Pack contract.
-	ContextSchemaVersion = "agentic.context/v1alpha1"
-	// ChangeSchemaVersion identifies the pre-freeze Change Contract contract.
-	ChangeSchemaVersion = "agentic.change/v1alpha1"
+	// ContextSchemaVersion identifies the frozen Context Pack contract.
+	ContextSchemaVersion = "agentic.context/v1"
+	// ChangeSchemaVersion identifies the frozen Change Contract contract.
+	ChangeSchemaVersion      = "agentic.change/v1"
+	changeAlphaSchemaVersion = "agentic.change/v1alpha1"
 	// DefaultBriefBytes is the compact workspace-brief response budget.
 	DefaultBriefBytes = 8 << 10
 	// DefaultSymbolBytes is the compact symbol-context response budget.

@@ -1,6 +1,6 @@
 {
-  "schema_version": "agentic.verify/v1",
-  "id": "verify_c081cd6460591eaca5fca0e38a37d9ecbd7c42e7b57a49d8e93fa6e695d3e437",
+  "schema_version": "agentic.verify/v1beta1",
+  "id": "verify_f05688e086d88c51a1438624fa6ad73ad98081aeb44c82d16dfbbc17cc901f3f",
   "provider": {
     "name": "agentic-go",
     "version": "0.2.0"

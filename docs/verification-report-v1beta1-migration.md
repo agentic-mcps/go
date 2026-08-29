@@ -1,12 +1,13 @@
 # Verification report v1beta1 migration
 
-`agentic.verify/v1beta1` is the current development report emitted by
-`agentic-go verify` and production `go_verify_change` calls. The v0.2
+`agentic.verify/v1beta1` is the historical v0.7 development report. The v0.2
 `agentic.verify/v1alpha1` contract is frozen for historical evidence and is no
-longer emitted as a parallel output mode.
+longer emitted as a parallel output mode. Current guidance is in
+[`v1-schema-migration.md`](v1-schema-migration.md).
 
-Consumers must inspect `schema_version` before decoding. Supporting alpha and
-beta inputs is a consumer choice; agentic-go itself emits beta only.
+At the v0.7 milestone, consumers had to inspect `schema_version` before
+decoding and agentic-go emitted beta only. Current releases emit v1 as described
+in the current migration guide.
 
 ## What changed
 
@@ -52,17 +53,17 @@ exact active contract lineage; stale or inconsistent references fail loudly.
 
 ## Schema and goldens
 
-- Current schema:
-  [`schema/verification-report-v1beta1.json`](schema/verification-report-v1beta1.json)
+- Archived beta schema:
+  [`schema/archive/verification-report-v1beta1.json`](schema/archive/verification-report-v1beta1.json)
 - Frozen alpha schema:
   [`schema/archive/verification-report-v1alpha1.json`](schema/archive/verification-report-v1alpha1.json)
 - Representative alpha report:
   [`../validation/v0.2.0/grpc-go-reverse-impact.json`](../validation/v0.2.0/grpc-go-reverse-impact.json)
-- Strict beta goldens:
-  [`../internal/verification/testdata/report-pass.json`](../internal/verification/testdata/report-pass.json),
-  [`../internal/verification/testdata/report-findings.json`](../internal/verification/testdata/report-findings.json), and
-  [`../internal/verification/testdata/report-incomplete.json`](../internal/verification/testdata/report-incomplete.json)
+- Archived beta goldens:
+  [`../internal/verification/testdata/archive/v1beta1/report-pass.json`](../internal/verification/testdata/archive/v1beta1/report-pass.json),
+  [`../internal/verification/testdata/archive/v1beta1/report-findings.json`](../internal/verification/testdata/archive/v1beta1/report-findings.json), and
+  [`../internal/verification/testdata/archive/v1beta1/report-incomplete.json`](../internal/verification/testdata/archive/v1beta1/report-incomplete.json)
 
-The alpha schema is retained as historical compatibility evidence. New beta
-fields describe deterministic local evidence; they do not establish universal
+The alpha and beta schemas are retained as historical compatibility evidence.
+Beta fields describe deterministic local evidence; they do not establish universal
 correctness, model reliability, token savings, or adoption claims.

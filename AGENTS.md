@@ -14,6 +14,9 @@ work. The roadmap adds staged scope without weakening v0.2 compatibility.
 Read [`docs/v0.8.0-evaluation-scope.md`](docs/v0.8.0-evaluation-scope.md)
 before changing the historical task corpus, scorer, replay format, or model
 evaluation claims.
+Read [`docs/v0.9.0-release-scope.md`](docs/v0.9.0-release-scope.md) before
+changing frozen schemas, MCP interfaces, cached-state upgrades, or v1 release
+evidence.
 
 For a rule change, also read the matching domain specification:
 [`docs/phase-4a-concurrency.md`](docs/phase-4a-concurrency.md) or
@@ -23,8 +26,8 @@ For a rule change, also read the matching domain specification:
 ## Invariants
 
 - Tagged v0.1.0 is seven tools, four resources, four prompts, and the
-  `agentic-go-vet` binary. v0.2 adds `go_verify_change`. The current v0.6
-  development surface is 14 tools, six fixed resources, one artifact resource
+  `agentic-go-vet` binary. v0.2 adds `go_verify_change`. The frozen v1
+  development surface is 14 tools, seven fixed resources, one artifact resource
   template, and six prompts. `internal/tools.RegisterAll` is the live inventory.
   Change Contracts are private same-machine user-cache state with exact
   snapshot lineage and stale rejection. Goal and decision prose is never
@@ -44,7 +47,7 @@ For a rule change, also read the matching domain specification:
 - v0.4 intelligence is bound to immutable Snapshot Refs. Public locations use
   one-based UTF-8 byte columns; LSP UTF-16 positions stay inside the gopls
   adapter and opaque Symbol Refs. Stale refs fail instead of being re-resolved.
-- `agentic.context/v1alpha1` Context Packs are compact, deterministic, and
+- `agentic.context/v1` Context Packs are compact, deterministic, and
   source-grounded. Complete overflow detail stays in private content-addressed
   artifacts addressed by opaque cursors. MCP and LSP types do not enter
   `internal/intelligence` domain contracts.

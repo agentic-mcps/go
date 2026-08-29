@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Frozen `agentic.context/v1`, `agentic.change/v1`, and
+  `agentic.verify/v1` contracts with immutable pre-freeze archives and
+  non-mutating private-state upgrade compatibility.
 - A reproducible eight-task historical evaluation corpus with deterministic
   private fixture bundles, independent behavioral and scope qualification,
   bounded scoring, and source-free MCP replay evidence.

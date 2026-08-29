@@ -56,8 +56,8 @@ Change Request
 - `cmd/agentic-go`, the root Action, and MCP tools adapt the same report. MCP
   types, workflow concepts, and adapter names do not enter the engine.
 
-The report began at `agentic.verify/v1alpha1` for v0.2 and currently evolves as
-`agentic.verify/v1beta1`. Go-specific entities use
+The report began at `agentic.verify/v1alpha1` for v0.2 and is frozen as
+`agentic.verify/v1`. Go-specific entities use
 namespaced kinds such as `go.package`; top-level concepts remain portable so a
 future TypeScript implementation can produce the same semantics. Extraction
 into an organization-level specification waits until a second implementation

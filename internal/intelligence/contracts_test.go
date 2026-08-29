@@ -1,7 +1,9 @@
 package intelligence
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -107,8 +109,8 @@ func TestContractStoreRejectsCorruptionAndCancellation(t *testing.T) {
 	repositoryID := "sha256:" + strings.Repeat("1", 64)
 	contractID := "chg_" + strings.Repeat("2", 64)
 	repositoryDir := filepath.Join(root, strings.Repeat("1", 64))
-	if err := os.MkdirAll(repositoryDir, 0o700); err != nil {
-		t.Fatal(err)
+	if mkdirErr := os.MkdirAll(repositoryDir, 0o700); mkdirErr != nil {
+		t.Fatal(mkdirErr)
 	}
 	if err := os.WriteFile(filepath.Join(repositoryDir, contractID+".json"), []byte("{"), 0o600); err != nil {
 		t.Fatal(err)
@@ -120,5 +122,63 @@ func TestContractStoreRejectsCorruptionAndCancellation(t *testing.T) {
 	cancel()
 	if _, err := store.Load(cancelled, repositoryID, contractID); !errors.Is(err, context.Canceled) {
 		t.Fatalf("cancelled load error = %v", err)
+	}
+}
+
+func TestContractStorePromotesAlphaOnExplicitSave(t *testing.T) {
+	root := t.TempDir()
+	store, err := NewContractStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repositoryID := "sha256:" + strings.Repeat("3", 64)
+	contractID := "chg_" + strings.Repeat("4", 64)
+	recorded := time.Date(2026, time.August, 29, 12, 0, 0, 0, time.UTC)
+	contract := ChangeContract{
+		SchemaVersion: changeAlphaSchemaVersion, ID: contractID, RepositoryID: repositoryID,
+		Goal: "preserve upgrade behavior", Base: "main", Scope: "./...",
+		InitialSnapshot: SnapshotRef{ID: "sha256:" + strings.Repeat("5", 64), RepositoryID: repositoryID},
+		LatestSnapshot:  SnapshotRef{ID: "sha256:" + strings.Repeat("5", 64), RepositoryID: repositoryID},
+		FocusedPaths:    []string{}, FocusedPackages: []string{}, FocusedSymbols: []SymbolRef{}, AllowedPaths: []string{},
+		Policies: DefaultStructuralPolicies(), Decisions: []Decision{}, UnresolvedQuestions: []string{}, Checkpoints: []CheckpointRef{},
+		Active: true, CreatedAt: recorded, UpdatedAt: recorded,
+	}
+	repositoryDir := filepath.Join(root, strings.Repeat("3", 64))
+	if mkdirErr := os.MkdirAll(repositoryDir, 0o700); mkdirErr != nil {
+		t.Fatal(mkdirErr)
+	}
+	encoded, err := json.MarshalIndent(contract, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(repositoryDir, contractID+".json")
+	alphaBytes := append(encoded, '\n')
+	if writeErr := os.WriteFile(path, alphaBytes, 0o600); writeErr != nil {
+		t.Fatal(writeErr)
+	}
+
+	loaded, err := store.Load(context.Background(), repositoryID, contractID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.SchemaVersion != ChangeSchemaVersion {
+		t.Fatalf("loaded schema = %q, want %q", loaded.SchemaVersion, ChangeSchemaVersion)
+	}
+	afterLoad, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(afterLoad, alphaBytes) {
+		t.Fatal("loading an alpha contract rewrote private state")
+	}
+	if saveErr := store.Save(context.Background(), loaded); saveErr != nil {
+		t.Fatal(saveErr)
+	}
+	afterSave, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(afterSave, []byte(changeAlphaSchemaVersion)) || !bytes.Contains(afterSave, []byte(ChangeSchemaVersion)) {
+		t.Fatal("explicit save did not promote the contract to v1")
 	}
 }

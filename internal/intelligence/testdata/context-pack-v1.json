@@ -1,0 +1,56 @@
+{
+  "schema_version": "agentic.context/v1",
+  "provider": {
+    "name": "agentic-go",
+    "version": "1.0.0-rc.1"
+  },
+  "snapshot": {
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "repository_id": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "workspace": ".",
+    "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+    "content_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "go_version": "go1.27.0",
+    "gopls_version": "v0.21.0",
+    "capabilities": {
+      "workspace_symbol": false,
+      "hover": false,
+      "definition": false,
+      "type_definition": false,
+      "references": false,
+      "implementation": false,
+      "document_symbol": false,
+      "call_hierarchy": false,
+      "diagnostics": false,
+      "rename": false,
+      "formatting": false,
+      "code_action": false
+    },
+    "build": {
+      "goos": "darwin",
+      "goarch": "arm64",
+      "cgo_enabled": true,
+      "goflags": "",
+      "tags": [],
+      "workspace": "."
+    },
+    "scope": "./..."
+  },
+  "modules": [],
+  "packages": [],
+  "symbols": [],
+  "diagnostics": [],
+  "guidance": [],
+  "risks": [],
+  "uncertainties": [],
+  "totals": {
+    "modules": 0,
+    "packages": 0,
+    "symbols": 0,
+    "diagnostics": 0,
+    "guidance": 0,
+    "risks": 0,
+    "uncertainties": 0
+  },
+  "truncated": false
+}

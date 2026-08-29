@@ -3,6 +3,7 @@ package intelligence
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -76,5 +77,58 @@ func TestVerificationStoreRejectsTamperedAndMissingState(t *testing.T) {
 	}
 	if _, currentErr := store.Current(context.Background(), repositoryID); !errors.Is(currentErr, ErrVerificationCorrupt) {
 		t.Fatalf("tampered Current() error = %v", currentErr)
+	}
+}
+
+func TestVerificationStoreReadsArchivedBetaWithoutRewriting(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "verifications")
+	store, err := NewVerificationStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repositoryID := "sha256:" + strings.Repeat("e", 64)
+	reportBytes, err := os.ReadFile(filepath.Join("..", "verification", "testdata", "archive", "v1beta1", "report-pass.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var archived verification.Report
+	if decodeErr := json.Unmarshal(reportBytes, &archived); decodeErr != nil {
+		t.Fatal(decodeErr)
+	}
+	if archived.SchemaVersion != verification.ArchivedBetaSchemaVersion || archived.ValidateStoredID() != nil {
+		t.Fatal("archived beta fixture has invalid identity")
+	}
+	repositoryDir := filepath.Join(root, strings.TrimPrefix(repositoryID, "sha256:"))
+	if mkdirErr := os.MkdirAll(repositoryDir, 0o700); mkdirErr != nil {
+		t.Fatal(mkdirErr)
+	}
+	reportPath := filepath.Join(repositoryDir, archived.ID+".json")
+	if writeErr := os.WriteFile(reportPath, reportBytes, 0o600); writeErr != nil {
+		t.Fatal(writeErr)
+	}
+	pointer, err := json.Marshal(latestVerification{ID: archived.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if writeErr := os.WriteFile(filepath.Join(repositoryDir, "latest.json"), append(pointer, '\n'), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
+	}
+
+	current, err := store.Current(context.Background(), repositoryID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.SchemaVersion != verification.ArchivedBetaSchemaVersion || current.ID != archived.ID {
+		t.Fatalf("archived report identity = %q/%q", current.SchemaVersion, current.ID)
+	}
+	after, err := os.ReadFile(reportPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(after, reportBytes) {
+		t.Fatal("reading an archived report rewrote private state")
+	}
+	if err := store.Save(context.Background(), repositoryID, current); !errors.Is(err, ErrVerificationCorrupt) {
+		t.Fatalf("saving archived report error = %v, want corrupt-state rejection", err)
 	}
 }

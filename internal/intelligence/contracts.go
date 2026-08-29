@@ -137,6 +137,9 @@ func (s *ContractStore) Load(ctx context.Context, repositoryID, contractID strin
 	if err := json.Unmarshal(encoded, &contract); err != nil {
 		return ChangeContract{}, fmt.Errorf("%w: decoding JSON", ErrContractCorrupt)
 	}
+	if contract.SchemaVersion == changeAlphaSchemaVersion {
+		contract.SchemaVersion = ChangeSchemaVersion
+	}
 	if contract.ID != contractID || contract.RepositoryID != repositoryID {
 		return ChangeContract{}, fmt.Errorf("%w: repository or contract identity mismatch", ErrContractCorrupt)
 	}

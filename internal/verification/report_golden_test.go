@@ -49,7 +49,7 @@ func TestGoldenReportsMatchPortableContract(t *testing.T) {
 				t.Fatalf("finalize golden report: %v", err)
 			}
 			if !reflect.DeepEqual(finalized, report) {
-				t.Fatal("golden report is not the deterministic finalized report")
+				t.Fatalf("golden report is not the deterministic finalized report: id = %q, want %q", finalized.ID, report.ID)
 			}
 			canonical, err := json.Marshal(report)
 			if err != nil {

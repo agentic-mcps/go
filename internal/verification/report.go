@@ -11,8 +11,12 @@ import (
 	"strings"
 )
 
-// SchemaVersion identifies the pre-freeze unified verification contract.
-const SchemaVersion = "agentic.verify/v1beta1"
+const (
+	// SchemaVersion identifies the frozen unified verification contract.
+	SchemaVersion = "agentic.verify/v1"
+	// ArchivedBetaSchemaVersion identifies reports emitted before the v1 freeze.
+	ArchivedBetaSchemaVersion = "agentic.verify/v1beta1"
+)
 
 const (
 	maxVisibleChangedFiles         = 15
@@ -559,7 +563,23 @@ func (r *Report) assignID() error {
 // ValidateID verifies that a report carries the exact content address assigned
 // by Finalize without mutating the caller's value.
 func (r Report) ValidateID() error {
-	if r.SchemaVersion != SchemaVersion || !strings.HasPrefix(r.ID, "verify_") || len(r.ID) != len("verify_")+sha256.Size*2 {
+	if r.SchemaVersion != SchemaVersion {
+		return fmt.Errorf("verification report identity is invalid")
+	}
+	return r.validateContentID()
+}
+
+// ValidateStoredID accepts the current schema and the archived beta schema
+// while still verifying the exact content address.
+func (r Report) ValidateStoredID() error {
+	if r.SchemaVersion != SchemaVersion && r.SchemaVersion != ArchivedBetaSchemaVersion {
+		return fmt.Errorf("verification report identity is invalid")
+	}
+	return r.validateContentID()
+}
+
+func (r Report) validateContentID() error {
+	if !strings.HasPrefix(r.ID, "verify_") || len(r.ID) != len("verify_")+sha256.Size*2 {
 		return fmt.Errorf("verification report identity is invalid")
 	}
 	want := r.ID
