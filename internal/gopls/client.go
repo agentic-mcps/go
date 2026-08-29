@@ -29,6 +29,7 @@ const (
 type Config struct {
 	Command           string
 	Workspace         string
+	ClientVersion     string
 	Args              []string
 	MaxFrame          int
 	InitializeTimeout time.Duration
@@ -78,6 +79,9 @@ type Client struct {
 func Start(ctx context.Context, config Config) (*Client, error) {
 	if strings.TrimSpace(config.Command) == "" {
 		return nil, fmt.Errorf("gopls command is empty")
+	}
+	if strings.TrimSpace(config.ClientVersion) == "" {
+		return nil, fmt.Errorf("gopls client version is empty")
 	}
 	workspace, err := filepath.Abs(config.Workspace)
 	if err != nil {
@@ -146,7 +150,7 @@ func Start(ctx context.Context, config Config) (*Client, error) {
 	rootURI := (&url.URL{Scheme: "file", Path: workspace}).String()
 	params := map[string]any{
 		"processId":        nil,
-		"clientInfo":       map[string]any{"name": "agentic-go", "version": "0.3.0-dev"},
+		"clientInfo":       map[string]any{"name": "agentic-go", "version": config.ClientVersion},
 		"rootUri":          rootURI,
 		"workspaceFolders": []map[string]any{{"uri": rootURI, "name": filepath.Base(workspace)}},
 		"capabilities": map[string]any{

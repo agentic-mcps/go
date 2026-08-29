@@ -27,7 +27,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-var version = "0.3.0-dev"
+var version = "1.0.0-dev"
 
 func main() {
 	os.Exit(run(os.Args[1:]))
@@ -108,7 +108,7 @@ func runMCP(args []string) int {
 		logger.Error("semantic sidecar preflight failed", "error", err)
 		return 1
 	}
-	semanticManager, err := gopls.NewManager(ctx, gopls.Config{Command: installation.Path, Args: []string{"serve"}, Workspace: ws.Root()})
+	semanticManager, err := gopls.NewManager(ctx, gopls.Config{Command: installation.Path, Args: []string{"serve"}, Workspace: ws.Root(), ClientVersion: version})
 	if err != nil {
 		logger.Error("semantic sidecar setup failed", "error", err)
 		return 1
@@ -306,7 +306,7 @@ func newUnifiedVerificationService(
 	if err != nil {
 		return nil, func() {}, fmt.Errorf("semantic sidecar preflight failed: %w", err)
 	}
-	manager, err := gopls.NewManager(ctx, gopls.Config{Command: installation.Path, Args: []string{"serve"}, Workspace: ws.Root()})
+	manager, err := gopls.NewManager(ctx, gopls.Config{Command: installation.Path, Args: []string{"serve"}, Workspace: ws.Root(), ClientVersion: version})
 	if err != nil {
 		return nil, func() {}, fmt.Errorf("semantic sidecar setup failed: %w", err)
 	}

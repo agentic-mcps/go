@@ -39,7 +39,7 @@ type IntelligenceService interface {
 
 // NewRuntime validates the dependencies shared by every tool registration.
 func NewRuntime(ws *workspace.Workspace, runner *execution.Runner, tracer *trace.Tracer) (*Runtime, error) {
-	return NewRuntimeWithVersion(ws, runner, tracer, "0.2.0-dev")
+	return NewRuntimeWithVersion(ws, runner, tracer, "1.0.0-dev")
 }
 
 // NewRuntimeWithVersion preserves the producing binary version in portable

@@ -21,7 +21,7 @@ func TestPinnedGoplsNormalizedIntelligenceContract(t *testing.T) {
 	snapshots := newTestSnapshotter(t, root)
 	lifecycle, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	manager, err := gopls.NewManager(lifecycle, gopls.Config{Command: sidecar, Args: []string{"serve"}, Workspace: snapshots.workspace.Root()})
+	manager, err := gopls.NewManager(lifecycle, gopls.Config{Command: sidecar, Args: []string{"serve"}, Workspace: snapshots.workspace.Root(), ClientVersion: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestPinnedGoplsGuardedRefactorContract(t *testing.T) {
 	snapshots := newTestSnapshotter(t, root)
 	lifecycle, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	manager, err := gopls.NewManager(lifecycle, gopls.Config{Command: sidecar, Args: []string{"serve"}, Workspace: snapshots.workspace.Root()})
+	manager, err := gopls.NewManager(lifecycle, gopls.Config{Command: sidecar, Args: []string{"serve"}, Workspace: snapshots.workspace.Root(), ClientVersion: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}

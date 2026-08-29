@@ -31,7 +31,7 @@ func TestPinnedSidecarContract(t *testing.T) {
 	if writeErr := os.WriteFile(file, source, 0o600); writeErr != nil {
 		t.Fatal(writeErr)
 	}
-	client, err := Start(ctx, Config{Command: installation.Path, Args: []string{"serve"}, Workspace: workspace})
+	client, err := Start(ctx, Config{Command: installation.Path, Args: []string{"serve"}, Workspace: workspace, ClientVersion: "test"})
 	if err != nil {
 		t.Fatalf("Start() error = %v", err)
 	}

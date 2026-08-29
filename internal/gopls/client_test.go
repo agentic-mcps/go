@@ -80,15 +80,23 @@ func TestClientRejectsOversizedFrame(t *testing.T) {
 	}
 }
 
+func TestClientRequiresVersionIdentity(t *testing.T) {
+	_, err := Start(context.Background(), Config{Command: os.Args[0], Workspace: t.TempDir()})
+	if err == nil || !strings.Contains(err.Error(), "client version") {
+		t.Fatalf("Start() error = %v, want client-version diagnostic", err)
+	}
+}
+
 func startHelperClient(t *testing.T, scenario string) *Client {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
 	client, err := Start(ctx, Config{
-		Command:   os.Args[0],
-		Args:      []string{"-test.run=TestGoplsHelperProcess", "--", scenario},
-		Workspace: t.TempDir(),
-		MaxFrame:  1 << 20,
+		Command:       os.Args[0],
+		Args:          []string{"-test.run=TestGoplsHelperProcess", "--", scenario},
+		Workspace:     t.TempDir(),
+		ClientVersion: "1.0.0-test",
+		MaxFrame:      1 << 20,
 	})
 	if err != nil {
 		t.Fatalf("Start() error = %v", err)
@@ -141,15 +149,26 @@ func TestGoplsHelperProcess(t *testing.T) {
 			t.Fatalf("read frame: %v", err)
 		}
 		var message struct {
-			JSONRPC string          `json:"jsonrpc"`
-			Method  string          `json:"method"`
-			ID      json.RawMessage `json:"id"`
+			Method string          `json:"method"`
+			Params json.RawMessage `json:"params"`
+			ID     json.RawMessage `json:"id"`
 		}
 		if err := json.Unmarshal(payload, &message); err != nil {
 			t.Fatalf("decode message: %v", err)
 		}
 		switch message.Method {
 		case "initialize":
+			var params struct {
+				ClientInfo struct {
+					Version string `json:"version"`
+				} `json:"clientInfo"`
+			}
+			if err := json.Unmarshal(message.Params, &params); err != nil {
+				t.Fatalf("decode initialize params: %v", err)
+			}
+			if scenario == "capabilities" && params.ClientInfo.Version != "1.0.0-test" {
+				t.Fatalf("client version = %q", params.ClientInfo.Version)
+			}
 			result := map[string]any{"capabilities": map[string]any{
 				"workspaceSymbolProvider": true,
 				"hoverProvider":           true,

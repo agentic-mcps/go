@@ -36,7 +36,7 @@ func TestExternalSemanticWorkspaces(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			manager, err := gopls.NewManager(ctx, gopls.Config{Command: sidecar, Args: []string{"serve"}, Workspace: ws.Root()})
+			manager, err := gopls.NewManager(ctx, gopls.Config{Command: sidecar, Args: []string{"serve"}, Workspace: ws.Root(), ClientVersion: "test"})
 			if err != nil {
 				t.Fatal(err)
 			}

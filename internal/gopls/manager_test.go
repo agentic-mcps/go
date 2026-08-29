@@ -15,9 +15,10 @@ func TestManagerRetriesOneIdempotentReadAfterCrash(t *testing.T) {
 	lifecycle, stop := context.WithCancel(context.Background())
 	t.Cleanup(stop)
 	manager, err := NewManager(lifecycle, Config{
-		Command:   os.Args[0],
-		Args:      []string{"-test.run=TestGoplsHelperProcess", "--", "restart", statePath},
-		Workspace: t.TempDir(),
+		Command:       os.Args[0],
+		Args:          []string{"-test.run=TestGoplsHelperProcess", "--", "restart", statePath},
+		Workspace:     t.TempDir(),
+		ClientVersion: "test",
 	})
 	if err != nil {
 		t.Fatalf("NewManager() error = %v", err)
@@ -49,9 +50,10 @@ func TestManagerNeverRetriesMutationAfterCrash(t *testing.T) {
 	lifecycle, stop := context.WithCancel(context.Background())
 	t.Cleanup(stop)
 	manager, err := NewManager(lifecycle, Config{
-		Command:   os.Args[0],
-		Args:      []string{"-test.run=TestGoplsHelperProcess", "--", "restart", statePath},
-		Workspace: t.TempDir(),
+		Command:       os.Args[0],
+		Args:          []string{"-test.run=TestGoplsHelperProcess", "--", "restart", statePath},
+		Workspace:     t.TempDir(),
+		ClientVersion: "test",
 	})
 	if err != nil {
 		t.Fatalf("NewManager() error = %v", err)
@@ -72,9 +74,10 @@ func TestManagerExplicitRestartReplacesSession(t *testing.T) {
 	lifecycle, stop := context.WithCancel(context.Background())
 	t.Cleanup(stop)
 	manager, err := NewManager(lifecycle, Config{
-		Command:   os.Args[0],
-		Args:      []string{"-test.run=TestGoplsHelperProcess", "--", "restart", statePath},
-		Workspace: t.TempDir(),
+		Command:       os.Args[0],
+		Args:          []string{"-test.run=TestGoplsHelperProcess", "--", "restart", statePath},
+		Workspace:     t.TempDir(),
+		ClientVersion: "test",
 	})
 	if err != nil {
 		t.Fatalf("NewManager() error = %v", err)
