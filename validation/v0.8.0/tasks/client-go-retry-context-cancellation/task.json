@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "client-go-retry-context-cancellation",
+  "pilot": true,
+  "repository": {
+    "name": "client-go",
+    "url": "https://github.com/kubernetes/client-go",
+    "base": "8c9ee70637600318f1cc4e3931da78f084e41123",
+    "target": "a4e0c957fe27dcac8c9befd2c561e22b470ffb36"
+  },
+  "prompt": "Preserve context cancellation from RetryOnConflict when cancellation happens before an operation returns a retriable error, without changing the existing last-error behavior.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["./util/retry"],
+    "allowed_paths": ["util/retry/util.go", "util/retry/util_test.go"]
+  },
+  "oracle": { "overlay_paths": ["util/retry/util_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", "./util/retry", "-run", "^TestRetryOnConflictPreservesContextErrorWithoutLastError$", "-count=1"], "timeout_seconds": 240 }
+  ],
+  "invariants": [
+    "RetryOnConflict returns context.Canceled when cancellation occurs before any retriable operation error.",
+    "A recorded operation error still takes precedence when backoff is interrupted.",
+    "Retry count and backoff behavior remain unchanged."
+  ],
+  "exercises": ["error-flow", "cancellation", "symbol-context", "verification"]
+}
