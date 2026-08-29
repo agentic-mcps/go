@@ -1,0 +1,265 @@
+{
+  "tools": [
+    {
+      "name": "go_audit_concurrency",
+      "input_schema_sha256": "2e8a3b7e1c608e1c05e28003379ad75fa2cfdd9484addfacdd4214962c6f16ed",
+      "output_schema_sha256": "d1396f6319deeaaf40bce39b01ca7a4b895ffd5eea86c227851e1ea20648f194",
+      "annotations": {
+        "read_only": true,
+        "destructive": false,
+        "idempotent": true,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_audit_errors",
+      "input_schema_sha256": "2e8a3b7e1c608e1c05e28003379ad75fa2cfdd9484addfacdd4214962c6f16ed",
+      "output_schema_sha256": "d1396f6319deeaaf40bce39b01ca7a4b895ffd5eea86c227851e1ea20648f194",
+      "annotations": {
+        "read_only": true,
+        "destructive": false,
+        "idempotent": true,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_begin_change",
+      "input_schema_sha256": "25e748de81003429db71a1bc846fa4dc4d8b5782c4a8a48e8edd9f94b6c10ca5",
+      "output_schema_sha256": "54cedf9710bf0ef57003cc1fe7fb9714c9e927ebf25d6ef6353a196695c8b610",
+      "annotations": {
+        "read_only": false,
+        "destructive": false,
+        "idempotent": false,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_benchmark_diff",
+      "input_schema_sha256": "684aedb0be91d80543db7e602deff44bd8435bd22030555a7930ad5cd3b63d1b",
+      "output_schema_sha256": "df57247959dbbe4bcd4e961e722de451d39d331c0e7d62b8eb2e9aabdc25a28c",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": true
+      }
+    },
+    {
+      "name": "go_checkpoint_change",
+      "input_schema_sha256": "d34a1283fb8d2563352457c7fe7cac9be9ffc4abc61017384e01d1b961692b22",
+      "output_schema_sha256": "e5f519bd538c41285452e45ccdb0a0d1d4853c279290377bb07f1099d457db93",
+      "annotations": {
+        "read_only": false,
+        "destructive": false,
+        "idempotent": false,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_coverage_gaps",
+      "input_schema_sha256": "ec48e31d021d914e0a0fd8963a7bda4ac9b0e53225d1e621a7c842bebf300f37",
+      "output_schema_sha256": "46dc775403296d6b8d0ef3101877e8f8433a25ee3686f45aafae8761a30ddc94",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": true
+      }
+    },
+    {
+      "name": "go_flake_finder",
+      "input_schema_sha256": "97dd7477645e0e94d3a81913d96c284e05eb23959b253a8ef8a8114aa9c357f4",
+      "output_schema_sha256": "6c11fe4c8a60111a5f949e9019ff637a1e4ed8aec106866d1b5f686b835279e7",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": true
+      }
+    },
+    {
+      "name": "go_race_report",
+      "input_schema_sha256": "d10a4dc40574ad64335357d5815a6e87ecb4f3eb29d55e0327b6434d756f0a43",
+      "output_schema_sha256": "cebec33f08d74f12e9e4ec5280460f2ba5f14b345f2af30d3de5bf9e57d90e92",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": true
+      }
+    },
+    {
+      "name": "go_refactor",
+      "input_schema_sha256": "1ad73964b9fdbd675275a7faedb20da11309436c8516405a83f1089e68ed6486",
+      "output_schema_sha256": "31e14f68b0be79b3379a95e4bfafc71524e4cab9d82c020a5a050952b55e4add",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_search",
+      "input_schema_sha256": "e1543a9b4e0d834cda1a1168971fec7546e74f3d00bf91e049151275e9e36c82",
+      "output_schema_sha256": "4d53013dc66fa13e7a0eeb49f5ce3ea5276cb275c3d128ae78718533ee766439",
+      "annotations": {
+        "read_only": true,
+        "destructive": false,
+        "idempotent": true,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_symbol_context",
+      "input_schema_sha256": "0e3624e8e8a607bb9de88567f76e14f57e2eaf854b275e6ab0ed5f2aa7844f81",
+      "output_schema_sha256": "8732eb1f4fa25b6d33ea33f79c60b764411ef3ed69f59d3a96fffd6c77055a18",
+      "annotations": {
+        "read_only": true,
+        "destructive": false,
+        "idempotent": true,
+        "open_world": false
+      }
+    },
+    {
+      "name": "go_test_structured",
+      "input_schema_sha256": "6e198fc6997f968bf646b5caee5ae18868c65968c1ac2214dce3979d50771771",
+      "output_schema_sha256": "ecf4ee89d8549d63ec699586981e4fe5470ab221d443b9ebc991c7088e011210",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": true
+      }
+    },
+    {
+      "name": "go_verify_change",
+      "input_schema_sha256": "1187500b202eb4173c85245cec316a2d06d4e5c01135af3474a922974c328c48",
+      "output_schema_sha256": "5ccaa1ccd27b8c0081fca9002ab7e6cee3305500198db23ff7515cd1e467585d",
+      "annotations": {
+        "read_only": false,
+        "destructive": true,
+        "idempotent": false,
+        "open_world": true
+      }
+    },
+    {
+      "name": "go_workspace_brief",
+      "input_schema_sha256": "8300d4ae20a2af3e9ba46921b50767606ba72a3181bf6d5004f8be846939449d",
+      "output_schema_sha256": "277ffe7c9c3dc0294ce5fe445945eccd3cf6646eedd7d6c86e72c330fa625406",
+      "annotations": {
+        "read_only": true,
+        "destructive": false,
+        "idempotent": true,
+        "open_world": false
+      }
+    }
+  ],
+  "resources": [
+    {
+      "name": "analysis-rules",
+      "uri": "agentic-go://analysis-rules",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "capabilities",
+      "uri": "agentic-go://capabilities",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "current-change-contract",
+      "uri": "agentic-go://change-contract/current",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "module",
+      "uri": "agentic-go://module",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "packages",
+      "uri": "agentic-go://packages",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "trace-summary",
+      "uri": "agentic-go://trace-summary",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "latest-verification",
+      "uri": "agentic-go://verification/latest",
+      "mime_type": "application/json"
+    }
+  ],
+  "resource_templates": [
+    {
+      "name": "artifact",
+      "uri_template": "agentic-go://artifact/{id}",
+      "mime_type": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "audit-package",
+      "arguments": [
+        {
+          "name": "package",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "bisect-flake",
+      "arguments": [
+        {
+          "name": "package",
+          "required": true
+        },
+        {
+          "name": "runs",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "pre-commit-check",
+      "arguments": [
+        {
+          "name": "coverage_threshold",
+          "required": true
+        },
+        {
+          "name": "package",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "resume-change",
+      "arguments": []
+    },
+    {
+      "name": "understand-change",
+      "arguments": [
+        {
+          "name": "base",
+          "required": true
+        },
+        {
+          "name": "goal",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "verify-change",
+      "arguments": [
+        {
+          "name": "base",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
