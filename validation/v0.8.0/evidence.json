@@ -1,0 +1,87 @@
+{
+  "schema_version": "agentic.eval.evidence/v1alpha1",
+  "date": "2026-08-29",
+  "implementation_commit": "921790193280af9bc82108e5c989eb3025c6e883",
+  "environment": {
+    "os": "macOS 26.6.2",
+    "architecture": "arm64",
+    "go": "go1.27.0",
+    "gopls": "v0.21.0",
+    "server_sha256": "fda8ef4c424e44dbe77baeac7487c087e6fb712f5a477278c80f718daea11b60"
+  },
+  "tasks": [
+    {
+      "id": "client-go-retry-context-cancellation",
+      "repository": "client-go",
+      "base": "8c9ee70637600318f1cc4e3931da78f084e41123",
+      "target": "a4e0c957fe27dcac8c9befd2c561e22b470ffb36",
+      "bundle_sha256": "805dff9345cee8da186fedd67484198cd1082b356f53b7e2389a5d8aaae89c33",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 5372 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 9458, "duration_ms": 4769 }
+    },
+    {
+      "id": "client-golang-gather-format",
+      "repository": "client_golang",
+      "base": "3df9b67fc3081c645189b48a20e1c86a44ee3021",
+      "target": "89c60c0554699c74fa3d4eec472b98a3108905e3",
+      "bundle_sha256": "a33f855f433ffb539fc03390508052c331f06e1c144bed039d7349d80e9b9b43",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 5007 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 24716, "duration_ms": 19806 }
+    },
+    {
+      "id": "cobra-unique-args",
+      "repository": "cobra",
+      "base": "746ef07158728502482cea9f880a6f4b21ef29a9",
+      "target": "ad460ea8f249db69c943a365fb84f3a59042d54e",
+      "bundle_sha256": "0192a755d301bae3f66435a280f8276372ea4b6f1b62149d8fff7d063e407412",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 4426 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 32953, "duration_ms": 7326 }
+    },
+    {
+      "id": "echo-csrf-token-lookup",
+      "repository": "echo",
+      "base": "05489dc1730161df26b72d1ae2a3ba6fb8178fc7",
+      "target": "4ec116dc9b5bff1da7513c0dc86095d0e8ce9654",
+      "bundle_sha256": "13d8ced76be56359a39232eab30661350c64bd74c22ed8847ac98ac89240c5b9",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 5644 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 33521, "duration_ms": 9224 }
+    },
+    {
+      "id": "gin-optional-writer-interfaces",
+      "repository": "gin",
+      "base": "8d0468f72897652485933b845253386f9147a8bf",
+      "target": "d75fcd4c9ab260e5225de590f1f0f8c0e0e12d11",
+      "bundle_sha256": "724bdc046553755a4fe21e9c8ea84ea8919d8a324111b764251722176185ae1e",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 7325 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 26072, "duration_ms": 11603 }
+    },
+    {
+      "id": "grpc-go-rbac-header-normalization",
+      "repository": "grpc-go",
+      "base": "7354d9c8debb4bcf2225bf429857078de310c176",
+      "target": "db9482836c298f234c896cf82ab68cafc78237f8",
+      "bundle_sha256": "5e5020fce6056939ed3f8cb5d37e967173ee35474126c263ba0549f5a763d915",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 10879 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 17890, "duration_ms": 11478 }
+    },
+    {
+      "id": "testify-setup-skip-stats",
+      "repository": "testify",
+      "base": "246de4504b1b5990508c5ab6b34fbcbd16614095",
+      "target": "fdc68949798a447974dabd56ab074c58825c6dd6",
+      "bundle_sha256": "f772dbae696398401ffcbc7c12defc20eca320e4adc8c7a371673d674d3b127a",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 6100 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 59979, "duration_ms": 13648 }
+    },
+    {
+      "id": "vault-redirect-query-preservation",
+      "repository": "vault",
+      "base": "8f40eb486c36b90a5d535017219379c2e89e12ab",
+      "target": "f9ea660c617cd1b3fb079c1dea98d3bf16a2c0a2",
+      "bundle_sha256": "9dc0a085fd9d518a2faa97a9cd37c46862808dde9e6c5c0cf0ae24fb5372ced8",
+      "qualification": { "status": "pass", "base": "fail", "reference": "pass", "scope_probe": "fail", "duration_ms": 61453 },
+      "replay": { "status": "pass", "tool_calls": 3, "result_bytes": 19453, "duration_ms": 115085 }
+    }
+  ],
+  "paid_pilot": "not_run"
+}

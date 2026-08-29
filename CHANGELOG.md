@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A reproducible eight-task historical evaluation corpus with deterministic
+  private fixture bundles, independent behavioral and scope qualification,
+  bounded scoring, and source-free MCP replay evidence.
 - Unified `agentic.verify/v1beta1` reports with content-addressed identity,
   semantic snapshot lineage, provider capabilities, diagnostics, provenance,
   and optional Change Contract compliance.

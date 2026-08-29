@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.eval.evidence/v1alpha1",
+  "title": "Agentic evaluation evidence summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "date", "implementation_commit", "environment", "tasks", "paid_pilot"],
+  "properties": {
+    "schema_version": { "const": "agentic.eval.evidence/v1alpha1" },
+    "date": { "type": "string", "format": "date" },
+    "implementation_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "go", "gopls", "server_sha256"],
+      "properties": {
+        "os": { "type": "string" },
+        "architecture": { "type": "string" },
+        "go": { "type": "string" },
+        "gopls": { "type": "string" },
+        "server_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "repository", "base", "target", "bundle_sha256", "qualification", "replay"],
+        "properties": {
+          "id": { "type": "string" },
+          "repository": { "type": "string" },
+          "base": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "target": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "bundle_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "qualification": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "base", "reference", "scope_probe", "duration_ms"],
+            "properties": {
+              "status": { "const": "pass" },
+              "base": { "const": "fail" },
+              "reference": { "const": "pass" },
+              "scope_probe": { "const": "fail" },
+              "duration_ms": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "replay": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "tool_calls", "result_bytes", "duration_ms"],
+            "properties": {
+              "status": { "const": "pass" },
+              "tool_calls": { "type": "integer", "minimum": 0 },
+              "result_bytes": { "type": "integer", "minimum": 0 },
+              "duration_ms": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "paid_pilot": { "const": "not_run" }
+  }
+}

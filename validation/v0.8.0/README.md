@@ -4,6 +4,10 @@ This directory defines eight pinned historical tasks and the neutral result
 contracts used to evaluate agentic-go. It contains no third-party source and no
 paid-model result.
 
+The checked-in local results and their limitations are summarized in
+[`summary.md`](summary.md). Exact machine-readable task evidence is in
+[`evidence.json`](evidence.json).
+
 Build and run the local runner with Go 1.27. The scorer disables implicit
 toolchain downloads, and some pinned tasks require a newer Go version than the
 agentic-go module floor.
