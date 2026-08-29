@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "grpc-go-rbac-header-normalization",
+  "pilot": true,
+  "repository": {
+    "name": "grpc-go",
+    "url": "https://github.com/grpc/grpc-go",
+    "base": "7354d9c8debb4bcf2225bf429857078de310c176",
+    "target": "db9482836c298f234c896cf82ab68cafc78237f8"
+  },
+  "prompt": "Normalize xDS RBAC header matcher names before validation and matching so mixed-case metadata names work, forbidden grpc and scheme names cannot bypass validation, and Host retains authority aliasing.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["./internal/xds/httpfilter/rbac"],
+    "allowed_paths": ["internal/xds/httpfilter/rbac/rbac.go", "internal/xds/httpfilter/rbac/rbac_test.go", "test/xds/xds_server_rbac_test.go"]
+  },
+  "oracle": { "overlay_paths": ["internal/xds/httpfilter/rbac/rbac_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", "./internal/xds/httpfilter/rbac", "-run", "^Test/(HeaderMatcherNameIsLowercased|HeaderMatcherValidationIsCaseInsensitive)$", "-count=1"], "timeout_seconds": 180 }
+  ],
+  "invariants": [
+    "Mixed-case matcher names are lowercased before reaching the matching engine.",
+    "Scheme and grpc-prefixed names are rejected regardless of case.",
+    "Host aliases to authority regardless of case, including nested rules."
+  ],
+  "exercises": ["security-boundary", "recursive-navigation", "configuration-validation", "verification"]
+}

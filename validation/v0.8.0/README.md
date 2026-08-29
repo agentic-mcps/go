@@ -4,7 +4,9 @@ This directory defines eight pinned historical tasks and the neutral result
 contracts used to evaluate agentic-go. It contains no third-party source and no
 paid-model result.
 
-Build the local runner with the repository's supported Go toolchain:
+Build and run the local runner with Go 1.27. The scorer disables implicit
+toolchain downloads, and some pinned tasks require a newer Go version than the
+agentic-go module floor.
 
 ```sh
 go build -o /tmp/agentic-go-eval ./validation/cmd/eval
@@ -34,30 +36,44 @@ Set up and score one candidate:
 
 ```sh
 /tmp/agentic-go-eval setup \
-  -task validation/v0.8.0/tasks/grpc-go-clone-token/task.json \
-  -bundle /path/to/grpc-go-clone-token-<sha256>.bundle \
-  -workspace /tmp/grpc-go-clone-token
+  -task validation/v0.8.0/tasks/grpc-go-rbac-header-normalization/task.json \
+  -bundle /path/to/grpc-go-rbac-header-normalization-<sha256>.bundle \
+  -workspace /tmp/grpc-go-rbac-header-normalization
 
 /tmp/agentic-go-eval score \
-  -task validation/v0.8.0/tasks/grpc-go-clone-token/task.json \
-  -bundle /path/to/grpc-go-clone-token-<sha256>.bundle \
-  -workspace /tmp/grpc-go-clone-token \
-  -output /tmp/grpc-go-clone-token-result.json
+  -task validation/v0.8.0/tasks/grpc-go-rbac-header-normalization/task.json \
+  -bundle /path/to/grpc-go-rbac-header-normalization-<sha256>.bundle \
+  -workspace /tmp/grpc-go-rbac-header-normalization \
+  -output /tmp/grpc-go-rbac-header-normalization-result.json
 ```
 
 `setup` exposes only the base snapshot. `score` copies the candidate into a
 temporary clone and overlays the target regression-test files there. It never
 overwrites the candidate workspace.
 
+Qualify a task before accepting its evidence:
+
+```sh
+/tmp/agentic-go-eval qualify \
+  -task validation/v0.8.0/tasks/grpc-go-rbac-header-normalization/task.json \
+  -bundle /path/to/grpc-go-rbac-header-normalization-<sha256>.bundle \
+  -source /path/to/agentic-go-validation/grpc-go \
+  -output /tmp/grpc-go-rbac-header-normalization-qualification.json
+```
+
+Qualification requires three independent results: the fixture base fails its
+behavioral oracle, the historical reference fix passes it, and an otherwise
+correct change with one forbidden path fails only the scope check.
+
 Replay a checked-in MCP transcript against a built server:
 
 ```sh
 /tmp/agentic-go-eval replay \
-  -transcript validation/v0.8.0/tasks/grpc-go-clone-token/replay.json \
+  -transcript validation/v0.8.0/tasks/grpc-go-rbac-header-normalization/replay.json \
   -server /tmp/agentic-go \
-  -workspace /tmp/grpc-go-clone-token \
-  -artifacts /tmp/grpc-go-clone-token-artifacts \
-  -output /tmp/grpc-go-clone-token-replay.json
+  -workspace /tmp/grpc-go-rbac-header-normalization \
+  -artifacts /tmp/grpc-go-rbac-header-normalization-artifacts \
+  -output /tmp/grpc-go-rbac-header-normalization-replay.json
 ```
 
 The scorer executes trusted repository tests with the caller's privileges. Its

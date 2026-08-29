@@ -22,7 +22,7 @@ func main() {
 
 func run(ctx context.Context, args []string) error {
 	if len(args) == 0 {
-		return errors.New("expected validate, prepare, setup, score, or replay")
+		return errors.New("expected validate, prepare, setup, score, qualify, or replay")
 	}
 	switch args[0] {
 	case "validate":
@@ -115,6 +115,36 @@ func run(ctx context.Context, args []string) error {
 		}
 		if result.Status != "pass" {
 			return fmt.Errorf("task result is %s", result.Status)
+		}
+		return nil
+	case "qualify":
+		fs := flag.NewFlagSet("qualify", flag.ContinueOnError)
+		manifest := fs.String("task", "", "task manifest")
+		bundle := fs.String("bundle", "", "prepared task bundle")
+		source := fs.String("source", "", "local upstream repository root")
+		output := fs.String("output", "", "qualification result JSON path")
+		if err := fs.Parse(args[1:]); err != nil {
+			return err
+		}
+		if *manifest == "" || *bundle == "" || *source == "" || *output == "" {
+			return errors.New("all qualify flags are required")
+		}
+		task, err := validation.LoadTask(*manifest)
+		if err != nil {
+			return err
+		}
+		result, err := validation.Qualify(ctx, task, *bundle, *source)
+		if err != nil {
+			return err
+		}
+		if err := validation.WriteQualification(*output, result); err != nil {
+			return err
+		}
+		if err := printJSON(result); err != nil {
+			return err
+		}
+		if result.Status != "pass" {
+			return fmt.Errorf("qualification result is %s", result.Status)
 		}
 		return nil
 	case "replay":

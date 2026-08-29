@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "vault-redirect-query-preservation",
+  "pilot": false,
+  "repository": {
+    "name": "vault",
+    "url": "https://github.com/hashicorp/vault",
+    "base": "8f40eb486c36b90a5d535017219379c2e89e12ab",
+    "target": "f9ea660c617cd1b3fb079c1dea98d3bf16a2c0a2"
+  },
+  "prompt": "Preserve the complete raw query string when Vault redirects a non-canonical API path, while retaining canonical path cleanup and redirect status behavior.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["./vault/external_tests/misc"],
+    "allowed_paths": ["changelog/_16619.txt", "http/handler.go", "vault/external_tests/misc/handler_redirect_test.go"]
+  },
+  "oracle": { "overlay_paths": ["vault/external_tests/misc/handler_redirect_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", "./vault/external_tests/misc", "-run", "^TestHandler_RedirectPreservesQueryParams$", "-count=1"], "timeout_seconds": 600 }
+  ],
+  "invariants": [
+    "Redirects from double-slash API paths retain every query parameter in order.",
+    "The Location header contains the canonical cleaned path.",
+    "Requests without query parameters preserve existing redirect behavior."
+  ],
+  "exercises": ["http-boundary", "cross-package-navigation", "data-preservation", "verification"]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.eval.qualification/v1alpha1",
+  "title": "Agentic evaluation task qualification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_id", "status", "bundle_sha256", "no_op", "reference", "scope_probe", "duration_ms", "failures"],
+  "properties": {
+    "schema_version": { "const": "agentic.eval.qualification/v1alpha1" },
+    "task_id": { "type": "string" },
+    "status": { "enum": ["pass", "fail"] },
+    "bundle_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "no_op": { "$ref": "result-v1alpha1.json" },
+    "reference": { "$ref": "result-v1alpha1.json" },
+    "scope_probe": { "$ref": "result-v1alpha1.json" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "failures": { "type": "array", "items": { "type": "string" } }
+  }
+}
