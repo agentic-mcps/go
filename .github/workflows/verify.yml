@@ -100,7 +100,7 @@ jobs:
       - name: Build release bundle
         env:
           RELEASE_TARGET: ${{ matrix.goos }}/${{ matrix.goarch }}
-        run: go run ./internal/cmd/releasepack --version 0.3.0-test --output /tmp/agentic-go-release --targets "$RELEASE_TARGET"
+        run: go run ./internal/cmd/releasepack --version 1.0.0-test --output /tmp/agentic-go-release --targets "$RELEASE_TARGET"
 
   installer:
     name: Installer / ${{ matrix.os }}
@@ -113,3 +113,14 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
       - name: Test exact-version installer
         run: bash scripts/install.test.sh
+
+  action-adapters:
+    name: Action adapters
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 (# v6)
+        with:
+          node-version: "24.x"
+      - name: Test Action adapters
+        run: node --test scripts/action-*.test.mjs
