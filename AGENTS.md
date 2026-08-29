@@ -11,6 +11,9 @@ types, execution boundaries, findings, tracing, or analyzer wiring.
 Read [`docs/v1.0.0-roadmap.md`](docs/v1.0.0-roadmap.md) before changing the
 v0.3+ sidecar, intelligence, snapshot, contract, refactor, or distribution
 work. The roadmap adds staged scope without weakening v0.2 compatibility.
+Read [`docs/v0.8.0-evaluation-scope.md`](docs/v0.8.0-evaluation-scope.md)
+before changing the historical task corpus, scorer, replay format, or model
+evaluation claims.
 
 For a rule change, also read the matching domain specification:
 [`docs/phase-4a-concurrency.md`](docs/phase-4a-concurrency.md) or

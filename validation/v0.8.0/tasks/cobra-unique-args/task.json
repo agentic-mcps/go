@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "cobra-unique-args",
+  "pilot": false,
+  "repository": {
+    "name": "cobra",
+    "url": "https://github.com/spf13/cobra",
+    "base": "746ef07158728502482cea9f880a6f4b21ef29a9",
+    "target": "ad460ea8f249db69c943a365fb84f3a59042d54e"
+  },
+  "prompt": "Add a positional-argument validator that rejects duplicate values with a deterministic error and composes correctly with OnlyValidArgs.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["."],
+    "allowed_paths": ["args.go", "args_test.go", "site/content/user_guide.md"]
+  },
+  "oracle": { "overlay_paths": ["args_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", ".", "-run", "^TestNoDuplicateArgs", "-count=1"], "timeout_seconds": 120 }
+  ],
+  "invariants": [
+    "Unique arguments are accepted.",
+    "Duplicate arguments return the duplicate value and command path in a deterministic error.",
+    "Composition with OnlyValidArgs preserves validation order."
+  ],
+  "exercises": ["navigation", "exported-api", "composition-contract"]
+}

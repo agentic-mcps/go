@@ -1,0 +1,26 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "echo-csrf-token-lookup",
+  "pilot": false,
+  "repository": {
+    "name": "echo",
+    "url": "https://github.com/labstack/echo",
+    "base": "05489dc1730161df26b72d1ae2a3ba6fb8178fc7",
+    "target": "4ec116dc9b5bff1da7513c0dc86095d0e8ce9654"
+  },
+  "prompt": "Reject CSRF TokenLookup configurations that produce no extractors while preserving valid configured sources and existing error behavior.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["./middleware"],
+    "allowed_paths": ["middleware/csrf.go", "middleware/csrf_test.go"]
+  },
+  "oracle": { "overlay_paths": ["middleware/csrf_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", "./middleware", "-run", "^TestCSRF_tokenExtractors$", "-count=1"], "timeout_seconds": 120 }
+  ],
+  "invariants": [
+    "An unknown-only TokenLookup returns the established no-extractors middleware error.",
+    "Valid cookie, header, form, and query extractors keep their existing behavior."
+  ],
+  "exercises": ["error-flow", "configuration-validation", "changed-coverage"]
+}

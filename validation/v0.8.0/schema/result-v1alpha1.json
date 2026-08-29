@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.eval.result/v1alpha1",
+  "title": "Agentic evaluation result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_id", "status", "changed_paths", "unexpected_paths", "commands", "measurements", "uncertainties"],
+  "properties": {
+    "schema_version": { "const": "agentic.eval.result/v1alpha1" },
+    "task_id": { "type": "string" },
+    "status": { "enum": ["pass", "fail", "incomplete"] },
+    "changed_paths": { "type": "array", "items": { "type": "string" } },
+    "unexpected_paths": { "type": "array", "items": { "type": "string" } },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["argv", "status", "exit_code", "duration_ms", "stdout_bytes", "stderr_bytes", "stdout_sha256", "stderr_sha256", "truncated"],
+        "properties": {
+          "argv": { "type": "array", "items": { "type": "string" } },
+          "status": { "enum": ["pass", "fail", "incomplete"] },
+          "exit_code": { "type": "integer" },
+          "duration_ms": { "type": "integer", "minimum": 0 },
+          "stdout_bytes": { "type": "integer", "minimum": 0 },
+          "stderr_bytes": { "type": "integer", "minimum": 0 },
+          "stdout_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "stderr_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "truncated": { "type": "boolean" }
+        }
+      }
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_ms", "tool_calls", "result_bytes"],
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "tool_calls": { "type": "integer", "minimum": 0 },
+        "result_bytes": { "type": "integer", "minimum": 0 },
+        "model_tokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "uncertainties": { "type": "array", "items": { "type": "string" } }
+  }
+}

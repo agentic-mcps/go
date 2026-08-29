@@ -1,0 +1,9 @@
+{
+  "schema_version": "agentic.eval.transcript/v1alpha1",
+  "task_id": "client-go-closed-event-channel",
+  "operations": [
+    { "tool": "go_workspace_brief", "arguments": { "base": "base", "package": "./tools/record", "max_bytes": 8192 }, "expect_error": false },
+    { "tool": "go_search", "arguments": { "query": "StartEventWatcher", "package": "./tools/record", "limit": 20 }, "expect_error": false },
+    { "tool": "go_verify_change", "arguments": { "base": "base", "package": "./tools/record", "fail_on": "error", "max_packages": 200 }, "expect_error": false }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.eval.replay/v1alpha1",
+  "title": "Agentic MCP replay result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_id", "status", "server_sha256", "calls", "measurements", "uncertainties"],
+  "properties": {
+    "schema_version": { "const": "agentic.eval.replay/v1alpha1" },
+    "task_id": { "type": "string" },
+    "status": { "enum": ["pass", "fail", "incomplete"] },
+    "server_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sequence", "tool", "status", "duration_ms", "result_bytes", "result_sha256"],
+        "properties": {
+          "sequence": { "type": "integer", "minimum": 1 },
+          "tool": { "type": "string" },
+          "status": { "enum": ["pass", "fail", "incomplete"] },
+          "duration_ms": { "type": "integer", "minimum": 0 },
+          "result_bytes": { "type": "integer", "minimum": 0 },
+          "result_sha256": { "type": "string", "pattern": "^$|^[0-9a-f]{64}$" },
+          "artifact": { "type": "string" },
+          "error": { "type": "string" }
+        }
+      }
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_ms", "tool_calls", "result_bytes"],
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "tool_calls": { "type": "integer", "minimum": 0 },
+        "result_bytes": { "type": "integer", "minimum": 0 },
+        "model_tokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "uncertainties": { "type": "array", "items": { "type": "string" } }
+  }
+}

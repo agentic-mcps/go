@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "testify-setup-skip-stats",
+  "pilot": false,
+  "repository": {
+    "name": "testify",
+    "url": "https://github.com/stretchr/testify",
+    "base": "246de4504b1b5990508c5ab6b34fbcbd16614095",
+    "target": "fdc68949798a447974dabd56ab074c58825c6dd6"
+  },
+  "prompt": "Initialize suite statistics before SetupTest so a setup-time skip still records the test and reaches HandleStats without executing the test body.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["./suite"],
+    "allowed_paths": ["suite/suite.go", "suite/suite_test.go"]
+  },
+  "oracle": { "overlay_paths": ["suite/suite_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", "./suite", "-run", "^TestSuiteWithSkipInSetupAndStats$", "-count=1"], "timeout_seconds": 180 }
+  ],
+  "invariants": [
+    "SetupTest may skip without a nil-statistics panic.",
+    "HandleStats receives a non-nil entry for the skipped test.",
+    "The skipped test body does not execute."
+  ],
+  "exercises": ["lifecycle-navigation", "control-flow", "test-semantics"]
+}

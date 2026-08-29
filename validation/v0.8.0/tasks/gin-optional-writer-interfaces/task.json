@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "gin-optional-writer-interfaces",
+  "pilot": false,
+  "repository": {
+    "name": "gin",
+    "url": "https://github.com/gin-gonic/gin",
+    "base": "8d0468f72897652485933b845253386f9147a8bf",
+    "target": "d75fcd4c9ab260e5225de590f1f0f8c0e0e12d11"
+  },
+  "prompt": "Make response-writer Hijack and CloseNotify degrade gracefully when the wrapped writer lacks those optional HTTP interfaces, without marking the response written.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["."],
+    "allowed_paths": ["response_writer.go", "response_writer_test.go"]
+  },
+  "oracle": { "overlay_paths": ["response_writer_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", ".", "-run", "^TestResponseWriterHijack$", "-count=1"], "timeout_seconds": 180 }
+  ],
+  "invariants": [
+    "Unsupported Hijack returns http.ErrNotSupported with nil connection and buffer.",
+    "Unsupported Hijack does not mark the response written.",
+    "Unsupported CloseNotify returns nil and existing flush behavior remains usable."
+  ],
+  "exercises": ["interface-navigation", "error-flow", "state-preservation"]
+}

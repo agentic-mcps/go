@@ -1,0 +1,27 @@
+{
+  "schema_version": "agentic.eval.task/v1alpha1",
+  "id": "client-golang-gather-format",
+  "pilot": false,
+  "repository": {
+    "name": "client_golang",
+    "url": "https://github.com/prometheus/client_golang",
+    "base": "3df9b67fc3081c645189b48a20e1c86a44ee3021",
+    "target": "89c60c0554699c74fa3d4eec472b98a3108905e3"
+  },
+  "prompt": "Add a test utility that gathers and formats metrics from an arbitrary Gatherer while preserving CollectAndFormat behavior and metric-name filtering.",
+  "scope": {
+    "workspace": ".",
+    "packages": ["./prometheus/testutil"],
+    "allowed_paths": ["CHANGELOG.md", "prometheus/testutil/testutil.go", "prometheus/testutil/testutil_test.go"]
+  },
+  "oracle": { "overlay_paths": ["prometheus/testutil/testutil_test.go"] },
+  "acceptance": [
+    { "argv": ["go", "test", "./prometheus/testutil", "-run", "^TestGatherAndFormat$", "-count=1"], "timeout_seconds": 180 }
+  ],
+  "invariants": [
+    "GatherAndFormat accepts an arbitrary Gatherer and returns the requested exposition format.",
+    "Metric-name filtering excludes unrelated gathered metrics.",
+    "CollectAndFormat remains compatible."
+  ],
+  "exercises": ["exported-api", "symbol-context", "reverse-impact", "changed-coverage"]
+}
