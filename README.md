@@ -24,7 +24,7 @@ not embed an LLM or an agent runtime.
 
 ## Keep an agent oriented
 
-The current v0.7 development workflow starts with compact semantic context,
+The current v0.9 development workflow starts with compact semantic context,
 retains structural continuity while an agent edits, can apply a reviewed
 deterministic refactor, and ends with executed change evidence:
 
@@ -95,10 +95,10 @@ Change: 3 files, 2 declarations
 Impact: 4 packages
 
 Evidence:
-- go.analysis.concurrency: passed — 0 introduced, 0 existing, 0 resolved, 0 unknown
-- go.analysis.errors: passed — 0 introduced, 1 existing, 0 resolved, 0 unknown
-- go.coverage: passed — 83.3% of changed statements covered
-- go.test: passed — 42 passed, 0 failed, 1 skipped
+- go.analysis.concurrency: passed; 0 introduced, 0 existing, 0 resolved, 0 unknown
+- go.analysis.errors: passed; 0 introduced, 1 existing, 0 resolved, 0 unknown
+- go.coverage: passed; 83.3% of changed statements covered
+- go.test: passed; 42 passed, 0 failed, 1 skipped
 
 requested verification completed without blocking findings. A passing report does not prove the change safe.
 ~~~
@@ -214,7 +214,7 @@ diverged user edits.
 
 ## MCP adapter
 
-agentic-go also speaks stdio MCP for local coding agents. The current v0.7
+agentic-go also speaks stdio MCP for local coding agents. The current v0.9
 development inventory is 14 tools, seven fixed resources, one artifact resource
 template, and six prompts. Earlier tool contracts remain compatible. Change
 Contracts are private same-machine user-cache state, preserve exact snapshot
