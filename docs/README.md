@@ -1,11 +1,12 @@
 # Documentation authority map
 
-Start with [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) for the
+Start with [`v0.9.0-release-scope.md`](v0.9.0-release-scope.md) for the frozen
+v1 contract. [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) remains the
 verification compatibility baseline. The tagged
 [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md) remains the earlier
 compatibility baseline. Shared interfaces and invariants live in
-[`contracts.md`](contracts.md). The current additive v0.3+ development stages
-and their implementation status live in
+[`contracts.md`](contracts.md). The completed v1 implementation stages and
+their evidence live in
 [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md). The architectural rationale is
 recorded in [`decision-memo.md`](decision-memo.md); [`plan.md`](plan.md) is the
 concise product plan and routing summary.
@@ -27,7 +28,7 @@ concise product plan and routing summary.
   [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
   — shared language and the durable product-boundary decision
 
-## v0.3 through v0.7 implementation contracts
+## v1 implementation contracts
 
 - [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md): staged sidecar, semantic,
   continuity, refactor, evaluation, and contract-freeze authority
@@ -51,9 +52,8 @@ concise product plan and routing summary.
 
 ## Deferred roadmap specifications
 
-The v0.7 unified verification milestone is implemented locally. The v0.8 and
-later portions of the v1 roadmap remain future authority. They do not silently
-expand the current development surface.
+The v1 roadmap is implemented locally. The following broader phase documents
+remain retained research and do not silently expand the frozen surface.
 
 - [`phase-4a-index.md`](phase-4a-index.md)
 - [`phase-4a-security.md`](phase-4a-security.md)

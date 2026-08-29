@@ -15,9 +15,9 @@ GitHub Action, and MCP server are adapters over one engine. Agentic-go remains
 deterministic developer tooling; it embeds no LLM and performs no agent
 orchestration.
 
-Module path through public v0.x releases:
-`github.com/ashwingopalsamy/agentic-go`. The organization transfer and explicit
-module-identity change are v1 release-candidate gates after v0.9.
+The personal v1 module path is `github.com/ashwingopalsamy/agentic-go`. A later
+`github.com/agentic-mcps/go` repository is an independent module identity with
+an explicit migration, not a transfer or alias.
 
 ## Release authorities
 
@@ -150,21 +150,20 @@ change discovery and evidence execution. They share only semantics proven
 portable in practice: snapshots, impacted units, checks, evidence, findings,
 risks, uncertainty, and policy status.
 
-The personal Go module remains unchanged throughout the public v0.x milestone
-series. A repository transfer may redirect GitHub URLs, but changing the Go
-module path changes package identity. The move to
-`github.com/agentic-mcps/go` is therefore an explicit v1 release-candidate
-migration after v0.9, not a seamless rename.
+The personal Go module remains `github.com/ashwingopalsamy/agentic-go` for its
+v1 release. A later `github.com/agentic-mcps/go` implementation starts from the
+same source lineage but remains a separate repository and module identity. The
+two paths are not interchangeable and no automatic mirroring is implied.
 
 ## v1 direction
 
-The executable authority remains [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md).
-The future product direction is [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md):
+The v0.2 compatibility authority remains
+[`v0.2.0-release-scope.md`](v0.2.0-release-scope.md). The implemented product
+direction is [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md):
 source-grounded Go change intelligence combining semantic navigation, compact
 context, persistent change continuity, guarded deterministic refactoring, and
 verification with explicit provenance and uncertainty.
 
-The roadmap is staged. It must prove useful workflows and reliable contracts
-before the repository is transferred to `github.com/agentic-mcps/go`; it is
-not permission to claim that a larger MCP surface, gopls integration, or
-model/token improvement already exists.
+The roadmap was staged to prove useful workflows and reliable contracts before
+v1. The implemented surface and evidence do not establish a universal
+model-reliability or token-saving claim.

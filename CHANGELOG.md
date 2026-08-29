@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-30
+
 ### Added
 
 - Frozen `agentic.context/v1`, `agentic.change/v1`, and
@@ -14,7 +16,7 @@ All notable changes to this project are documented here. The format follows
 - A reproducible eight-task historical evaluation corpus with deterministic
   private fixture bundles, independent behavioral and scope qualification,
   bounded scoring, and source-free MCP replay evidence.
-- Unified `agentic.verify/v1beta1` reports with content-addressed identity,
+- Unified `agentic.verify/v1` reports with content-addressed identity,
   semantic snapshot lineage, provider capabilities, diagnostics, provenance,
   and optional Change Contract compliance.
 - Private finalized-report storage and the
@@ -57,4 +59,5 @@ All notable changes to this project are documented here. The format follows
 - Workspace containment, bounded execution, event-driven progress, and
   optional privacy-preserving local traces.
 
-[Unreleased]: https://github.com/ashwingopalsamy/agentic-go/commits/main
+[Unreleased]: https://github.com/ashwingopalsamy/agentic-go/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/ashwingopalsamy/agentic-go/releases/tag/v1.0.0

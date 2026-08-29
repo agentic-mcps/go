@@ -2,7 +2,7 @@
 
 ## Trust boundary
 
-Agentic-go is local developer tooling, not a sandbox. Five v0.1 tools invoke
+Agentic-go is local developer tooling, not a sandbox. Five execution tools invoke
 `go test` and therefore compile and execute code already present in the target
 repository:
 
@@ -12,7 +12,7 @@ repository:
 - `go_benchmark_diff`
 - `go_flake_finder`
 
-The v0.2 `agentic-go verify` CLI, GitHub Action, and `go_verify_change` MCP
+The `agentic-go verify` CLI, GitHub Action, and `go_verify_change` MCP
 tool can also run trusted repository tests and analyzers as part of a report.
 They use the caller/runner's privileges. Containment, cancellation, deadlines,
 concurrency limits, and output caps reduce accidental scope and resource use;
@@ -28,7 +28,7 @@ and analyze source without running target tests, benchmarks, or fuzz targets.
 Their package loading is closed-world: module downloads and toolchain downloads
 are disabled.
 
-The v0.4 semantic tools read and type-check workspace source through the pinned
+The semantic tools read and type-check workspace source through the pinned
 gopls companion. They do not apply edits or run target tests. Workspace briefs,
 search results, symbol context, and artifact chunks remain subject to the same
 symlink-resolved containment and request deadline. Semantic results can still
@@ -85,10 +85,10 @@ absolute workspace path. Writes are atomic per report and latest pointer, with
 
 ## Supported releases
 
-Security fixes target the latest published release. The pre-release branch is
-development software and does not receive backports. Supported release
-artifacts are limited to documented macOS and Linux targets; Windows has not
-been validated.
+Security fixes target the latest v1 release. Development branches and older
+releases do not receive routine backports. Supported release artifacts are
+limited to documented macOS and Linux amd64/arm64 targets with Go 1.25, 1.26,
+or 1.27; Windows has not been validated.
 
 ## Report a vulnerability
 

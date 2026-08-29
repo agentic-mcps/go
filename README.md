@@ -7,7 +7,7 @@
 <p align="center">Source-grounded Go change intelligence for coding agents.</p>
 
 <p align="center">
-  <a href="docs/v0.2.0-release-scope.md">Release scope</a> |
+  <a href="docs/v0.9.0-release-scope.md">v1 contract freeze</a> |
   <a href="docs/contracts.md">Protocol contracts</a> |
   <a href="CONTRIBUTING.md">Contributing</a> |
   <a href="SECURITY.md">Security</a>
@@ -19,12 +19,12 @@ uncertain. The report is the durable product boundary; the CLI, GitHub Action,
 and MCP server are delivery adapters over the same verification engine. It does
 not embed an LLM or an agent runtime.
 
-> Status: pre-release. Install from this checkout. Release packages are not
-> published yet.
+> Status: v1.0.0. Install the exact signed release and its bundled semantic
+> companion using the checksum-verifying installer below.
 
 ## Keep an agent oriented
 
-The current v0.9 development workflow starts with compact semantic context,
+The v1 workflow starts with compact semantic context,
 retains structural continuity while an agent edits, can apply a reviewed
 deterministic refactor, and ends with executed change evidence:
 
@@ -112,7 +112,7 @@ and a JSON report under `RUNNER_TEMP`. It is advisory by default; set
 PR-write permission and posts no comments. It assumes checkout history and a
 configured Go toolchain are already available.
 
-After v0.2.0 is published, a pull-request job can use:
+A pull-request job can use:
 
 ~~~yaml
 permissions:
@@ -125,7 +125,7 @@ steps:
   - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
     with:
       go-version: 1.27.x
-  - uses: ashwingopalsamy/agentic-go@v0.2.0
+  - uses: ashwingopalsamy/agentic-go@v1.0.0
     with:
       enforce: false
 ~~~
@@ -138,12 +138,12 @@ When the Action is pinned by commit SHA instead of a semver tag, pass its
 Go 1.25 or newer is required. Versions 1.25, 1.26, and 1.27 are explicitly
 supported; newer stable toolchains may pass preflight but are not yet claimed.
 
-After v0.3.0 is published, the canonical exact-version installer is:
+The canonical exact-version installer is:
 
 ~~~sh
 curl --fail --location --silent --show-error \
-  https://raw.githubusercontent.com/ashwingopalsamy/agentic-go/v0.3.0/scripts/install.sh \
-  | bash -s -- 0.3.0
+  https://raw.githubusercontent.com/ashwingopalsamy/agentic-go/v1.0.0/scripts/install.sh \
+  | bash -s -- 1.0.0
 ~~~
 
 It verifies `checksums.txt` before installing `agentic-go`, `agentic-go-vet`,
@@ -162,10 +162,10 @@ agentic-go doctor
 ~~~
 
 Keep `$(go env GOPATH)/bin` on your `PATH` so an MCP client can find the
-binaries. Homebrew is not advertised because no maintained tap exists. The
-personal repository and module path remain `github.com/ashwingopalsamy/agentic-go`
-through public v0.x releases. The future organization path is a planned,
-breaking module migration, not a current import path.
+binaries. Homebrew is not advertised because no maintained tap exists. This
+release uses module path `github.com/ashwingopalsamy/agentic-go`. A future
+`github.com/agentic-mcps/go` repository is a separate Go module identity, not
+an alias or current import path.
 
 ## Connect an MCP client
 
@@ -214,8 +214,8 @@ diverged user edits.
 
 ## MCP adapter
 
-agentic-go also speaks stdio MCP for local coding agents. The current v0.9
-development inventory is 14 tools, seven fixed resources, one artifact resource
+agentic-go also speaks stdio MCP for local coding agents. The frozen v1
+inventory is 14 tools, seven fixed resources, one artifact resource
 template, and six prompts. Earlier tool contracts remain compatible. Change
 Contracts are private same-machine user-cache state, preserve exact snapshot
 lineage, and reject stale checkpoints. Goal and decision prose is context only
@@ -364,9 +364,9 @@ returns a bounded UTF-8-safe chunk and, when needed, another cursor.
 - Set `AGENTIC_GO_TRACE=true` to write bounded JSONL traces under
   `os.UserCacheDir()/agentic-go/runs/<run-id>/trace.jsonl`. Traces hash
   arguments and retain summaries rather than source contents.
-- The v0.3 distribution bundles gopls v0.21.0 as `agentic-go-gopls`, disables
-  its telemetry in managed sessions, and validates its exact version. The v0.4
-  development line exposes compact Context Packs, not raw LSP or the
+- The v1 distribution bundles gopls v0.21.0 as `agentic-go-gopls`, disables
+  its telemetry in managed sessions, and validates its exact version. The
+  semantic interface exposes compact Context Packs, not raw LSP or the
   experimental upstream gopls MCP interface.
 - MCP remains stdio only. HTTP, SARIF, automatic toolchain installation,
   Homebrew distribution, and a Windows support claim are not shipped.
@@ -390,10 +390,15 @@ corpus-specific evidence, not a universal guarantee. Read the
 [validation evidence](validation/v0.1.0/summary.md) for the corpus, raw
 sanitized reports, classifications, limitations, and reproduction command.
 
+The deterministic historical corpus and protocol replay qualify the shipped
+contracts. No paid model pilot has run, so agentic-go does not claim universal
+reductions in model mistakes, tool calls, or token use.
+
 ## Read next
 
+- [v0.9.0 contract freeze](docs/v0.9.0-release-scope.md): the frozen v1 schemas and MCP interface
+- [v1 roadmap](docs/v1.0.0-roadmap.md): completed implementation stages and release direction
 - [v0.2.0 release scope](docs/v0.2.0-release-scope.md): the verification compatibility baseline
-- [v1 roadmap](docs/v1.0.0-roadmap.md): current additive v0.3+ development authority and implementation status
 - [v0.1.0 release scope](docs/v0.1.0-release-scope.md): the compatibility baseline
 - [Protocol contracts](docs/contracts.md): shared types, limits, and invariants
 - [v0.2.0 evidence](validation/v0.2.0/summary.md): change-verification reports and release gates

@@ -9,9 +9,11 @@ Read [`AGENTS.md`](AGENTS.md), the canonical
 [`v0.2.0 release scope`](docs/v0.2.0-release-scope.md), and the tagged
 [`v0.1.0 compatibility baseline`](docs/v0.1.0-release-scope.md). Shared
 protocol and safety invariants live in [`docs/contracts.md`](docs/contracts.md);
-the additive v0.3+ development stages live in
-[`docs/v1.0.0-roadmap.md`](docs/v1.0.0-roadmap.md). Domain specifications under
-`docs/` explain individual analyzer rules and their limitations.
+the frozen v1 contract lives in
+[`docs/v0.9.0-release-scope.md`](docs/v0.9.0-release-scope.md), and completed
+implementation stages live in [`docs/v1.0.0-roadmap.md`](docs/v1.0.0-roadmap.md).
+Domain specifications under `docs/` explain individual analyzer rules and
+their limitations.
 
 Discuss additions that change the MCP inventory, trust boundary, output schema,
 or supported platforms before implementation. Roadmap items without an
@@ -59,7 +61,7 @@ findings. Register shipped protocol surfaces through
 `internal/tools.RegisterAll` and extend the in-memory protocol inventory test.
 Keep the MCP interface focused on local coding agents; CI-oriented output
 belongs in compatible command-line surfaces when it would distort MCP.
-The current v0.7 development inventory is 14 tools, seven fixed resources, one
+The frozen v1 inventory is 14 tools, seven fixed resources, one
 artifact resource template, and six prompts. Existing v0.1, v0.2, and v0.4
 tool contracts remain compatible. Change Contract state is private same-machine
 user-cache state. Impact relationships are
