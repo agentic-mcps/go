@@ -38,8 +38,9 @@
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <header class="site-header" role="banner">
-    <div class="header-container">
+  <!-- Floating Dynamic Island Header -->
+  <div class="island-header-wrapper">
+    <header class="island-header" role="banner">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
         <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
@@ -61,8 +62,8 @@
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
-    </div>
-  </header>
+    </header>
+  </div>
 
   <div class="docs-layout">
     <aside class="docs-sidebar" aria-label="Documentation sidebar">
@@ -105,34 +106,34 @@
         </p>
 
         <h2>Generating Configuration Automatically</h2>
-        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
-          <div class="mac-header mac-header--dark">
+        <div class="mac-window" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header">
             <div class="traffic-lights">
               <span class="traffic-dot close"></span>
               <span class="traffic-dot min"></span>
               <span class="traffic-dot max"></span>
             </div>
-            <span class="mac-title mac-title--dark">Terminal</span>
+            <span class="mac-title">Terminal</span>
             <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="mac-body mac-body--dark">
-            <p><span style="color: #00add8;">$</span> agentic-go mcp-config --client claude --workspace $(pwd)</p>
+          <div class="mac-body" style="background: #f8fafc;">
+            <p><span style="color: #0071e3; font-weight: 600;">$</span> agentic-go mcp-config --client claude --workspace $(pwd)</p>
           </div>
         </div>
 
         <h2>Client Configuration Snippets</h2>
-        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
-          <div class="mac-header mac-header--dark">
+        <div class="mac-window" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header">
             <div class="traffic-lights">
               <span class="traffic-dot close"></span>
               <span class="traffic-dot min"></span>
               <span class="traffic-dot max"></span>
             </div>
-            <span class="mac-title mac-title--dark">claude_desktop_config.json</span>
+            <span class="mac-title">claude_desktop_config.json</span>
             <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="mac-body mac-body--dark">
-            <pre><code>{
+          <div class="mac-body" style="background: #f8fafc;">
+            <pre style="font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #1e293b;"><code>{
   "mcpServers": {
     "agentic-go": {
       "command": "agentic-go",
@@ -179,7 +180,7 @@
   </div>
 
   <aside class="floating-settings-bar" aria-label="Typography settings">
-    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.06em;">Font:</span>
     <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
     <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
   </aside>

@@ -1,6 +1,6 @@
 /**
  * agentic-go — Interactive behavior, typography switcher & WebMCP browser registry
- * Built for Apple 'MacBook Neo' design system.
+ * Modern Apple Human Interface (macOS27 / iOS27) edition.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* --------------------------------------------------------------------------
-   Typography Switcher (SF Pro / Inter)
+   Typography Switcher (SF Pro / Inter Variable)
    -------------------------------------------------------------------------- */
 function initTypographySwitcher() {
   const savedFont = localStorage.getItem('agentic-go-font') || 'sf-pro';
@@ -40,6 +40,7 @@ const VERIFICATION_STEPS = [
     id: 'snapshot',
     num: '01 / Snapshot',
     title: 'Workspace Snapshot',
+    badgeClass: 'badge-azure',
     badge: 'Immutable Hash',
     heading: 'Content-Addressed Workspace Baseline',
     desc: 'Before reading or modifying code, agentic-go computes an immutable snapshot hash over workspace files and AST structures. All subsequent operations (briefs, symbols, refactoring, verification) are pinned to this Snapshot Ref. If source files change externally, stale references fail closed.',
@@ -63,6 +64,7 @@ const VERIFICATION_STEPS = [
     id: 'intent',
     num: '02 / Intent',
     title: 'Intent & Drift Check',
+    badgeClass: 'badge-azure',
     badge: 'Change Continuity',
     heading: 'Tracking Drift Against Stated Goal',
     desc: 'A Change Contract records the intended goal, touched packages, and decisions. At each checkpoint, agentic-go compares the current AST against the baseline snapshot to catch exported API mutations, unintended dependency additions, generated-file modifications, or test deletions.',
@@ -89,6 +91,7 @@ const VERIFICATION_STEPS = [
     id: 'execute',
     num: '03 / Execution',
     title: 'Executed Evidence',
+    badgeClass: 'badge-emerald',
     badge: 'Whole-Package Verification',
     heading: 'Targeted Compilation & Test Execution',
     desc: 'agentic-go executes whole-package tests, benchmarks, and the Go race detector over the full impacted package closure. It never selects cherry-picked individual test methods that could miss integration regressions or side effects.',
@@ -117,6 +120,7 @@ const VERIFICATION_STEPS = [
     id: 'findings',
     num: '04 / Findings',
     title: 'Calibrated Findings',
+    badgeClass: 'badge-emerald',
     badge: '0% False Positive Baseline',
     heading: 'High-Precision Analyzer Diagnostics',
     desc: 'Static analyzers evaluate concurrency safety (channel leaks, mutex copying, goroutine lifecycle) and error handling conventions. In release calibration over 10 repos and 467 reviewed findings, zero false positives were observed in the target corpus.',
@@ -144,6 +148,7 @@ const VERIFICATION_STEPS = [
     id: 'uncertainty',
     num: '05 / Calibration',
     title: 'Explicit Uncertainty',
+    badgeClass: 'badge-amber',
     badge: 'Honest Boundaries',
     heading: 'Calibrated Risk Lenses & Provenance',
     desc: 'agentic-go never claims that passing tests prove omitted code is completely safe. Instead, the verification report explicitly enumerates uncertainty lenses (e.g. unexercised branch statements, skipped integration suites, build constraints).',
@@ -197,7 +202,7 @@ function initVerificationSequence() {
     `).join('');
 
     explanation.innerHTML = `
-      <div style="display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(0, 173, 216, 0.15); color: #00add8; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+      <div class="sequence-badge ${step.badgeClass}">
         ${step.badge}
       </div>
       <h4>${step.heading}</h4>
@@ -205,9 +210,9 @@ function initVerificationSequence() {
       <ul class="sequence-details-list">
         ${detailsHtml}
       </ul>
-      <div style="display: flex; gap: 12px; margin-top: 20px;">
+      <div style="display: flex; gap: 10px; margin-top: 24px;">
         <button type="button" class="copy-btn" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>← Previous</button>
-        <button type="button" class="copy-btn" id="seq-next-btn" style="background: rgba(0, 173, 216, 0.2); border-color: #00add8; color: #38bdf8;" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>Next Step →</button>
+        <button type="button" class="copy-btn" id="seq-next-btn" style="background: var(--color-ink); color: #ffffff; border-color: var(--color-ink);" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>Next Step →</button>
       </div>
     `;
 
@@ -233,7 +238,7 @@ function initVerificationSequence() {
    -------------------------------------------------------------------------- */
 function initTabSelectors() {
   document.querySelectorAll('[data-tabs]').forEach(tabContainer => {
-    const tabs = tabContainer.querySelectorAll('.tab-btn');
+    const tabs = tabContainer.querySelectorAll('.tab-btn, .seq-tab-btn');
     const groupName = tabContainer.getAttribute('data-tabs');
     const contentPanels = document.querySelectorAll(`[data-tab-content="${groupName}"]`);
 
@@ -269,7 +274,7 @@ function initCopyButtons() {
         const targetElem = document.getElementById(targetId);
         if (targetElem) textToCopy = targetElem.innerText;
       } else {
-        const pre = btn.closest('.quickstart-wrapper, .sequence-code-pane, .mac-window, pre, .terminal-body');
+        const pre = btn.closest('.sequence-code-pane, .mac-window, pre, .mac-body');
         if (pre) {
           const code = pre.querySelector('code') || pre;
           textToCopy = code.innerText;
@@ -308,13 +313,15 @@ function initMobileNav() {
       navLinks.style.display = isVisible ? 'none' : 'flex';
       if (!isVisible) {
         navLinks.style.position = 'absolute';
-        navLinks.style.top = 'var(--header-height)';
-        navLinks.style.left = '0';
-        navLinks.style.right = '0';
-        navLinks.style.background = 'var(--color-snow)';
+        navLinks.style.top = '60px';
+        navLinks.style.left = '16px';
+        navLinks.style.right = '16px';
+        navLinks.style.background = '#ffffff';
         navLinks.style.flexDirection = 'column';
-        navLinks.style.padding = 'var(--space-20)';
-        navLinks.style.borderBottom = '1px solid var(--color-silver-mist)';
+        navLinks.style.padding = '16px';
+        navLinks.style.borderRadius = '20px';
+        navLinks.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15)';
+        navLinks.style.border = '1px solid #e5e7eb';
       }
     });
   }
