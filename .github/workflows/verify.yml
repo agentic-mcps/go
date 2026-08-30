@@ -4,7 +4,17 @@ on:
   push:
     branches:
       - "**"
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "assets/**"
+      - "site/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "assets/**"
+      - "site/**"
   workflow_call:
 
 concurrency:
@@ -38,6 +48,8 @@ jobs:
         run: go test -mod=readonly -race ./...
       - name: Vet
         run: go vet -mod=readonly ./...
+      - name: Test installer
+        run: bash scripts/install.test.sh
 
   gopls-contract:
     name: gopls contract / ${{ matrix.os }}
@@ -52,7 +64,14 @@ jobs:
         with:
           go-version: "1.27.x"
           cache: true
+      - name: Cache gopls sidecar
+        id: cache-gopls
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: ${{ runner.temp }}/agentic-go-gopls
+          key: gopls-v0.21.0-${{ matrix.os }}-${{ runner.arch }}
       - name: Build pinned sidecar
+        if: steps.cache-gopls.outputs.cache-hit != 'true'
         run: |
           go mod download golang.org/x/tools/gopls@v0.21.0
           gopls_source="$(go env GOMODCACHE)/golang.org/x/tools/gopls@v0.21.0"
@@ -63,21 +82,8 @@ jobs:
           GOTELEMETRY: "off"
         run: go test ./internal/gopls ./internal/intelligence ./internal/mcptest -count=1
 
-  golangci-lint:
-    name: golangci-lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with:
-          go-version: "1.26.x"
-          cache: true
-      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
-        with:
-          version: v2.12.2
-
-  cross-build:
-    name: Cross-build release bundles
+  quality:
+    name: Quality & Packaging
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -85,28 +91,13 @@ jobs:
         with:
           go-version: "1.27.x"
           cache: true
-      - name: Build release bundles
-        run: go run ./internal/cmd/releasepack --version 1.0.0-test --output /tmp/agentic-go-release
-
-  installer:
-    name: Installer / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - name: Test exact-version installer
-        run: bash scripts/install.test.sh
-
-  action-adapters:
-    name: Action adapters
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24.x"
+      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
+        with:
+          version: v2.12.2
+      - name: Build release bundles
+        run: go run ./internal/cmd/releasepack --version 1.0.0-test --output /tmp/agentic-go-release
       - name: Test Action adapters
         run: node --test scripts/action-*.test.mjs
