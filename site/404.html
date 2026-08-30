@@ -11,8 +11,9 @@
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <header class="site-header" role="banner">
-    <div class="header-container">
+  <!-- Floating Dynamic Island Header -->
+  <div class="island-header-wrapper">
+    <header class="island-header" role="banner">
       <a href="./" class="brand-link" aria-label="agentic-go home">
         <img src="assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
@@ -34,14 +35,14 @@
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="./" class="btn-pill btn-pill--sm">Home</a>
       </div>
-    </div>
-  </header>
+    </header>
+  </div>
 
   <main id="main-content" class="section" style="text-align: center; padding: var(--space-120) var(--space-24);">
     <div class="section-container" style="max-width: 600px;">
-      <div class="t-eyebrow" style="color: var(--color-caution);">404 Error</div>
-      <h1 class="t-heading-lg" style="margin-bottom: var(--space-16);">Page not found</h1>
-      <p class="t-subheading" style="margin-bottom: var(--space-32);">
+      <div class="hero-eyebrow" style="color: var(--color-amber);">404 Error</div>
+      <h1 class="section-title" style="margin-bottom: var(--space-16);">Page not found</h1>
+      <p class="section-subtitle" style="margin-bottom: var(--space-32);">
         The documentation page or resource you requested could not be located.
       </p>
 
@@ -53,7 +54,7 @@
   </main>
 
   <aside class="floating-settings-bar" aria-label="Typography settings">
-    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.06em;">Font:</span>
     <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
     <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
   </aside>

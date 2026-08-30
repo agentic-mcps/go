@@ -36,6 +36,14 @@
       },
       {
         "@type": "Question",
+        "name": "How does it help open-weight models?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Open models excel at code generation, but often lack closed-lab tool harnesses. agentic-go gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification—producing results on par with proprietary frontier setups."
+        }
+      },
+      {
+        "@type": "Question",
         "name": "Can agentic-go modify my files or Git history?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -65,8 +73,9 @@
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <header class="site-header" role="banner">
-    <div class="header-container">
+  <!-- Floating Dynamic Island Header -->
+  <div class="island-header-wrapper">
+    <header class="island-header" role="banner">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
         <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
@@ -88,8 +97,8 @@
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
-    </div>
-  </header>
+    </header>
+  </div>
 
   <div class="docs-layout">
     <aside class="docs-sidebar" aria-label="Documentation sidebar">
@@ -140,6 +149,13 @@
           </div>
 
           <div class="faq-row">
+            <div class="faq-question">How does it help open-weight models?</div>
+            <div class="faq-answer">
+              Open models (DeepSeek, Llama, Qwen, Mistral) excel at code generation, but often lack closed-lab tool harnesses. <code>agentic-go</code> gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification—producing results on par with proprietary frontier setups.
+            </div>
+          </div>
+
+          <div class="faq-row">
             <div class="faq-question">Can agentic-go modify my files or Git history?</div>
             <div class="faq-answer">
               <code>agentic-go</code> will <strong>never</strong> mutate Git repository state (it never executes <code>git add</code>, <code>git commit</code>, <code>git branch</code>, or <code>git stash</code>). The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal.
@@ -183,7 +199,7 @@
   </div>
 
   <aside class="floating-settings-bar" aria-label="Typography settings">
-    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.06em;">Font:</span>
     <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
     <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
   </aside>
