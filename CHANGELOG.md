@@ -10,6 +10,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Independent `github.com/agentic-mcps/go` module identity, release path, and
+  organization-facing documentation. The personal module remains a separate
+  identity and is not an alias.
 - Frozen `agentic.context/v1`, `agentic.change/v1`, and
   `agentic.verify/v1` contracts with immutable pre-freeze archives and
   non-mutating private-state upgrade compatibility.
@@ -59,5 +62,5 @@ All notable changes to this project are documented here. The format follows
 - Workspace containment, bounded execution, event-driven progress, and
   optional privacy-preserving local traces.
 
-[Unreleased]: https://github.com/ashwingopalsamy/agentic-go/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/ashwingopalsamy/agentic-go/releases/tag/v1.0.0
+[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/agentic-mcps/go/releases/tag/v1.0.0

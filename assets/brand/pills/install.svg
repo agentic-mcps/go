@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="38" viewBox="0 0 112 38" role="img" aria-label="Install">
+  <rect x="0.75" y="0.75" width="110.5" height="36.5" rx="18.25" fill="#0d1117" stroke="#30363d" stroke-width="1.5"/>
+  <circle cx="22" cy="19" r="5" fill="#00add8"/>
+  <text x="63" y="24" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="650">Install</text>
+</svg>

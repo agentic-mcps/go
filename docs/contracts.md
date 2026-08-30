@@ -243,7 +243,7 @@ contract stores.
 ## Module
 
 ```
-module github.com/ashwingopalsamy/agentic-go
+module github.com/agentic-mcps/go
 go 1.25
 ```
 CI matrix tests `{1.25, 1.26, 1.27}` — floor stays 1.25 for adoption reach,
@@ -277,7 +277,7 @@ without `go_` (e.g. `TestStructured` for `go_test_structured`).
 ```go
 package tools
 
-import "github.com/ashwingopalsamy/agentic-go/internal/finding"
+import "github.com/agentic-mcps/go/internal/finding"
 
 type <Name>Input struct {
     // jsonschema tag is the ONLY documentation the MCP client sees for this field.
@@ -489,8 +489,8 @@ import (
     "golang.org/x/tools/go/analysis/passes/inspect"
     "golang.org/x/tools/go/ast/inspector"
 
-    "github.com/ashwingopalsamy/agentic-go/internal/analysis/astutil"
-    "github.com/ashwingopalsamy/agentic-go/internal/finding"
+    "github.com/agentic-mcps/go/internal/analysis/astutil"
+    "github.com/agentic-mcps/go/internal/finding"
 )
 
 func init() {
@@ -535,7 +535,7 @@ import (
     "golang.org/x/tools/go/analysis/checker"
     "golang.org/x/tools/go/packages"
 
-    "github.com/ashwingopalsamy/agentic-go/internal/finding"
+    "github.com/agentic-mcps/go/internal/finding"
 )
 
 func Run(ctx context.Context, ws, pattern string, analyzers []*analysis.Analyzer) (result finding.AuditResult, err error) {
@@ -955,9 +955,9 @@ import (
 
     "golang.org/x/tools/go/analysis"
 
-    "github.com/ashwingopalsamy/agentic-go/internal/analysis/<domain>"
-    "github.com/ashwingopalsamy/agentic-go/internal/audit"
-    "github.com/ashwingopalsamy/agentic-go/internal/finding"
+    "github.com/agentic-mcps/go/internal/analysis/<domain>"
+    "github.com/agentic-mcps/go/internal/audit"
+    "github.com/agentic-mcps/go/internal/finding"
     "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

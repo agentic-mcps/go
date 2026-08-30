@@ -1,0 +1,26 @@
+# agentic-go
+
+> A local Go MCP server and CLI for source-grounded code intelligence, semantic navigation, change continuity, guarded refactoring, and executed verification.
+
+This is a convenience index for humans and coding agents. It is not a ranking or citation signal.
+
+## Start
+
+- [README](https://github.com/agentic-mcps/go/blob/main/README.md): installation, MCP setup, workflow, capabilities, compatibility, and trust boundary.
+- [v1.0.0 release](https://github.com/agentic-mcps/go/releases/tag/v1.0.0): supported archives and checksums.
+- [Module migration](https://github.com/agentic-mcps/go/blob/main/docs/module-migration.md): separate personal and organization module identities.
+
+## Contracts
+
+- [Protocol contracts](https://github.com/agentic-mcps/go/blob/main/docs/contracts.md): MCP tools, resources, execution boundaries, reports, and analyzer wiring.
+- [Context Pack schema](https://github.com/agentic-mcps/go/blob/main/docs/schema/context-pack-v1.json): `agentic.context/v1`.
+- [Change Contract schema](https://github.com/agentic-mcps/go/blob/main/docs/schema/change-contract-v1.json): `agentic.change/v1`.
+- [Verification report schema](https://github.com/agentic-mcps/go/blob/main/docs/schema/verification-report-v1.json): `agentic.verify/v1`.
+
+## Evidence and policy
+
+- [v1 release evidence](https://github.com/agentic-mcps/go/blob/main/validation/v1.0.0/release-evidence.md): release matrix, deterministic archives, client smoke, and claim boundaries.
+- [Analyzer calibration](https://github.com/agentic-mcps/go/blob/main/validation/v0.1.0/summary.md): corpus-specific reviewed findings and limitations.
+- [Security](https://github.com/agentic-mcps/go/blob/main/SECURITY.md): trust boundary, private reporting, and supported releases.
+- [Contributing](https://github.com/agentic-mcps/go/blob/main/CONTRIBUTING.md): contribution and analyzer calibration requirements.
+- [Discoverability research](https://github.com/agentic-mcps/go/blob/main/docs/research/discoverability.md): primary-source rationale for this repository surface.

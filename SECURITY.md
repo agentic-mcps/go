@@ -93,6 +93,6 @@ or 1.27; Windows has not been validated.
 ## Report a vulnerability
 
 Please use GitHub's private
-[security advisory form](https://github.com/ashwingopalsamy/agentic-go/security/advisories/new).
+[security advisory form](https://github.com/agentic-mcps/go/security/advisories/new).
 Do not include private source code, credentials, or sensitive trace contents in
 a public issue.
