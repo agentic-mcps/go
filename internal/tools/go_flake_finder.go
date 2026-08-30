@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
-	"github.com/ashwingopalsamy/agentic-go/internal/progress"
-	"github.com/ashwingopalsamy/agentic-go/internal/trace"
+	"github.com/agentic-mcps/go/internal/parser"
+	"github.com/agentic-mcps/go/internal/progress"
+	"github.com/agentic-mcps/go/internal/trace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

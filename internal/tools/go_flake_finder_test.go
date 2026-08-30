@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 func TestFlakeFinderReturnsOnlyMixedOutcomes(t *testing.T) {

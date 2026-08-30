@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
+	"github.com/agentic-mcps/go/internal/finding"
 )
 
 const unparsedRaceMarker = "UNPARSED: race detector block did not match the supported format"

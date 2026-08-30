@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/analysis/errors"
-	"github.com/ashwingopalsamy/agentic-go/internal/audit"
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
-	"github.com/ashwingopalsamy/agentic-go/internal/progress"
-	"github.com/ashwingopalsamy/agentic-go/internal/trace"
+	"github.com/agentic-mcps/go/internal/analysis/errors"
+	"github.com/agentic-mcps/go/internal/audit"
+	"github.com/agentic-mcps/go/internal/finding"
+	"github.com/agentic-mcps/go/internal/progress"
+	"github.com/agentic-mcps/go/internal/trace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"golang.org/x/tools/go/analysis"
 )

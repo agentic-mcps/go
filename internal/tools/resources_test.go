@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/trace"
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/trace"
+	"github.com/agentic-mcps/go/internal/workspace"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

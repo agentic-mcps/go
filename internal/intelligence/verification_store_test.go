@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 func TestVerificationStorePersistsPrivateContentAddressedReport(t *testing.T) {

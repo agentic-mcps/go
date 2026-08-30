@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
+	"github.com/agentic-mcps/go/internal/finding"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/packages"
 )

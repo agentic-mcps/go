@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 func (r *Runtime) runTestJSON(ctx context.Context, arguments []string, consume func(parser.TestEvent) error) (execution.Result, error) {

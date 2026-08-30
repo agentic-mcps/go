@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
+	"github.com/agentic-mcps/go/internal/finding"
 )
 
 type baselineComparison struct {

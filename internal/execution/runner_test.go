@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 func TestRunnerReturnsOrdinaryExit(t *testing.T) {

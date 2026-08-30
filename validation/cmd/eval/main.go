@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	validation "github.com/ashwingopalsamy/agentic-go/validation/internal/eval"
+	validation "github.com/agentic-mcps/go/validation/internal/eval"
 )
 
 func main() {

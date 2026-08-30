@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 // ContractExportRequest selects one explicit workspace-contained handoff copy.

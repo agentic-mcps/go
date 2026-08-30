@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Private security report
-    url: https://github.com/ashwingopalsamy/agentic-go/security/advisories/new
+    url: https://github.com/agentic-mcps/go/security/advisories/new
     about: Report vulnerabilities without exposing sensitive details publicly.

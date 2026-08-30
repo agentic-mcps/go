@@ -13,10 +13,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/gopls"
+	"github.com/agentic-mcps/go/internal/verification"
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 const (

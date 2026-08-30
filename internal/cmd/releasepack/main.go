@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
-	"github.com/ashwingopalsamy/agentic-go/internal/releasebundle"
+	"github.com/agentic-mcps/go/internal/gopls"
+	"github.com/agentic-mcps/go/internal/releasebundle"
 )
 
 var releaseVersionPattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$`)

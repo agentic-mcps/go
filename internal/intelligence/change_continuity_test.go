@@ -9,8 +9,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/changeimpact"
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/changeimpact"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 func TestCoreBeginPersistsNormalizedContract(t *testing.T) {

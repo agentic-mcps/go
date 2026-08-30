@@ -53,9 +53,9 @@ runs:
       run: |
         set -euo pipefail
         root="$(mktemp -d "$RUNNER_TEMP/agentic-go.XXXXXX")"
-        url="https://github.com/ashwingopalsamy/agentic-go/releases/download/v${AGENTIC_VERSION}/${AGENTIC_ARCHIVE}"
+        url="https://github.com/agentic-mcps/go/releases/download/v${AGENTIC_VERSION}/${AGENTIC_ARCHIVE}"
         curl --fail --location --silent --show-error "$url" -o "$root/$AGENTIC_ARCHIVE"
-        curl --fail --location --silent --show-error "https://github.com/ashwingopalsamy/agentic-go/releases/download/v${AGENTIC_VERSION}/checksums.txt" -o "$root/checksums.txt"
+        curl --fail --location --silent --show-error "https://github.com/agentic-mcps/go/releases/download/v${AGENTIC_VERSION}/checksums.txt" -o "$root/checksums.txt"
         bash "$GITHUB_ACTION_PATH/scripts/action-checksum.sh" "$root/checksums.txt" "$root/$AGENTIC_ARCHIVE"
         tar -xzf "$root/$AGENTIC_ARCHIVE" -C "$root"
         [ -x "$root/agentic-go" ] || { echo "agentic-go: archive does not contain an executable agentic-go binary" >&2; exit 2; }

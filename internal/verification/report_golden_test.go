@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 func TestGoldenReportsMatchPortableContract(t *testing.T) {

@@ -30,7 +30,7 @@ if [ -z "$install_dir" ] || [ "$install_dir" = "/" ]; then
 fi
 
 archive="agentic-go_${version}_${release_os}_${release_arch}.tar.gz"
-base_url="${AGENTIC_GO_RELEASE_BASE_URL:-https://github.com/ashwingopalsamy/agentic-go/releases/download/v${version}}"
+base_url="${AGENTIC_GO_RELEASE_BASE_URL:-https://github.com/agentic-mcps/go/releases/download/v${version}}"
 download_root="$(mktemp -d "${TMPDIR:-/tmp}/agentic-go-install.XXXXXX")"
 trap 'rm -rf "$download_root"' EXIT
 

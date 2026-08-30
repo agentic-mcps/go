@@ -8,8 +8,8 @@ import (
 	"io"
 	"sort"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/analysis/astutil"
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
+	"github.com/agentic-mcps/go/internal/analysis/astutil"
+	"github.com/agentic-mcps/go/internal/execution"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

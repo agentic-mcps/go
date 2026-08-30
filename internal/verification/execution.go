@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 const (

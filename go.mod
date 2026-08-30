@@ -1,4 +1,4 @@
-module github.com/ashwingopalsamy/agentic-go
+module github.com/agentic-mcps/go
 
 go 1.25.0
 

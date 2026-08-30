@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 func TestExportedInventory(t *testing.T) {

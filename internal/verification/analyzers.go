@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
-	concurrencyanalysis "github.com/ashwingopalsamy/agentic-go/internal/analysis/concurrency"
-	erroranalysis "github.com/ashwingopalsamy/agentic-go/internal/analysis/errors"
-	"github.com/ashwingopalsamy/agentic-go/internal/audit"
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	concurrencyanalysis "github.com/agentic-mcps/go/internal/analysis/concurrency"
+	erroranalysis "github.com/agentic-mcps/go/internal/analysis/errors"
+	"github.com/agentic-mcps/go/internal/audit"
+	"github.com/agentic-mcps/go/internal/finding"
+	"github.com/agentic-mcps/go/internal/workspace"
 	"golang.org/x/tools/go/analysis"
 )
 

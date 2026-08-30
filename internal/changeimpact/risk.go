@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 type riskDefinition struct {

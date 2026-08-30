@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 func TestBenchmarkDiffComparesCommittedFixture(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

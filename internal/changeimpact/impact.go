@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 func (a *Analyzer) computeImpact(ctx context.Context, analysis Analysis, options Options) (Analysis, error) {

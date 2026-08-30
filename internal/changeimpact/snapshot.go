@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 func (a *Analyzer) snapshot(ctx context.Context, options Options) (Analysis, error) {

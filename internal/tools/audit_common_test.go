@@ -3,7 +3,7 @@ package tools
 import (
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
+	"github.com/agentic-mcps/go/internal/finding"
 )
 
 func TestNormalizeAuditInput(t *testing.T) {

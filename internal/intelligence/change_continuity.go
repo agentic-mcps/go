@@ -16,7 +16,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 const checkpointPackageLimit = 200

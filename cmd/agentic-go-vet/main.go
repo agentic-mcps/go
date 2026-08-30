@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ashwingopalsamy/agentic-go/internal/analysis/concurrency"
-	"github.com/ashwingopalsamy/agentic-go/internal/analysis/errors"
+	"github.com/agentic-mcps/go/internal/analysis/concurrency"
+	"github.com/agentic-mcps/go/internal/analysis/errors"
 	"golang.org/x/tools/go/analysis/multichecker"
 )
 

@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
+	"github.com/agentic-mcps/go/internal/gopls"
 )
 
 type rpcTextEdit struct {

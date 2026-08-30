@@ -3,7 +3,7 @@ package verification
 import (
 	"fmt"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 func (e *Engine) raceFindings(report parser.RaceReportOutput) []Finding {

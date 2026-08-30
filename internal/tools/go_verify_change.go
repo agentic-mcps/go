@@ -8,9 +8,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/changeimpact"
-	"github.com/ashwingopalsamy/agentic-go/internal/trace"
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/changeimpact"
+	"github.com/agentic-mcps/go/internal/trace"
+	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

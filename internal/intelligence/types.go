@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 )
 
 const (

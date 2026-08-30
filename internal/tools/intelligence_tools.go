@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/intelligence"
+	"github.com/agentic-mcps/go/internal/intelligence"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

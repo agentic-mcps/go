@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/gopls"
+	"github.com/agentic-mcps/go/internal/gopls"
 )
 
 func TestPinnedGoplsNormalizedIntelligenceContract(t *testing.T) {

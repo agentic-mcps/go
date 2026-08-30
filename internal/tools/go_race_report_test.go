@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/finding"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 func TestRaceReportReturnsStructuredConflict(t *testing.T) {

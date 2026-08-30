@@ -6,9 +6,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/execution"
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/verification"
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 const (

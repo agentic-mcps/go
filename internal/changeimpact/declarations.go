@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/verification"
+	"github.com/agentic-mcps/go/internal/verification"
 	"golang.org/x/mod/modfile"
 )
 

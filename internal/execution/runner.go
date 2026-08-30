@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/workspace"
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 const (

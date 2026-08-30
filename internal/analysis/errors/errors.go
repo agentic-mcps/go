@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/analysis/astutil"
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
+	"github.com/agentic-mcps/go/internal/analysis/astutil"
+	"github.com/agentic-mcps/go/internal/finding"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/finding"
-	"github.com/ashwingopalsamy/agentic-go/internal/trace"
+	"github.com/agentic-mcps/go/internal/finding"
+	"github.com/agentic-mcps/go/internal/trace"
 )
 
 type auditOptions struct {

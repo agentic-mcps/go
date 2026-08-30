@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ashwingopalsamy/agentic-go/internal/parser"
+	"github.com/agentic-mcps/go/internal/parser"
 )
 
 type verificationTestCollector struct {
