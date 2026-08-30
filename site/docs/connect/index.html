@@ -21,6 +21,10 @@
   <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
   <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
+  <link rel="alternate" type="text/plain" href="../../llms.txt" title="LLM Context Index">
+  <link rel="alternate" type="text/plain" href="../../llms-full.txt" title="Full LLM Context">
+  <link rel="alternate" type="application/json" href="../../.well-known/mcp.json" title="MCP Server Declaration">
+  <link rel="alternate" type="application/json" href="../../.well-known/ai-catalog.json" title="AI Discovery Catalog">
   <link rel="stylesheet" href="../../styles.css">
 
   <script type="application/ld+json">
@@ -61,6 +65,11 @@
       </nav>
 
       <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
@@ -69,6 +78,15 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar" aria-label="Documentation sidebar">
+      <div class="sidebar-search" style="margin-bottom: var(--space-20);">
+        <form class="docs-search-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./" method="GET">
+          <div style="position: relative;">
+            <input type="search" name="query" placeholder="Search docs (⌘K)..." class="webmcp-input" style="width: 100%; padding-left: 28px; font-size: 12px; height: 32px;" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 8px; top: 9px; color: var(--color-text-dim); pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+        </form>
+      </div>
+
       <div class="sidebar-group">
         <div class="sidebar-title">Getting Started</div>
         <ul class="sidebar-list">
@@ -123,7 +141,7 @@
           </div>
         </div>
 
-        <h2>Client Configuration Snippets</h2>
+        <h2>Client Configuration Generator &amp; Snippets</h2>
         <div class="mac-window" style="margin: var(--space-16) 0 var(--space-32);">
           <div class="mac-header">
             <div class="traffic-lights">
@@ -131,17 +149,34 @@
               <span class="traffic-dot min"></span>
               <span class="traffic-dot max"></span>
             </div>
-            <span class="mac-title">claude_desktop_config.json</span>
+            <span class="mac-title">MCP Client Configuration</span>
             <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="mac-body" style="background: #f8fafc;">
-            <pre style="font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #1e293b;"><code>{
+          <form class="mcp-config-form" toolname="generate_mcp_config" tooldescription="Generate JSON configuration snippet for connecting agentic-go with AI coding clients including Claude Desktop, Cursor, Cline, or Claude Code." toolautosubmit action="./">
+            <div class="webmcp-controls-bar">
+              <div class="webmcp-control-group">
+                <label for="mcp-client-docs" class="webmcp-label">Client:</label>
+                <select id="mcp-client-docs" name="client" class="webmcp-select" toolparamdescription="Target AI coding assistant client (claude, cursor, cline, claudecode)">
+                  <option value="claude" selected>Claude Desktop</option>
+                  <option value="cursor">Cursor</option>
+                  <option value="cline">Cline</option>
+                  <option value="claudecode">Claude Code</option>
+                </select>
+              </div>
+              <div class="webmcp-control-group" style="flex: 1; min-width: 180px;">
+                <label for="mcp-workspace-docs" class="webmcp-label">Workspace:</label>
+                <input type="text" id="mcp-workspace-docs" name="workspace" class="webmcp-input" value="/path/to/your/go/project" style="width: 100%;" toolparamdescription="Absolute file path to the target Go workspace directory (defaults to current directory .)" />
+              </div>
+            </div>
+          </form>
+          <div class="mac-body" style="background: #f8fafc; padding: var(--space-20);">
+            <pre style="font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #1e293b; margin: 0;"><code id="mcp-generated-config">{
   "mcpServers": {
     "agentic-go": {
       "command": "agentic-go",
       "args": [
         "--workspace",
-        "/absolute/path/to/your/go/project"
+        "/path/to/your/go/project"
       ]
     }
   }

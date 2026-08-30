@@ -21,6 +21,10 @@
   <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
   <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
+  <link rel="alternate" type="text/plain" href="../../llms.txt" title="LLM Context Index">
+  <link rel="alternate" type="text/plain" href="../../llms-full.txt" title="Full LLM Context">
+  <link rel="alternate" type="application/json" href="../../.well-known/mcp.json" title="MCP Server Declaration">
+  <link rel="alternate" type="application/json" href="../../.well-known/ai-catalog.json" title="AI Discovery Catalog">
   <link rel="stylesheet" href="../../styles.css">
 
   <script type="application/ld+json">
@@ -96,6 +100,11 @@
       </nav>
 
       <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
@@ -104,6 +113,15 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar" aria-label="Documentation sidebar">
+      <div class="sidebar-search" style="margin-bottom: var(--space-20);">
+        <form class="docs-search-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./" method="GET">
+          <div style="position: relative;">
+            <input type="search" name="query" placeholder="Search docs (⌘K)..." class="webmcp-input" style="width: 100%; padding-left: 28px; font-size: 12px; height: 32px;" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 8px; top: 9px; color: var(--color-text-dim); pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+        </form>
+      </div>
+
       <div class="sidebar-group">
         <div class="sidebar-title">Getting Started</div>
         <ul class="sidebar-list">

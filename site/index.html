@@ -94,6 +94,11 @@
       </nav>
 
       <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="#install" class="btn-pill btn-pill--sm">Install</a>
         <button type="button" class="mobile-menu-btn" aria-label="Toggle mobile menu">
@@ -123,7 +128,7 @@
 
         <div class="hero-actions">
           <a href="#install" class="btn-pill">Install agentic-go</a>
-          <a href="https://github.com/agentic-mcps/go" class="btn-ghost" target="_blank" rel="noopener noreferrer">View on GitHub ›</a>
+          <button type="button" class="btn-ghost" data-search-trigger style="cursor: pointer;">Search Docs (⌘K) ›</button>
         </div>
 
         <div class="hero-footnote">
@@ -219,36 +224,83 @@
               <span class="traffic-dot min"></span>
               <span class="traffic-dot max"></span>
             </div>
-            <div class="mac-title">Terminal</div>
+            <div class="mac-title">Terminal &amp; Client Setup</div>
             <div class="sequence-tabs" data-tabs="install-tabs" style="margin-left: auto;">
-              <button type="button" class="seq-tab-btn active" data-target="brew">Homebrew</button>
-              <button type="button" class="seq-tab-btn" data-target="curl">Curl Script</button>
+              <button type="button" class="seq-tab-btn active" data-target="generator">Installer</button>
               <button type="button" class="seq-tab-btn" data-target="mcp">MCP Config</button>
             </div>
           </div>
 
-          <div class="mac-body" data-tab-content="install-tabs" data-panel="brew" style="position: relative; background: #f8fafc;">
-            <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
-            <p><span style="color: #0071e3; font-weight: 600;">$</span> brew install agentic-mcps/tap/agentic-go</p>
-            <p><span style="color: #0071e3; font-weight: 600;">$</span> agentic-go --version</p>
-            <p style="color: #6b7280;">&gt; agentic-go version 1.0.0 (darwin/arm64)</p>
+          <!-- Tab 1: Dynamic Install Command Generator (WebMCP Form) -->
+          <div class="mac-body" data-tab-content="install-tabs" data-panel="generator" style="padding: 0; background: #f8fafc;">
+            <form class="install-generator-form" toolname="generate_install_command" tooldescription="Generate the terminal installation command for agentic-go based on package manager, operating system, and architecture." toolautosubmit action="#install">
+              <div class="webmcp-controls-bar">
+                <div class="webmcp-control-group">
+                  <label for="install-method" class="webmcp-label">Method:</label>
+                  <select id="install-method" name="method" class="webmcp-select" toolparamdescription="Installation method: brew (Homebrew tap), curl (shell installer), or binary (direct release archive)">
+                    <option value="brew" selected>Homebrew</option>
+                    <option value="curl">Curl Script</option>
+                    <option value="binary">Direct Binary</option>
+                  </select>
+                </div>
+                <div class="webmcp-control-group">
+                  <label for="install-os" class="webmcp-label">OS:</label>
+                  <select id="install-os" name="os" class="webmcp-select" toolparamdescription="Target operating system (darwin for macOS, linux for Linux)">
+                    <option value="darwin" selected>macOS (Darwin)</option>
+                    <option value="linux">Linux</option>
+                  </select>
+                </div>
+                <div class="webmcp-control-group">
+                  <label for="install-arch" class="webmcp-label">Arch:</label>
+                  <select id="install-arch" name="arch" class="webmcp-select" toolparamdescription="Target CPU architecture (arm64 for Apple Silicon / ARM, amd64 for Intel / x86_64)">
+                    <option value="arm64" selected>ARM64</option>
+                    <option value="amd64">AMD64</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+
+            <div style="position: relative; padding: var(--space-20);">
+              <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
+              <pre style="font-family: var(--font-mono); font-size: 13px; line-height: 1.6; color: #1e293b; white-space: pre-wrap; margin: 0;"><code id="install-generated-command">brew install agentic-mcps/tap/agentic-go
+agentic-go --version</code></pre>
+            </div>
           </div>
 
-          <div class="mac-body" data-tab-content="install-tabs" data-panel="curl" style="display: none; position: relative; background: #f8fafc;">
-            <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
-            <p><span style="color: #0071e3; font-weight: 600;">$</span> curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/install.sh | bash -s -- 1.0.0</p>
-          </div>
+          <!-- Tab 2: Dynamic MCP Config Generator (WebMCP Form) -->
+          <div class="mac-body" data-tab-content="install-tabs" data-panel="mcp" style="display: none; padding: 0; background: #f8fafc;">
+            <form class="mcp-config-form" toolname="generate_mcp_config" tooldescription="Generate JSON configuration snippet for connecting agentic-go with AI coding clients including Claude Desktop, Cursor, Cline, or Claude Code." toolautosubmit action="#install">
+              <div class="webmcp-controls-bar">
+                <div class="webmcp-control-group">
+                  <label for="mcp-client" class="webmcp-label">Client:</label>
+                  <select id="mcp-client" name="client" class="webmcp-select" toolparamdescription="Target AI coding assistant client (claude, cursor, cline, claudecode)">
+                    <option value="claude" selected>Claude Desktop</option>
+                    <option value="cursor">Cursor</option>
+                    <option value="cline">Cline</option>
+                    <option value="claudecode">Claude Code</option>
+                  </select>
+                </div>
+                <div class="webmcp-control-group" style="flex: 1; min-width: 180px;">
+                  <label for="mcp-workspace" class="webmcp-label">Workspace:</label>
+                  <input type="text" id="mcp-workspace" name="workspace" class="webmcp-input" value="/path/to/your/go/project" style="width: 100%;" toolparamdescription="Absolute file path to the target Go workspace directory (defaults to current directory .)" />
+                </div>
+              </div>
+            </form>
 
-          <div class="mac-body" data-tab-content="install-tabs" data-panel="mcp" style="display: none; position: relative; background: #f8fafc;">
-            <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
-            <pre style="font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #1e293b;"><code>{
+            <div style="position: relative; padding: var(--space-20);">
+              <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
+              <pre style="font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #1e293b; margin: 0;"><code id="mcp-generated-config">{
   "mcpServers": {
     "agentic-go": {
       "command": "agentic-go",
-      "args": ["--workspace", "/path/to/your/go/project"]
+      "args": [
+        "--workspace",
+        "/path/to/your/go/project"
+      ]
     }
   }
 }</code></pre>
+            </div>
           </div>
         </div>
       </div>
@@ -343,6 +395,17 @@
               <span class="traffic-dot max"></span>
             </div>
             <div class="mac-title" style="position: static; margin-left: 14px; font-size: 12px;">Verification Pipeline Explorer</div>
+
+            <!-- WebMCP Declarative Form for Verification Step Inspection -->
+            <form class="verification-step-form" toolname="inspect_verification_step" tooldescription="Inspect a specific step of the agentic-go verification pipeline (01 Baseline Snapshot, 02 Change Intent & Drift, 03 Test Execution & Race Detector, 04 Calibrated Findings, 05 Uncertainty & Policy)." toolautosubmit action="#verification-sequence" style="margin-left: auto; margin-right: 12px;">
+              <select name="step" class="webmcp-select" aria-label="Select verification pipeline stage" toolparamdescription="The verification pipeline stage to inspect (snapshot, intent, execute, findings, uncertainty)">
+                <option value="snapshot" selected>01 Snapshot</option>
+                <option value="intent">02 Intent</option>
+                <option value="execute">03 Tests</option>
+                <option value="findings">04 Findings</option>
+                <option value="uncertainty">05 Uncertainty</option>
+              </select>
+            </form>
 
             <!-- Segmented Pill Step Tabs -->
             <div class="sequence-tabs" role="tablist" aria-label="Verification sequence steps">

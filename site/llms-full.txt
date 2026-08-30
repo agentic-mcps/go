@@ -99,10 +99,11 @@ curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/inst
 
 ---
 
-## 5. Official URLs & Verification Endpoints
+## 5. Official Canonical Routes & AI Endpoints
 
-- Website: https://agentic-mcps.github.io/go/
-- Docs: https://agentic-mcps.github.io/go/docs/
-- Repository: https://github.com/agentic-mcps/go
-- MCP Declaration: https://agentic-mcps.github.io/go/.well-known/mcp.json
-- AI Catalog: https://agentic-mcps.github.io/go/.well-known/ai-catalog.json
+- [Landing Page](https://agentic-mcps.github.io/go/): Official product overview and quickstart.
+- [Documentation Hub](https://agentic-mcps.github.io/go/docs/): Complete documentation for agentic-go architecture and workflows.
+- [GitHub Repository](https://github.com/agentic-mcps/go): Open source source code, issue tracker, and releases.
+- [MCP Server Declaration](https://agentic-mcps.github.io/go/.well-known/mcp.json): Machine-readable MCP declaration and capabilities manifest.
+- [AI Discovery Catalog](https://agentic-mcps.github.io/go/.well-known/ai-catalog.json): AI catalog and representative query mappings.
+- [Context Summary](https://agentic-mcps.github.io/go/llms.txt): Machine-readable summary for LLMs and coding agents.

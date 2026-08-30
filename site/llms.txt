@@ -2,38 +2,43 @@
 
 > Source-grounded Go intelligence, change continuity, guarded refactoring, and executed verification for coding agents.
 
-This is a machine-readable summary and index for AI coding agents and LLMs.
+agentic-go is a local Model Context Protocol (MCP) server and CLI for Go codebases. It operates strictly over local stdio with a bundled, telemetry-disabled `agentic-go-gopls` sidecar, giving coding agents immutable workspace context, change contracts, and evidence-backed verification.
 
 ## Core Summary
 
 - **What it is:** A local Model Context Protocol (MCP) server and CLI for Go codebases.
-- **Transport:** Local `stdio` only. No background daemons, network ports, or external accounts.
-- **Sidecar:** Bundles pinned companion `agentic-go-gopls` (v0.21.0) with telemetry disabled.
+- **Transport:** Local `stdio` only. No background daemons, network ports, or external cloud accounts.
+- **Sidecar:** Bundles pinned companion `agentic-go-gopls` (v0.21.0) with telemetry permanently disabled.
 - **Supported Versions:** Go 1.25, 1.26, and 1.27 on macOS and Linux (`amd64` / `arm64`).
 - **Core Loop:** Orient (workspace brief) -> Intent (change contract) -> Edit (agent modifies code) -> Checkpoint (detects drift/API breakage) -> Verify (whole-package tests & analyzers).
 - **Security Boundary:** Workspace containment (symlink-resolved, path-bound). Verification runs with local user privileges. Git history and staging are never mutated.
 
-## Canonical Documentation Routes
+## Documentation
 
-- Landing Page: https://agentic-mcps.github.io/go/
-- Docs Hub: https://agentic-mcps.github.io/go/docs/
-- Installation: https://agentic-mcps.github.io/go/docs/install/
-- MCP Setup: https://agentic-mcps.github.io/go/docs/connect/
-- Verification Engine: https://agentic-mcps.github.io/go/docs/verify/
-- Safety & Containment: https://agentic-mcps.github.io/go/docs/safety/
-- GitHub Action: https://agentic-mcps.github.io/go/docs/action/
-- Protocol Contracts & Schemas: https://agentic-mcps.github.io/go/docs/contracts/
-- FAQ: https://agentic-mcps.github.io/go/docs/faq/
+- [Docs Hub](https://agentic-mcps.github.io/go/docs/): Overview of agentic-go architecture, core concepts, and the five-stage agent loop.
+- [Installation Guide](https://agentic-mcps.github.io/go/docs/install/): Installing via Homebrew, standalone curl installer, or binary release archives.
+- [MCP Setup & Connection](https://agentic-mcps.github.io/go/docs/connect/): Connecting Claude Desktop, Cursor, Cline, and Claude Code over stdio transport.
+- [Verification Engine](https://agentic-mcps.github.io/go/docs/verify/): Package-level test execution, race detection, coverage gaps, and verification reports.
+- [Safety & Containment](https://agentic-mcps.github.io/go/docs/safety/): Workspace boundary containment, non-destructive mutation guarantees, and execution permissions.
+- [GitHub Action in CI](https://agentic-mcps.github.io/go/docs/action/): Running agentic-go verification in GitHub Actions pull request workflows.
+- [Protocol Contracts & Schemas](https://agentic-mcps.github.io/go/docs/contracts/): Complete specification of 14 MCP tools, 7 resources, 6 prompts, and JSON schemas.
+- [Frequently Asked Questions](https://agentic-mcps.github.io/go/docs/faq/): Answers to common questions about gopls integration, sandboxing, and licensing.
 
 ## MCP Surface (v1.0.0 Frozen)
 
-- 14 Tools: `go_workspace_brief`, `go_search`, `go_symbol_context`, `go_begin_change`, `go_checkpoint_change`, `go_refactor`, `go_verify_change`, `go_test_structured`, `go_race_report`, `go_coverage_gaps`, `go_benchmark_diff`, `go_flake_finder`, `go_audit_concurrency`, `go_audit_errors`.
-- 7 Resources: `agentic-go://analysis-rules`, `agentic-go://capabilities`, `agentic-go://change-contract/current`, `agentic-go://module`, `agentic-go://packages`, `agentic-go://trace-summary`, `agentic-go://verification/latest`.
-- 1 Template: `agentic-go://artifact/{id}`.
-- 6 Prompts: `audit-package`, `bisect-flake`, `pre-commit-check`, `resume-change`, `understand-change`, `verify-change`.
+- **14 Tools:** `go_workspace_brief`, `go_search`, `go_symbol_context`, `go_begin_change`, `go_checkpoint_change`, `go_refactor`, `go_verify_change`, `go_test_structured`, `go_race_report`, `go_coverage_gaps`, `go_benchmark_diff`, `go_flake_finder`, `go_audit_concurrency`, `go_audit_errors`.
+- **7 Resources:** `agentic-go://analysis-rules`, `agentic-go://capabilities`, `agentic-go://change-contract/current`, `agentic-go://module`, `agentic-go://packages`, `agentic-go://trace-summary`, `agentic-go://verification/latest`.
+- **1 Resource Template:** `agentic-go://artifact/{id}`.
+- **6 Prompts:** `audit-package`, `bisect-flake`, `pre-commit-check`, `resume-change`, `understand-change`, `verify-change`.
 
 ## Schemas
 
 - `agentic.context/v1`: Compact Context Packs with Snapshot Refs and Symbol Refs.
 - `agentic.change/v1`: Private Change Contracts with drift detection and checkpoint lineage.
 - `agentic.verify/v1`: Deterministic verification reports with whole-package test evidence, race reports, and calibrated uncertainty.
+
+## Optional
+
+- [Full System Briefing](https://agentic-mcps.github.io/go/llms-full.txt): Complete uncompressed technical briefing, protocol specs, schema definitions, and usage reference.
+- [MCP Server Declaration](https://agentic-mcps.github.io/go/.well-known/mcp.json): Machine-readable MCP declaration and capabilities manifest.
+- [AI Discovery Catalog](https://agentic-mcps.github.io/go/.well-known/ai-catalog.json): AI discovery catalog and representative query mappings.

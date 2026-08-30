@@ -8,6 +8,10 @@
   <meta name="google-site-verification" content="_xfuakbOfHKdIaPnD1ICyA1oFyB3uQw2rRUDZm8nruY">
   <meta name="google-site-verification" content="jrVQkywCbDdo4lBhOAZFXdiIAEFciezMVwdDKAADEaQ">
   <link rel="icon" type="image/svg+xml" href="assets/brand/project-mark.svg">
+  <link rel="alternate" type="text/plain" href="llms.txt" title="LLM Context Index">
+  <link rel="alternate" type="text/plain" href="llms-full.txt" title="Full LLM Context">
+  <link rel="alternate" type="application/json" href=".well-known/mcp.json" title="MCP Server Declaration">
+  <link rel="alternate" type="application/json" href=".well-known/ai-catalog.json" title="AI Discovery Catalog">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -34,6 +38,11 @@
       </nav>
 
       <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
         <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
         <a href="./" class="btn-pill btn-pill--sm">Home</a>
       </div>
@@ -48,7 +57,14 @@
         The documentation page or resource you requested could not be located.
       </p>
 
-      <div class="hero-actions">
+      <form class="docs-search-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./docs/" method="GET" style="margin-bottom: var(--space-32);">
+        <div style="position: relative; max-width: 440px; margin: 0 auto;">
+          <input type="search" name="query" placeholder="Search documentation... (⌘K)" class="webmcp-input" style="width: 100%; padding: 10px 16px 10px 36px; border-radius: var(--radius-pill); font-size: 14px;" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 12px; top: 12px; color: var(--color-text-dim); pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+      </form>
+
+      <div class="hero-actions" style="justify-content: center;">
         <a href="./" class="btn-pill">Return to Home</a>
         <a href="docs/" class="btn-ghost">Documentation Hub ›</a>
       </div>
