@@ -1,4 +1,4 @@
-# agentic-go — Full System Briefing & Technical Reference
+# agentic-go : Full System Briefing & Technical Reference
 
 > Source-grounded Go intelligence for coding agents.
 

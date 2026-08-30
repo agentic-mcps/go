@@ -1,18 +1,45 @@
 /**
- * agentic-go — Interactive behavior, search palette, code generators & WebMCP registry
+ * agentic-go : Interactive behavior, search palette, code generators & WebMCP registry
  * Technical Developer Tool Edition
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
   initVerificationSequence();
   initTabSelectors();
   initCopyButtons();
   initMobileNav();
+  initFloatingNav();
   initSearchPalette();
   initInstallGenerator();
   initMcpConfigGenerator();
   initWebMCP();
 });
+
+/* --------------------------------------------------------------------------
+   Theme Toggle (Light & Dark Mode)
+   -------------------------------------------------------------------------- */
+function initThemeToggle() {
+  const toggleBtns = document.querySelectorAll('[data-theme-toggle]');
+  if (!toggleBtns.length) return;
+
+  function updateTheme(dark) {
+    if (dark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      try { localStorage.setItem('agentic:theme', 'dark'); } catch(e) {}
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      try { localStorage.setItem('agentic:theme', 'light'); } catch(e) {}
+    }
+  }
+
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      updateTheme(!isDark);
+    });
+  });
+}
 
 /* --------------------------------------------------------------------------
    Verification Explorer Sequence State & Data
@@ -195,8 +222,8 @@ function selectVerificationStep(stepIdOrIndex) {
         ${detailsHtml}
       </ul>
       <div class="sequence-nav-buttons">
-        <button type="button" class="btn btn-outline btn-sm" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>← Previous</button>
-        <button type="button" class="btn btn-primary btn-sm" id="seq-next-btn" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Next Step →</button>
+        <button type="button" class="pill-btn" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" class="pill-btn pill-primary" id="seq-next-btn" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
     `;
 
@@ -207,7 +234,7 @@ function selectVerificationStep(stepIdOrIndex) {
   }
 
   if (codeTitle) codeTitle.textContent = step.codeTitle;
-  if (codeContent) codeContent.textContent = step.jsonPayload;
+  if (codeContent) codeContent.innerHTML = highlightJsonCode(step.jsonPayload);
 
   const stepSelect = document.querySelector('form[toolname="inspect_verification_step"] select[name="step"]');
   if (stepSelect && stepSelect.value !== step.id) {
@@ -248,9 +275,11 @@ function initTabSelectors() {
 
         contentPanels.forEach(panel => {
           if (panel.getAttribute('data-panel') === target) {
-            panel.style.display = 'block';
+            panel.style.display = '';
+            panel.removeAttribute('hidden');
           } else {
             panel.style.display = 'none';
+            panel.setAttribute('hidden', '');
           }
         });
       });
@@ -259,10 +288,17 @@ function initTabSelectors() {
 }
 
 /* --------------------------------------------------------------------------
-   Copy to Clipboard
+   Copy to Clipboard with SVG Icon Feedback
    -------------------------------------------------------------------------- */
+const COPY_ICON_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+const COPIED_ICON_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
 function initCopyButtons() {
   document.querySelectorAll('.copy-btn').forEach(btn => {
+    if (!btn.querySelector('svg')) {
+      btn.innerHTML = COPY_ICON_SVG;
+    }
+
     btn.addEventListener('click', async () => {
       let textToCopy = '';
       const targetId = btn.getAttribute('data-copy-target');
@@ -283,12 +319,11 @@ function initCopyButtons() {
 
       try {
         await navigator.clipboard.writeText(textToCopy);
-        const originalText = btn.innerHTML;
         btn.classList.add('copied');
-        btn.innerHTML = `✓ Copied`;
+        btn.innerHTML = COPIED_ICON_SVG;
         setTimeout(() => {
           btn.classList.remove('copied');
-          btn.innerHTML = originalText;
+          btn.innerHTML = COPY_ICON_SVG;
         }, 2000);
       } catch (err) {
         console.error('Failed to copy text: ', err);
@@ -302,9 +337,11 @@ function initCopyButtons() {
    -------------------------------------------------------------------------- */
 function initMobileNav() {
   const menuBtn = document.querySelector('.mobile-menu-btn');
+  if (!menuBtn) return;
+
   let mobileNav = document.querySelector('.mobile-nav-panel');
 
-  if (menuBtn) {
+  menuBtn.addEventListener('click', () => {
     if (!mobileNav) {
       mobileNav = document.createElement('div');
       mobileNav.className = 'mobile-nav-panel';
@@ -316,18 +353,70 @@ function initMobileNav() {
       if (header) header.appendChild(mobileNav);
     }
 
-    menuBtn.addEventListener('click', () => {
-      const isOpen = mobileNav.classList.contains('open');
-      mobileNav.classList.toggle('open', !isOpen);
-      menuBtn.setAttribute('aria-expanded', !isOpen);
+    const isOpen = mobileNav.classList.contains('open');
+    mobileNav.classList.toggle('open', !isOpen);
+    menuBtn.setAttribute('aria-expanded', !isOpen);
 
-      // If on docs page, also toggle docs sidebar
-      const sidebar = document.querySelector('.docs-sidebar');
-      if (sidebar) {
-        sidebar.classList.toggle('mobile-open', !isOpen);
+    const sidebar = document.querySelector('.docs-sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('mobile-open', !isOpen);
+    }
+  });
+}
+
+/* --------------------------------------------------------------------------
+   Substack-Style Floating Section Navigator
+   -------------------------------------------------------------------------- */
+function initFloatingNav() {
+  const floatingNav = document.querySelector('.floating-nav');
+  if (!floatingNav) return;
+
+  const navItems = floatingNav.querySelectorAll('.floating-nav-item');
+  if (!navItems.length) return;
+
+  const sections = [];
+  navItems.forEach(item => {
+    const targetId = item.getAttribute('data-nav-target');
+    const section = document.getElementById(targetId);
+    if (section) {
+      sections.push({ id: targetId, elem: section, item: item });
+    }
+
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById(targetId);
+      if (target) {
+        const headerOffset = 60;
+        const targetTop = target.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: targetTop,
+          behavior: 'smooth'
+        });
       }
     });
+  });
+
+  if (!sections.length) return;
+
+  function updateActiveNav() {
+    const scrollPos = window.pageYOffset + window.innerHeight * 0.35;
+    let current = sections[0];
+
+    for (let i = 0; i < sections.length; i++) {
+      const top = sections[i].elem.getBoundingClientRect().top + window.pageYOffset;
+      if (scrollPos >= top) {
+        current = sections[i];
+      }
+    }
+
+    sections.forEach(s => {
+      s.item.classList.toggle('active', s.id === current.id);
+    });
   }
+
+  window.addEventListener('scroll', updateActiveNav, { passive: true });
+  window.addEventListener('resize', updateActiveNav, { passive: true });
+  updateActiveNav();
 }
 
 /* --------------------------------------------------------------------------
@@ -564,6 +653,35 @@ function generateInstallCommandPayload(params = {}) {
   return { method, os, arch, command, instructions };
 }
 
+function highlightShellCode(text) {
+  return text.split('\n').map(line => {
+    return line
+      .replace(/(\b(?:brew|curl|tar|sudo|bash|agentic-go|mv)\b)/g, '<span class="token-keyword">$1</span>')
+      .replace(/(\s)(-[a-zA-Z0-9_-]+)/g, '$1<span class="token-flag">$2</span>')
+      .replace(/(https?:\/\/[^\s]+)/g, '<span class="token-string">$1</span>');
+  }).join('\n');
+}
+
+function highlightJsonCode(jsonStr) {
+  return jsonStr
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      let cls = 'token-number';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'token-property';
+        } else {
+          cls = 'token-string';
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'token-keyword';
+      } else if (/null/.test(match)) {
+        cls = 'token-comment';
+      }
+      return '<span class="' + cls + '">' + match + '</span>';
+    })
+    .replace(/([\{\}\[\]:,])/g, '<span class="token-punct">$1</span>');
+}
+
 function initInstallGenerator() {
   const forms = document.querySelectorAll('form[toolname="generate_install_command"]');
   if (!forms.length) return;
@@ -578,7 +696,7 @@ function initInstallGenerator() {
       const parent = form.closest('.code-block, .section, main');
       const codeBlock = parent ? parent.querySelector('#install-generated-command, .install-command-output') : document.getElementById('install-generated-command');
       if (codeBlock) {
-        codeBlock.textContent = result.command;
+        codeBlock.innerHTML = highlightShellCode(result.command);
       }
     }
 
@@ -587,6 +705,7 @@ function initInstallGenerator() {
       e.preventDefault();
       update();
     });
+    update();
   });
 }
 
@@ -664,7 +783,7 @@ function initMcpConfigGenerator() {
       const parent = form.closest('.code-block, .section, main');
       const codeBlock = parent ? parent.querySelector('#mcp-generated-config, .mcp-config-output') : document.getElementById('mcp-generated-config');
       if (codeBlock) {
-        codeBlock.textContent = result.config_json;
+        codeBlock.innerHTML = highlightJsonCode(result.config_json);
       }
     }
 
@@ -674,6 +793,7 @@ function initMcpConfigGenerator() {
       e.preventDefault();
       update();
     });
+    update();
   });
 }
 
@@ -690,7 +810,7 @@ function initWebMCP() {
     {
       topic: "open-weight",
       question: "How does it help open-weight models?",
-      answer: "Open models (DeepSeek, Llama, Qwen, Mistral) excel at code generation, but often lack closed-lab tool harnesses. agentic-go gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification—producing results on par with proprietary frontier setups."
+      answer: "Open models (DeepSeek, Llama, Qwen, Mistral) excel at code generation, but often lack closed-lab tool harnesses. agentic-go gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification - producing results on par with proprietary frontier setups."
     },
     {
       topic: "git",
