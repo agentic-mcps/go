@@ -25,37 +25,30 @@ permissions:
   contents: read
 
 jobs:
-  go:
-    name: Go ${{ matrix.go }} / ubuntu-latest
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        go: ["1.25.x", "1.26.x", "1.27.x"]
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with:
-          go-version: ${{ matrix.go }}
-          cache: true
-      - name: Build
-        run: go build -mod=readonly ./...
-      - name: Race tests
-        run: go test -mod=readonly -race ./...
-      - name: Vet
-        run: go vet -mod=readonly ./...
-      - name: Test installer
-        run: bash scripts/install.test.sh
-
-  gopls-contract:
-    name: gopls contract / ubuntu-latest
+  # --------------------------------------------------------------------------
+  # 1. PULL REQUEST GATE: Single, unified, ultra-fast check for PRs (~35s)
+  # --------------------------------------------------------------------------
+  pr-gate:
+    name: PR Verification
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version: "1.27.x"
+          go-version: "1.26.x"
           cache: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.x"
+      - name: Build & Unit tests
+        run: |
+          go build -mod=readonly ./...
+          go test -mod=readonly -race ./...
+          go vet -mod=readonly ./...
+      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
+        with:
+          version: v2.12.2
       - name: Cache gopls sidecar
         id: cache-gopls
         uses: actions/cache@v4
@@ -73,9 +66,38 @@ jobs:
           AGENTIC_GO_GOPLS: ${{ runner.temp }}/agentic-go-gopls
           GOTELEMETRY: "off"
         run: go test ./internal/gopls ./internal/intelligence ./internal/mcptest -count=1
+      - name: Test Action adapters
+        run: node --test scripts/action-*.test.mjs
+      - name: Test installer
+        run: bash scripts/install.test.sh
 
-  quality:
-    name: Quality & Packaging
+  # --------------------------------------------------------------------------
+  # 2. MAIN & RELEASE PIPELINE: Comprehensive multi-Go and macOS matrix
+  # --------------------------------------------------------------------------
+  go-matrix:
+    name: Go ${{ matrix.go }} / ubuntu-latest
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.25.x", "1.26.x", "1.27.x"]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Build & Tests
+        run: |
+          go build -mod=readonly ./...
+          go test -mod=readonly -race ./...
+          go vet -mod=readonly ./...
+          bash scripts/install.test.sh
+
+  quality-main:
+    name: Quality & Packaging (main)
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -94,7 +116,7 @@ jobs:
       - name: Test Action adapters
         run: node --test scripts/action-*.test.mjs
 
-  macos:
+  macos-main:
     name: macOS Validation (main / release)
     if: github.event_name != 'pull_request'
     runs-on: macos-latest
@@ -104,14 +126,12 @@ jobs:
         with:
           go-version: "1.27.x"
           cache: true
-      - name: Build
-        run: go build -mod=readonly ./...
-      - name: Race tests
-        run: go test -mod=readonly -race ./...
-      - name: Vet
-        run: go vet -mod=readonly ./...
-      - name: Test installer
-        run: bash scripts/install.test.sh
+      - name: Build & Tests
+        run: |
+          go build -mod=readonly ./...
+          go test -mod=readonly -race ./...
+          go vet -mod=readonly ./...
+          bash scripts/install.test.sh
       - name: Cache gopls sidecar
         id: cache-gopls
         uses: actions/cache@v4
