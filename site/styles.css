@@ -537,7 +537,7 @@ html:not([data-theme="dark"]) .theme-icon-moon {
 }
 
 .mobile-nav-panel {
-  display: none !important;
+  display: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -2213,7 +2213,7 @@ html[data-theme="dark"] .floating-nav-label {
 }
 
 /* --------------------------------------------------------------------------
-   Responsive Rules
+   Responsive Rules (Tailored Mobile Design System)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
   .section,
@@ -2234,6 +2234,63 @@ html[data-theme="dark"] .floating-nav-label {
   /* Hide nav pill-btns from header-actions; keep only icon circle-btns + hamburger */
   .header-actions .pill-btn {
     display: none;
+  }
+
+  /* ── Mobile Dropdown Navigation Panel ── */
+  .mobile-nav-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+    padding: 12px var(--gutter) 16px;
+    z-index: 999;
+    animation: mobileNavSlide 0.18s var(--ease-out);
+  }
+
+  html[data-theme="dark"] .mobile-nav-panel {
+    background: rgba(17, 18, 21, 0.98);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-nav-panel.open {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 450;
+    transition: all 0.12s var(--ease-out);
+  }
+
+  .mobile-nav-link:hover,
+  .mobile-nav-link.active {
+    background-color: var(--chip-bg);
+    color: var(--brand);
+  }
+
+  .mobile-nav-link svg {
+    color: var(--text-faint);
+  }
+
+  .mobile-nav-divider {
+    height: 1px;
+    background-color: var(--border);
+    margin: 6px 0;
   }
 
   .docs-layout {
@@ -2269,110 +2326,342 @@ html[data-theme="dark"] .floating-nav-label {
   }
 }
 
+@keyframes mobileNavSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 600px) {
   :root {
-    --gutter: 20px;
+    --gutter: 16px;
     --header-height: 52px;
   }
 
   /* ── Header ── */
-  /* Prevent brand label from wrapping at narrow widths */
   .brand-title {
     white-space: nowrap;
   }
 
-  /* ── Hero trust bar ── */
-  /* Stack the three items vertically; drop the separator dots to avoid orphans */
-  .hero-trust-bar {
+  /* ── Hero Section ── */
+  .hero-section {
+    min-height: auto;
+    padding: 40px 0 28px;
+  }
+  .hero-logo-img {
+    width: 52px;
+    height: 52px;
+  }
+  .hero-title-main {
+    font-size: 27px;
+    letter-spacing: -0.03em;
+  }
+  .hero-title-sub {
+    font-size: 20px;
+    letter-spacing: -0.025em;
+  }
+  .hero-description {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .hero-actions {
+    width: 100%;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .hero-actions .btn {
+    width: 100%;
+    max-width: 320px;
+    height: 40px;
+    font-size: 13.5px;
+  }
+
+  /* ── Hero Trust Bar (Structured Micro-Card Stack) ── */
+  .hero-trust-bar {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 8px;
+    border-radius: 14px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    gap: 6px;
   }
   .trust-sep {
     display: none;
   }
   .trust-item {
-    justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background-color: var(--stage-bg);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 450;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .trust-item svg {
+    width: 14px;
+    height: 14px;
+    color: var(--brand);
+    flex-shrink: 0;
   }
 
-  /* ── Hero ── */
-  .hero-section {
-    min-height: auto;
-    padding: 48px 0 36px;
-  }
-  .hero-title-main {
-    font-size: 28px;
-  }
-  .hero-title-sub {
-    font-size: 22px;
-  }
-  .hero-description {
-    font-size: 14.5px;
-  }
-
-  /* ── Install page: unlock pixel-locked heights so filter pills don't clip ── */
-  #install .code-block {
+  /* ── Universal Code Blocks & Terminal Snippets ── */
+  .code-block,
+  #install .code-block,
+  .docs-content .code-block {
     height: auto;
     min-height: 0;
     max-height: none;
+    border-radius: 14px;
+    margin: 16px 0 20px;
   }
+  .code-block-header,
   #install .code-block-header {
     height: auto;
-    min-height: 48px;
+    min-height: 44px;
     max-height: none;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .code-block-title {
+    font-size: 12px;
   }
   #install [data-tab-content="install-tabs"] {
     height: auto;
     min-height: 0;
     max-height: none;
   }
-  /* Let filter pills wrap onto a second row instead of overflowing off-screen */
-  #install .webmcp-controls-bar,
-  .webmcp-controls-bar {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 0;
-    max-height: none;
-    padding: 10px 14px;
-    gap: 8px;
-  }
-  #install .code-block-body {
-    height: auto;
-    min-height: 120px;
-    max-height: 240px;
-  }
-
-  /* ── Docs install page (standalone): same height unlock ── */
-  .docs-content .code-block {
-    height: auto;
-    min-height: 0;
-    max-height: none;
-  }
-  .docs-content .webmcp-controls-bar {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 0;
-    max-height: none;
-    padding: 10px 14px;
-    gap: 8px;
-  }
+  .code-block-body,
+  #install .code-block-body,
   .docs-content .code-block-body {
     height: auto;
-    min-height: 120px;
-    max-height: 260px;
+    min-height: 0;
+    max-height: none;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .code-block-body pre {
+    white-space: pre;
+    font-size: 12px;
+    width: 100%;
   }
 
-  /* ── General ── */
+  /* ── WebMCP Controls Bar (Touch Form Control Stack) ── */
+  .webmcp-controls-bar,
+  #install .webmcp-controls-bar,
+  .docs-content .webmcp-controls-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    padding: 10px 14px;
+    gap: 8px;
+    overflow-x: visible;
+  }
+  .webmcp-pill-control {
+    width: 100%;
+    height: 36px;
+    padding: 0 28px 0 12px;
+    box-sizing: border-box;
+    display: flex;
+  }
+  .webmcp-select {
+    width: 100%;
+    font-size: 12.5px;
+  }
+  .webmcp-pill-input {
+    max-width: 100%;
+    width: 100%;
+    padding-right: 12px;
+  }
+  .webmcp-pill-input .webmcp-input {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  /* ── Comparison Diff Cards ── */
+  .comparison-grid {
+    gap: 16px;
+  }
+  .diff-card {
+    border-radius: 14px;
+  }
+  .diff-header {
+    padding: 10px 14px;
+    font-size: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .diff-badge {
+    align-self: flex-start;
+    font-size: 11px;
+  }
+  .diff-body {
+    padding: 12px 14px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    gap: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .diff-line {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 11.5px;
+  }
+  .diff-footer {
+    padding: 10px 14px;
+    font-size: 11.5px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* ── Capabilities Feature Cards ── */
+  .feature-card {
+    border-radius: 14px;
+  }
+  .feature-preview {
+    padding: 14px;
+    font-size: 11.5px;
+  }
+  .feature-body {
+    padding: 14px;
+  }
+  .feature-title {
+    font-size: 14.5px;
+  }
+
+  /* ── Verification Pipeline Sequence Explorer ── */
+  .sequence-card {
+    border-radius: 14px;
+  }
+  .sequence-header {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .sequence-tabs {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding: 3px;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-radius: var(--radius-pill);
+    box-sizing: border-box;
+  }
+  .sequence-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .seq-tab-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    font-size: 11.5px;
+  }
+  .sequence-body {
+    padding: 14px;
+    min-height: auto;
+    gap: 16px;
+    grid-template-columns: 1fr;
+  }
+  .sequence-info {
+    min-height: auto;
+  }
+  .sequence-info h4 {
+    font-size: 16px;
+  }
+  .sequence-info p {
+    font-size: 13px;
+  }
+  .sequence-code-pane {
+    min-height: auto;
+    border-radius: 10px;
+  }
+  .sequence-code-header {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  .sequence-code-content {
+    padding: 12px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── FAQ Split View ── */
+  .faq-split-grid {
+    gap: 20px;
+  }
+  .faq-category-nav {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    padding: 3px;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-radius: var(--radius-pill);
+    box-sizing: border-box;
+  }
+  .faq-category-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .faq-cat-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  /* ── Search Modal ── */
+  .search-modal-backdrop {
+    padding-top: 6vh;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .search-modal-dialog {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 14px;
+  }
+
+  /* ── General Elements ── */
   .section {
     min-height: auto;
-    padding: 48px 0;
+    padding: 44px 0;
   }
   .article h1 {
-    font-size: 26px;
+    font-size: 25px;
   }
   .site-footer-inner {
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
   }
 }
