@@ -1,0 +1,70 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "agentic-go",
+    "identifier": "https://agentic-mcps.github.io/go/"
+  },
+  "entries": [
+    {
+      "identifier": "urn:agentic:go:mcp:declaration",
+      "displayName": "agentic-go MCP Server Declaration",
+      "type": "application/json",
+      "url": "https://agentic-mcps.github.io/go/.well-known/mcp.json",
+      "representativeQueries": [
+        "connect to agentic-go MCP server",
+        "fetch agentic-go tools and capabilities",
+        "agentic-go MCP stdio configuration"
+      ]
+    },
+    {
+      "identifier": "urn:agentic:go:llms:brief",
+      "displayName": "agentic-go LLM Context Index",
+      "type": "text/plain",
+      "url": "https://agentic-mcps.github.io/go/llms.txt",
+      "representativeQueries": [
+        "what is agentic-go and what problems does it solve",
+        "overview of agentic-go architecture and features"
+      ]
+    },
+    {
+      "identifier": "urn:agentic:go:llms:full",
+      "displayName": "agentic-go LLM Full Context",
+      "type": "text/plain",
+      "url": "https://agentic-mcps.github.io/go/llms-full.txt",
+      "representativeQueries": [
+        "complete documentation for agentic-go",
+        "full agentic-go schema and verification specifications"
+      ]
+    },
+    {
+      "identifier": "urn:agentic:go:schema:verification",
+      "displayName": "agentic.verify/v1 JSON Schema",
+      "type": "application/schema+json",
+      "url": "https://agentic-mcps.github.io/go/docs/contracts/",
+      "representativeQueries": [
+        "verification report schema agentic.verify/v1",
+        "agentic-go verification report structure and fields"
+      ]
+    },
+    {
+      "identifier": "urn:agentic:go:schema:context-pack",
+      "displayName": "agentic.context/v1 JSON Schema",
+      "type": "application/schema+json",
+      "url": "https://agentic-mcps.github.io/go/docs/contracts/",
+      "representativeQueries": [
+        "agentic.context/v1 context pack schema",
+        "agentic-go workspace brief and symbol context format"
+      ]
+    },
+    {
+      "identifier": "urn:agentic:go:schema:change-contract",
+      "displayName": "agentic.change/v1 JSON Schema",
+      "type": "application/schema+json",
+      "url": "https://agentic-mcps.github.io/go/docs/contracts/",
+      "representativeQueries": [
+        "agentic.change/v1 change contract schema",
+        "agentic-go drift detection and checkpoint specification"
+      ]
+    }
+  ]
+}

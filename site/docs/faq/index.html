@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequently Asked Questions — agentic-go</title>
+  <meta name="description" content="Common questions and answers regarding agentic-go architecture, gopls integration, sandboxing, refactoring safety, and compatibility.">
+  <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/faq/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/faq/">
+  <meta property="og:title" content="Frequently Asked Questions — agentic-go">
+  <meta property="og:description" content="Architecture, compatibility, execution model, and security FAQ for agentic-go.">
+  <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Frequently Asked Questions — agentic-go">
+  <meta name="twitter:description" content="Architecture, compatibility, execution model, and security FAQ for agentic-go.">
+  <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
+  <link rel="stylesheet" href="../../styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does agentic-go replace gopls?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. agentic-go bundles a pinned gopls v0.21.0 companion as a private sidecar to handle semantic AST operations, and builds immutable snapshot lineage, change continuity contracts, guarded mutation, and whole-package verification around it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can agentic-go modify my files or Git history?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "agentic-go never mutates Git state, commits, branches, or staging areas. The only mutation tool is go_refactor, which applies deterministic AST edits only to existing, contained, non-generated files after rechecking all file preimages against a recovery journal."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is agentic-go a sandbox?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. We describe our filesystem boundaries as containment, not sandboxing. Subprocesses share cancellation, deadlines, and workspace path constraints, but compiling and executing Go tests runs with the permissions of the local user."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which Go versions are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Go 1.25, 1.26, and 1.27 on macOS (Darwin) and Linux for amd64 and arm64."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="../../" class="brand-link" aria-label="agentic-go home">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <span>agentic-go</span>
+        <span class="brand-tag">Docs</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="../" class="nav-link">Docs</a></li>
+          <li><a href="../install/" class="nav-link">Install</a></li>
+          <li><a href="../connect/" class="nav-link">Connect</a></li>
+          <li><a href="../verify/" class="nav-link">Verify</a></li>
+          <li><a href="../safety/" class="nav-link">Safety</a></li>
+          <li><a href="../contracts/" class="nav-link">Contracts</a></li>
+          <li><a href="./" class="nav-link active">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="../install/" class="btn btn-primary btn-sm">Install</a>
+        <button type="button" class="mobile-menu-btn docs-sidebar-toggle" aria-label="Toggle navigation menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" aria-label="Documentation sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-list">
+          <li><a href="../" class="sidebar-link">Overview</a></li>
+          <li><a href="../install/" class="sidebar-link">Installation</a></li>
+          <li><a href="../connect/" class="sidebar-link">MCP Client Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Core Workflows</div>
+        <ul class="sidebar-list">
+          <li><a href="../verify/" class="sidebar-link">Verification Engine</a></li>
+          <li><a href="../safety/" class="sidebar-link">Safety &amp; Containment</a></li>
+          <li><a href="../action/" class="sidebar-link">GitHub Action in CI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Reference</div>
+        <ul class="sidebar-list">
+          <li><a href="../contracts/" class="sidebar-link">Protocol Contracts</a></li>
+          <li><a href="./" class="sidebar-link active">Frequently Asked Questions</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main id="main-content" class="docs-content">
+      <nav class="docs-breadcrumbs" aria-label="Breadcrumb">
+        <a href="../../">Home</a> <span>/</span> <a href="../">Docs</a> <span>/</span> <span>FAQ</span>
+      </nav>
+
+      <article class="docs-article">
+        <h1>Frequently Asked Questions</h1>
+        <p class="lead">
+          Direct, source-grounded answers to technical questions about architecture, toolchains, execution boundaries, and safety.
+        </p>
+
+        <div class="faq-list">
+          <details class="faq-item" open>
+            <summary class="faq-summary">Does agentic-go replace gopls?</summary>
+            <div class="faq-content">
+              <p>
+                <strong>No.</strong> <code>agentic-go</code> bundles an exact, tested <code>gopls v0.21.0</code> companion named <code>agentic-go-gopls</code>. It uses <code>gopls</code> as a private stdio sidecar for type analysis, definition lookups, and symbol references, while layering immutable snapshot lineage, change continuity contracts, guarded deterministic refactoring, and executed whole-package verification around it.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-summary">Can agentic-go modify my files or Git history?</summary>
+            <div class="faq-content">
+              <p>
+                <code>agentic-go</code> will <strong>never</strong> mutate Git repository state (it never executes <code>git add</code>, <code>git commit</code>, <code>git branch</code>, or <code>git stash</code>).
+              </p>
+              <p>
+                The only mutating tool is <code>go_refactor</code>, which operates under strict preview-and-apply guarantees: it modifies only existing contained non-generated files after checking that all target file preimages match their baseline hash, and writes a recovery journal before touching the disk.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-summary">What execution privileges does verification require?</summary>
+            <div class="faq-content">
+              <p>
+                Execution tools (such as <code>go_verify_change</code> and <code>go_test_structured</code>) compile and run Go test suites using the local <code>go</code> toolchain. They execute with the same OS user permissions and environment privileges as running <code>go test ./...</code> manually in your terminal.
+              </p>
+              <p>
+                All workspace paths are contained and symlink-resolved, but this is <strong>containment</strong>, not a sandbox. Do not run verification on untrusted or hostile code.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-summary">Which Go versions and operating systems are supported?</summary>
+            <div class="faq-content">
+              <p>
+                We explicitly support <strong>Go 1.25, Go 1.26, and Go 1.27</strong> on <strong>macOS (Darwin)</strong> and <strong>Linux</strong> for both <strong>amd64</strong> and <strong>arm64</strong> architectures.
+              </p>
+              <p>
+                Server startup verifies the host toolchain against the workspace's minimum Go requirement using <code>GOTOOLCHAIN=local</code>.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-summary">Does agentic-go embed an LLM or make external API calls?</summary>
+            <div class="faq-content">
+              <p>
+                <strong>No.</strong> <code>agentic-go</code> is 100% deterministic local software. It does not embed any large language models, does not require an API key, and makes zero network calls. The bundled <code>gopls</code> sidecar has telemetry permanently disabled.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-summary">How does agentic-go achieve a 0% false-positive baseline?</summary>
+            <div class="faq-content">
+              <p>
+                In calibration across 10 pinned Go repositories and 467 reviewed findings, our static analyzers produced zero false positives. Our analyzers are deliberately conservative: when source patterns cannot be definitively proven problematic, the engine reports an explicit <strong>uncertainty lens</strong> rather than guessing or spamming low-confidence warnings.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-summary">What is the difference between personal and organization module paths?</summary>
+            <div class="faq-content">
+              <p>
+                The module identity for v1 is <code>github.com/agentic-mcps/go</code>. The previous personal module path (<code>github.com/ashwingopalsamy/agentic-go</code>) was migrated; they remain distinct module identities without automatic aliasing. See <a href="https://github.com/agentic-mcps/go/blob/main/docs/module-migration.md">Module Migration</a> for details.
+              </p>
+            </div>
+          </details>
+        </div>
+
+        <div class="docs-nav-footer">
+          <a href="../contracts/" class="docs-nav-card">
+            <span class="docs-nav-label">Previous</span>
+            <span class="docs-nav-title">← Protocol Contracts</span>
+          </a>
+          <a href="../install/" class="docs-nav-card" style="text-align: right;">
+            <span class="docs-nav-label">Next Step</span>
+            <span class="docs-nav-title">Installation Guide →</span>
+          </a>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="../../" class="brand-link">
+          <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
+          <span>agentic-go</span>
+        </a>
+        <p>Source-grounded Go intelligence for coding agents.</p>
+      </div>
+      <div>
+        <h4 class="footer-group-title">Documentation</h4>
+        <ul class="footer-links">
+          <li><a href="../" class="footer-link">Overview</a></li>
+          <li><a href="../install/" class="footer-link">Installation</a></li>
+          <li><a href="../connect/" class="footer-link">MCP Connection</a></li>
+          <li><a href="../verify/" class="footer-link">Verification</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-group-title">Protocols</h4>
+        <ul class="footer-links">
+          <li><a href="../contracts/" class="footer-link">Contracts &amp; Schemas</a></li>
+          <li><a href="../safety/" class="footer-link">Safety &amp; Trust</a></li>
+          <li><a href="../action/" class="footer-link">GitHub Action</a></li>
+          <li><a href="./" class="footer-link">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-group-title">Repository</h4>
+        <ul class="footer-links">
+          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Releases</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
+      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+    </div>
+  </footer>
+
+  <script src="../../app.js"></script>
+</body>
+</html>

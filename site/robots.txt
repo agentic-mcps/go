@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /go/
+Allow: /
+Allow: /.well-known/
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+Sitemap: https://agentic-mcps.github.io/go/sitemap.xml
