@@ -690,6 +690,39 @@ function initMcpConfigGenerator() {
    WebMCP In-Browser Tool Registry (Level 5 Agent Native & Google WebMCP Standard)
    -------------------------------------------------------------------------- */
 function initWebMCP() {
+  const FAQ_DATABASE = [
+    {
+      topic: "gopls",
+      question: "Does agentic-go replace gopls?",
+      answer: "No. agentic-go bundles an exact, tested gopls v0.21.0 companion named agentic-go-gopls. It uses gopls as a private stdio sidecar for type analysis, definition lookups, and symbol references, while layering immutable snapshot lineage, change continuity contracts, guarded deterministic refactoring, and executed whole-package verification around it."
+    },
+    {
+      topic: "open-weight",
+      question: "How does it help open-weight models?",
+      answer: "Open models (DeepSeek, Llama, Qwen, Mistral) excel at code generation, but often lack closed-lab tool harnesses. agentic-go gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification—producing results on par with proprietary frontier setups."
+    },
+    {
+      topic: "git",
+      question: "Can agentic-go modify my files or Git history?",
+      answer: "agentic-go will never mutate Git repository state (it never executes git add, git commit, git branch, or git stash). The only mutating tool is go_refactor, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal."
+    },
+    {
+      topic: "sandbox",
+      question: "What execution privileges does verification require?",
+      answer: "Execution tools compile and run Go test suites using the local go toolchain with the caller's privileges (same as running go test ./...). All workspace paths are contained and symlink-resolved, but this is containment, not a sandbox. Do not run verification on untrusted code."
+    },
+    {
+      topic: "toolchain",
+      question: "Which Go versions are supported?",
+      answer: "We explicitly support Go 1.25, Go 1.26, and Go 1.27 on macOS (Darwin) and Linux for both amd64 and arm64 architectures. Server startup verifies the host toolchain against the workspace's minimum Go requirement using GOTOOLCHAIN=local."
+    },
+    {
+      topic: "network",
+      question: "Does agentic-go embed an LLM or make external network calls?",
+      answer: "No. agentic-go is a strictly local, deterministic developer tool that communicates over stdio using JSON-RPC Model Context Protocol. It embeds zero AI models, requires zero API keys, and transmits zero telemetry or code to external servers."
+    }
+  ];
+
   const agentTools = [
     {
       name: "search_documentation",
@@ -705,7 +738,7 @@ function initWebMCP() {
         required: ["query"],
         additionalProperties: false
       },
-      execute: async ({ query }) => {
+      execute: async ({ query } = {}) => {
         const results = performDocSearch(query);
         return {
           content: [
@@ -903,7 +936,7 @@ function initWebMCP() {
         required: ["step"],
         additionalProperties: false
       },
-      execute: async ({ step }) => {
+      execute: async ({ step } = {}) => {
         const found = VERIFICATION_STEPS.find(s => s.id === step);
         if (!found) {
           return {
@@ -917,9 +950,120 @@ function initWebMCP() {
           step: found
         };
       }
+    },
+    {
+      name: "get_faq_answers",
+      description: "Query frequently asked questions and official architectural answers regarding agentic-go, gopls integration, sandboxing, and refactoring safety.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          topic: {
+            type: "string",
+            description: "Optional FAQ keyword or topic filter (e.g. gopls, git, sandbox, toolchain, open-weight)"
+          }
+        },
+        additionalProperties: false
+      },
+      execute: async ({ topic } = {}) => {
+        let results = FAQ_DATABASE;
+        if (topic && topic.trim()) {
+          const t = topic.trim().toLowerCase();
+          results = FAQ_DATABASE.filter(f => f.topic.includes(t) || f.question.toLowerCase().includes(t) || f.answer.toLowerCase().includes(t));
+        }
+        return {
+          content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
+          count: results.length,
+          faq: results
+        };
+      }
+    },
+    {
+      name: "get_contract_specification",
+      description: "Returns the official schema specification, invariants, and purpose of an agentic-go protocol contract.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          contract: {
+            type: "string",
+            enum: ["context", "change", "verify"],
+            description: "Protocol contract to retrieve (context: agentic.context/v1, change: agentic.change/v1, verify: agentic.verify/v1)"
+          }
+        },
+        required: ["contract"],
+        additionalProperties: false
+      },
+      execute: async ({ contract } = {}) => {
+        const specs = {
+          context: {
+            schema: "agentic.context/v1",
+            title: "Context Pack Contract",
+            purpose: "Source-grounded workspace context, package APIs, and call graphs for coding agents without blowing token budgets.",
+            producers: ["go_workspace_brief", "go_symbol_context"],
+            invariants: ["Pinned to immutable Snapshot Ref", "One-based byte columns", "Deterministic output"]
+          },
+          change: {
+            schema: "agentic.change/v1",
+            title: "Change Contract",
+            purpose: "Change continuity across model checkpoints, preventing silent scope creep, exported API breakage, and test deletion.",
+            producers: ["go_begin_change", "go_checkpoint_change"],
+            invariants: ["Exact snapshot lineage", "Stale ref rejection", "Private user cache storage"]
+          },
+          verify: {
+            schema: "agentic.verify/v1",
+            title: "Verification Report Contract",
+            purpose: "Evidence-backed verification combining whole-package test runs, race detection, AST drift, and calibrated analyzers.",
+            producers: ["go_verify_change", "agentic-go-vet CLI", "GitHub Action"],
+            invariants: ["Never cherry-picks unit tests", "Explicit risk lenses & uncertainties", "0% false positive baseline"]
+          }
+        };
+        const selected = specs[contract];
+        if (!selected) {
+          return {
+            isError: true,
+            content: [{ type: "text", text: `Unknown contract "${contract}". Allowed values: context, change, verify.` }]
+          };
+        }
+        return {
+          content: [{ type: "text", text: JSON.stringify(selected, null, 2) }],
+          contract: selected
+        };
+      }
+    },
+    {
+      name: "set_page_font",
+      description: "Set the typographic system font on the agentic-go documentation website (SF Pro for Apple Human Interface or Inter Variable).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          font: {
+            type: "string",
+            enum: ["sf-pro", "inter"],
+            description: "Typography system font family"
+          }
+        },
+        required: ["font"],
+        additionalProperties: false
+      },
+      execute: async ({ font } = {}) => {
+        if (font !== "sf-pro" && font !== "inter") {
+          return {
+            isError: true,
+            content: [{ type: "text", text: `Invalid font "${font}". Allowed values: "sf-pro", "inter".` }]
+          };
+        }
+        document.documentElement.setAttribute('data-font', font);
+        try { localStorage.setItem('agentic-go-font', font); } catch {}
+        const fontButtons = document.querySelectorAll('[data-font-btn]');
+        fontButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-font-btn') === font));
+        return {
+          content: [{ type: "text", text: `Typography font updated to "${font}".` }],
+          font
+        };
+      }
     }
   ];
 
+  // Native WebMCP API registration if supported by host browser/agent
   if (typeof document !== 'undefined' && document.modelContext && typeof document.modelContext.registerTool === 'function') {
     try {
       agentTools.forEach(tool => {
@@ -931,21 +1075,36 @@ function initWebMCP() {
         });
       });
     } catch (err) {
-      console.warn('Native WebMCP registerTool error:', err);
+      console.warn('Native WebMCP registerTool warning:', err);
     }
   }
 
+  // ModelContext Protocol Dual Array/Object Registry Handler
+  function createToolList() {
+    const list = agentTools.map(t => ({
+      name: t.name,
+      description: t.description,
+      inputSchema: t.inputSchema
+    }));
+    // Provide both array indexing and .tools property for cross-client compatibility
+    list.tools = list;
+    return list;
+  }
+
   const modelContextRegistry = {
-    listTools: async () => agentTools.map(t => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema
-    })),
-    getTools: async () => agentTools.map(t => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema
-    })),
+    listTools: async () => createToolList(),
+    getTools: async () => createToolList(),
+    callTool: async (nameOrParams, maybeParams = {}) => {
+      let name, params;
+      if (typeof nameOrParams === 'object' && nameOrParams !== null) {
+        name = nameOrParams.name;
+        params = nameOrParams.arguments || nameOrParams.params || {};
+      } else {
+        name = nameOrParams;
+        params = maybeParams || {};
+      }
+      return modelContextRegistry.executeTool(name, params);
+    },
     executeTool: async (name, input = {}) => {
       const tool = agentTools.find(t => t.name === name);
       if (!tool) {
@@ -955,7 +1114,7 @@ function initWebMCP() {
         };
       }
       try {
-        return await tool.execute(input);
+        return await tool.execute(input || {});
       } catch (err) {
         return {
           isError: true,
@@ -968,30 +1127,26 @@ function initWebMCP() {
       const idx = agentTools.findIndex(t => t.name === tool.name);
       if (idx >= 0) agentTools[idx] = tool;
       else agentTools.push(tool);
+    },
+    unregisterTool: (name) => {
+      const idx = agentTools.findIndex(t => t.name === name);
+      if (idx >= 0) agentTools.splice(idx, 1);
     }
   };
 
+  // Expose registry across all standard agent detection targets
   if (typeof window !== 'undefined') window.modelContext = modelContextRegistry;
 
   if (typeof navigator !== 'undefined') {
-    if (!navigator.modelContext) {
-      try {
-        Object.defineProperty(navigator, 'modelContext', { value: modelContextRegistry, writable: true, configurable: true });
-      } catch {}
-    }
-    if (!navigator.modelContextTesting) {
-      try {
-        Object.defineProperty(navigator, 'modelContextTesting', { value: modelContextRegistry, writable: true, configurable: true });
-      } catch {}
-    }
+    try { Object.defineProperty(navigator, 'modelContext', { value: modelContextRegistry, writable: true, configurable: true }); } catch { navigator.modelContext = modelContextRegistry; }
+    try { Object.defineProperty(navigator, 'modelContextTesting', { value: modelContextRegistry, writable: true, configurable: true }); } catch { navigator.modelContextTesting = modelContextRegistry; }
   }
 
-  if (typeof document !== 'undefined' && !document.modelContext) {
-    try {
-      Object.defineProperty(document, 'modelContext', { value: modelContextRegistry, writable: true, configurable: true });
-    } catch {}
+  if (typeof document !== 'undefined') {
+    try { Object.defineProperty(document, 'modelContext', { value: modelContextRegistry, writable: true, configurable: true }); } catch { document.modelContext = modelContextRegistry; }
   }
 
+  // Declarative Form Auto-binding
   document.querySelectorAll('form[toolname]').forEach(form => {
     const toolName = form.getAttribute('toolname');
     const hasAutoSubmit = form.hasAttribute('toolautosubmit');
