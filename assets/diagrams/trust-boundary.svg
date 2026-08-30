@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="250" viewBox="0 0 1000 250" role="img" aria-labelledby="title desc">
+  <title id="title">agentic-go trust boundary</title>
+  <desc id="desc">A local MCP client connects to agentic-go, which reads the contained Go workspace and may run trusted checks with caller privileges.</desc>
+  <defs>
+    <linearGradient id="agentic" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#00add8"/>
+      <stop offset="1" stop-color="#00758d"/>
+    </linearGradient>
+    <marker id="arrow" markerHeight="8" markerWidth="8" orient="auto" refX="6" refY="4">
+      <path d="M0 0 8 4 0 8Z" fill="#00758d"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="250" rx="32" fill="#f6f8fa"/>
+  <text x="42" y="42" fill="#57606a" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="15" font-weight="650" letter-spacing="1.6">LOCAL BY DEFAULT</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <rect x="42" y="78" width="220" height="92" rx="28" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+    <text x="70" y="116" fill="#111318" font-size="20" font-weight="700">MCP client</text>
+    <text x="70" y="143" fill="#57606a" font-size="14">asks and approves</text>
+    <path d="M274 124h72" stroke="#00758d" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="364" y="62" width="272" height="124" rx="34" fill="url(#agentic)"/>
+    <text x="400" y="108" fill="#ffffff" font-size="24" font-weight="700">agentic-go</text>
+    <text x="400" y="137" fill="#e6fbff" font-size="14">snapshots · contracts · reports</text>
+    <text x="400" y="161" fill="#e6fbff" font-size="14">stdio · bounded · local</text>
+    <path d="M648 124h72" stroke="#00758d" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="738" y="78" width="220" height="92" rx="28" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+    <text x="766" y="116" fill="#111318" font-size="20" font-weight="700">Go workspace</text>
+    <text x="766" y="143" fill="#57606a" font-size="14">source and trusted checks</text>
+  </g>
+  <text x="500" y="218" text-anchor="middle" fill="#57606a" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Containment and cancellation are enforced. This is not a sandbox.</text>
+</svg>
