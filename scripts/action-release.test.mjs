@@ -3,7 +3,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const resolver = fileURLToPath(new URL('./action-release.mjs', import.meta.url));
-const resolve = (...args) => spawnSync(process.execPath, [resolver, ...args], { encoding: 'utf8' });
+const env = { ...process.env };
+delete env.GITHUB_OUTPUT;
+const resolve = (...args) => spawnSync(process.execPath, [resolver, ...args], { env, encoding: 'utf8' });
 for (const [platform, arch, wantOS, wantArch] of [
   ['darwin', 'x64', 'darwin', 'amd64'],
   ['darwin', 'arm64', 'darwin', 'arm64'],

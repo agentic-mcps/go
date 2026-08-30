@@ -9,7 +9,9 @@ const resolver = fileURLToPath(new URL('./action-base.mjs', import.meta.url));
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agentic-base-'));
 const event = path.join(dir, 'event.json');
 fs.writeFileSync(event, JSON.stringify({ pull_request: { base: { sha: '0123456789abcdef' } } }));
-const resolve = (...args) => spawnSync(process.execPath, [resolver, ...args], { encoding: 'utf8' });
+const env = { ...process.env };
+delete env.GITHUB_OUTPUT;
+const resolve = (...args) => spawnSync(process.execPath, [resolver, ...args], { env, encoding: 'utf8' });
 
 let run = resolve('origin/main', event, 'ignored');
 assert.equal(run.status, 0, run.stderr);
