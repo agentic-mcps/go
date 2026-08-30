@@ -1,0 +1,109 @@
+# agentic-go — Full System Briefing & Technical Reference
+
+> Source-grounded Go intelligence for coding agents.
+
+This document contains full technical reference and context for LLMs, agent frameworks, and automated web agents.
+
+---
+
+## 1. Product Summary & Value Proposition
+
+`agentic-go` is a local Model Context Protocol (MCP) server and CLI tool designed specifically for Go repositories.
+
+### The Problem It Solves
+When autonomous AI agents write or refactor Go code, they often:
+1. Lose workspace context by dumping arbitrary raw files into token-limited context windows.
+2. Drift from initial intent by accidentally changing public API signatures, modifying generated files, or introducing unintended cross-package dependencies.
+3. Fail to verify changes with real test execution, or only run narrow cherry-picked tests (`-run TestX`) that miss regression bugs or data races.
+
+### The agentic-go Solution
+`agentic-go` introduces:
+- **Immutable Snapshot Lineage:** Anchors all operations to content-addressed `Snapshot Refs` (`sha256:...`). Stale operations fail closed if files change externally.
+- **Change Continuity Contracts:** Tracks stated goals, touched packages, unapproved exported API mutations, and structural drift between checkpoints.
+- **Guarded Refactoring:** Deterministic AST rename, formatting, and import organization with strict preimage validation and recovery journals.
+- **Evidence-Backed Verification:** Package-aware test execution, race detection (`-race`), changed-statement coverage tracking, 0% false-positive static analyzers, and explicit uncertainty reporting.
+
+---
+
+## 2. Technical Architecture & Constraints
+
+- **Transport:** Standard input/output (`stdio`) only. No HTTP daemon, no telemetry, no cloud authentication.
+- **Sidecar Integration:** Spawns an internal, pinned `agentic-go-gopls` companion (v0.21.0) over private stdio LSP. Telemetry is permanently disabled.
+- **Go Toolchain Support:** Go 1.25, Go 1.26, and Go 1.27 on macOS (Darwin) and Linux (`amd64` and `arm64`).
+- **Containment:** All filesystem access is strictly bounded to the symlink-canonicalized workspace directory. Subprocesses share cancellation contexts, deadlines, and bounded output buffers.
+
+---
+
+## 3. Installation & Connection
+
+### Homebrew
+```sh
+brew install agentic-mcps/tap/agentic-go
+agentic-go --version
+```
+
+### Standalone Shell Installer
+```sh
+curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/install.sh | bash -s -- 1.0.0
+```
+
+### MCP Configuration (Claude Desktop, Cursor, Cline)
+```json
+{
+  "mcpServers": {
+    "agentic-go": {
+      "command": "agentic-go",
+      "args": ["--workspace", "/absolute/path/to/go/module"]
+    }
+  }
+}
+```
+
+---
+
+## 4. MCP Surface Inventory (v1.0.0 Frozen)
+
+### 14 Tools
+1. `go_workspace_brief` (read-only): Returns top-level module map, package list, and entry points.
+2. `go_search` (read-only): Bounded symbol and identifier search across workspace packages.
+3. `go_symbol_context` (read-only): Definitions, references, implementations, and call relationships.
+4. `go_begin_change` (read-write): Initializes Change Contract with goal and baseline snapshot.
+5. `go_checkpoint_change` (read-write): Compares diff against snapshot; checks for API and scope drift.
+6. `go_refactor` (destructive): Preview and apply deterministic AST refactoring.
+7. `go_verify_change` (destructive): Executes tests, race detector, and analyzers; returns report.
+8. `go_test_structured` (destructive): Runs package tests with structured failure output.
+9. `go_race_report` (destructive): Executes tests under Go race detector.
+10. `go_coverage_gaps` (destructive): Highlights uncovered statements in modified functions.
+11. `go_benchmark_diff` (destructive): Compares benchmark performance between commits.
+12. `go_flake_finder` (destructive): Repeats tests under stress to detect flaky behavior.
+13. `go_audit_concurrency` (read-only): Analyzes channels, goroutines, and mutexes (0% FP baseline).
+14. `go_audit_errors` (read-only): Analyzes error wrapping and return conventions.
+
+### 7 Fixed Resources & 1 Template
+- `agentic-go://analysis-rules`: Active static analyzer rule configurations.
+- `agentic-go://capabilities`: Server capabilities and toolchain metadata.
+- `agentic-go://change-contract/current`: Active Change Contract state and checkpoint history.
+- `agentic-go://module`: Root module path and dependencies.
+- `agentic-go://packages`: Complete workspace package graph.
+- `agentic-go://trace-summary`: Operational traces and execution latency.
+- `agentic-go://verification/latest`: Most recent verification report.
+- `agentic-go://artifact/{id}`: Content-addressed overflow artifacts.
+
+### 6 Prompts
+- `audit-package`: Concurrency and error audit workflow.
+- `bisect-flake`: Flake discovery workflow.
+- `pre-commit-check`: Pre-commit gating workflow.
+- `resume-change`: Resume stored Change Contract workflow.
+- `understand-change`: Explore touched packages and dependencies.
+- `verify-change`: Full verification execution workflow.
+
+---
+
+## 5. Official Canonical Routes & AI Endpoints
+
+- [Landing Page](https://agentic-mcps.github.io/go/): Official product overview and quickstart.
+- [Documentation Hub](https://agentic-mcps.github.io/go/docs/): Complete documentation for agentic-go architecture and workflows.
+- [GitHub Repository](https://github.com/agentic-mcps/go): Open source source code, issue tracker, and releases.
+- [MCP Server Declaration](https://agentic-mcps.github.io/go/.well-known/mcp.json): Machine-readable MCP declaration and capabilities manifest.
+- [AI Discovery Catalog](https://agentic-mcps.github.io/go/.well-known/ai-catalog.json): AI catalog and representative query mappings.
+- [Context Summary](https://agentic-mcps.github.io/go/llms.txt): Machine-readable summary for LLMs and coding agents.

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-font="sf-pro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Client Setup — agentic-go</title>
+  <meta name="description" content="Connect agentic-go to Claude Desktop, Cursor, Cline, Claude Code, and generic MCP clients over local stdio transport.">
+  <meta name="google-site-verification" content="_xfuakbOfHKdIaPnD1ICyA1oFyB3uQw2rRUDZm8nruY">
+  <meta name="google-site-verification" content="jrVQkywCbDdo4lBhOAZFXdiIAEFciezMVwdDKAADEaQ">
+  <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/connect/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/connect/">
+  <meta property="og:title" content="MCP Client Setup — agentic-go">
+  <meta property="og:description" content="Configure Claude Desktop, Cursor, Cline, and other MCP clients to use agentic-go.">
+  <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MCP Client Setup — agentic-go">
+  <meta name="twitter:description" content="Configure Claude Desktop, Cursor, Cline, and other MCP clients to use agentic-go.">
+  <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
+  <link rel="alternate" type="text/plain" href="../../llms.txt" title="LLM Context Index">
+  <link rel="alternate" type="text/plain" href="../../llms-full.txt" title="Full LLM Context">
+  <link rel="alternate" type="application/json" href="../../.well-known/mcp.json" title="MCP Server Declaration">
+  <link rel="alternate" type="application/json" href="../../.well-known/ai-catalog.json" title="AI Discovery Catalog">
+  <link rel="stylesheet" href="../../styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Connecting MCP Clients to agentic-go",
+    "description": "How to configure Claude Desktop, Cursor, Cline, and generic MCP clients to communicate with agentic-go over stdio.",
+    "url": "https://agentic-mcps.github.io/go/docs/connect/",
+    "author": {
+      "@type": "Organization",
+      "name": "agentic-mcps"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Floating Dynamic Island Header -->
+  <div class="island-header-wrapper">
+    <header class="island-header" role="banner">
+      <a href="../../" class="brand-link" aria-label="agentic-go home">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
+        <span>agentic-go</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
+          <li><a href="./" class="nav-link active">Connect</a></li>
+          <li><a href="../verify/">Verify</a></li>
+          <li><a href="../safety/">Safety</a></li>
+          <li><a href="../contracts/">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
+      </div>
+    </header>
+  </div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" aria-label="Documentation sidebar">
+      <div class="sidebar-search" style="margin-bottom: var(--space-20);">
+        <form class="docs-search-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./" method="GET">
+          <div style="position: relative;">
+            <input type="search" name="query" placeholder="Search docs (⌘K)..." class="webmcp-input" style="width: 100%; padding-left: 28px; font-size: 12px; height: 32px;" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 8px; top: 9px; color: var(--color-text-dim); pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+        </form>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-list">
+          <li><a href="../" class="sidebar-link">Overview</a></li>
+          <li><a href="../install/" class="sidebar-link">Installation</a></li>
+          <li><a href="./" class="sidebar-link active">MCP Client Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Core Workflows</div>
+        <ul class="sidebar-list">
+          <li><a href="../verify/" class="sidebar-link">Verification Engine</a></li>
+          <li><a href="../safety/" class="sidebar-link">Safety &amp; Containment</a></li>
+          <li><a href="../action/" class="sidebar-link">GitHub Action in CI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Reference</div>
+        <ul class="sidebar-list">
+          <li><a href="../contracts/" class="sidebar-link">Protocol Contracts</a></li>
+          <li><a href="../faq/" class="sidebar-link">Frequently Asked Questions</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main id="main-content" class="docs-content">
+      <nav class="docs-breadcrumbs" aria-label="Breadcrumb">
+        <a href="../../">Home</a> <span>/</span> <a href="../">Docs</a> <span>/</span> <span>MCP Client Setup</span>
+      </nav>
+
+      <article class="docs-article">
+        <h1>Connecting MCP Clients</h1>
+        <p class="lead">
+          <code>agentic-go</code> speaks standard Model Context Protocol (MCP) over <code>stdio</code>. There are no ports to forward, daemons to manage, or external accounts required.
+        </p>
+
+        <h2>Generating Configuration Automatically</h2>
+        <div class="mac-window" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
+          </div>
+          <div class="mac-body" style="background: #f8fafc;">
+            <p><span style="color: #0071e3; font-weight: 600;">$</span> agentic-go mcp-config --client claude --workspace $(pwd)</p>
+          </div>
+        </div>
+
+        <h2>Client Configuration Generator &amp; Snippets</h2>
+        <div class="mac-window" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title">MCP Client Configuration</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
+          </div>
+          <form class="mcp-config-form" toolname="generate_mcp_config" tooldescription="Generate JSON configuration snippet for connecting agentic-go with AI coding clients including Claude Desktop, Cursor, Cline, or Claude Code." toolautosubmit action="./">
+            <div class="webmcp-controls-bar">
+              <div class="webmcp-control-group">
+                <label for="mcp-client-docs" class="webmcp-label">Client:</label>
+                <select id="mcp-client-docs" name="client" class="webmcp-select" toolparamdescription="Target AI coding assistant client (claude, cursor, cline, claudecode)">
+                  <option value="claude" selected>Claude Desktop</option>
+                  <option value="cursor">Cursor</option>
+                  <option value="cline">Cline</option>
+                  <option value="claudecode">Claude Code</option>
+                </select>
+              </div>
+              <div class="webmcp-control-group" style="flex: 1; min-width: 180px;">
+                <label for="mcp-workspace-docs" class="webmcp-label">Workspace:</label>
+                <input type="text" id="mcp-workspace-docs" name="workspace" class="webmcp-input" value="/path/to/your/go/project" style="width: 100%;" toolparamdescription="Absolute file path to the target Go workspace directory (defaults to current directory .)" />
+              </div>
+            </div>
+          </form>
+          <div class="mac-body" style="background: #f8fafc; padding: var(--space-20);">
+            <pre style="font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #1e293b; margin: 0;"><code id="mcp-generated-config">{
+  "mcpServers": {
+    "agentic-go": {
+      "command": "agentic-go",
+      "args": [
+        "--workspace",
+        "/path/to/your/go/project"
+      ]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <h2>Server Parameters</h2>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Flag</th>
+                <th>Default</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--workspace &lt;path&gt;</code></td>
+                <td>Current directory (<code>.</code>)</td>
+                <td>Absolute or relative root path of the target Go module / workspace.</td>
+              </tr>
+              <tr>
+                <td><code>--timeout &lt;duration&gt;</code></td>
+                <td><code>45s</code></td>
+                <td>Maximum timeout for semantic lookups and compilation passes.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../verify/" class="btn-ghost">Next: Verification Engine ›</a>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.06em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-container">
+      <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../install/">Install</a></li>
+        <li><a href="../verify/">Verify</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="../../app.js"></script>
+</body>
+</html>

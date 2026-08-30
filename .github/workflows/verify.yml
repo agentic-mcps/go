@@ -3,37 +3,34 @@ name: Verify
 on:
   push:
     branches:
-      - "**"
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "assets/**"
+      - "site/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "assets/**"
+      - "site/**"
   workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  go:
-    name: Go ${{ matrix.go }} / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        go: ["1.25.x", "1.26.x", "1.27.x"]
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with:
-          go-version: ${{ matrix.go }}
-          cache: true
-      - name: Build
-        run: go build -mod=readonly ./...
-      - name: Race tests
-        run: go test -mod=readonly -race ./...
-      - name: Vet
-        run: go vet -mod=readonly ./...
-
-  staticcheck:
-    name: Staticcheck
+  # --------------------------------------------------------------------------
+  # 1. PULL REQUEST GATE: Single, unified, ultra-fast check for PRs (~35s)
+  # --------------------------------------------------------------------------
+  pr-gate:
+    name: PR Verification
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -41,25 +38,25 @@ jobs:
         with:
           go-version: "1.26.x"
           cache: true
-      - name: Install Staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
-      - name: Staticcheck
-        run: '"$(go env GOPATH)/bin/staticcheck" ./...'
-
-  gopls-contract:
-    name: gopls contract / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          go-version: "1.27.x"
-          cache: true
+          node-version: "24.x"
+      - name: Build & Unit tests
+        run: |
+          go build -mod=readonly ./...
+          go test -mod=readonly -race ./...
+          go vet -mod=readonly ./...
+      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
+        with:
+          version: v2.12.2
+      - name: Cache gopls sidecar
+        id: cache-gopls
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/agentic-go-gopls
+          key: gopls-v0.21.0-ubuntu-latest-${{ runner.arch }}
       - name: Build pinned sidecar
+        if: steps.cache-gopls.outputs.cache-hit != 'true'
         run: |
           go mod download golang.org/x/tools/gopls@v0.21.0
           gopls_source="$(go env GOMODCACHE)/golang.org/x/tools/gopls@v0.21.0"
@@ -69,9 +66,38 @@ jobs:
           AGENTIC_GO_GOPLS: ${{ runner.temp }}/agentic-go-gopls
           GOTELEMETRY: "off"
         run: go test ./internal/gopls ./internal/intelligence ./internal/mcptest -count=1
+      - name: Test Action adapters
+        run: node --test scripts/action-*.test.mjs
+      - name: Test installer
+        run: bash scripts/install.test.sh
 
-  golangci-lint:
-    name: golangci-lint
+  # --------------------------------------------------------------------------
+  # 2. MAIN & RELEASE PIPELINE: Comprehensive multi-Go and macOS matrix
+  # --------------------------------------------------------------------------
+  go-matrix:
+    name: Go ${{ matrix.go }} / ubuntu-latest
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.25.x", "1.26.x", "1.27.x"]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Build & Tests
+        run: |
+          go build -mod=readonly ./...
+          go test -mod=readonly -race ./...
+          go vet -mod=readonly ./...
+          bash scripts/install.test.sh
+
+  quality-main:
+    name: Quality & Packaging (main)
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -79,48 +105,47 @@ jobs:
         with:
           go-version: "1.26.x"
           cache: true
-      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.x"
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
           version: v2.12.2
+      - name: Build release bundles
+        run: go run ./internal/cmd/releasepack --version 1.0.0-test --output /tmp/agentic-go-release
+      - name: Test Action adapters
+        run: node --test scripts/action-*.test.mjs
 
-  cross-build:
-    name: Cross-build ${{ matrix.goos }}/${{ matrix.goarch }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goos: [darwin, linux]
-        goarch: [amd64, arm64]
+  macos-main:
+    name: macOS Validation (main / release)
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.27.x"
           cache: true
-      - name: Build release bundle
-        env:
-          RELEASE_TARGET: ${{ matrix.goos }}/${{ matrix.goarch }}
-        run: go run ./internal/cmd/releasepack --version 1.0.0-test --output /tmp/agentic-go-release --targets "$RELEASE_TARGET"
-
-  installer:
-    name: Installer / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - name: Test exact-version installer
-        run: bash scripts/install.test.sh
-
-  action-adapters:
-    name: Action adapters
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      - name: Build & Tests
+        run: |
+          go build -mod=readonly ./...
+          go test -mod=readonly -race ./...
+          go vet -mod=readonly ./...
+          bash scripts/install.test.sh
+      - name: Cache gopls sidecar
+        id: cache-gopls
+        uses: actions/cache@v4
         with:
-          node-version: "24.x"
-      - name: Test Action adapters
-        run: node --test scripts/action-*.test.mjs
+          path: ${{ runner.temp }}/agentic-go-gopls
+          key: gopls-v0.21.0-macos-latest-${{ runner.arch }}
+      - name: Build pinned sidecar
+        if: steps.cache-gopls.outputs.cache-hit != 'true'
+        run: |
+          go mod download golang.org/x/tools/gopls@v0.21.0
+          gopls_source="$(go env GOMODCACHE)/golang.org/x/tools/gopls@v0.21.0"
+          (cd "$gopls_source" && GOTELEMETRY=off go build -mod=readonly -trimpath -ldflags='-X main.version=v0.21.0' -o "$RUNNER_TEMP/agentic-go-gopls" .)
+      - name: Run LSP contract
+        env:
+          AGENTIC_GO_GOPLS: ${{ runner.temp }}/agentic-go-gopls
+          GOTELEMETRY: "off"
+        run: go test ./internal/gopls ./internal/intelligence ./internal/mcptest -count=1

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" data-font="sf-pro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protocol Contracts — agentic-go</title>
+  <meta name="description" content="Specification of agentic-go schemas (context/v1, change/v1, verify/v1), 14 MCP tools, 7 resources, and 6 prompts.">
+  <meta name="google-site-verification" content="_xfuakbOfHKdIaPnD1ICyA1oFyB3uQw2rRUDZm8nruY">
+  <meta name="google-site-verification" content="jrVQkywCbDdo4lBhOAZFXdiIAEFciezMVwdDKAADEaQ">
+  <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/contracts/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/contracts/">
+  <meta property="og:title" content="Protocol Contracts — agentic-go">
+  <meta property="og:description" content="Official MCP tools, resources, prompts, and JSON schemas for agentic-go v1.0.0.">
+  <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Protocol Contracts — agentic-go">
+  <meta name="twitter:description" content="Official MCP tools, resources, prompts, and JSON schemas for agentic-go v1.0.0.">
+  <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
+  <link rel="alternate" type="text/plain" href="../../llms.txt" title="LLM Context Index">
+  <link rel="alternate" type="text/plain" href="../../llms-full.txt" title="Full LLM Context">
+  <link rel="alternate" type="application/json" href="../../.well-known/mcp.json" title="MCP Server Declaration">
+  <link rel="alternate" type="application/json" href="../../.well-known/ai-catalog.json" title="AI Discovery Catalog">
+  <link rel="stylesheet" href="../../styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "agentic-go Protocol Contracts & Schemas",
+    "description": "Comprehensive specification of Model Context Protocol interfaces and JSON schemas in agentic-go.",
+    "url": "https://agentic-mcps.github.io/go/docs/contracts/",
+    "author": {
+      "@type": "Organization",
+      "name": "agentic-mcps"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Floating Dynamic Island Header -->
+  <div class="island-header-wrapper">
+    <header class="island-header" role="banner">
+      <a href="../../" class="brand-link" aria-label="agentic-go home">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
+        <span>agentic-go</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
+          <li><a href="../connect/">Connect</a></li>
+          <li><a href="../verify/">Verify</a></li>
+          <li><a href="../safety/">Safety</a></li>
+          <li><a href="./" class="nav-link active">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
+      </div>
+    </header>
+  </div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" aria-label="Documentation sidebar">
+      <div class="sidebar-search" style="margin-bottom: var(--space-20);">
+        <form class="docs-search-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./" method="GET">
+          <div style="position: relative;">
+            <input type="search" name="query" placeholder="Search docs (⌘K)..." class="webmcp-input" style="width: 100%; padding-left: 28px; font-size: 12px; height: 32px;" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 8px; top: 9px; color: var(--color-text-dim); pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+        </form>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-list">
+          <li><a href="../" class="sidebar-link">Overview</a></li>
+          <li><a href="../install/" class="sidebar-link">Installation</a></li>
+          <li><a href="../connect/" class="sidebar-link">MCP Client Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Core Workflows</div>
+        <ul class="sidebar-list">
+          <li><a href="../verify/" class="sidebar-link">Verification Engine</a></li>
+          <li><a href="../safety/" class="sidebar-link">Safety &amp; Containment</a></li>
+          <li><a href="../action/" class="sidebar-link">GitHub Action in CI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Reference</div>
+        <ul class="sidebar-list">
+          <li><a href="./" class="sidebar-link active">Protocol Contracts</a></li>
+          <li><a href="../faq/" class="sidebar-link">Frequently Asked Questions</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main id="main-content" class="docs-content">
+      <nav class="docs-breadcrumbs" aria-label="Breadcrumb">
+        <a href="../../">Home</a> <span>/</span> <a href="../">Docs</a> <span>/</span> <span>Protocol Contracts</span>
+      </nav>
+
+      <article class="docs-article">
+        <h1>Protocol Contracts &amp; Schemas</h1>
+        <p class="lead">
+          <code>agentic-go</code> implements a frozen protocol surface consisting of 14 MCP tools, 7 resources, 1 resource template, 6 prompts, and three durable JSON schemas.
+        </p>
+
+        <h2>Core JSON Schemas</h2>
+
+        <h3>1. Context Pack Schema (<code>agentic.context/v1</code>)</h3>
+        <p>
+          Emitted by <code>go_workspace_brief</code> and <code>go_symbol_context</code>. Provides compact, source-grounded summaries of packages, definitions, implementations, and call relationships.
+        </p>
+
+        <h3>2. Change Contract Schema (<code>agentic.change/v1</code>)</h3>
+        <p>
+          Emitted by <code>go_begin_change</code> and <code>go_checkpoint_change</code>. Keeps agents aligned with initial user intent and detects structural drift.
+        </p>
+
+        <h3>3. Verification Report Schema (<code>agentic.verify/v1</code>)</h3>
+        <p>
+          Emitted by <code>go_verify_change</code> and the CLI. Assembles package test results, coverage delta, race reports, and calibrated analyzer findings into one deterministic structure.
+        </p>
+
+        <h2>Frozen MCP Tools Inventory (14 Tools)</h2>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tool Name</th>
+                <th>Read Only</th>
+                <th>Destructive</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>go_workspace_brief</code></td>
+                <td>true</td>
+                <td>false</td>
+                <td>High-level workspace package map, module roots, and entry points.</td>
+              </tr>
+              <tr>
+                <td><code>go_search</code></td>
+                <td>true</td>
+                <td>false</td>
+                <td>Bounded symbol, type, and identifier search across workspace packages.</td>
+              </tr>
+              <tr>
+                <td><code>go_symbol_context</code></td>
+                <td>true</td>
+                <td>false</td>
+                <td>Definitions, references, implementations, and callers for a symbol.</td>
+              </tr>
+              <tr>
+                <td><code>go_begin_change</code></td>
+                <td>false</td>
+                <td>false</td>
+                <td>Initializes a Change Contract with goal, scope, and snapshot hash.</td>
+              </tr>
+              <tr>
+                <td><code>go_checkpoint_change</code></td>
+                <td>false</td>
+                <td>false</td>
+                <td>Validates progress against contract; catches API drift and scope leaks.</td>
+              </tr>
+              <tr>
+                <td><code>go_refactor</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Preview and apply deterministic rename, format, and import edits.</td>
+              </tr>
+              <tr>
+                <td><code>go_verify_change</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Executes full impacted verification suite and compiles JSON report.</td>
+              </tr>
+              <tr>
+                <td><code>go_test_structured</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Executes package tests and returns structured failure diagnostics.</td>
+              </tr>
+              <tr>
+                <td><code>go_race_report</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Runs tests under Go race detector and parses data race traces.</td>
+              </tr>
+              <tr>
+                <td><code>go_coverage_gaps</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Identifies uncovered statement blocks in modified functions.</td>
+              </tr>
+              <tr>
+                <td><code>go_benchmark_diff</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Compares execution performance against baseline commits.</td>
+              </tr>
+              <tr>
+                <td><code>go_flake_finder</code></td>
+                <td>false</td>
+                <td>true</td>
+                <td>Repeats test execution with randomization to uncover flaky tests.</td>
+              </tr>
+              <tr>
+                <td><code>go_audit_concurrency</code></td>
+                <td>true</td>
+                <td>false</td>
+                <td>Audits goroutines, channels, and sync primitives (0% false positives).</td>
+              </tr>
+              <tr>
+                <td><code>go_audit_errors</code></td>
+                <td>true</td>
+                <td>false</td>
+                <td>Audits error wrapping, sentinel checking, and return conventions.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../faq/" class="btn-ghost">Next: FAQ ›</a>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.06em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-container">
+      <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../action/">Action</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="../../app.js"></script>
+</body>
+</html>

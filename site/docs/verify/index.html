@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-font="sf-pro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Engine — agentic-go</title>
+  <meta name="description" content="In-depth guide to agentic-go verification: whole-package testing, race detection, analyzer findings, coverage tracking, and schema output.">
+  <meta name="google-site-verification" content="_xfuakbOfHKdIaPnD1ICyA1oFyB3uQw2rRUDZm8nruY">
+  <meta name="google-site-verification" content="jrVQkywCbDdo4lBhOAZFXdiIAEFciezMVwdDKAADEaQ">
+  <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/verify/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/verify/">
+  <meta property="og:title" content="Verification Engine — agentic-go">
+  <meta property="og:description" content="Executed verification, race detection, coverage tracking, and calibrated analyzer findings for Go coding agents.">
+  <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Verification Engine — agentic-go">
+  <meta name="twitter:description" content="Executed verification, race detection, coverage tracking, and calibrated analyzer findings for Go coding agents.">
+  <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
+  <link rel="alternate" type="text/plain" href="../../llms.txt" title="LLM Context Index">
+  <link rel="alternate" type="text/plain" href="../../llms-full.txt" title="Full LLM Context">
+  <link rel="alternate" type="application/json" href="../../.well-known/mcp.json" title="MCP Server Declaration">
+  <link rel="alternate" type="application/json" href="../../.well-known/ai-catalog.json" title="AI Discovery Catalog">
+  <link rel="stylesheet" href="../../styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "agentic-go Verification Engine",
+    "description": "How the verification engine plans, executes, and scores Go code changes with package-aware tests and calibrated analyzers.",
+    "url": "https://agentic-mcps.github.io/go/docs/verify/",
+    "author": {
+      "@type": "Organization",
+      "name": "agentic-mcps"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Floating Dynamic Island Header -->
+  <div class="island-header-wrapper">
+    <header class="island-header" role="banner">
+      <a href="../../" class="brand-link" aria-label="agentic-go home">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
+        <span>agentic-go</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
+          <li><a href="../connect/">Connect</a></li>
+          <li><a href="./" class="nav-link active">Verify</a></li>
+          <li><a href="../safety/">Safety</a></li>
+          <li><a href="../contracts/">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="search-trigger-btn" data-search-trigger aria-label="Search documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Search</span>
+          <span class="search-trigger-kbd">⌘K</span>
+        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
+      </div>
+    </header>
+  </div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" aria-label="Documentation sidebar">
+      <div class="sidebar-search" style="margin-bottom: var(--space-20);">
+        <form class="docs-search-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./" method="GET">
+          <div style="position: relative;">
+            <input type="search" name="query" placeholder="Search docs (⌘K)..." class="webmcp-input" style="width: 100%; padding-left: 28px; font-size: 12px; height: 32px;" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 8px; top: 9px; color: var(--color-text-dim); pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+        </form>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-list">
+          <li><a href="../" class="sidebar-link">Overview</a></li>
+          <li><a href="../install/" class="sidebar-link">Installation</a></li>
+          <li><a href="../connect/" class="sidebar-link">MCP Client Setup</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Core Workflows</div>
+        <ul class="sidebar-list">
+          <li><a href="./" class="sidebar-link active">Verification Engine</a></li>
+          <li><a href="../safety/" class="sidebar-link">Safety &amp; Containment</a></li>
+          <li><a href="../action/" class="sidebar-link">GitHub Action in CI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Reference</div>
+        <ul class="sidebar-list">
+          <li><a href="../contracts/" class="sidebar-link">Protocol Contracts</a></li>
+          <li><a href="../faq/" class="sidebar-link">Frequently Asked Questions</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main id="main-content" class="docs-content">
+      <nav class="docs-breadcrumbs" aria-label="Breadcrumb">
+        <a href="../../">Home</a> <span>/</span> <a href="../">Docs</a> <span>/</span> <span>Verification Engine</span>
+      </nav>
+
+      <article class="docs-article">
+        <h1>The Verification Engine</h1>
+        <p class="lead">
+          The verification engine is the core product boundary shared by the CLI (<code>agentic-go verify</code>), GitHub Action, and MCP server (<code>go_verify_change</code>).
+        </p>
+
+        <h2>CLI Usage</h2>
+        <div class="mac-window" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
+          </div>
+          <div class="mac-body" style="background: #f8fafc;">
+            <p><span style="color: #0071e3; font-weight: 600;">$</span> agentic-go verify --base origin/main --package ./... --format text</p>
+          </div>
+        </div>
+
+        <h2>Exit Codes</h2>
+        <ul>
+          <li><strong>0 (Pass):</strong> All requested packages compiled, tests passed without regressions, and no policy-blocking findings were introduced.</li>
+          <li><strong>1 (Policy Findings):</strong> Tests passed or were evaluated, but policy checks detected blocking findings (concurrency bugs, unhandled errors, scope drift).</li>
+          <li><strong>2 (Incomplete / Error):</strong> Compilation failure, unhandled runtime exception, or execution timeout prevented complete evaluation.</li>
+        </ul>
+
+        <h2>Verification Pipeline</h2>
+        <ol>
+          <li><strong>Snapshot &amp; Impact Analysis:</strong> Computes the diff against <code>--base</code>, identifies modified declarations, and resolves all downstream packages.</li>
+          <li><strong>Whole-Package Testing:</strong> Executes full package test suites without cherry-picking individual methods.</li>
+          <li><strong>Changed-Statement Coverage:</strong> Tracks coverage specifically across statements touched in the diff.</li>
+          <li><strong>Calibrated Static Analyzers:</strong> Concurrency and error analyzers run with a 0% false positive target.</li>
+          <li><strong>Uncertainty Calibration:</strong> Explicitly reports unexercised branches, skipped suites, and environment constraints.</li>
+        </ol>
+
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../safety/" class="btn-ghost">Next: Safety &amp; Containment ›</a>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-dim); letter-spacing: 0.06em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-container">
+      <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../connect/">Connect</a></li>
+        <li><a href="../safety/">Safety</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="../../app.js"></script>
+</body>
+</html>

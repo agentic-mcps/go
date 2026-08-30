@@ -1,0 +1,64 @@
+{
+  "name": "agentic-go",
+  "version": "1.0.0",
+  "serverInfo": {
+    "name": "agentic-go",
+    "version": "1.0.0"
+  },
+  "description": "Source-grounded Go intelligence, change continuity, guarded refactoring, and whole-package verification for coding agents.",
+  "homepage": "https://agentic-mcps.github.io/go/",
+  "repository": "https://github.com/agentic-mcps/go",
+  "transport": {
+    "type": "stdio",
+    "command": "agentic-go",
+    "args": ["--workspace", "."]
+  },
+  "capabilities": {
+    "tools": {
+      "count": 14,
+      "list": [
+        "go_workspace_brief",
+        "go_search",
+        "go_symbol_context",
+        "go_begin_change",
+        "go_checkpoint_change",
+        "go_refactor",
+        "go_verify_change",
+        "go_test_structured",
+        "go_race_report",
+        "go_coverage_gaps",
+        "go_benchmark_diff",
+        "go_flake_finder",
+        "go_audit_concurrency",
+        "go_audit_errors"
+      ]
+    },
+    "resources": {
+      "count": 7,
+      "list": [
+        "agentic-go://analysis-rules",
+        "agentic-go://capabilities",
+        "agentic-go://change-contract/current",
+        "agentic-go://module",
+        "agentic-go://packages",
+        "agentic-go://trace-summary",
+        "agentic-go://verification/latest"
+      ]
+    },
+    "resourceTemplates": {
+      "count": 1,
+      "list": ["agentic-go://artifact/{id}"]
+    },
+    "prompts": {
+      "count": 6,
+      "list": [
+        "audit-package",
+        "bisect-flake",
+        "pre-commit-check",
+        "resume-change",
+        "understand-change",
+        "verify-change"
+      ]
+    }
+  }
+}
