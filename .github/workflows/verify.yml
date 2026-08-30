@@ -10,11 +10,6 @@ on:
       - "assets/**"
       - "site/**"
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "*.md"
-      - "assets/**"
-      - "site/**"
   workflow_call:
 
 concurrency:

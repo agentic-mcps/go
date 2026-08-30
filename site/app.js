@@ -1,10 +1,9 @@
 /**
- * agentic-go — Interactive behavior, typography switcher & WebMCP browser registry
- * Modern Apple Human Interface (macOS27 / iOS27) edition.
+ * agentic-go — Interactive behavior, search palette, code generators & WebMCP registry
+ * Technical Developer Tool Edition
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initTypographySwitcher();
   initVerificationSequence();
   initTabSelectors();
   initCopyButtons();
@@ -16,32 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* --------------------------------------------------------------------------
-   Typography Switcher (SF Pro / Inter Variable)
-   -------------------------------------------------------------------------- */
-function initTypographySwitcher() {
-  const savedFont = localStorage.getItem('agentic-go-font') || 'sf-pro';
-  document.documentElement.setAttribute('data-font', savedFont);
-
-  const fontButtons = document.querySelectorAll('[data-font-btn]');
-  fontButtons.forEach(btn => {
-    const font = btn.getAttribute('data-font-btn');
-    btn.classList.toggle('active', font === savedFont);
-
-    btn.addEventListener('click', () => {
-      document.documentElement.setAttribute('data-font', font);
-      localStorage.setItem('agentic-go-font', font);
-      fontButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-font-btn') === font));
-    });
-  });
-}
-
-/* --------------------------------------------------------------------------
    Verification Explorer Sequence State & Data
    -------------------------------------------------------------------------- */
 const VERIFICATION_STEPS = [
   {
     id: 'snapshot',
-    num: '01 / Snapshot',
+    num: '01',
     title: 'Workspace Snapshot',
     badgeClass: 'badge-azure',
     badge: 'Immutable Hash',
@@ -65,7 +44,7 @@ const VERIFICATION_STEPS = [
   },
   {
     id: 'intent',
-    num: '02 / Intent',
+    num: '02',
     title: 'Intent & Drift Check',
     badgeClass: 'badge-azure',
     badge: 'Change Continuity',
@@ -92,8 +71,8 @@ const VERIFICATION_STEPS = [
   },
   {
     id: 'execute',
-    num: '03 / Execution',
-    title: 'Executed Evidence',
+    num: '03',
+    title: 'Execution Evidence',
     badgeClass: 'badge-emerald',
     badge: 'Whole-Package Verification',
     heading: 'Targeted Compilation & Test Execution',
@@ -121,7 +100,7 @@ const VERIFICATION_STEPS = [
   },
   {
     id: 'findings',
-    num: '04 / Findings',
+    num: '04',
     title: 'Calibrated Findings',
     badgeClass: 'badge-emerald',
     badge: '0% False Positive Baseline',
@@ -149,7 +128,7 @@ const VERIFICATION_STEPS = [
   },
   {
     id: 'uncertainty',
-    num: '05 / Calibration',
+    num: '05',
     title: 'Explicit Uncertainty',
     badgeClass: 'badge-amber',
     badge: 'Honest Boundaries',
@@ -185,8 +164,8 @@ function selectVerificationStep(stepIdOrIndex) {
   if (!container) return;
 
   const nav = container.querySelector('.sequence-tabs');
-  const explanation = container.querySelector('.sequence-explanation');
-  const codeContent = container.querySelector('.sequence-code-content');
+  const explanation = container.querySelector('.sequence-info');
+  const codeContent = container.querySelector('.sequence-code-content code');
   const codeTitle = container.querySelector('.sequence-code-title');
 
   const step = VERIFICATION_STEPS[index];
@@ -199,7 +178,7 @@ function selectVerificationStep(stepIdOrIndex) {
   }
 
   if (explanation) {
-    let detailsHtml = step.details.map(d => `
+    const detailsHtml = step.details.map(d => `
       <li class="sequence-details-item">
         <span class="sequence-details-icon icon-${d.icon}">${d.icon === 'success' ? '✓' : d.icon === 'warn' ? '!' : 'i'}</span>
         <span>${d.text}</span>
@@ -215,9 +194,9 @@ function selectVerificationStep(stepIdOrIndex) {
       <ul class="sequence-details-list">
         ${detailsHtml}
       </ul>
-      <div style="display: flex; gap: 10px; margin-top: 24px;">
-        <button type="button" class="copy-btn" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>← Previous</button>
-        <button type="button" class="copy-btn" id="seq-next-btn" style="background: var(--color-ink); color: #ffffff; border-color: var(--color-ink);" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>Next Step →</button>
+      <div class="sequence-nav-buttons">
+        <button type="button" class="btn btn-outline btn-sm" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>← Previous</button>
+        <button type="button" class="btn btn-primary btn-sm" id="seq-next-btn" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Next Step →</button>
       </div>
     `;
 
@@ -256,7 +235,7 @@ function initVerificationSequence() {
    -------------------------------------------------------------------------- */
 function initTabSelectors() {
   document.querySelectorAll('[data-tabs]').forEach(tabContainer => {
-    const tabs = tabContainer.querySelectorAll('.tab-btn, .seq-tab-btn');
+    const tabs = tabContainer.querySelectorAll('.segmented-btn, .seq-tab-btn');
     const groupName = tabContainer.getAttribute('data-tabs');
     const contentPanels = document.querySelectorAll(`[data-tab-content="${groupName}"]`);
 
@@ -292,9 +271,9 @@ function initCopyButtons() {
         const targetElem = document.getElementById(targetId);
         if (targetElem) textToCopy = targetElem.innerText;
       } else {
-        const pre = btn.closest('.sequence-code-pane, .mac-window, pre, .mac-body');
+        const pre = btn.closest('.code-block, .sequence-code-pane, pre, .diff-card, .terminal-window');
         if (pre) {
-          const code = pre.querySelector('code') || pre;
+          const code = pre.querySelector('code') || pre.querySelector('pre') || pre;
           textToCopy = code.innerText;
         }
       }
@@ -319,27 +298,33 @@ function initCopyButtons() {
 }
 
 /* --------------------------------------------------------------------------
-   Mobile Navigation
+   Mobile Navigation & Sidebar Toggle
    -------------------------------------------------------------------------- */
 function initMobileNav() {
   const menuBtn = document.querySelector('.mobile-menu-btn');
-  const navLinks = document.querySelector('.nav-links');
+  let mobileNav = document.querySelector('.mobile-nav-panel');
 
-  if (menuBtn && navLinks) {
+  if (menuBtn) {
+    if (!mobileNav) {
+      mobileNav = document.createElement('div');
+      mobileNav.className = 'mobile-nav-panel';
+      const navList = document.querySelector('.nav-list');
+      if (navList) {
+        mobileNav.innerHTML = navList.innerHTML;
+      }
+      const header = document.querySelector('.site-header');
+      if (header) header.appendChild(mobileNav);
+    }
+
     menuBtn.addEventListener('click', () => {
-      const isVisible = navLinks.style.display === 'flex';
-      navLinks.style.display = isVisible ? 'none' : 'flex';
-      if (!isVisible) {
-        navLinks.style.position = 'absolute';
-        navLinks.style.top = '60px';
-        navLinks.style.left = '16px';
-        navLinks.style.right = '16px';
-        navLinks.style.background = '#ffffff';
-        navLinks.style.flexDirection = 'column';
-        navLinks.style.padding = '16px';
-        navLinks.style.borderRadius = '20px';
-        navLinks.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15)';
-        navLinks.style.border = '1px solid #e5e7eb';
+      const isOpen = mobileNav.classList.contains('open');
+      mobileNav.classList.toggle('open', !isOpen);
+      menuBtn.setAttribute('aria-expanded', !isOpen);
+
+      // If on docs page, also toggle docs sidebar
+      const sidebar = document.querySelector('.docs-sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('mobile-open', !isOpen);
       }
     });
   }
@@ -364,7 +349,7 @@ const DOCS_SEARCH_INDEX = [
     keywords: "install, installation, brew, homebrew, curl, script, binary, darwin, linux, arm64, amd64, go version"
   },
   {
-    title: "MCP Client Connection",
+    title: "MCP Client Setup",
     path: "/go/docs/connect/",
     relPath: "docs/connect/",
     summary: "Connect Claude Desktop, Cursor, Cline, and Claude Code over standard stdio transport.",
@@ -388,7 +373,7 @@ const DOCS_SEARCH_INDEX = [
     title: "GitHub Action in CI",
     path: "/go/docs/action/",
     relPath: "docs/action/",
-    summary: "Automated PR gating and verification reports with agentic-mcps/go/action in CI workflows.",
+    summary: "Automated PR gating and verification reports with agentic-mcps/go in CI workflows.",
     keywords: "github action, ci, continuous integration, pr, pull request, automated verification, workflow"
   },
   {
@@ -449,7 +434,7 @@ function initSearchPalette() {
       <div class="search-modal-dialog">
         <form class="search-modal-form" toolname="search_documentation" tooldescription="Search agentic-go documentation topics, MCP connection guides, installation instructions, and schema definitions." toolautosubmit action="./" method="GET">
           <div class="search-modal-input-wrapper">
-            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input type="search" name="query" class="search-modal-input" placeholder="Search documentation... (e.g. verify, gopls, install, contracts)" autocomplete="off" toolparamdescription="Keywords or topics to search within the documentation (e.g., install, verify, gopls, mcp, contracts)" />
             <kbd class="search-modal-esc">ESC</kbd>
           </div>
@@ -554,7 +539,7 @@ function escapeHtml(str) {
 }
 
 /* --------------------------------------------------------------------------
-   Install Command Generator (WebMCP Form & Live UI Sync)
+   Install Command Generator
    -------------------------------------------------------------------------- */
 function generateInstallCommandPayload(params = {}) {
   const method = params.method || 'brew';
@@ -580,30 +565,33 @@ function generateInstallCommandPayload(params = {}) {
 }
 
 function initInstallGenerator() {
-  const form = document.querySelector('form[toolname="generate_install_command"]');
-  if (!form) return;
+  const forms = document.querySelectorAll('form[toolname="generate_install_command"]');
+  if (!forms.length) return;
 
-  function update() {
-    const method = form.elements['method'] ? form.elements['method'].value : 'brew';
-    const os = form.elements['os'] ? form.elements['os'].value : 'darwin';
-    const arch = form.elements['arch'] ? form.elements['arch'].value : 'arm64';
+  forms.forEach(form => {
+    function update() {
+      const method = form.elements['method'] ? form.elements['method'].value : 'brew';
+      const os = form.elements['os'] ? form.elements['os'].value : 'darwin';
+      const arch = form.elements['arch'] ? form.elements['arch'].value : 'arm64';
 
-    const result = generateInstallCommandPayload({ method, os, arch });
-    const codeBlock = document.getElementById('install-generated-command');
-    if (codeBlock) {
-      codeBlock.textContent = result.command;
+      const result = generateInstallCommandPayload({ method, os, arch });
+      const parent = form.closest('.code-block, .section, main');
+      const codeBlock = parent ? parent.querySelector('#install-generated-command, .install-command-output') : document.getElementById('install-generated-command');
+      if (codeBlock) {
+        codeBlock.textContent = result.command;
+      }
     }
-  }
 
-  form.addEventListener('change', update);
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    update();
+    form.addEventListener('change', update);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      update();
+    });
   });
 }
 
 /* --------------------------------------------------------------------------
-   MCP Client Config Generator (WebMCP Form & Live UI Sync)
+   MCP Client Config Generator
    -------------------------------------------------------------------------- */
 function generateMcpConfigPayload(params = {}) {
   const client = params.client || 'claude';
@@ -664,30 +652,33 @@ function generateMcpConfigPayload(params = {}) {
 }
 
 function initMcpConfigGenerator() {
-  const form = document.querySelector('form[toolname="generate_mcp_config"]');
-  if (!form) return;
+  const forms = document.querySelectorAll('form[toolname="generate_mcp_config"]');
+  if (!forms.length) return;
 
-  function update() {
-    const client = form.elements['client'] ? form.elements['client'].value : 'claude';
-    const workspace = form.elements['workspace'] ? form.elements['workspace'].value : '/path/to/your/go/project';
+  forms.forEach(form => {
+    function update() {
+      const client = form.elements['client'] ? form.elements['client'].value : 'claude';
+      const workspace = form.elements['workspace'] ? form.elements['workspace'].value : '/path/to/your/go/project';
 
-    const result = generateMcpConfigPayload({ client, workspace_path: workspace });
-    const codeBlock = document.getElementById('mcp-generated-config');
-    if (codeBlock) {
-      codeBlock.textContent = result.config_json;
+      const result = generateMcpConfigPayload({ client, workspace_path: workspace });
+      const parent = form.closest('.code-block, .section, main');
+      const codeBlock = parent ? parent.querySelector('#mcp-generated-config, .mcp-config-output') : document.getElementById('mcp-generated-config');
+      if (codeBlock) {
+        codeBlock.textContent = result.config_json;
+      }
     }
-  }
 
-  form.addEventListener('input', update);
-  form.addEventListener('change', update);
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    update();
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      update();
+    });
   });
 }
 
 /* --------------------------------------------------------------------------
-   WebMCP In-Browser Tool Registry (Level 5 Agent Native & Google WebMCP Standard)
+   WebMCP In-Browser Tool Registry
    -------------------------------------------------------------------------- */
 function initWebMCP() {
   const FAQ_DATABASE = [
@@ -1028,38 +1019,6 @@ function initWebMCP() {
           contract: selected
         };
       }
-    },
-    {
-      name: "set_page_font",
-      description: "Set the typographic system font on the agentic-go documentation website (SF Pro for Apple Human Interface or Inter Variable).",
-      inputSchema: {
-        type: "object",
-        properties: {
-          font: {
-            type: "string",
-            enum: ["sf-pro", "inter"],
-            description: "Typography system font family"
-          }
-        },
-        required: ["font"],
-        additionalProperties: false
-      },
-      execute: async ({ font } = {}) => {
-        if (font !== "sf-pro" && font !== "inter") {
-          return {
-            isError: true,
-            content: [{ type: "text", text: `Invalid font "${font}". Allowed values: "sf-pro", "inter".` }]
-          };
-        }
-        document.documentElement.setAttribute('data-font', font);
-        try { localStorage.setItem('agentic-go-font', font); } catch {}
-        const fontButtons = document.querySelectorAll('[data-font-btn]');
-        fontButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-font-btn') === font));
-        return {
-          content: [{ type: "text", text: `Typography font updated to "${font}".` }],
-          font
-        };
-      }
     }
   ];
 
@@ -1086,7 +1045,6 @@ function initWebMCP() {
       description: t.description,
       inputSchema: t.inputSchema
     }));
-    // Provide both array indexing and .tools property for cross-client compatibility
     list.tools = list;
     return list;
   }
