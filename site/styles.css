@@ -2230,6 +2230,12 @@ html[data-theme="dark"] .floating-nav-label {
   .mobile-menu-btn {
     display: inline-flex;
   }
+
+  /* Hide nav pill-btns from header-actions; keep only icon circle-btns + hamburger */
+  .header-actions .pill-btn {
+    display: none;
+  }
+
   .docs-layout {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -2268,6 +2274,29 @@ html[data-theme="dark"] .floating-nav-label {
     --gutter: 20px;
     --header-height: 52px;
   }
+
+  /* ── Header ── */
+  /* Prevent brand label from wrapping at narrow widths */
+  .brand-title {
+    white-space: nowrap;
+  }
+
+  /* ── Hero trust bar ── */
+  /* Stack the three items vertically; drop the separator dots to avoid orphans */
+  .hero-trust-bar {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+  }
+  .trust-sep {
+    display: none;
+  }
+  .trust-item {
+    justify-content: center;
+  }
+
+  /* ── Hero ── */
   .hero-section {
     min-height: auto;
     padding: 48px 0 36px;
@@ -2281,6 +2310,60 @@ html[data-theme="dark"] .floating-nav-label {
   .hero-description {
     font-size: 14.5px;
   }
+
+  /* ── Install page: unlock pixel-locked heights so filter pills don't clip ── */
+  #install .code-block {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  #install .code-block-header {
+    height: auto;
+    min-height: 48px;
+    max-height: none;
+  }
+  #install [data-tab-content="install-tabs"] {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  /* Let filter pills wrap onto a second row instead of overflowing off-screen */
+  #install .webmcp-controls-bar,
+  .webmcp-controls-bar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  #install .code-block-body {
+    height: auto;
+    min-height: 120px;
+    max-height: 240px;
+  }
+
+  /* ── Docs install page (standalone): same height unlock ── */
+  .docs-content .code-block {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  .docs-content .webmcp-controls-bar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .docs-content .code-block-body {
+    height: auto;
+    min-height: 120px;
+    max-height: 260px;
+  }
+
+  /* ── General ── */
   .section {
     min-height: auto;
     padding: 48px 0;
