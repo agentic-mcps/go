@@ -35,6 +35,21 @@ All Go commands used explicit local toolchains with `GOTOOLCHAIN=local`.
 | GitHub Action adapters | Node 24-compatible test runner | pass, five suites |
 | Release bundles | Darwin/Linux, amd64/arm64 | pass, two byte-identical builds |
 
+## Hosted pre-tag qualification
+
+GitHub Actions Verify run
+[`33288916240`](https://github.com/ashwingopalsamy/agentic-go/actions/runs/33288916240)
+passed at commit `2229f8db6e7205a257985dc2987b9b7f0304bc98` on 2026-08-30.
+All 17 jobs passed: the Go 1.25, 1.26, and 1.27 Linux/macOS matrix;
+race, vet, and build; Staticcheck; golangci-lint; pinned-gopls contracts;
+Action adapters; installer contracts; and all four release targets.
+
+Two hosted-only defects were corrected before this successful run. GitHub
+output-channel variables are now isolated from stdout-based adapter assertions,
+and golangci-lint runs with Go 1.26 because its released binary cannot
+type-check the Go 1.27 standard library. Go 1.27 remains covered by the full
+build, race, vet, gopls, and cross-build gates.
+
 ## Deterministic candidate archives
 
 Two independent four-target builds produced byte-identical files. The first
@@ -111,9 +126,10 @@ tree equals curated commit `b62b73c` at tree
 `7a37104e2e3a48b4f02edfd3e2c00dc731d96b0d`. The complete 58-commit mapping
 is recorded in [`public-history-map.md`](public-history-map.md).
 
-The source lineage through `709e7d4` contains 144 commits; every one is signed
-and authored by Ashwin Gopalsamy. No remote ref, tag, release, repository rule,
-or GitHub repository was changed.
+The source lineage through `2229f8d` contains 147 commits; every one is signed
+and authored by Ashwin Gopalsamy. Curated `main` is published at that commit.
+The existing `v0.1.0` tag remains unchanged; no `v1.0.0` tag or release exists,
+and no repository rule or organization repository was changed.
 
 ## Claim boundary
 
