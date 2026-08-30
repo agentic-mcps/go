@@ -13,6 +13,8 @@
   <a href="https://github.com/agentic-mcps/go/releases/tag/v1.0.0"><img src="assets/brand/pills/release.svg" alt="v1.0.0 release"></a>
 </p>
 
+<p align="center"><a href="#why-this-exists">Why</a> · <a href="#workflow">Workflow</a> · <a href="#capabilities">Capabilities</a> · <a href="#evidence">Evidence</a> · <a href="#trust-boundary">Trust</a> · <a href="#faq">FAQ</a></p>
+
 agentic-go keeps a coding agent oriented around the codebase it is changing. It is deterministic local tooling. It does not embed an LLM, author arbitrary feature code, or become an agent framework.
 
 ## Install
@@ -28,7 +30,7 @@ export PATH="$HOME/.local/bin:$PATH"
 agentic-go doctor
 ```
 
-The installer verifies `checksums.txt` before installing the binaries into `~/.local/bin`. Archives include the Apache-2.0 license, the upstream gopls BSD license, and dependency notices. Homebrew is not advertised because there is no maintained tap.
+The installer verifies `checksums.txt` and installs into `~/.local/bin`. Archives include the Apache-2.0 license, the upstream gopls BSD license, and dependency notices. There is no Homebrew tap to pretend otherwise.
 
 ## Connect an MCP client
 
@@ -40,7 +42,7 @@ agentic-go mcp-config --client codex --workspace /absolute/path/to/your/go/modul
 agentic-go mcp-config --client claude --workspace /absolute/path/to/your/go/module
 ```
 
-The generic shape is:
+The generic shape:
 
 ```json
 {
@@ -53,15 +55,15 @@ The generic shape is:
 }
 ```
 
-`--workspace` defaults to the current directory and must resolve to a Go module or workspace. Codex, Claude, and other compatible clients can use the same local process. The client owns approval decisions for tools that execute trusted repository code.
+`--workspace` defaults to the current directory and must resolve to a Go module or workspace. The client controls approvals for tools that execute repository code.
 
 ## Why this exists
 
-Finding a definition is easy. Keeping the same mental model after several edits is the expensive part. agentic-go gives an external coding agent compact, source-grounded context before an edit, a private change contract during the work, and executed evidence at the end.
+Finding a definition is easy. Keeping the same mental model after several edits is the expensive part. agentic-go gives an external coding agent compact context before an edit, a private contract during the work, and executed evidence at the end.
 
 Your agent can find the definition. Remembering why it opened the file is the harder bit.
 
-## The workflow
+## Workflow
 
 ```text
 Brief → Begin Change → Search / Symbol Context
@@ -69,107 +71,94 @@ Brief → Begin Change → Search / Symbol Context
   → optional guarded Refactor → Verify Change
 ```
 
-The primary CLI workflow is:
+Direct report:
 
 ```sh
 agentic-go verify --base origin/main --package ./... --format text
 ```
 
-Verification compares the final worktree with an explicit local base, computes a conservative affected-package closure, runs whole-package checks, compares calibrated analyzer findings, and reports evidence, risk facts, and uncertainty. It never selects individual tests.
+Verification compares the final worktree with an explicit local base, computes affected packages, runs whole-package checks, compares calibrated findings, and reports evidence, risks, and uncertainty. It never selects individual tests. Use `--format json` for `agentic.verify/v1`; exit `0` means pass, `1` findings, and `2` incomplete or execution failure. Pass does not mean safe.
 
-`--race` opts into race evidence. `--fail-on` accepts `error`, `warning`, `info`, or `none`. `--min-changed-coverage` sets an optional `0..100` threshold. `--max-packages` defaults to 200 and is bounded at 500. Use `--format json` for the frozen `agentic.verify/v1` report. Exit status is `0` for pass, `1` for policy findings, and `2` for incomplete or execution failure. Pass means the requested checks completed without policy-blocking evidence, not that the change is safe.
+## Capabilities
+
+| Focus | What it gives an agent |
+| --- | --- |
+| Understand | Bounded Context Packs with APIs, diagnostics, definitions, references, implementations, related tests, and optional call hierarchy. Immutable snapshots and opaque Symbol Refs reject stale guesses. |
+| Continue | Private Change Contracts record goal, base, scope, focus, decisions, questions, drift, and snapshot lineage for handoff. |
+| Refactor | Preview or apply deterministic rename, formatting, import organization, and allowed `source.fixAll` edits with approval, exact preimages, and contained files. |
+| Verify | The CLI and `go_verify_change` share one report covering impact, tests, coverage, race evidence, calibrated findings, contract compliance, and uncertainty. |
+
+v1 exposes 14 tools, seven resources, one artifact template, and six prompts; legacy resources and prompts remain compatible.
 
 ## GitHub Action
 
-The composite Action downloads the exact release, verifies its checksum, and runs the same verification engine. It is advisory by default and requests no pull-request write permission.
+The composite Action downloads the exact release, verifies its checksum, and runs the same engine. It is advisory by default and requests no pull-request write permission.
 
 ```yaml
 permissions:
   contents: read
-
 steps:
   - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-    with:
-      fetch-depth: 0
+    with: { fetch-depth: 0 }
   - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-    with:
-      go-version: 1.27.x
+    with: { go-version: 1.27.x }
   - uses: agentic-mcps/go@v1.0.0
-    with:
-      enforce: false
+    with: { enforce: false }
 ```
 
-Set `enforce: true` to propagate findings or incomplete verification as a failing job. The Action writes a job summary, source annotations, and a JSON report under `RUNNER_TEMP`; it posts no comments.
+Set `enforce: true` to fail on findings or incomplete verification. The Action writes a job summary, source annotations, and a JSON report under `RUNNER_TEMP`; it posts no comments.
 
-## Capabilities
+## Evidence
 
-### Understand the workspace
+<details>
+<summary>What has been measured</summary>
 
-`go_workspace_brief`, `go_search`, and `go_symbol_context` return bounded Context Packs with package layout, APIs, diagnostics, definitions, references, implementations, related tests, and optional call hierarchy. Results carry an immutable snapshot and opaque Symbol Refs. Stale references are rejected, not silently guessed at.
+The [v0.2 evidence](validation/v0.2.0/summary.md) records contract goldens, CLI dogfood, the release matrix, and reviewed historical changes from grpc-go, Prometheus client_golang, and Echo. Active rules have positive and near-miss fixtures. The [v0.1 calibration](validation/v0.1.0/summary.md) covered 10 pinned repositories and 467 reviewed findings, with 0% observed false positives in that corpus. That is corpus-specific evidence, not a universal guarantee.
 
-### Maintain change continuity
+No paid model pilot has run, so there is no universal claim about reducing model mistakes, tool calls, or token use.
 
-`go_begin_change` and `go_checkpoint_change` persist a private Change Contract in the user cache. It records the goal, base, scope, focus, decisions, questions, structural drift, and exact snapshot lineage. Goal prose is retained for handoff and is never treated as a machine-enforceable instruction.
+</details>
 
-### Refactor with guardrails
+## Trust boundary
 
-`go_refactor` previews or applies deterministic rename, formatting, import organization, and allowed `source.fixAll` edits. Apply requires explicit approval, the exact preview snapshot, matching preimages, and existing contained non-generated files. It never stages, commits, creates, or deletes files.
+Explicit support covers Go 1.25, 1.26, and 1.27 on Darwin and Linux for amd64 and arm64. The release bundles gopls v0.21.0 as `agentic-go-gopls`; newer stable Go versions may pass preflight but are unclaimed.
 
-### Verify with evidence
+Execution tools may compile and run trusted repository tests, benchmarks, or fuzz functions with the server process's privileges. Audit tools are read-only. Operations enforce symlink-resolved workspace containment, cancellation, deadlines, concurrency limits, and bounded output. Containment is not a sandbox.
 
-`go_verify_change` returns the same report as the CLI. The engine records changed declarations, reverse impact, tests, coverage, race evidence when requested, calibrated concurrency and error findings, contract compliance, risk areas, and explicit limitations.
-
-The frozen v1 MCP surface is 14 tools, seven fixed resources, one artifact resource template, and six prompts. Four legacy resources and prompts remain available for compatibility.
-
-## Evidence and uncertainty
-
-The [v0.2 verification evidence](validation/v0.2.0/summary.md) records contract goldens, CLI and stdio dogfood, the release matrix, and reviewed historical changes from grpc-go, Prometheus client_golang, and Echo. These are implementation evidence, not adoption claims.
-
-The active analyzer rules have positive and near-miss fixtures. The v0.1 calibration covered 10 pinned repositories and 467 reviewed findings, with 0% observed false positives in that corpus. That result is corpus-specific and is not a universal guarantee. See the [calibration record](validation/v0.1.0/summary.md).
-
-No paid model pilot has run. The project therefore makes no universal claim about reducing model mistakes, tool calls, or token use.
-
-## Compatibility and trust boundary
-
-Explicit support covers Go 1.25, 1.26, and 1.27 on Darwin and Linux for amd64 and arm64. The release bundles gopls v0.21.0 as `agentic-go-gopls`, disables managed-session telemetry, and validates its exact version. Newer stable Go versions may pass preflight but are not claimed.
-
-Verification and execution tools may compile and run trusted repository tests, benchmarks, or fuzz functions with the server process's operating-system privileges. Audit tools are read-only and do not execute target code. All operations enforce symlink-resolved workspace containment, cancellation, deadlines, concurrency limits, and bounded output. These are containment controls, not a sandbox.
-
-Normal operation stores contracts, refactor journals, artifacts, and bounded traces under `os.UserCacheDir()/agentic-go`; it does not write source or Git metadata into the target worktree. MCP remains stdio-only. HTTP, automatic toolchain installation, SARIF, and a Windows support claim are not shipped.
+Contracts, journals, artifacts, and traces live under `os.UserCacheDir()/agentic-go`; normal operation does not write source or Git metadata into the target worktree. MCP remains stdio-only. HTTP, automatic toolchain installation, SARIF, and a Windows support claim are not shipped.
 
 ## FAQ
 
-**Does this replace gopls?** No. It uses a pinned gopls sidecar for semantic capabilities and adds snapshot lineage, change continuity, guarded mutation, and verification around it.
+<details>
+<summary>Does this replace gopls?</summary>
 
-**Does it work with Codex or Claude?** Yes, through stdio MCP configuration. The client remains responsible for approvals and for the agent's edits.
+No. A pinned gopls sidecar provides semantic capabilities; agentic-go adds snapshots, continuity, guarded mutation, and verification around it.
+</details>
 
-**Does verification run tests?** Yes, when requested by the workflow. It runs trusted repository code with the caller's privileges and reports failures as evidence. It does not claim isolation.
+<details>
+<summary>Does it work with Codex or Claude?</summary>
 
-**Can it change my files?** Only an explicitly approved, snapshot-bound deterministic refactor can mutate existing contained non-generated files. It never changes Git state.
+Yes, through stdio MCP configuration. The client remains responsible for approvals and the agent's edits.
+</details>
 
-**What does containment mean?** Paths are resolved inside the configured workspace, subprocesses are bounded, and cancellation propagates. Containment is not a security sandbox.
+<details>
+<summary>Can it change my files?</summary>
 
-**Is this the same module as the personal repository?** No. `github.com/agentic-mcps/go` and `github.com/ashwingopalsamy/agentic-go` are separate Go module identities. There is no alias or automatic mirroring.
+Only an explicitly approved, snapshot-bound deterministic refactor can mutate existing contained non-generated files. Git state never changes.
+</details>
 
-See the [module migration guide](docs/module-migration.md) before moving an existing installation or automation.
+<details>
+<summary>Is this the same module as the personal repository?</summary>
+
+No. `github.com/agentic-mcps/go` and `github.com/ashwingopalsamy/agentic-go` are separate Go module identities with no alias or automatic mirroring. See the [migration guide](docs/module-migration.md).
+</details>
 
 ## Read next
 
-- [Protocol contracts](docs/contracts.md)
-- [Module migration](docs/module-migration.md)
-- [v1 roadmap](docs/v1.0.0-roadmap.md)
-- [v0.2 verification scope](docs/v0.2.0-release-scope.md)
-- [v0.2 evidence](validation/v0.2.0/summary.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security](SECURITY.md)
-- [License](LICENSE)
+[Contracts](docs/contracts.md) · [Module migration](docs/module-migration.md) · [v1 roadmap](docs/v1.0.0-roadmap.md) · [v0.2 scope](docs/v0.2.0-release-scope.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [License](LICENSE)
 
-## Attribution
+## Attribution and license
 
-The project mark is a supplied adaptation controlled by Ashwin Gopalsamy, adapted from [Maria Letta's Free Gophers Pack](https://github.com/MariaLetta/free-gophers-pack), released under CC0. The original Go gopher is by Renée French and is licensed CC BY 4.0. This adaptation and derived graphics are licensed CC BY 4.0. It is the project mark, not the official Go logo.
+The project mark is a supplied adaptation controlled by Ashwin Gopalsamy, adapted from [Maria Letta's Free Gophers Pack](https://github.com/MariaLetta/free-gophers-pack), released under CC0. The original Go gopher is by Renée French under CC BY 4.0. This adaptation and derived graphics are licensed CC BY 4.0. It is the project mark, not the official Go logo.
 
-See the [artwork terms and provenance](assets/brand/README.md).
-
-## License
-
-The software is available under the [Apache-2.0 license](LICENSE).
+Software is available under the [Apache-2.0 license](LICENSE). See the [artwork terms](assets/brand/README.md).
