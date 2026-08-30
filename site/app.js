@@ -341,14 +341,52 @@ function initMobileNav() {
 
   let mobileNav = document.querySelector('.mobile-nav-panel');
 
-  menuBtn.addEventListener('click', () => {
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (!mobileNav) {
       mobileNav = document.createElement('div');
       mobileNav.className = 'mobile-nav-panel';
-      const navList = document.querySelector('.nav-list');
-      if (navList) {
-        mobileNav.innerHTML = navList.innerHTML;
-      }
+
+      const brandLink = document.querySelector('.brand-link');
+      const rawRoot = brandLink ? brandLink.getAttribute('href') : './';
+      const cleanRoot = rawRoot.endsWith('/') ? rawRoot : rawRoot + '/';
+
+      mobileNav.innerHTML = `
+        <a href="${cleanRoot}docs/" class="mobile-nav-link">
+          <span>Documentation</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="${cleanRoot}docs/install/" class="mobile-nav-link">
+          <span>Installation &amp; Setup</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="${cleanRoot}docs/verify/" class="mobile-nav-link">
+          <span>Verification Engine</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="${cleanRoot}docs/connect/" class="mobile-nav-link">
+          <span>MCP Client Setup</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="${cleanRoot}docs/safety/" class="mobile-nav-link">
+          <span>Safety &amp; Containment</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="${cleanRoot}docs/action/" class="mobile-nav-link">
+          <span>GitHub Action CI</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="${cleanRoot}docs/faq/" class="mobile-nav-link">
+          <span>FAQ</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <div class="mobile-nav-divider"></div>
+        <a href="https://github.com/agentic-mcps/go" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">
+          <span>GitHub Repository</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
+        </a>
+      `;
+
       const header = document.querySelector('.site-header');
       if (header) header.appendChild(mobileNav);
     }
@@ -360,6 +398,15 @@ function initMobileNav() {
     const sidebar = document.querySelector('.docs-sidebar');
     if (sidebar) {
       sidebar.classList.toggle('mobile-open', !isOpen);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (mobileNav && mobileNav.classList.contains('open')) {
+      if (!mobileNav.contains(e.target) && !menuBtn.contains(e.target)) {
+        mobileNav.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      }
     }
   });
 }
