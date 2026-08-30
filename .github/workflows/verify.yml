@@ -20,8 +20,8 @@ jobs:
         go: ["1.25.x", "1.26.x", "1.27.x"]
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: ${{ matrix.go }}
           cache: true
@@ -36,8 +36,8 @@ jobs:
     name: Staticcheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.26.x"
           cache: true
@@ -54,8 +54,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.27.x"
           cache: true
@@ -74,12 +74,12 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.27.x"
           cache: true
-      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 (# v9)
+      - uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
         with:
           version: v2.12.2
 
@@ -92,8 +92,8 @@ jobs:
         goos: [darwin, linux]
         goarch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e (# v7)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.27.x"
           cache: true
@@ -110,7 +110,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Test exact-version installer
         run: bash scripts/install.test.sh
 
@@ -118,8 +118,8 @@ jobs:
     name: Action adapters
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 (# v6)
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 (# v6)
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24.x"
       - name: Test Action adapters
