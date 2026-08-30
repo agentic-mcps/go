@@ -9,11 +9,11 @@
 <p align="center">
   <a href="#install"><img src="assets/brand/pills/install.svg" alt="Install agentic-go"></a>
   <a href="#connect"><img src="assets/brand/pills/mcp-setup.svg" alt="Connect MCP"></a>
-  <a href="docs/contracts.md"><img src="assets/brand/pills/docs.svg" alt="Read contracts"></a>
+  <a href="https://agentic-mcps.github.io/go/docs/"><img src="assets/brand/pills/docs.svg" alt="Read docs"></a>
   <a href="https://github.com/agentic-mcps/go/releases/tag/v1.0.0"><img src="assets/brand/pills/release.svg" alt="v1.0.0 release"></a>
 </p>
 
-<p align="center"><a href="#install">Install</a> · <a href="#connect">Connect</a> · <a href="#workflow">Workflow</a> · <a href="#capabilities">Capabilities</a> · <a href="#faq">FAQ</a></p>
+<p align="center"><a href="https://agentic-mcps.github.io/go/">Website</a> · <a href="https://agentic-mcps.github.io/go/docs/">Docs</a> · <a href="#install">Install</a> · <a href="#connect">Connect</a> · <a href="#workflow">Workflow</a> · <a href="#capabilities">Capabilities</a> · <a href="#faq">FAQ</a></p>
 
 `agentic-go` is a local Go MCP server and CLI. It gives an external coding agent semantic context, change continuity, guarded refactoring, and executed verification without embedding an LLM or becoming an agent framework.
 
@@ -127,7 +127,7 @@ The [v0.2 evidence](validation/v0.2.0/summary.md) records contract goldens, CLI 
 
 ## More
 
-[Contracts](docs/contracts.md) · [Migration](docs/module-migration.md) · [Roadmap](docs/v1.0.0-roadmap.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Issues](https://github.com/agentic-mcps/go/issues)
+[Website](https://agentic-mcps.github.io/go/) · [Docs](https://agentic-mcps.github.io/go/docs/) · [Contracts](docs/contracts.md) · [Migration](docs/module-migration.md) · [Roadmap](docs/v1.0.0-roadmap.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Issues](https://github.com/agentic-mcps/go/issues)
 
 <details>
 <summary>Artwork and license</summary>
