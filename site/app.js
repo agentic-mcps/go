@@ -1,16 +1,36 @@
 /**
- * agentic-go — Interactive scripts, application behavior & WebMCP browser registry
- * Implements the verification sequence explorer, tab selectors, copy buttons, mobile nav,
- * and WebMCP in-browser tool context (window.modelContext / navigator.modelContext).
+ * agentic-go — Interactive behavior, typography switcher & WebMCP browser registry
+ * Built for Apple 'MacBook Neo' design system.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTypographySwitcher();
   initVerificationSequence();
   initTabSelectors();
   initCopyButtons();
   initMobileNav();
   initWebMCP();
 });
+
+/* --------------------------------------------------------------------------
+   Typography Switcher (SF Pro / Inter)
+   -------------------------------------------------------------------------- */
+function initTypographySwitcher() {
+  const savedFont = localStorage.getItem('agentic-go-font') || 'sf-pro';
+  document.documentElement.setAttribute('data-font', savedFont);
+
+  const fontButtons = document.querySelectorAll('[data-font-btn]');
+  fontButtons.forEach(btn => {
+    const font = btn.getAttribute('data-font-btn');
+    btn.classList.toggle('active', font === savedFont);
+
+    btn.addEventListener('click', () => {
+      document.documentElement.setAttribute('data-font', font);
+      localStorage.setItem('agentic-go-font', font);
+      fontButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-font-btn') === font));
+    });
+  });
+}
 
 /* --------------------------------------------------------------------------
    Verification Explorer Sequence State & Data
@@ -153,27 +173,22 @@ function initVerificationSequence() {
   const container = document.getElementById('verification-sequence');
   if (!container) return;
 
-  const nav = container.querySelector('.sequence-nav');
+  const nav = container.querySelector('.sequence-tabs');
   const explanation = container.querySelector('.sequence-explanation');
-  const codeContent = container.querySelector('.preview-code-content');
-  const codeTitle = container.querySelector('.preview-code-title');
+  const codeContent = container.querySelector('.sequence-code-content');
+  const codeTitle = container.querySelector('.sequence-code-title');
 
   if (!nav || !explanation || !codeContent) return;
 
-  let currentStepIndex = 0;
-
   function renderStep(index) {
-    currentStepIndex = index;
     const step = VERIFICATION_STEPS[index];
 
-    // Update nav active states
-    const buttons = nav.querySelectorAll('.seq-step-btn');
+    const buttons = nav.querySelectorAll('.seq-tab-btn');
     buttons.forEach((btn, i) => {
       btn.classList.toggle('active', i === index);
       btn.setAttribute('aria-selected', i === index ? 'true' : 'false');
     });
 
-    // Update explanation
     let detailsHtml = step.details.map(d => `
       <li class="sequence-details-item">
         <span class="sequence-details-icon icon-${d.icon}">${d.icon === 'success' ? '✓' : d.icon === 'warn' ? '!' : 'i'}</span>
@@ -182,38 +197,34 @@ function initVerificationSequence() {
     `).join('');
 
     explanation.innerHTML = `
-      <div class="hero-badge" style="margin-bottom: var(--space-4); font-size: 0.775rem;">
-        <span class="dot"></span> ${step.badge}
+      <div style="display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(0, 173, 216, 0.15); color: #00add8; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+        ${step.badge}
       </div>
       <h4>${step.heading}</h4>
       <p>${step.desc}</p>
       <ul class="sequence-details-list">
         ${detailsHtml}
       </ul>
-      <div style="display: flex; gap: var(--space-3); margin-top: var(--space-6);">
-        <button type="button" class="btn btn-secondary btn-sm" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>← Previous</button>
-        <button type="button" class="btn btn-primary btn-sm" id="seq-next-btn" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Next Step →</button>
+      <div style="display: flex; gap: 12px; margin-top: 20px;">
+        <button type="button" class="copy-btn" id="seq-prev-btn" ${index === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>← Previous</button>
+        <button type="button" class="copy-btn" id="seq-next-btn" style="background: rgba(0, 173, 216, 0.2); border-color: #00add8; color: #38bdf8;" ${index === VERIFICATION_STEPS.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>Next Step →</button>
       </div>
     `;
 
-    // Reattach step button handlers
     const prevBtn = document.getElementById('seq-prev-btn');
     const nextBtn = document.getElementById('seq-next-btn');
     if (prevBtn && index > 0) prevBtn.addEventListener('click', () => renderStep(index - 1));
     if (nextBtn && index < VERIFICATION_STEPS.length - 1) nextBtn.addEventListener('click', () => renderStep(index + 1));
 
-    // Update Code Box
     if (codeTitle) codeTitle.textContent = step.codeTitle;
     codeContent.textContent = step.jsonPayload;
   }
 
-  // Bind nav button clicks
-  const buttons = nav.querySelectorAll('.seq-step-btn');
+  const buttons = nav.querySelectorAll('.seq-tab-btn');
   buttons.forEach((btn, i) => {
     btn.addEventListener('click', () => renderStep(i));
   });
 
-  // Initial render
   renderStep(0);
 }
 
@@ -258,7 +269,7 @@ function initCopyButtons() {
         const targetElem = document.getElementById(targetId);
         if (targetElem) textToCopy = targetElem.innerText;
       } else {
-        const pre = btn.closest('.quickstart-wrapper, .sequence-preview-pane, pre, .terminal-body');
+        const pre = btn.closest('.quickstart-wrapper, .sequence-code-pane, .mac-window, pre, .terminal-body');
         if (pre) {
           const code = pre.querySelector('code') || pre;
           textToCopy = code.innerText;
@@ -266,15 +277,13 @@ function initCopyButtons() {
       }
 
       if (!textToCopy) return;
-
-      // Clean prompt chars
       textToCopy = textToCopy.replace(/^\$ /gm, '').trim();
 
       try {
         await navigator.clipboard.writeText(textToCopy);
         const originalText = btn.innerHTML;
         btn.classList.add('copied');
-        btn.innerHTML = `✓ Copied!`;
+        btn.innerHTML = `✓ Copied`;
         setTimeout(() => {
           btn.classList.remove('copied');
           btn.innerHTML = originalText;
@@ -292,8 +301,6 @@ function initCopyButtons() {
 function initMobileNav() {
   const menuBtn = document.querySelector('.mobile-menu-btn');
   const navLinks = document.querySelector('.nav-links');
-  const sidebarToggle = document.querySelector('.docs-sidebar-toggle');
-  const sidebar = document.querySelector('.docs-sidebar');
 
   if (menuBtn && navLinks) {
     menuBtn.addEventListener('click', () => {
@@ -304,24 +311,17 @@ function initMobileNav() {
         navLinks.style.top = 'var(--header-height)';
         navLinks.style.left = '0';
         navLinks.style.right = '0';
-        navLinks.style.background = 'var(--bg-surface)';
+        navLinks.style.background = 'var(--color-snow)';
         navLinks.style.flexDirection = 'column';
-        navLinks.style.padding = 'var(--space-6)';
-        navLinks.style.borderBottom = '1px solid var(--border-base)';
+        navLinks.style.padding = 'var(--space-20)';
+        navLinks.style.borderBottom = '1px solid var(--color-silver-mist)';
       }
-    });
-  }
-
-  if (sidebarToggle && sidebar) {
-    sidebarToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('show-mobile');
     });
   }
 }
 
 /* --------------------------------------------------------------------------
    WebMCP In-Browser Tool Registry (Level 5 Agent Native)
-   Exposes window.modelContext and navigator.modelContext tools for AI agents.
    -------------------------------------------------------------------------- */
 function initWebMCP() {
   const agentTools = [
@@ -417,7 +417,6 @@ function initWebMCP() {
     }
   ];
 
-  // ToolContext implementation compliant with WebMCP / ModelContext API standard
   const modelContext = {
     getTools: async () => agentTools.map(t => ({
       name: t.name,
@@ -434,30 +433,15 @@ function initWebMCP() {
     }
   };
 
-  // Mount across standard browser discovery locations
-  if (typeof window !== 'undefined') {
-    window.modelContext = modelContext;
-  }
+  if (typeof window !== 'undefined') window.modelContext = modelContext;
   if (typeof navigator !== 'undefined' && !navigator.modelContext) {
     try {
-      Object.defineProperty(navigator, 'modelContext', {
-        value: modelContext,
-        writable: true,
-        configurable: true
-      });
-    } catch {
-      // Ignore if immutable
-    }
+      Object.defineProperty(navigator, 'modelContext', { value: modelContext, writable: true, configurable: true });
+    } catch {}
   }
   if (typeof document !== 'undefined' && !document.modelContext) {
     try {
-      Object.defineProperty(document, 'modelContext', {
-        value: modelContext,
-        writable: true,
-        configurable: true
-      });
-    } catch {
-      // Ignore if immutable
-    }
+      Object.defineProperty(document, 'modelContext', { value: modelContext, writable: true, configurable: true });
+    } catch {}
   }
 }

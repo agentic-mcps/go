@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-font="sf-pro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +12,6 @@
   <meta property="og:title" content="Installation — agentic-go">
   <meta property="og:description" content="Install agentic-go, agentic-go-gopls, and agentic-go-vet on macOS and Linux.">
   <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Installation — agentic-go">
-  <meta name="twitter:description" content="Install agentic-go, agentic-go-gopls, and agentic-go-vet on macOS and Linux.">
-  <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
   <link rel="icon" type="image/svg+xml" href="../../assets/brand/project-mark.svg">
   <link rel="stylesheet" href="../../styles.css">
@@ -41,29 +36,25 @@
   <header class="site-header" role="banner">
     <div class="header-container">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
-        <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
-        <span class="brand-tag">Docs</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="../" class="nav-link">Docs</a></li>
+          <li><a href="../">Docs</a></li>
           <li><a href="./" class="nav-link active">Install</a></li>
-          <li><a href="../connect/" class="nav-link">Connect</a></li>
-          <li><a href="../verify/" class="nav-link">Verify</a></li>
-          <li><a href="../safety/" class="nav-link">Safety</a></li>
-          <li><a href="../contracts/" class="nav-link">Contracts</a></li>
-          <li><a href="../faq/" class="nav-link">FAQ</a></li>
+          <li><a href="../connect/">Connect</a></li>
+          <li><a href="../verify/">Verify</a></li>
+          <li><a href="../safety/">Safety</a></li>
+          <li><a href="../contracts/">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="./" class="btn btn-primary btn-sm">Install</a>
-        <button type="button" class="mobile-menu-btn docs-sidebar-toggle" aria-label="Toggle navigation menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="./" class="btn-pill btn-pill--sm">Install</a>
       </div>
     </div>
   </header>
@@ -126,143 +117,80 @@
         </div>
 
         <h2>Method 1: Homebrew (macOS &amp; Linux)</h2>
-        <p>The recommended installation method uses our official Homebrew tap:</p>
-
-        <div class="quickstart-wrapper" style="margin: var(--space-4) 0 var(--space-8);">
-          <div class="terminal-header">
-            <span class="preview-code-title">Terminal</span>
-            <button type="button" class="copy-btn" aria-label="Copy Homebrew install snippet">Copy</button>
+        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title mac-title--dark">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="terminal-body">
-            <div class="code-line"><span class="prompt-char">$</span> <code>brew install agentic-mcps/tap/agentic-go</code></div>
-            <div class="code-line"><span class="prompt-char">$</span> <code>agentic-go --version</code></div>
+          <div class="mac-body mac-body--dark">
+            <p><span style="color: #00add8;">$</span> brew install agentic-mcps/tap/agentic-go</p>
+            <p><span style="color: #00add8;">$</span> agentic-go --version</p>
           </div>
         </div>
 
         <h2>Method 2: Standalone Shell Installer</h2>
-        <p>
-          For automated CI environments or systems without Homebrew, use the official shell installer. It verifies cryptographic checksums before writing binaries to <code>~/.local/bin</code>:
-        </p>
-
-        <div class="quickstart-wrapper" style="margin: var(--space-4) 0 var(--space-8);">
-          <div class="terminal-header">
-            <span class="preview-code-title">Terminal</span>
-            <button type="button" class="copy-btn" aria-label="Copy Shell installer snippet">Copy</button>
+        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title mac-title--dark">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="terminal-body">
-            <div class="code-line"><span class="prompt-char">$</span> <code>curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/install.sh | bash -s -- 1.0.0</code></div>
-          </div>
-        </div>
-
-        <h2>Method 3: Direct Archive Download</h2>
-        <p>
-          Download signed release archives directly from GitHub Releases:
-        </p>
-
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Platform</th>
-                <th>Archive</th>
-                <th>SHA-256 Checksum</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="cell-highlight">macOS arm64 (Apple Silicon)</td>
-                <td><code>agentic-go_1.0.0_darwin_arm64.tar.gz</code></td>
-                <td><code>a5847a4f7e7d407483c2d03c99a17465df9bc8f602c87b95824edc19c8c4d1ae</code></td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">macOS amd64 (Intel)</td>
-                <td><code>agentic-go_1.0.0_darwin_amd64.tar.gz</code></td>
-                <td><code>862f33278f96b72516c1b6e5e233d8161cd8ac5617d9273d998bf54c396ceac1</code></td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">Linux arm64</td>
-                <td><code>agentic-go_1.0.0_linux_arm64.tar.gz</code></td>
-                <td><code>7434bd99eaf937daa5ba3410e1f529b1fe125086a50a83bcee4ac73fd019024f</code></td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">Linux amd64</td>
-                <td><code>agentic-go_1.0.0_linux_amd64.tar.gz</code></td>
-                <td><code>e82162f2487c56e9eb62fb88bf0df395407b402bf752f4811e1136509b10f776</code></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h2>Validating Installation with <code>doctor</code></h2>
-        <p>
-          Run <code>agentic-go doctor</code> inside any Go repository to verify your local Go toolchain, sidecar binaries, and environment compatibility:
-        </p>
-
-        <div class="quickstart-wrapper" style="margin: var(--space-4) 0 var(--space-8);">
-          <div class="terminal-header">
-            <span class="preview-code-title">Terminal</span>
-            <button type="button" class="copy-btn" aria-label="Copy doctor command">Copy</button>
-          </div>
-          <div class="terminal-body">
-            <div class="code-line"><span class="prompt-char">$</span> <code>agentic-go doctor</code></div>
-            <div class="code-line" style="color: var(--accent-emerald);"><span class="prompt-char">&gt;</span> [PASS] Go toolchain: go1.27.0 darwin/arm64</div>
-            <div class="code-line" style="color: var(--accent-emerald);"><span class="prompt-char">&gt;</span> [PASS] Companion sidecar: agentic-go-gopls v0.21.0</div>
-            <div class="code-line" style="color: var(--accent-emerald);"><span class="prompt-char">&gt;</span> [PASS] Workspace: contained and symlink-safe</div>
+          <div class="mac-body mac-body--dark">
+            <p><span style="color: #00add8;">$</span> curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/install.sh | bash -s -- 1.0.0</p>
           </div>
         </div>
 
-        <div class="docs-nav-footer">
-          <a href="../" class="docs-nav-card">
-            <span class="docs-nav-label">Previous</span>
-            <span class="docs-nav-title">← Overview</span>
-          </a>
-          <a href="../connect/" class="docs-nav-card" style="text-align: right;">
-            <span class="docs-nav-label">Next Step</span>
-            <span class="docs-nav-title">Connect MCP Client →</span>
-          </a>
+        <h2>Validating with <code>doctor</code></h2>
+        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title mac-title--dark">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
+          </div>
+          <div class="mac-body mac-body--dark">
+            <p><span style="color: #00add8;">$</span> agentic-go doctor</p>
+            <p style="color: #10b981;">&gt; [PASS] Go toolchain: go1.27.0 darwin/arm64</p>
+            <p style="color: #10b981;">&gt; [PASS] Companion sidecar: agentic-go-gopls v0.21.0</p>
+            <p style="color: #10b981;">&gt; [PASS] Workspace: contained and symlink-safe</p>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../connect/" class="btn-ghost">Next: MCP Client Setup ›</a>
         </div>
       </article>
     </main>
   </div>
 
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
   <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      <div class="footer-brand">
-        <a href="../../" class="brand-link">
-          <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
-          <span>agentic-go</span>
-        </a>
-        <p>Source-grounded Go intelligence for coding agents.</p>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Documentation</h4>
-        <ul class="footer-links">
-          <li><a href="../" class="footer-link">Overview</a></li>
-          <li><a href="./" class="footer-link">Installation</a></li>
-          <li><a href="../connect/" class="footer-link">MCP Connection</a></li>
-          <li><a href="../verify/" class="footer-link">Verification</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Protocols</h4>
-        <ul class="footer-links">
-          <li><a href="../contracts/" class="footer-link">Contracts &amp; Schemas</a></li>
-          <li><a href="../safety/" class="footer-link">Safety &amp; Trust</a></li>
-          <li><a href="../action/" class="footer-link">GitHub Action</a></li>
-          <li><a href="../faq/" class="footer-link">FAQ</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Repository</h4>
-        <ul class="footer-links">
-          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Releases</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
       <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
-      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../connect/">Connect</a></li>
+        <li><a href="../verify/">Verify</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
     </div>
   </footer>
 

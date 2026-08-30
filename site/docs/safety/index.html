@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-font="sf-pro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Safety &amp; Trust Boundaries — agentic-go</title>
+  <title>Safety &amp; Containment — agentic-go</title>
   <meta name="description" content="Detailed guide to agentic-go trust boundaries, workspace containment, execution privileges, and guarded mutation guarantees.">
   <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/safety/">
 
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/safety/">
-  <meta property="og:title" content="Safety &amp; Trust Boundaries — agentic-go">
+  <meta property="og:title" content="Safety &amp; Containment — agentic-go">
   <meta property="og:description" content="Workspace containment, execution boundaries, and refactoring safety in agentic-go.">
   <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Safety &amp; Trust Boundaries — agentic-go">
+  <meta name="twitter:title" content="Safety &amp; Containment — agentic-go">
   <meta name="twitter:description" content="Workspace containment, execution boundaries, and refactoring safety in agentic-go.">
   <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
@@ -41,29 +41,25 @@
   <header class="site-header" role="banner">
     <div class="header-container">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
-        <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
-        <span class="brand-tag">Docs</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="../" class="nav-link">Docs</a></li>
-          <li><a href="../install/" class="nav-link">Install</a></li>
-          <li><a href="../connect/" class="nav-link">Connect</a></li>
-          <li><a href="../verify/" class="nav-link">Verify</a></li>
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
+          <li><a href="../connect/">Connect</a></li>
+          <li><a href="../verify/">Verify</a></li>
           <li><a href="./" class="nav-link active">Safety</a></li>
-          <li><a href="../contracts/" class="nav-link">Contracts</a></li>
-          <li><a href="../faq/" class="nav-link">FAQ</a></li>
+          <li><a href="../contracts/">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="../install/" class="btn btn-primary btn-sm">Install</a>
-        <button type="button" class="mobile-menu-btn docs-sidebar-toggle" aria-label="Toggle navigation menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
     </div>
   </header>
@@ -105,20 +101,13 @@
       <article class="docs-article">
         <h1>Safety &amp; Trust Boundaries</h1>
         <p class="lead">
-          <code>agentic-go</code> is engineered with transparent security controls. We state clearly what is executed, what can be modified, and why we define our protections as <strong>containment</strong> rather than sandboxing.
+          <code>agentic-go</code> is engineered with transparent security controls. We define our protections as <strong>containment</strong> rather than sandboxing.
         </p>
-
-        <div class="diagram-container">
-          <img src="../../assets/diagrams/trust-boundary.svg" alt="agentic-go trust boundary" width="840" height="280">
-        </div>
 
         <h2>Containment vs. Sandboxing</h2>
-        <p>
-          We deliberately avoid claiming that <code>agentic-go</code> runs in a secure sandbox:
-        </p>
         <ul>
-          <li><strong>Containment Controls:</strong> All filesystem lookups, AST analysis, and subprocess operations are resolved against the symlink-canonicalized workspace root. Operations outside the workspace are rejected. Subprocesses share cancellation contexts, bounded stderr/stdout buffers, and execution timeouts.</li>
-          <li><strong>No Hostile-Code Isolation:</strong> When verification compiles and runs Go tests (e.g. <code>go test ./...</code>), that code runs with the exact OS permissions and credentials of the user running the MCP process. Do not execute verification against untrusted, malicious repositories.</li>
+          <li><strong>Containment Controls:</strong> All filesystem lookups, AST analysis, and subprocess operations are resolved against the symlink-canonicalized workspace root. Subprocesses share cancellation contexts, bounded output buffers, and execution timeouts.</li>
+          <li><strong>Execution Privileges:</strong> When verification compiles and runs Go tests (<code>go test ./...</code>), that code runs with the exact OS permissions of the user running the process. Do not execute verification against untrusted repositories.</li>
         </ul>
 
         <h2>Tool Execution Classes</h2>
@@ -135,12 +124,12 @@
               <tr>
                 <td class="cell-highlight">Read-Only / Closed-World</td>
                 <td><code>go_workspace_brief</code>, <code>go_search</code>, <code>go_symbol_context</code>, <code>go_audit_concurrency</code>, <code>go_audit_errors</code></td>
-                <td>Never executes compilers, test binaries, or shell commands. Operates purely by reading contained files and parsing ASTs. Completely safe for automatic client execution.</td>
+                <td>Never executes compilers or test binaries. Completely safe for automated execution.</td>
               </tr>
               <tr>
                 <td class="cell-highlight">Execution Tools</td>
                 <td><code>go_test_structured</code>, <code>go_race_report</code>, <code>go_verify_change</code>, <code>go_flake_finder</code>, <code>go_benchmark_diff</code></td>
-                <td>Invokes local <code>go</code> toolchain to compile packages and run tests. Subject to user process privileges, timeouts, and cancellation.</td>
+                <td>Invokes local <code>go</code> toolchain to compile packages and run tests. Subject to timeouts and cancellation.</td>
               </tr>
               <tr>
                 <td class="cell-highlight">Guarded Mutation</td>
@@ -152,76 +141,36 @@
         </div>
 
         <h2>Guarded Refactoring Invariants</h2>
-        <p>
-          The <code>go_refactor</code> tool provides preview and apply capabilities for renames, formatting, and imports:
-        </p>
         <ol>
           <li><strong>Content-Addressed Plan:</strong> Calling refactor preview produces an immutable plan ID bound to the exact Snapshot Ref and file preimages.</li>
-          <li><strong>Preimage Recheck:</strong> Before applying any edit, <code>agentic-go</code> verifies that every target file still matches its preimage bit-for-bit. If files changed externally, apply aborts immediately.</li>
-          <li><strong>Recovery Journal:</strong> A durable recovery journal is written prior to disk writes. If an operation is interrupted, <code>agentic-go doctor --recover</code> can restore the clean state.</li>
-          <li><strong>Non-Generated Files Only:</strong> Refactoring will never overwrite files matching standard generated file headers (e.g. <code>DO NOT EDIT</code>).</li>
-          <li><strong>Zero Git State Mutation:</strong> Refactoring never runs <code>git commit</code>, <code>git add</code>, or branch commands. Your Git staging area and history remain 100% under your control.</li>
+          <li><strong>Preimage Recheck:</strong> Before applying any edit, <code>agentic-go</code> verifies that every target file still matches its preimage bit-for-bit.</li>
+          <li><strong>Recovery Journal:</strong> A durable recovery journal is written prior to disk writes. <code>agentic-go doctor --recover</code> can restore clean state if interrupted.</li>
+          <li><strong>Zero Git State Mutation:</strong> Refactoring never runs <code>git commit</code>, <code>git add</code>, or branch commands.</li>
         </ol>
 
-        <h2>Network &amp; Telemetry Policy</h2>
-        <ul>
-          <li><code>agentic-go</code> communicates exclusively over local <code>stdio</code>.</li>
-          <li>It makes zero outbound network requests and has no tracking or analytics beacons.</li>
-          <li>The bundled <code>gopls</code> companion is spawned with telemetry permanently disabled.</li>
-        </ul>
-
-        <div class="docs-nav-footer">
-          <a href="../verify/" class="docs-nav-card">
-            <span class="docs-nav-label">Previous</span>
-            <span class="docs-nav-title">← Verification Engine</span>
-          </a>
-          <a href="../action/" class="docs-nav-card" style="text-align: right;">
-            <span class="docs-nav-label">Next Step</span>
-            <span class="docs-nav-title">GitHub Action →</span>
-          </a>
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../action/" class="btn-ghost">Next: GitHub Action ›</a>
         </div>
       </article>
     </main>
   </div>
 
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
   <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      <div class="footer-brand">
-        <a href="../../" class="brand-link">
-          <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
-          <span>agentic-go</span>
-        </a>
-        <p>Source-grounded Go intelligence for coding agents.</p>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Documentation</h4>
-        <ul class="footer-links">
-          <li><a href="../" class="footer-link">Overview</a></li>
-          <li><a href="../install/" class="footer-link">Installation</a></li>
-          <li><a href="../connect/" class="footer-link">MCP Connection</a></li>
-          <li><a href="../verify/" class="footer-link">Verification</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Protocols</h4>
-        <ul class="footer-links">
-          <li><a href="../contracts/" class="footer-link">Contracts &amp; Schemas</a></li>
-          <li><a href="./" class="footer-link">Safety &amp; Trust</a></li>
-          <li><a href="../action/" class="footer-link">GitHub Action</a></li>
-          <li><a href="../faq/" class="footer-link">FAQ</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Repository</h4>
-        <ul class="footer-links">
-          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Releases</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
       <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
-      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../action/">Action</a></li>
+        <li><a href="../contracts/">Contracts</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
     </div>
   </footer>
 
