@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-font="sf-pro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
   <meta name="author" content="agentic-mcps">
   <link rel="canonical" href="https://agentic-mcps.github.io/go/">
 
-  <!-- Open Graph / Facebook / LinkedIn -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://agentic-mcps.github.io/go/">
   <meta property="og:title" content="agentic-go — Source-grounded Go intelligence for coding agents">
@@ -32,7 +32,7 @@
   <link rel="alternate" type="application/json" href=".well-known/mcp.json" title="MCP Server Declaration">
   <link rel="alternate" type="application/json" href=".well-known/ai-catalog.json" title="AI Discovery Catalog">
 
-  <!-- Google Search Console verification placeholder -->
+  <!-- Google Search Console placeholder -->
   <!-- <meta name="google-site-verification" content="YOUR_SEARCH_CONSOLE_TOKEN_HERE" /> -->
 
   <link rel="stylesheet" href="styles.css">
@@ -65,7 +65,7 @@
         "@type": "WebSite",
         "name": "agentic-go",
         "url": "https://agentic-mcps.github.io/go/",
-        "description": "Official documentation and product guide for agentic-go."
+        "description": "Official website and documentation for agentic-go."
       }
     ]
   }
@@ -78,9 +78,8 @@
   <header class="site-header" role="banner">
     <div class="header-container">
       <a href="./" class="brand-link" aria-label="agentic-go home">
-        <img src="assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <img src="assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
-        <span class="brand-tag">v1.0.0</span>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -96,13 +95,8 @@
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-          </svg>
-          <span>GitHub</span>
-        </a>
-        <a href="#install" class="btn btn-primary btn-sm">Install</a>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="#install" class="btn-pill btn-pill--sm">Install</a>
         <button type="button" class="mobile-menu-btn" aria-label="Toggle mobile menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
@@ -115,78 +109,138 @@
     
     <!-- Hero Section -->
     <section class="hero-section">
-      <div class="section-container">
-        <div class="hero-badge">
-          <span class="dot"></span> Local Stdio MCP Server & CLI
-        </div>
+      <div class="hero-container">
+        <img src="assets/brand/project-mark.svg" alt="agentic-go project mark" class="hero-app-icon" width="104" height="104">
+        <div class="hero-eyebrow">agentic-go</div>
         
-        <h1 class="hero-title">
-          Source-grounded Go intelligence<br>
-          <span class="gradient-text">for coding agents.</span>
+        <h1 class="t-heading-lg hero-headline">
+          Source-grounded Go intelligence<br>for coding agents.
         </h1>
         
-        <p class="hero-lead">
-          Coding agents lose repository context, drift from stated intent, and cannot prove what changed. 
-          <strong>agentic-go</strong> provides workspace context, durable change continuity, guarded refactoring, 
-          and evidence-backed verification—without embedding an LLM.
+        <p class="t-subheading hero-subhead">
+          The local Go MCP server that gives external coding agents workspace context, durable change continuity, guarded refactoring, and evidence-backed verification.
         </p>
 
-        <div class="hero-cta">
-          <a href="#install" class="btn btn-primary">Install agentic-go</a>
-          <a href="docs/connect/" class="btn btn-secondary">Connect MCP Client</a>
-          <a href="docs/" class="btn btn-secondary">Read Documentation</a>
+        <div class="hero-actions">
+          <a href="#install" class="btn-pill">Install agentic-go</a>
+          <a href="https://github.com/agentic-mcps/go" class="btn-ghost" target="_blank" rel="noopener noreferrer">View on GitHub ›</a>
         </div>
 
-        <div class="hero-pills">
-          <a href="#install"><img src="assets/brand/pills/install.svg" alt="Install agentic-go badge" width="130" height="28"></a>
-          <a href="docs/connect/"><img src="assets/brand/pills/mcp-setup.svg" alt="MCP Setup badge" width="130" height="28"></a>
-          <a href="docs/contracts/"><img src="assets/brand/pills/docs.svg" alt="Contracts documentation badge" width="130" height="28"></a>
-          <a href="https://github.com/agentic-mcps/go/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer"><img src="assets/brand/pills/release.svg" alt="v1.0.0 Release badge" width="130" height="28"></a>
+        <div class="hero-footnote">
+          Free and open source (Apache-2.0) · Requires Go 1.25, 1.26, or 1.27 on macOS &amp; Linux
         </div>
       </div>
     </section>
 
-    <!-- Quickstart Section -->
-    <section id="install" class="section section-alt">
+    <!-- Dual macOS Before vs After Comparison (Screenshot 3 aesthetic) -->
+    <section class="section section-fog">
       <div class="section-container">
         <div class="section-header">
-          <div class="section-tag">Quickstart</div>
-          <h2 class="section-title">Install in seconds. Connect directly.</h2>
-          <p class="section-subtitle">
-            Supported on macOS (Darwin) and Linux for <code>amd64</code> and <code>arm64</code>. 
-            Requires Go 1.25, 1.26, or 1.27. Bundles the pinned <code>agentic-go-gopls</code> companion.
+          <h2 class="t-heading" style="margin-bottom: var(--space-12);">
+            Ever let an AI agent edit your Go repo<br>and seen this?
+          </h2>
+          <p class="t-subheading">
+            Coding agents lose workspace context, mutate unapproved public APIs, and skip whole-package test verification. Same task, two very different reading and execution experiences.
           </p>
         </div>
 
-        <div class="quickstart-wrapper">
-          <div class="terminal-header">
-            <div class="terminal-dots">
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
+        <div class="comparison-grid">
+          <!-- Left: Before Window -->
+          <div>
+            <div class="mac-window">
+              <div class="mac-header">
+                <div class="traffic-lights">
+                  <span class="traffic-dot close"></span>
+                  <span class="traffic-dot min"></span>
+                  <span class="traffic-dot max"></span>
+                </div>
+                <span class="mac-title">worker_pool.go — Unassisted Agent</span>
+              </div>
+              <div class="mac-body" style="background: #fafafa; color: #474747; min-height: 240px;">
+                <p style="color: #999; margin-bottom: 8px;">// Agent edited file without snapshot check</p>
+                <p><strong>type</strong> WorkerPool <strong>struct</strong> {</p>
+                <p style="color: #d9534f; background: #fff1f0; padding: 2px 4px; margin: 4px 0;">-  tasks chan Task // Deleted without checking callers</p>
+                <p style="color: #d9534f; background: #fff1f0; padding: 2px 4px; margin: 4px 0;">+  tasks []Task   // Breaking public API change!</p>
+                <p>}</p>
+                <p style="margin-top: 12px; color: #d9534f;">⚠️ 0 tests executed · Race condition introduced · Stale context</p>
+              </div>
             </div>
-            <div class="tab-selector" data-tabs="install-tabs">
-              <button type="button" class="tab-btn active" data-target="brew">Homebrew</button>
-              <button type="button" class="tab-btn" data-target="curl">Curl Installer</button>
-              <button type="button" class="tab-btn" data-target="mcp">MCP Config</button>
+            <div class="comparison-label">
+              <strong>Before</strong> — what standard unassisted agents produce
             </div>
           </div>
 
-          <div class="terminal-body" data-tab-content="install-tabs" data-panel="brew">
-            <button type="button" class="copy-btn" aria-label="Copy Homebrew command">Copy</button>
-            <div class="code-line"><span class="prompt-char">$</span> <code>brew install agentic-mcps/tap/agentic-go</code></div>
-            <div class="code-line"><span class="prompt-char">$</span> <code>agentic-go --version</code></div>
-            <div class="code-line" style="color: var(--text-muted);"><span class="prompt-char">&gt;</span> agentic-go version 1.0.0 (darwin/arm64)</div>
+          <!-- Arrow -->
+          <div class="comparison-arrow">→</div>
+
+          <!-- Right: After Window -->
+          <div>
+            <div class="mac-window">
+              <div class="mac-header">
+                <div class="traffic-lights">
+                  <span class="traffic-dot close"></span>
+                  <span class="traffic-dot min"></span>
+                  <span class="traffic-dot max"></span>
+                </div>
+                <span class="mac-title">agentic.verify/v1 — With agentic-go</span>
+              </div>
+              <div class="mac-body" style="background: #ffffff; color: #1d1d1f; min-height: 240px;">
+                <p style="color: #00add8; margin-bottom: 8px;">// Pinned Snapshot: sha256:5e303777...</p>
+                <p style="color: #10b981; background: #f0fdf4; padding: 2px 4px; margin: 4px 0;">✓ Exported API: 0 breaking signature changes</p>
+                <p style="color: #10b981; background: #f0fdf4; padding: 2px 4px; margin: 4px 0;">✓ Whole-package tests: 198 passed across 6 packages</p>
+                <p style="color: #10b981; background: #f0fdf4; padding: 2px 4px; margin: 4px 0;">✓ Go race detector: 0 data races detected (-race)</p>
+                <p style="color: #10b981; background: #f0fdf4; padding: 2px 4px; margin: 4px 0;">✓ Concurrency &amp; error analyzers: 0 introduced findings</p>
+                <p style="margin-top: 12px; font-weight: 600; color: #10b981;">Policy Result: PASS (Exit code 0)</p>
+              </div>
+            </div>
+            <div class="comparison-label">
+              <strong>After</strong> — the verified outcome with agentic-go
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quickstart & Installation -->
+    <section id="install" class="section">
+      <div class="section-container">
+        <div class="section-header">
+          <div class="t-eyebrow">Installation</div>
+          <h2 class="t-heading">Install in seconds. Connect directly.</h2>
+          <p class="t-subheading">
+            Zero external accounts, no cloud dependencies. Works seamlessly with Claude Desktop, Cursor, Cline, and Claude Code.
+          </p>
+        </div>
+
+        <div class="mac-window mac-window--dark" style="max-width: 780px; margin: 0 auto;">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <div class="mac-title mac-title--dark">Terminal</div>
+            <div class="sequence-tabs" data-tabs="install-tabs" style="border: none; background: transparent; position: relative; z-index: 10;">
+              <button type="button" class="seq-tab-btn active" data-target="brew" style="padding: 6px 12px; min-width: auto; border: none; font-size: 12px;">Homebrew</button>
+              <button type="button" class="seq-tab-btn" data-target="curl" style="padding: 6px 12px; min-width: auto; border: none; font-size: 12px;">Curl Script</button>
+              <button type="button" class="seq-tab-btn" data-target="mcp" style="padding: 6px 12px; min-width: auto; border: none; font-size: 12px;">MCP Config</button>
+            </div>
           </div>
 
-          <div class="terminal-body" data-tab-content="install-tabs" data-panel="curl" style="display: none;">
-            <button type="button" class="copy-btn" aria-label="Copy Curl installer command">Copy</button>
-            <div class="code-line"><span class="prompt-char">$</span> <code>curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/install.sh | bash -s -- 1.0.0</code></div>
-            <div class="code-line" style="color: var(--text-muted);"><span class="prompt-char">&gt;</span> Installed agentic-go, agentic-go-gopls, agentic-go-vet into ~/.local/bin</div>
+          <div class="mac-body mac-body--dark" data-tab-content="install-tabs" data-panel="brew" style="position: relative;">
+            <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
+            <p><span style="color: #00add8;">$</span> brew install agentic-mcps/tap/agentic-go</p>
+            <p><span style="color: #00add8;">$</span> agentic-go --version</p>
+            <p style="color: #8896aa;">&gt; agentic-go version 1.0.0 (darwin/arm64)</p>
           </div>
 
-          <div class="terminal-body" data-tab-content="install-tabs" data-panel="mcp" style="display: none;">
-            <button type="button" class="copy-btn" aria-label="Copy MCP JSON configuration">Copy</button>
+          <div class="mac-body mac-body--dark" data-tab-content="install-tabs" data-panel="curl" style="display: none; position: relative;">
+            <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
+            <p><span style="color: #00add8;">$</span> curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.0.0/scripts/install.sh | bash -s -- 1.0.0</p>
+          </div>
+
+          <div class="mac-body mac-body--dark" data-tab-content="install-tabs" data-panel="mcp" style="display: none; position: relative;">
+            <button type="button" class="copy-btn" style="position: absolute; top: 16px; right: 16px;">Copy</button>
             <pre><code>{
   "mcpServers": {
     "agentic-go": {
@@ -200,95 +254,121 @@
       </div>
     </section>
 
-    <!-- Workflow Section -->
-    <section class="section">
+    <!-- Feature Cards Section (Screenshot 5 aesthetic) -->
+    <section class="section section-fog">
       <div class="section-container">
         <div class="section-header">
-          <div class="section-tag">The Workflow</div>
-          <h2 class="section-title">Orient → Intent → Edit → Checkpoint → Verify</h2>
-          <p class="section-subtitle">
-            A small, predictable loop that gives external agents precise grounding before making changes, 
-            catches drift during modifications, and proves outcome through executed tests.
+          <div class="t-eyebrow">Capabilities</div>
+          <h2 class="t-heading">Designed to stay grounded.<br>Built to verify.</h2>
+          <p class="t-subheading">
+            Every feature is deterministic, local, and tied to an immutable workspace snapshot.
           </p>
         </div>
 
-        <div class="diagram-container">
-          <img src="assets/diagrams/agentic-go-loop.svg" alt="agentic-go workflow loop: Brief, begin, edit, checkpoint, and verify" width="900" height="240" loading="lazy">
-        </div>
+        <div class="feature-grid">
+          <!-- Card 1 -->
+          <div class="feature-card">
+            <div class="feature-card-shot">
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #1d1d1f; line-height: 1.6; text-align: left; width: 100%;">
+                <p><strong>Package API:</strong> internal/worker</p>
+                <p style="color: #0066cc;">func NewPool(ctx, size int) *Pool</p>
+                <p style="color: #707070;">→ 14 callers · 3 test files</p>
+                <p style="color: #707070;">→ Bounded call hierarchy</p>
+              </div>
+            </div>
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">Workspace Context</h3>
+              <p class="feature-card-text">
+                Compact Context Packs with package APIs, definitions, and call hierarchy without overwhelming token limits.
+              </p>
+            </div>
+          </div>
 
-        <div class="workflow-steps-grid">
-          <div class="workflow-step-card">
-            <div class="workflow-step-name">1. Orient</div>
-            <div class="workflow-step-desc">Load compact Context Packs with package APIs, definitions, and call hierarchy.</div>
+          <!-- Card 2 -->
+          <div class="feature-card">
+            <div class="feature-card-shot">
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #1d1d1f; line-height: 1.6; text-align: left; width: 100%;">
+                <p><strong>Change Contract:</strong> chg_8f2910ba</p>
+                <p style="color: #10b981;">✓ Goal: Context cancellation</p>
+                <p style="color: #10b981;">✓ Scope: 2 packages tracked</p>
+                <p style="color: #10b981;">✓ Exported API: 0 breakages</p>
+              </div>
+            </div>
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">Change Continuity</h3>
+              <p class="feature-card-text">
+                Private same-machine contracts that catch unintended API signature changes, scope drift, and test deletions.
+              </p>
+            </div>
           </div>
-          <div class="workflow-step-card">
-            <div class="workflow-step-name">2. Intent</div>
-            <div class="workflow-step-desc">Establish a Change Contract recording goal, boundaries, and snapshot lineage.</div>
-          </div>
-          <div class="workflow-step-card">
-            <div class="workflow-step-name">3. Edit</div>
-            <div class="workflow-step-desc">Agent edits files or performs guarded deterministic AST refactorings.</div>
-          </div>
-          <div class="workflow-step-card">
-            <div class="workflow-step-name">4. Checkpoint</div>
-            <div class="workflow-step-desc">Detect unintended scope drift, exported API breakages, or touched generated files.</div>
-          </div>
-          <div class="workflow-step-card">
-            <div class="workflow-step-name">5. Verify</div>
-            <div class="workflow-step-desc">Execute whole-package tests, race detector, coverage delta, and calibrated analyzers.</div>
+
+          <!-- Card 3 -->
+          <div class="feature-card">
+            <div class="feature-card-shot">
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #1d1d1f; line-height: 1.6; text-align: left; width: 100%;">
+                <p><strong>Refactor Plan:</strong> plan_0cf9b0dc</p>
+                <p style="color: #00add8;">→ Deterministic Rename / FixAll</p>
+                <p style="color: #10b981;">✓ All file preimages verified</p>
+                <p style="color: #707070;">→ Journal written before edits</p>
+              </div>
+            </div>
+            <div class="feature-card-content">
+              <h3 class="feature-card-title">Guarded Refactoring</h3>
+              <p class="feature-card-text">
+                Content-addressed preview plans re-verify all file preimages before modifying contained non-generated files.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Central Interactive Verification Sequence Explorer -->
-    <section class="section section-alt">
+    <section class="section">
       <div class="section-container">
         <div class="section-header">
-          <div class="section-tag">Interactive Explorer</div>
-          <h2 class="section-title">Anatomy of an Evidence-Backed Verification</h2>
-          <p class="section-subtitle">
-            Explore how <code>agentic.verify/v1</code> assembles snapshot lineage, executed whole-package evidence, 
-            calibrated findings, and explicit uncertainty without hand-waving.
+          <div class="t-eyebrow">Interactive Explorer</div>
+          <h2 class="t-heading">The Verification Pipeline</h2>
+          <p class="t-subheading">
+            Inspect how <code>agentic.verify/v1</code> assembles executed whole-package evidence, race reports, and calibrated uncertainty.
           </p>
         </div>
 
-        <div id="verification-sequence" class="interactive-sequence">
-          <!-- Step Navigation -->
-          <div class="sequence-nav" role="tablist" aria-label="Verification sequence steps">
-            <button type="button" class="seq-step-btn active" role="tab" aria-selected="true">
-              <span class="seq-step-num">01 / Snapshot</span>
-              <span class="seq-step-title">Workspace Baseline</span>
+        <div id="verification-sequence" class="sequence-card">
+          <!-- Step Tabs -->
+          <div class="sequence-tabs" role="tablist" aria-label="Verification sequence steps">
+            <button type="button" class="seq-tab-btn active" role="tab" aria-selected="true">
+              <span class="seq-tab-num">01 / Snapshot</span>
+              <span class="seq-tab-title">Baseline</span>
             </button>
-            <button type="button" class="seq-step-btn" role="tab" aria-selected="false">
-              <span class="seq-step-num">02 / Intent</span>
-              <span class="seq-step-title">Drift & Scope</span>
+            <button type="button" class="seq-tab-btn" role="tab" aria-selected="false">
+              <span class="seq-tab-num">02 / Intent</span>
+              <span class="seq-tab-title">Drift Check</span>
             </button>
-            <button type="button" class="seq-step-btn" role="tab" aria-selected="false">
-              <span class="seq-step-num">03 / Execution</span>
-              <span class="seq-step-title">Whole-Package Tests</span>
+            <button type="button" class="seq-tab-btn" role="tab" aria-selected="false">
+              <span class="seq-tab-num">03 / Execution</span>
+              <span class="seq-tab-title">Whole-Package Tests</span>
             </button>
-            <button type="button" class="seq-step-btn" role="tab" aria-selected="false">
-              <span class="seq-step-num">04 / Findings</span>
-              <span class="seq-step-title">Calibrated Analyzers</span>
+            <button type="button" class="seq-tab-btn" role="tab" aria-selected="false">
+              <span class="seq-tab-num">04 / Findings</span>
+              <span class="seq-tab-title">Analyzers</span>
             </button>
-            <button type="button" class="seq-step-btn" role="tab" aria-selected="false">
-              <span class="seq-step-num">05 / Uncertainty</span>
-              <span class="seq-step-title">Explicit Risk Lenses</span>
+            <button type="button" class="seq-tab-btn" role="tab" aria-selected="false">
+              <span class="seq-tab-num">05 / Uncertainty</span>
+              <span class="seq-tab-title">Risk Lenses</span>
             </button>
           </div>
 
-          <!-- Sequence Viewport -->
-          <div class="sequence-viewport">
-            <!-- Left: Dynamic Explanation -->
+          <!-- Viewport -->
+          <div class="sequence-body">
+            <!-- Left: Dynamic Description -->
             <div class="sequence-explanation">
-              <!-- Rendered via JS, fallback below -->
-              <div class="hero-badge" style="margin-bottom: var(--space-4); font-size: 0.775rem;">
-                <span class="dot"></span> Immutable Hash
+              <div style="display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(0, 173, 216, 0.15); color: #00add8; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+                Immutable Hash
               </div>
               <h4>Content-Addressed Workspace Baseline</h4>
               <p>
-                Before reading or modifying code, agentic-go computes an immutable snapshot hash over workspace files and AST structures. All subsequent operations are pinned to this Snapshot Ref.
+                Before reading or modifying code, agentic-go computes an immutable snapshot hash over workspace files and AST structures. All operations are pinned to this Snapshot Ref.
               </p>
               <ul class="sequence-details-list">
                 <li class="sequence-details-item">
@@ -306,13 +386,13 @@
               </ul>
             </div>
 
-            <!-- Right: Code Preview Pane -->
-            <div class="sequence-preview-pane">
-              <div class="preview-pane-header">
-                <span class="preview-code-title">Snapshot Metadata (agentic.context/v1)</span>
-                <button type="button" class="copy-btn" aria-label="Copy payload JSON">Copy</button>
+            <!-- Right: Code Preview -->
+            <div class="sequence-code-pane">
+              <div class="sequence-code-header">
+                <span class="sequence-code-title">Snapshot Metadata (agentic.context/v1)</span>
+                <button type="button" class="copy-btn" aria-label="Copy JSON snippet">Copy</button>
               </div>
-              <pre class="preview-code-content"><code>{
+              <pre class="sequence-code-content"><code>{
   "snapshot_ref": "sha256:5e3037779544636ea1d0338cce1dc798bac1be4ad1f22d9622f68f95e1f45db7",
   "root_module": "github.com/agentic-mcps/go",
   "go_version": "1.27.0",
@@ -327,205 +407,91 @@
       </div>
     </section>
 
-    <!-- Capabilities Matrix -->
-    <section class="section">
+    <!-- 2-Column FAQ Section (Screenshot 2 aesthetic) -->
+    <section class="section section-fog">
       <div class="section-container">
-        <div class="section-header">
-          <div class="section-tag">Capabilities</div>
-          <h2 class="section-title">Built specifically for Go coding agents</h2>
-          <p class="section-subtitle">
-            Every feature is deterministic, local, and tied to an immutable snapshot.
-          </p>
+        <div class="section-header" style="text-align: left; max-width: 900px; margin-bottom: var(--space-40);">
+          <h2 class="t-heading">Questions before you install.</h2>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-icon">🔍</div>
-            <h3 class="card-title">Workspace Context</h3>
-            <p class="card-desc">
-              Package APIs, diagnostics, definitions, references, implementations, related tests, and bounded call relationships without flooding LLM context windows.
-            </p>
-            <div class="card-meta">
-              <span>Tools: <code>go_workspace_brief</code>, <code>go_search</code>, <code>go_symbol_context</code></span>
+        <div class="faq-container">
+          <div class="faq-row">
+            <div class="faq-question">Does this replace gopls?</div>
+            <div class="faq-answer">
+              No. <code>agentic-go</code> bundles a pinned <code>gopls v0.21.0</code> companion named <code>agentic-go-gopls</code>. It uses <code>gopls</code> as a private stdio sidecar for type analysis and symbol references, while building immutable snapshot lineage, change continuity contracts, guarded mutation, and whole-package verification around it.
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-icon">📋</div>
-            <h3 class="card-title">Change Continuity</h3>
-            <p class="card-desc">
-              Private same-machine Change Contracts tracking goals, touched files, questions, decisions, and catching exported API or dependency drift.
-            </p>
-            <div class="card-meta">
-              <span>Tools: <code>go_begin_change</code>, <code>go_checkpoint_change</code></span>
+          <div class="faq-row">
+            <div class="faq-question">Can it modify my files or Git history?</div>
+            <div class="faq-answer">
+              <code>agentic-go</code> will never mutate Git repository state (it never runs <code>git commit</code>, <code>git add</code>, or branch commands). The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after rechecking all file preimages against a recovery journal.
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-icon">⚡</div>
-            <h3 class="card-title">Guarded Refactoring</h3>
-            <p class="card-desc">
-              Deterministic AST rename, format, and import organization. Content-addressed preview plans re-verify all file preimages before modifying contained non-generated files.
-            </p>
-            <div class="card-meta">
-              <span>Tool: <code>go_refactor</code> (preview &amp; apply)</span>
+          <div class="faq-row">
+            <div class="faq-question">What execution privileges does verification need?</div>
+            <div class="faq-answer">
+              Execution tools compile and run Go test suites with the caller's privileges (same environment as running <code>go test ./...</code> in terminal). All paths are contained and symlink-resolved, but this is containment, not a sandbox. Do not run verification on hostile untrusted repositories.
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-icon">🛡️</div>
-            <h3 class="card-title">Evidence-Backed Verification</h3>
-            <p class="card-desc">
-              Whole-package test execution, race detection, coverage tracking, calibrated concurrency and error analyzers, and explicit uncertainty reporting.
-            </p>
-            <div class="card-meta">
-              <span>Tools: <code>go_verify_change</code>, <code>go_audit_concurrency</code>, <code>go_race_report</code></span>
+          <div class="faq-row">
+            <div class="faq-question">Which Go versions are supported?</div>
+            <div class="faq-answer">
+              Go 1.25, Go 1.26, and Go 1.27 on macOS (Darwin) and Linux for <code>amd64</code> and <code>arm64</code>. Server startup verifies your host toolchain against the workspace's minimum Go requirement using <code>GOTOOLCHAIN=local</code>.
+            </div>
+          </div>
+
+          <div class="faq-row">
+            <div class="faq-question">Is it free and open source?</div>
+            <div class="faq-answer">
+              Yes — free and open source under the Apache-2.0 license. The project mark is adapted from Maria Letta's Free Gophers Pack under CC BY 4.0.
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Trust Boundary & Safety -->
-    <section class="section section-alt">
-      <div class="section-container">
-        <div class="section-header">
-          <div class="section-tag">Trust &amp; Boundaries</div>
-          <h2 class="section-title">Strict workspace containment. No sandboxing illusions.</h2>
-          <p class="section-subtitle">
-            Understand exactly what agentic-go executes, what it modifies, and where security boundaries lie.
-          </p>
-        </div>
-
-        <div class="diagram-container">
-          <img src="assets/diagrams/trust-boundary.svg" alt="Trust boundary diagram showing MCP client, agentic-go server, and contained Go workspace" width="840" height="280" loading="lazy">
-        </div>
-
-        <div class="grid-3" style="margin-top: var(--space-8);">
-          <div class="card">
-            <h3 class="card-title" style="font-size: 1.1rem;">Read &amp; Audit Tools</h3>
-            <p class="card-desc">
-              Completely read-only and closed-world. Never run compilers or test binaries. Safe for automated execution.
-            </p>
-          </div>
-          <div class="card">
-            <h3 class="card-title" style="font-size: 1.1rem;">Execution Tools</h3>
-            <p class="card-desc">
-              May compile and run trusted repository code with the caller's privileges. We describe this as <strong>containment</strong>, never as sandboxing.
-            </p>
-          </div>
-          <div class="card">
-            <h3 class="card-title" style="font-size: 1.1rem;">Git Safety</h3>
-            <p class="card-desc">
-              agentic-go never stages, commits, rebases, or alters Git history. Refactoring modifies only existing non-generated files after journal validation.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Evidence & Release Verification -->
-    <section class="section">
-      <div class="section-container">
-        <div class="section-header">
-          <div class="section-tag">Validation Evidence</div>
-          <h2 class="section-title">Corpus-calibrated and release-proven</h2>
-          <p class="section-subtitle">
-            All claims are backed by public test golden fixtures, multi-version toolchain matrices, and historical corpus reviews.
-          </p>
-        </div>
-
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Evaluation Gate</th>
-                <th>Toolchain &amp; Environment</th>
-                <th>Observed Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="cell-highlight">Multi-version Test Matrix</td>
-                <td>Go 1.25.13, Go 1.26.7, Go 1.27.0 (macOS &amp; Linux)</td>
-                <td><span style="color: var(--accent-emerald);">✓ Pass</span> (100% test suite passing across all versions)</td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">Concurrency &amp; Race Detection</td>
-                <td>Go 1.27.0 with <code>-race</code> enabled</td>
-                <td><span style="color: var(--accent-emerald);">✓ Pass</span> (0 data races detected)</td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">Analyzer Calibration Corpus</td>
-                <td>10 pinned repositories, 467 reviewed findings</td>
-                <td><span style="color: var(--accent-emerald);">0% False Positives</span> observed in corpus baseline</td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">Release Archives</td>
-                <td>Darwin &amp; Linux (amd64 / arm64)</td>
-                <td><span style="color: var(--accent-emerald);">✓ Byte-identical</span> deterministic builds with checksums</td>
-              </tr>
-              <tr>
-                <td class="cell-highlight">Gopls Companion Seam</td>
-                <td>Pinned gopls v0.21.0 sidecar</td>
-                <td><span style="color: var(--accent-emerald);">✓ Pass</span> (Strict capability handshake &amp; telemetry disabled)</td>
-              </tr>
-            </tbody>
-          </table>
+    <!-- Bottom CTA Banner (Screenshot 1 aesthetic) -->
+    <section class="section" style="text-align: center; padding: var(--space-120) var(--space-24);">
+      <div class="section-container" style="max-width: 640px;">
+        <h2 class="t-display" style="font-size: clamp(40px, 5.5vw, 64px); margin-bottom: var(--space-8);">
+          Free. Open source.<br>Built for Go.
+        </h2>
+        <p class="t-subheading" style="margin-bottom: var(--space-32);">
+          Give your AI coding agents true repository context and evidence-backed verification.
+        </p>
+        <div class="hero-actions">
+          <a href="#install" class="btn-pill">Install agentic-go</a>
+          <a href="docs/" class="btn-ghost">Read documentation ›</a>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- Site Footer -->
+  <!-- Floating Typography Switcher (Footer) -->
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
+  <!-- Footer (Screenshot 1 aesthetic) -->
   <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      <div class="footer-brand">
-        <a href="./" class="brand-link">
-          <img src="assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
-          <span>agentic-go</span>
-        </a>
-        <p>
-          Source-grounded Go intelligence, change continuity, guarded refactoring, and evidence-backed verification for AI coding agents.
-        </p>
-      </div>
-
-      <div>
-        <h4 class="footer-group-title">Documentation</h4>
-        <ul class="footer-links">
-          <li><a href="docs/" class="footer-link">Overview &amp; Concepts</a></li>
-          <li><a href="docs/install/" class="footer-link">Installation</a></li>
-          <li><a href="docs/connect/" class="footer-link">MCP Connection</a></li>
-          <li><a href="docs/verify/" class="footer-link">Verification Workflow</a></li>
-          <li><a href="docs/safety/" class="footer-link">Safety &amp; Containment</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="footer-group-title">Protocols &amp; CI</h4>
-        <ul class="footer-links">
-          <li><a href="docs/contracts/" class="footer-link">Protocol Contracts</a></li>
-          <li><a href="docs/action/" class="footer-link">GitHub Action</a></li>
-          <li><a href="docs/faq/" class="footer-link">Frequently Asked Questions</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Release Archives</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="footer-group-title">Project</h4>
-        <ul class="footer-links">
-          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/blob/main/LICENSE" class="footer-link" target="_blank" rel="noopener noreferrer">Apache-2.0 License</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/blob/main/SECURITY.md" class="footer-link" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/blob/main/CONTRIBUTING.md" class="footer-link" target="_blank" rel="noopener noreferrer">Contributing</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div>© 2026 agentic-mcps authors. Software licensed under Apache-2.0. Project mark adapted from Maria Letta (CC BY 4.0).</div>
-      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+      <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
+      <ul class="footer-nav">
+        <li><a href="docs/">Docs</a></li>
+        <li><a href="docs/install/">Install</a></li>
+        <li><a href="docs/connect/">Connect</a></li>
+        <li><a href="docs/verify/">Verify</a></li>
+        <li><a href="docs/contracts/">Contracts</a></li>
+        <li><a href="docs/faq/">FAQ</a></li>
+        <li><a href="https://github.com/agentic-mcps/go" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        <li><a href="https://github.com/agentic-mcps/go/releases" target="_blank" rel="noopener noreferrer">Releases</a></li>
+      </ul>
     </div>
   </footer>
 

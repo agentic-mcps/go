@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-font="sf-pro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Client Connection — agentic-go</title>
+  <title>MCP Client Setup — agentic-go</title>
   <meta name="description" content="Connect agentic-go to Claude Desktop, Cursor, Cline, Claude Code, and generic MCP clients over local stdio transport.">
   <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/connect/">
 
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/connect/">
-  <meta property="og:title" content="MCP Client Connection — agentic-go">
+  <meta property="og:title" content="MCP Client Setup — agentic-go">
   <meta property="og:description" content="Configure Claude Desktop, Cursor, Cline, and other MCP clients to use agentic-go.">
   <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="MCP Client Connection — agentic-go">
+  <meta name="twitter:title" content="MCP Client Setup — agentic-go">
   <meta name="twitter:description" content="Configure Claude Desktop, Cursor, Cline, and other MCP clients to use agentic-go.">
   <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
@@ -41,29 +41,25 @@
   <header class="site-header" role="banner">
     <div class="header-container">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
-        <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
-        <span class="brand-tag">Docs</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="../" class="nav-link">Docs</a></li>
-          <li><a href="../install/" class="nav-link">Install</a></li>
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
           <li><a href="./" class="nav-link active">Connect</a></li>
-          <li><a href="../verify/" class="nav-link">Verify</a></li>
-          <li><a href="../safety/" class="nav-link">Safety</a></li>
-          <li><a href="../contracts/" class="nav-link">Contracts</a></li>
-          <li><a href="../faq/" class="nav-link">FAQ</a></li>
+          <li><a href="../verify/">Verify</a></li>
+          <li><a href="../safety/">Safety</a></li>
+          <li><a href="../contracts/">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="../install/" class="btn btn-primary btn-sm">Install</a>
-        <button type="button" class="mobile-menu-btn docs-sidebar-toggle" aria-label="Toggle navigation menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
     </div>
   </header>
@@ -109,36 +105,33 @@
         </p>
 
         <h2>Generating Configuration Automatically</h2>
-        <p>
-          You can print ready-to-use configuration for your preferred client using the built-in <code>mcp-config</code> command:
-        </p>
-
-        <div class="quickstart-wrapper" style="margin: var(--space-4) 0 var(--space-8);">
-          <div class="terminal-header">
-            <span class="preview-code-title">Terminal</span>
-            <button type="button" class="copy-btn" aria-label="Copy mcp-config snippet">Copy</button>
+        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title mac-title--dark">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="terminal-body">
-            <div class="code-line"><span class="prompt-char">$</span> <code>agentic-go mcp-config --client claude --workspace $(pwd)</code></div>
+          <div class="mac-body mac-body--dark">
+            <p><span style="color: #00add8;">$</span> agentic-go mcp-config --client claude --workspace $(pwd)</p>
           </div>
         </div>
 
         <h2>Client Configuration Snippets</h2>
-
-        <div class="quickstart-wrapper" style="margin: var(--space-6) 0 var(--space-8);">
-          <div class="terminal-header">
-            <div class="tab-selector" data-tabs="mcp-client-tabs">
-              <button type="button" class="tab-btn active" data-target="claude-desktop">Claude Desktop</button>
-              <button type="button" class="tab-btn" data-target="cursor">Cursor</button>
-              <button type="button" class="tab-btn" data-target="cline">Cline / Roo</button>
-              <button type="button" class="tab-btn" data-target="claude-code">Claude Code CLI</button>
+        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
             </div>
+            <span class="mac-title mac-title--dark">claude_desktop_config.json</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-
-          <!-- Claude Desktop -->
-          <div class="terminal-body" data-tab-content="mcp-client-tabs" data-panel="claude-desktop">
-            <button type="button" class="copy-btn" aria-label="Copy Claude Desktop config">Copy</button>
-            <p class="tok-comment">// ~/Library/Application Support/Claude/claude_desktop_config.json</p>
+          <div class="mac-body mac-body--dark">
             <pre><code>{
   "mcpServers": {
     "agentic-go": {
@@ -150,42 +143,6 @@
     }
   }
 }</code></pre>
-          </div>
-
-          <!-- Cursor -->
-          <div class="terminal-body" data-tab-content="mcp-client-tabs" data-panel="cursor" style="display: none;">
-            <button type="button" class="copy-btn" aria-label="Copy Cursor config">Copy</button>
-            <p class="tok-comment">// In Cursor Settings &gt; Features &gt; MCP &gt; Add New MCP Server</p>
-            <pre><code>{
-  "mcpServers": {
-    "agentic-go": {
-      "command": "agentic-go",
-      "args": ["--workspace", "${workspaceFolder}"]
-    }
-  }
-}</code></pre>
-          </div>
-
-          <!-- Cline -->
-          <div class="terminal-body" data-tab-content="mcp-client-tabs" data-panel="cline" style="display: none;">
-            <button type="button" class="copy-btn" aria-label="Copy Cline config">Copy</button>
-            <p class="tok-comment">// ~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json</p>
-            <pre><code>{
-  "mcpServers": {
-    "agentic-go": {
-      "command": "agentic-go",
-      "args": ["--workspace", "/absolute/path/to/your/go/project"],
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
-}</code></pre>
-          </div>
-
-          <!-- Claude Code -->
-          <div class="terminal-body" data-tab-content="mcp-client-tabs" data-panel="claude-code" style="display: none;">
-            <button type="button" class="copy-btn" aria-label="Copy Claude Code CLI command">Copy</button>
-            <div class="code-line"><span class="prompt-char">$</span> <code>claude mcp add agentic-go agentic-go -- --workspace $(pwd)</code></div>
           </div>
         </div>
 
@@ -214,68 +171,29 @@
           </table>
         </div>
 
-        <h2>Preflight Diagnostics</h2>
-        <p>
-          When the MCP server starts, it verifies the host toolchain before opening stdio communication:
-        </p>
-        <ol>
-          <li>Checks that <code>go</code> is in <code>PATH</code> and satisfies Go 1.25+.</li>
-          <li>Resolves workspace symlinks and validates directory containment.</li>
-          <li>Spawns the bundled <code>agentic-go-gopls</code> sidecar, negotiates LSP capabilities, and disables gopls telemetry.</li>
-        </ol>
-
-        <div class="docs-nav-footer">
-          <a href="../install/" class="docs-nav-card">
-            <span class="docs-nav-label">Previous</span>
-            <span class="docs-nav-title">← Installation</span>
-          </a>
-          <a href="../verify/" class="docs-nav-card" style="text-align: right;">
-            <span class="docs-nav-label">Next Step</span>
-            <span class="docs-nav-title">Verification Engine →</span>
-          </a>
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../verify/" class="btn-ghost">Next: Verification Engine ›</a>
         </div>
       </article>
     </main>
   </div>
 
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
   <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      <div class="footer-brand">
-        <a href="../../" class="brand-link">
-          <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
-          <span>agentic-go</span>
-        </a>
-        <p>Source-grounded Go intelligence for coding agents.</p>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Documentation</h4>
-        <ul class="footer-links">
-          <li><a href="../" class="footer-link">Overview</a></li>
-          <li><a href="../install/" class="footer-link">Installation</a></li>
-          <li><a href="./" class="footer-link">MCP Connection</a></li>
-          <li><a href="../verify/" class="footer-link">Verification</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Protocols</h4>
-        <ul class="footer-links">
-          <li><a href="../contracts/" class="footer-link">Contracts &amp; Schemas</a></li>
-          <li><a href="../safety/" class="footer-link">Safety &amp; Trust</a></li>
-          <li><a href="../action/" class="footer-link">GitHub Action</a></li>
-          <li><a href="../faq/" class="footer-link">FAQ</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Repository</h4>
-        <ul class="footer-links">
-          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Releases</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
       <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
-      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../install/">Install</a></li>
+        <li><a href="../verify/">Verify</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
     </div>
   </footer>
 

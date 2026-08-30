@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-font="sf-pro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Protocol Contracts &amp; Schemas — agentic-go</title>
+  <title>Protocol Contracts — agentic-go</title>
   <meta name="description" content="Specification of agentic-go schemas (context/v1, change/v1, verify/v1), 14 MCP tools, 7 resources, and 6 prompts.">
   <link rel="canonical" href="https://agentic-mcps.github.io/go/docs/contracts/">
 
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://agentic-mcps.github.io/go/docs/contracts/">
-  <meta property="og:title" content="Protocol Contracts &amp; Schemas — agentic-go">
+  <meta property="og:title" content="Protocol Contracts — agentic-go">
   <meta property="og:description" content="Official MCP tools, resources, prompts, and JSON schemas for agentic-go v1.0.0.">
   <meta property="og:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Protocol Contracts &amp; Schemas — agentic-go">
+  <meta name="twitter:title" content="Protocol Contracts — agentic-go">
   <meta name="twitter:description" content="Official MCP tools, resources, prompts, and JSON schemas for agentic-go v1.0.0.">
   <meta name="twitter:image" content="https://agentic-mcps.github.io/go/assets/brand/social-preview.png">
 
@@ -41,29 +41,25 @@
   <header class="site-header" role="banner">
     <div class="header-container">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
-        <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
-        <span class="brand-tag">Docs</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="../" class="nav-link">Docs</a></li>
-          <li><a href="../install/" class="nav-link">Install</a></li>
-          <li><a href="../connect/" class="nav-link">Connect</a></li>
-          <li><a href="../verify/" class="nav-link">Verify</a></li>
-          <li><a href="../safety/" class="nav-link">Safety</a></li>
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
+          <li><a href="../connect/">Connect</a></li>
+          <li><a href="../verify/">Verify</a></li>
+          <li><a href="../safety/">Safety</a></li>
           <li><a href="./" class="nav-link active">Contracts</a></li>
-          <li><a href="../faq/" class="nav-link">FAQ</a></li>
+          <li><a href="../faq/">FAQ</a></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="../install/" class="btn btn-primary btn-sm">Install</a>
-        <button type="button" class="mobile-menu-btn docs-sidebar-toggle" aria-label="Toggle navigation menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
     </div>
   </header>
@@ -114,29 +110,18 @@
         <p>
           Emitted by <code>go_workspace_brief</code> and <code>go_symbol_context</code>. Provides compact, source-grounded summaries of packages, definitions, implementations, and call relationships.
         </p>
-        <ul>
-          <li><strong>Immutable Snapshot Ref:</strong> Every context pack includes a <code>snapshot_ref</code> hash.</li>
-          <li><strong>Compact Sizing:</strong> Bounded response payload fits comfortably within standard LLM context budgets.</li>
-          <li><strong>Artifact Overflow:</strong> Complete AST trees or deep call-chains are stored in private content-addressed artifacts retrievable via <code>agentic-go://artifact/{id}</code>.</li>
-        </ul>
 
         <h3>2. Change Contract Schema (<code>agentic.change/v1</code>)</h3>
         <p>
           Emitted by <code>go_begin_change</code> and <code>go_checkpoint_change</code>. Keeps agents aligned with initial user intent and detects structural drift.
         </p>
-        <ul>
-          <li><strong>Lineage Tracking:</strong> Records baseline snapshot, checkpoints, and current diff.</li>
-          <li><strong>Exported API Drift:</strong> Compares public declaration signatures; reports breaking signature changes.</li>
-          <li><strong>Scope Drift:</strong> Alerts when files in unstated packages are touched.</li>
-          <li><strong>File Integrity:</strong> Blocks modifications to generated files and flags test deletions.</li>
-        </ul>
 
         <h3>3. Verification Report Schema (<code>agentic.verify/v1</code>)</h3>
         <p>
           Emitted by <code>go_verify_change</code> and the CLI. Assembles package test results, coverage delta, race reports, and calibrated analyzer findings into one deterministic structure.
         </p>
 
-        <h2>Frozen MCP Tools Inventory</h2>
+        <h2>Frozen MCP Tools Inventory (14 Tools)</h2>
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
@@ -236,123 +221,28 @@
           </table>
         </div>
 
-        <h2>Fixed MCP Resources &amp; Templates</h2>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Resource URI</th>
-                <th>MIME Type</th>
-                <th>Content</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>agentic-go://analysis-rules</code></td>
-                <td><code>application/json</code></td>
-                <td>Active analyzer rules, severity levels, and configuration.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://capabilities</code></td>
-                <td><code>application/json</code></td>
-                <td>Effective server capabilities, sidecar status, and toolchain metadata.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://change-contract/current</code></td>
-                <td><code>application/json</code></td>
-                <td>Active Change Contract, goal, scope, and checkpoint lineage.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://module</code></td>
-                <td><code>application/json</code></td>
-                <td>Root module path, dependencies, and Go directives.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://packages</code></td>
-                <td><code>application/json</code></td>
-                <td>Complete package list with import graphs and test presence.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://trace-summary</code></td>
-                <td><code>application/json</code></td>
-                <td>Operational trace spans and duration metrics for recent operations.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://verification/latest</code></td>
-                <td><code>application/json</code></td>
-                <td>Most recent <code>agentic.verify/v1</code> verification report.</td>
-              </tr>
-              <tr>
-                <td><code>agentic-go://artifact/{id}</code></td>
-                <td><code>application/json</code></td>
-                <td>Content-addressed artifact payload (overflow context packs, diffs).</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h2>MCP Prompts</h2>
-        <ul>
-          <li><code>audit-package</code> (requires <code>package</code>): Systematic concurrency and error audit for a target package.</li>
-          <li><code>bisect-flake</code> (requires <code>package</code>, <code>runs</code>): Uncovers timing bugs and flakes under repeated runs.</li>
-          <li><code>pre-commit-check</code> (requires <code>package</code>, <code>coverage_threshold</code>): Runs tests, race detection, and coverage gating.</li>
-          <li><code>resume-change</code>: Resumes an existing Change Contract from stored cache state.</li>
-          <li><code>understand-change</code> (requires <code>base</code>, <code>goal</code>): Explores modified packages and builds semantic context.</li>
-          <li><code>verify-change</code> (requires <code>base</code>): Executes full verification suite against specified git base.</li>
-        </ul>
-
-        <div class="docs-nav-footer">
-          <a href="../action/" class="docs-nav-card">
-            <span class="docs-nav-label">Previous</span>
-            <span class="docs-nav-title">← GitHub Action</span>
-          </a>
-          <a href="../faq/" class="docs-nav-card" style="text-align: right;">
-            <span class="docs-nav-label">Next Step</span>
-            <span class="docs-nav-title">Frequently Asked Questions →</span>
-          </a>
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../faq/" class="btn-ghost">Next: FAQ ›</a>
         </div>
       </article>
     </main>
   </div>
 
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
   <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      <div class="footer-brand">
-        <a href="../../" class="brand-link">
-          <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
-          <span>agentic-go</span>
-        </a>
-        <p>Source-grounded Go intelligence for coding agents.</p>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Documentation</h4>
-        <ul class="footer-links">
-          <li><a href="../" class="footer-link">Overview</a></li>
-          <li><a href="../install/" class="footer-link">Installation</a></li>
-          <li><a href="../connect/" class="footer-link">MCP Connection</a></li>
-          <li><a href="../verify/" class="footer-link">Verification</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Protocols</h4>
-        <ul class="footer-links">
-          <li><a href="./" class="footer-link">Contracts &amp; Schemas</a></li>
-          <li><a href="../safety/" class="footer-link">Safety &amp; Trust</a></li>
-          <li><a href="../action/" class="footer-link">GitHub Action</a></li>
-          <li><a href="../faq/" class="footer-link">FAQ</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Repository</h4>
-        <ul class="footer-links">
-          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Releases</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
       <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
-      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../action/">Action</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
     </div>
   </footer>
 

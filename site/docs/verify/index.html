@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-font="sf-pro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,29 +41,25 @@
   <header class="site-header" role="banner">
     <div class="header-container">
       <a href="../../" class="brand-link" aria-label="agentic-go home">
-        <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="32" height="32">
+        <img src="../../assets/brand/project-mark.svg" alt="agentic-go icon" class="brand-icon" width="26" height="26">
         <span>agentic-go</span>
-        <span class="brand-tag">Docs</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="../" class="nav-link">Docs</a></li>
-          <li><a href="../install/" class="nav-link">Install</a></li>
-          <li><a href="../connect/" class="nav-link">Connect</a></li>
+          <li><a href="../">Docs</a></li>
+          <li><a href="../install/">Install</a></li>
+          <li><a href="../connect/">Connect</a></li>
           <li><a href="./" class="nav-link active">Verify</a></li>
-          <li><a href="../safety/" class="nav-link">Safety</a></li>
-          <li><a href="../contracts/" class="nav-link">Contracts</a></li>
-          <li><a href="../faq/" class="nav-link">FAQ</a></li>
+          <li><a href="../safety/">Safety</a></li>
+          <li><a href="../contracts/">Contracts</a></li>
+          <li><a href="../faq/">FAQ</a></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/agentic-mcps/go" class="btn btn-github btn-sm" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="../install/" class="btn btn-primary btn-sm">Install</a>
-        <button type="button" class="mobile-menu-btn docs-sidebar-toggle" aria-label="Toggle navigation menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <a href="https://github.com/agentic-mcps/go" class="nav-link" target="_blank" rel="noopener noreferrer" style="font-size: 13px;">GitHub</a>
+        <a href="../install/" class="btn-pill btn-pill--sm">Install</a>
       </div>
     </div>
   </header>
@@ -109,167 +105,60 @@
         </p>
 
         <h2>CLI Usage</h2>
-        <p>
-          Run a comprehensive verification against git base <code>origin/main</code>:
-        </p>
-
-        <div class="quickstart-wrapper" style="margin: var(--space-4) 0 var(--space-8);">
-          <div class="terminal-header">
-            <span class="preview-code-title">Terminal</span>
-            <button type="button" class="copy-btn" aria-label="Copy CLI command">Copy</button>
+        <div class="mac-window mac-window--dark" style="margin: var(--space-16) 0 var(--space-32);">
+          <div class="mac-header mac-header--dark">
+            <div class="traffic-lights">
+              <span class="traffic-dot close"></span>
+              <span class="traffic-dot min"></span>
+              <span class="traffic-dot max"></span>
+            </div>
+            <span class="mac-title mac-title--dark">Terminal</span>
+            <button type="button" class="copy-btn" style="margin-left: auto;">Copy</button>
           </div>
-          <div class="terminal-body">
-            <div class="code-line"><span class="prompt-char">$</span> <code>agentic-go verify --base origin/main --package ./... --format text</code></div>
+          <div class="mac-body mac-body--dark">
+            <p><span style="color: #00add8;">$</span> agentic-go verify --base origin/main --package ./... --format text</p>
           </div>
-        </div>
-
-        <h2>Command Options</h2>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Flag</th>
-                <th>Default</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>--base &lt;ref&gt;</code></td>
-                <td><code>HEAD~1</code> (or main)</td>
-                <td>Git ref, branch, or tree hash representing the baseline comparison.</td>
-              </tr>
-              <tr>
-                <td><code>--package &lt;pattern&gt;</code></td>
-                <td><code>./...</code></td>
-                <td>Package selector. Impact analysis computes the full transitive closure of affected packages automatically.</td>
-              </tr>
-              <tr>
-                <td><code>--format &lt;text|json&gt;</code></td>
-                <td><code>text</code></td>
-                <td>Human-readable terminal summary or machine-readable <code>agentic.verify/v1</code> JSON.</td>
-              </tr>
-              <tr>
-                <td><code>--race</code></td>
-                <td><code>true</code></td>
-                <td>Run tests under the Go race detector to catch data races.</td>
-              </tr>
-              <tr>
-                <td><code>--fail-on &lt;level&gt;</code></td>
-                <td><code>error</code></td>
-                <td>Threshold that triggers a non-zero exit code: <code>error</code>, <code>warning</code>, or <code>findings</code>.</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
 
         <h2>Exit Codes</h2>
-        <p>Deterministic exit codes make <code>agentic-go verify</code> reliable in CI and local scripts:</p>
         <ul>
           <li><strong>0 (Pass):</strong> All requested packages compiled, tests passed without regressions, and no policy-blocking findings were introduced.</li>
-          <li><strong>1 (Policy Findings):</strong> Tests passed or were evaluated, but policy checks detected blocking findings (e.g. concurrency issues, error-handling bugs, scope drift).</li>
+          <li><strong>1 (Policy Findings):</strong> Tests passed or were evaluated, but policy checks detected blocking findings (concurrency bugs, unhandled errors, scope drift).</li>
           <li><strong>2 (Incomplete / Error):</strong> Compilation failure, unhandled runtime exception, or execution timeout prevented complete evaluation.</li>
         </ul>
 
         <h2>Verification Pipeline</h2>
         <ol>
-          <li>
-            <strong>Snapshot &amp; Impact Analysis:</strong> Computes the diff against <code>--base</code>, identifies modified declarations and comments, and resolves all downstream packages depending on altered code.
-          </li>
-          <li>
-            <strong>Whole-Package Testing:</strong> Executes full package test suites. <code>agentic-go</code> deliberately avoids selecting individual test methods (e.g. <code>-run TestSpecific</code>) because partial test runs miss cross-test contamination and package init side-effects.
-          </li>
-          <li>
-            <strong>Changed-Statement Coverage:</strong> Tracks coverage specifically across statements touched in the diff, reporting the exact coverage percentage on changed lines.
-          </li>
-          <li>
-            <strong>Static Concurrency &amp; Error Auditing:</strong> Analyzes goroutine lifecycles, channel operations, mutex copy semantics, and error wrapping conventions with a 0% false positive target.
-          </li>
-          <li>
-            <strong>Uncertainty Calibration:</strong> Identifies unexercised branches, skipped tests, and environment constraints, reporting them explicitly in the output.
-          </li>
+          <li><strong>Snapshot &amp; Impact Analysis:</strong> Computes the diff against <code>--base</code>, identifies modified declarations, and resolves all downstream packages.</li>
+          <li><strong>Whole-Package Testing:</strong> Executes full package test suites without cherry-picking individual methods.</li>
+          <li><strong>Changed-Statement Coverage:</strong> Tracks coverage specifically across statements touched in the diff.</li>
+          <li><strong>Calibrated Static Analyzers:</strong> Concurrency and error analyzers run with a 0% false positive target.</li>
+          <li><strong>Uncertainty Calibration:</strong> Explicitly reports unexercised branches, skipped suites, and environment constraints.</li>
         </ol>
 
-        <h2>Sample JSON Output (<code>agentic.verify/v1</code>)</h2>
-        <div class="quickstart-wrapper" style="margin: var(--space-6) 0 var(--space-8);">
-          <div class="terminal-header">
-            <span class="preview-code-title">agentic.verify/v1 payload</span>
-            <button type="button" class="copy-btn" aria-label="Copy JSON schema snippet">Copy</button>
-          </div>
-          <div class="terminal-body">
-            <pre><code>{
-  "$schema": "https://agentic-mcps.github.io/go/schema/verification-report-v1.json",
-  "report_id": "verify_0cf9b0dc7f4cab1ee964a8a8fd20a532d8756cc84d728fb008bc7ce00338aa2f",
-  "schema_version": "agentic.verify/v1",
-  "result": "pass",
-  "exit_code": 0,
-  "summary": {
-    "changed_files_total": 3,
-    "impacted_packages_total": 4,
-    "tests_passed": 84,
-    "tests_failed": 0,
-    "race_findings": 0,
-    "changed_statement_coverage": 87.5
-  },
-  "uncertainties": [
-    "External network mocks used for HTTP client tests"
-  ]
-}</code></pre>
-          </div>
-        </div>
-
-        <div class="docs-nav-footer">
-          <a href="../connect/" class="docs-nav-card">
-            <span class="docs-nav-label">Previous</span>
-            <span class="docs-nav-title">← MCP Client Setup</span>
-          </a>
-          <a href="../safety/" class="docs-nav-card" style="text-align: right;">
-            <span class="docs-nav-label">Next Step</span>
-            <span class="docs-nav-title">Safety &amp; Containment →</span>
-          </a>
+        <div style="margin-top: var(--space-48); text-align: right;">
+          <a href="../safety/" class="btn-ghost">Next: Safety &amp; Containment ›</a>
         </div>
       </article>
     </main>
   </div>
 
+  <aside class="floating-settings-bar" aria-label="Typography settings">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-graphite); letter-spacing: 0.04em;">Font:</span>
+    <button type="button" class="font-switch-btn active" data-font-btn="sf-pro" aria-label="Use SF Pro font">SF Pro</button>
+    <button type="button" class="font-switch-btn" data-font-btn="inter" aria-label="Use Inter font">Inter</button>
+  </aside>
+
   <footer class="site-footer" role="contentinfo">
     <div class="footer-container">
-      <div class="footer-brand">
-        <a href="../../" class="brand-link">
-          <img src="../../assets/brand/project-mark.svg" alt="agentic-go logo" class="brand-icon" width="28" height="28">
-          <span>agentic-go</span>
-        </a>
-        <p>Source-grounded Go intelligence for coding agents.</p>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Documentation</h4>
-        <ul class="footer-links">
-          <li><a href="../" class="footer-link">Overview</a></li>
-          <li><a href="../install/" class="footer-link">Installation</a></li>
-          <li><a href="../connect/" class="footer-link">MCP Connection</a></li>
-          <li><a href="./" class="footer-link">Verification</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Protocols</h4>
-        <ul class="footer-links">
-          <li><a href="../contracts/" class="footer-link">Contracts &amp; Schemas</a></li>
-          <li><a href="../safety/" class="footer-link">Safety &amp; Trust</a></li>
-          <li><a href="../action/" class="footer-link">GitHub Action</a></li>
-          <li><a href="../faq/" class="footer-link">FAQ</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="footer-group-title">Repository</h4>
-        <ul class="footer-links">
-          <li><a href="https://github.com/agentic-mcps/go" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://github.com/agentic-mcps/go/releases" class="footer-link" target="_blank" rel="noopener noreferrer">Releases</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
       <div>© 2026 agentic-mcps authors. Apache-2.0 licensed.</div>
-      <div>Published on <a href="https://agentic-mcps.github.io/go/">GitHub Pages</a></div>
+      <ul class="footer-nav">
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Docs</a></li>
+        <li><a href="../connect/">Connect</a></li>
+        <li><a href="../safety/">Safety</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+      </ul>
     </div>
   </footer>
 
