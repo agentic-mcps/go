@@ -46,7 +46,7 @@ jobs:
           version: v2.12.2
       - name: Cache gopls sidecar
         id: cache-gopls
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/agentic-go-gopls
           key: gopls-v0.21.0-ubuntu-latest-${{ runner.arch }}
@@ -129,7 +129,7 @@ jobs:
           bash scripts/install.test.sh
       - name: Cache gopls sidecar
         id: cache-gopls
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/agentic-go-gopls
           key: gopls-v0.21.0-macos-latest-${{ runner.arch }}
