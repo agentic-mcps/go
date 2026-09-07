@@ -94,7 +94,7 @@ func TestWorkspaceDigestStableAcrossExcludedFiles(t *testing.T) {
 }
 
 func TestSanitizeTextRemovesPrivateRoots(t *testing.T) {
-	got := SanitizeText("error /Users/ashwin/x /tmp/run")
+	got := SanitizeText("error /Users/example/x /tmp/run")
 	if strings.Contains(got, "/Users/") || strings.Contains(got, "/tmp/") {
 		t.Fatalf("unsanitized: %q", got)
 	}
