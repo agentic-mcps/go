@@ -5,3 +5,5 @@ coverage.out
 
 /agentic-go
 /agentic-go-vet
+.agentic-go-eval/pilot/
+.agentic-go-eval/adoption/

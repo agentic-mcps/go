@@ -1,0 +1,12 @@
+interface:
+  display_name: "Agentic Go Context"
+  short_description: "Map Go impact before unfamiliar edits; refresh after changes"
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "agentic-go"
+      description: "Local agentic-go MCP server"
+
+policy:
+  allow_implicit_invocation: true

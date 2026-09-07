@@ -1,0 +1,7 @@
+{
+  "schema_version": "agentic.eval.adoption/v1alpha1",
+  "id": "client-go-retry-context-cancellation",
+  "task_id": "client-go-retry-context-cancellation",
+  "prompt": "Preserve context cancellation from RetryOnConflict when cancellation happens before an operation returns a retriable error, without changing unrelated retry behavior. Identify the declaration, callers, tests, and verification implications before and after editing.",
+  "obligations": ["identify RetryOnConflict declaration", "identify callers and tests", "interpret verification applicability after edit"]
+}

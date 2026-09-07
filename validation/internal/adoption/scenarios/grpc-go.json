@@ -1,0 +1,7 @@
+{
+  "schema_version": "agentic.eval.adoption/v1alpha1",
+  "id": "grpc-go-rbac-header-normalization",
+  "task_id": "grpc-go-rbac-header-normalization",
+  "prompt": "Normalize xDS RBAC header matcher names before validation and matching so mixed-case metadata names work, while preserving forbidden-name behavior. Identify the declaration, callers, tests, and verification implications before and after editing.",
+  "obligations": ["identify header matcher declaration", "identify callers and tests", "interpret verification applicability after edit"]
+}

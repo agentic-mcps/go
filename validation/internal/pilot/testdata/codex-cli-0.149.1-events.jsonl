@@ -1,0 +1,6 @@
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"go test ./..."}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"go test ./...","status":"completed"}}
+{"type":"item.started","item":{"id":"item_2","type":"file_change","changes":[]}}
+{"type":"item.completed","item":{"id":"item_2","type":"file_change","changes":[]}}
+{"type":"item.completed","item":{"id":"item_3","type":"mcp_tool_call","name":"go_context"}}
+{"type":"item.completed","item":{"id":"item_4","type":"agent_message","text":"done"}}
