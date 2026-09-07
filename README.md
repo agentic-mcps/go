@@ -28,6 +28,16 @@ agentic-go --version
 
 That installs `agentic-go`, the pinned `agentic-go-gopls` companion, and `agentic-go-vet`. The formula tracks the signed `v1.0.0` release archives for Darwin/Linux amd64 and arm64.
 
+For an agent workflow, install the binary first, then print the client-native
+MCP entry for the current workspace:
+
+```sh
+agentic-go mcp-config --client codex --workspace "$PWD"
+```
+
+The command prints configuration for manual review and copying. It does not
+edit your client configuration.
+
 <details>
 <summary>Install from the release archive instead</summary>
 
@@ -60,6 +70,18 @@ Start `agentic-go` as a stdio MCP server with your Go workspace as its working d
 `--workspace` defaults to the current directory. The client controls approvals for operations that execute repository code.
 </details>
 
+Codex users can optionally use the model-invoked project skill at
+`.agents/skills/agentic-go-context`. Keep it in the repository's project skill
+path, or install it manually in a user skill directory when needed:
+
+```sh
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R .agents/skills/agentic-go-context "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+This copy is optional and does not edit MCP configuration. The skill only
+guides when to call `go_context`; it does not install the binary.
+
 ## Workflow
 
 The useful loop is deliberately small: orient, set intent, edit, catch drift, then verify.
@@ -75,6 +97,12 @@ agentic-go verify --base origin/main --package ./... --format text
 ```
 
 The report is conservative, package-aware, and explicit about evidence and uncertainty. It never selects individual tests. JSON output follows `agentic.verify/v1`; exit `0` means pass, `1` means policy findings, and `2` means incomplete or execution failure.
+
+For focused context before an edit, an MCP client can call `go_context` with the required local base (for example `HEAD` or `origin/main`) and one selector, then refresh after editing with the base and returned `pack_id` as `previous_pack_id` only. Stale selectors and refs are rejected. The equivalent CLI command is:
+
+```sh
+agentic-go context --base origin/main --query Worker --format text
+```
 
 ## Capabilities
 
@@ -122,7 +150,7 @@ Go 1.25, 1.26, and 1.27 on Darwin and Linux for amd64 and arm64. The release bun
 
 The optional composite [GitHub Action](action.yml) downloads the exact release, verifies its checksum, and writes a job summary plus JSON report. It is advisory by default and requests no pull-request write permission.
 
-The [v0.2 evidence](validation/v0.2.0/summary.md) records contract goldens, CLI dogfood, release checks, and reviewed historical changes. The [v0.1 calibration](validation/v0.1.0/summary.md) covered 10 pinned repositories and 467 reviewed findings with 0% observed false positives in that corpus. This is corpus-specific evidence, not a universal guarantee. No paid model pilot has run.
+The [v0.2 evidence](validation/v0.2.0/summary.md) records contract goldens, CLI dogfood, release checks, and reviewed historical changes. The [v0.1 calibration](validation/v0.1.0/summary.md) covered 10 pinned repositories and 467 reviewed findings with 0% observed false positives in that corpus. This is corpus-specific evidence, not a universal guarantee. A private GPT-5.6 Luna focus pilot found no treatment use; its later 27-run adoption follow-up recorded use in 6/6 runs with generic guidance and 6/6 runs with the shipped skill, after 0/6 with description-only discoverability. These records establish observed workflow use and safety, not causal engineering improvement, speedup, token savings, reliability, or general adoption. The bounded paid Codex and Claude comparison has not run; see the [adoption evidence](validation/v1.0.0/adoption-results.md).
 </details>
 
 ## More

@@ -29,6 +29,7 @@ type Service interface {
 	Brief(context.Context, BriefRequest) (ContextPack, error)
 	Search(context.Context, SearchRequest) (SearchResult, error)
 	Symbol(context.Context, SymbolRequest) (SymbolContext, error)
+	Focus(context.Context, FocusRequest) (FocusResult, error)
 	Begin(context.Context, BeginRequest) (ChangeContract, error)
 	Checkpoint(context.Context, CheckpointRequest) (Checkpoint, error)
 	Refactor(context.Context, RefactorRequest) (RefactorResult, error)
@@ -48,6 +49,10 @@ type Capabilities struct {
 	Provider        Provider           `json:"provider"`
 	Semantic        CapabilityManifest `json:"semantic"`
 	ContextSchema   string             `json:"context_schema"`
+	FocusSchema     string             `json:"focus_schema"`
+	FocusSelectors  []string           `json:"focus_selectors"`
+	FocusRefresh    string             `json:"focus_refresh"`
+	FocusRelations  []string           `json:"focus_relationships"`
 	BriefBytes      int                `json:"brief_bytes"`
 	SymbolBytes     int                `json:"symbol_bytes"`
 	SearchDefault   int                `json:"search_default"`
@@ -249,9 +254,12 @@ type SymbolSet struct {
 }
 
 // CallEdge is one bounded static call-hierarchy relationship.
+//
+//nolint:govet // Field order preserves the frozen public JSON fields.
 type CallEdge struct {
 	Direction string      `json:"direction"`
 	Symbol    SymbolMatch `json:"symbol"`
+	CallSites []Location  `json:"-"`
 }
 
 // CallSet retains complete counts for a bounded call-hierarchy facet.

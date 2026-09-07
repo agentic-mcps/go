@@ -1,0 +1,252 @@
+{
+  "schema_version": "agentic.focus/v1",
+  "provider": {
+    "name": "agentic-go-gopls",
+    "version": "v0.21.0"
+  },
+  "snapshot": {
+    "id": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "repository_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "workspace": ".",
+    "requested_base": "HEAD~1",
+    "base_commit": "3333333333333333333333333333333333333333",
+    "merge_base_commit": "3333333333333333333333333333333333333333",
+    "head_commit": "4444444444444444444444444444444444444444",
+    "content_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "go_version": "go1.25",
+    "gopls_version": "v0.21.0",
+    "capabilities": {
+      "workspace_symbol": true,
+      "hover": true,
+      "definition": true,
+      "type_definition": true,
+      "references": true,
+      "implementation": true,
+      "document_symbol": true,
+      "call_hierarchy": true,
+      "diagnostics": true,
+      "rename": false,
+      "formatting": false,
+      "code_action": false
+    },
+    "build": {
+      "goos": "linux",
+      "goarch": "amd64",
+      "cgo_enabled": false,
+      "goflags": "",
+      "tags": [],
+      "workspace": "go.work"
+    },
+    "scope": "./..."
+  },
+  "change": {
+    "files": [],
+    "files_total": 0,
+    "files_truncated": false,
+    "declarations": [],
+    "declarations_total": 0,
+    "declarations_truncated": false
+  },
+  "impact": {
+    "packages": [],
+    "packages_total": 0,
+    "packages_truncated": false
+  },
+  "risks": [],
+  "uncertainties": [],
+  "verification": {
+    "report_id": "verify_6666666666666666666666666666666666666666666666666666666666666666",
+    "outcome": "pass",
+    "reasons": [
+      "workspace snapshot differs"
+    ],
+    "next_action": "request verification for the current snapshot and policy",
+    "present": true,
+    "applicable": false
+  },
+  "observed_packages": 1,
+  "complete": true,
+  "context": {
+    "selection": {
+      "query": "Worker"
+    },
+    "candidates": [
+      {
+        "ref": "eyJzbmFwc2hvdCI6InNoYTI1NjoxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwiYmFzZSI6IkhFQUR-MSIsInNjb3BlIjoiLi8uLi4iLCJwYXRoIjoid29ya2VyLmdvIiwia2luZCI6ImdvLnR5cGUiLCJwYWNrYWdlIjoiZXhhbXBsZS5jb20vZm9jdXMiLCJxdWFsaWZpZWQiOiJleGFtcGxlLmNvbS9mb2N1cy5Xb3JrZXIiLCJkaWdlc3QiOiJkZGI2ZTU0MmZjYThmMDhlMDY1MWQxMmY0M2Y2MTZjODRiM2FkNzg3NzljM2VjYzc0MDY2ZDEwMWQ5NjkxNzM1IiwicG9zaXRpb24iOnsibGluZSI6NiwiY2hhcmFjdGVyIjo1fSwidiI6MX0",
+        "kind": "go.type",
+        "name": "Worker",
+        "qualified": "example.com/focus.Worker",
+        "package": "example.com/focus",
+        "location": {
+          "file": "worker.go",
+          "line": 7,
+          "column": 6,
+          "end_line": 7,
+          "end_column": 12
+        }
+      }
+    ],
+    "symbol": {
+      "schema_version": "agentic.context/v1",
+      "provider": {
+        "name": "agentic-go-gopls",
+        "version": "v0.21.0"
+      },
+      "snapshot": {
+        "id": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "repository_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "workspace": ".",
+        "requested_base": "HEAD~1",
+        "base_commit": "3333333333333333333333333333333333333333",
+        "merge_base_commit": "3333333333333333333333333333333333333333",
+        "head_commit": "4444444444444444444444444444444444444444",
+        "content_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "go_version": "go1.25",
+        "gopls_version": "v0.21.0",
+        "capabilities": {
+          "workspace_symbol": true,
+          "hover": true,
+          "definition": true,
+          "type_definition": true,
+          "references": true,
+          "implementation": true,
+          "document_symbol": true,
+          "call_hierarchy": true,
+          "diagnostics": true,
+          "rename": false,
+          "formatting": false,
+          "code_action": false
+        },
+        "build": {
+          "goos": "linux",
+          "goarch": "amd64",
+          "cgo_enabled": false,
+          "goflags": "",
+          "tags": [],
+          "workspace": "go.work"
+        },
+        "scope": "./..."
+      },
+      "symbol": {
+        "ref": "eyJzbmFwc2hvdCI6InNoYTI1NjoxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwiYmFzZSI6IkhFQUR-MSIsInNjb3BlIjoiLi8uLi4iLCJwYXRoIjoid29ya2VyLmdvIiwia2luZCI6ImdvLnR5cGUiLCJwYWNrYWdlIjoiZXhhbXBsZS5jb20vZm9jdXMiLCJxdWFsaWZpZWQiOiJleGFtcGxlLmNvbS9mb2N1cy5Xb3JrZXIiLCJkaWdlc3QiOiJkZGI2ZTU0MmZjYThmMDhlMDY1MWQxMmY0M2Y2MTZjODRiM2FkNzg3NzljM2VjYzc0MDY2ZDEwMWQ5NjkxNzM1IiwicG9zaXRpb24iOnsibGluZSI6NiwiY2hhcmFjdGVyIjo1fSwidiI6MX0",
+        "kind": "go.type",
+        "name": "Worker",
+        "qualified": "example.com/focus.Worker",
+        "package": "example.com/focus",
+        "location": {
+          "file": "worker.go",
+          "line": 7,
+          "column": 6,
+          "end_line": 7,
+          "end_column": 12
+        }
+      },
+      "hover": "type Worker struct",
+      "definitions": {
+        "items": [
+          {
+            "file": "worker.go",
+            "line": 7,
+            "column": 6,
+            "end_line": 7,
+            "end_column": 12
+          }
+        ],
+        "total": 1,
+        "truncated": false
+      },
+      "type_definitions": {
+        "items": [],
+        "total": 0,
+        "truncated": false
+      },
+      "references": {
+        "items": [],
+        "total": 0,
+        "truncated": false
+      },
+      "implementations": {
+        "items": [],
+        "total": 0,
+        "truncated": false
+      },
+      "related_tests": {
+        "items": [],
+        "total": 0,
+        "truncated": false
+      },
+      "diagnostics": [],
+      "diagnostics_total": 0,
+      "calls": {
+        "items": [],
+        "total": 0,
+        "truncated": false
+      },
+      "uncertainties": [],
+      "truncated": false
+    },
+    "test_declarations": [],
+    "excerpts": [
+      {
+        "location": {
+          "file": "worker.go",
+          "line": 7,
+          "column": 6,
+          "end_line": 7,
+          "end_column": 12
+        },
+        "text": "type Worker struct{}\n"
+      }
+    ],
+    "call_sites": [],
+    "reasons": [
+      "query resolved to its only workspace declaration"
+    ],
+    "uncertainties": [],
+    "evidence_states": [
+      {
+        "facet": "related_tests",
+        "state": "examined_and_absent"
+      }
+    ],
+    "typed_evidence": {
+      "relationships": [
+        {
+          "kind": "defined_type",
+          "subject": "Worker",
+          "object": "struct{}",
+          "location": {
+            "file": "worker.go",
+            "line": 7,
+            "column": 6,
+            "end_line": 7,
+            "end_column": 12
+          },
+          "evidence": "go/types defined type",
+          "build": {
+            "goos": "linux",
+            "goarch": "amd64",
+            "cgo_enabled": false,
+            "goflags": "",
+            "tags": [],
+            "workspace": "go.work"
+          },
+          "availability": "available",
+          "limits": [
+            "does not imply behavioral equivalence"
+          ]
+        }
+      ],
+      "uncertainties": [],
+      "complete": true,
+      "truncated": false
+    },
+    "truncated": false
+  },
+  "pack_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "refresh": {
+    "previous_pack_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "status": "replaced",
+    "message": "previous evidence was reselected against the current observation"
+  }
+}

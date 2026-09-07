@@ -2,10 +2,12 @@
 
 Date: 2026-08-30 (Asia/Kolkata)
 
-This record qualifies the personal-path v1 candidate at source commit
-`709e7d42b301f40041d80e75e9be3d74daf5c13c`. The module identity is
-`github.com/ashwingopalsamy/agentic-go`. The evidence files added afterward do
-not change production code, schemas, analyzer predicates, or protocol behavior.
+This record qualifies the historical personal-path v1 candidate at source
+commit `709e7d42b301f40041d80e75e9be3d74daf5c13c`. The module identity was
+`github.com/ashwingopalsamy/agentic-go`. It predates the organization module
+`github.com/agentic-mcps/go` and its signed `v1.0.0` release. The evidence files
+added afterward do not change production code, schemas, analyzer predicates,
+or protocol behavior.
 
 ## Release identity
 
@@ -128,13 +130,18 @@ is recorded in [`public-history-map.md`](public-history-map.md).
 
 The source lineage through `2229f8d` contains 147 commits; every one is signed
 and authored by Ashwin Gopalsamy. Curated `main` is published at that commit.
-The existing `v0.1.0` tag remains unchanged; no `v1.0.0` tag or release exists,
-and no repository rule or organization repository was changed.
+The existing `v0.1.0` tag remained unchanged during this historical candidate
+qualification. The organization repository's later signed `v1.0.0` tag is a
+separate release and remains unchanged; this record does not qualify later
+post-tag feature work.
 
 ## Claim boundary
 
 The v0.8 corpus and deterministic replay qualify shipped contracts. The paid
-Codex and Claude pilot did not run. This release therefore makes no universal
-claim that agentic-go reduces model mistakes, tool calls, or token use. The
-v0.1 analyzer false-positive result remains corpus-specific evidence, not a
-universal guarantee.
+Codex and Claude comparison did not run. A later private GPT-5.6 Luna focus
+pilot and adoption follow-up are documented separately; they establish only
+observed workflow use and safety, not causal engineering improvement. This
+historical release evidence therefore makes no universal claim that agentic-go
+reduces model mistakes, tool calls, or token use. The v0.1 analyzer
+false-positive result remains corpus-specific evidence, not a universal
+guarantee.

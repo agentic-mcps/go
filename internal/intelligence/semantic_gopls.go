@@ -73,12 +73,28 @@ func (p *goplsProvider) Read(ctx context.Context, snapshot SnapshotRef, fn func(
 	if fn == nil {
 		return fmt.Errorf("semantic read callback is nil")
 	}
+	lease, err := p.snapshots.pin(snapshot.ID)
+	if err != nil {
+		return err
+	}
+	defer lease.release()
+	records, _ := p.snapshots.manifest(snapshot.ID)
+	return p.read(ctx, snapshot, records, nil, fn)
+}
+
+func (p *goplsProvider) ReadObservation(ctx context.Context, observation *snapshotObservation, fn func(semanticReader) error) error {
+	if observation == nil {
+		return fmt.Errorf("semantic observation is nil")
+	}
+	if fn == nil {
+		return fmt.Errorf("semantic read callback is nil")
+	}
+	return p.read(ctx, observation.snapshot, observation.records, observation, fn)
+}
+
+func (p *goplsProvider) read(ctx context.Context, snapshot SnapshotRef, records []contentRecord, observation *snapshotObservation, fn func(semanticReader) error) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	records, found := p.snapshots.manifest(snapshot.ID)
-	if !found {
-		return fmt.Errorf("%w: snapshot manifest %s is unavailable", ErrSnapshotChanged, snapshot.ID)
-	}
 	restarted := false
 	if p.last.ID != "" && mustRestartGopls(p.last, snapshot, p.records, records) {
 		if err := p.manager.Restart(ctx); err != nil {
@@ -94,7 +110,7 @@ func (p *goplsProvider) Read(ctx context.Context, snapshot SnapshotRef, fn func(
 			}
 		}
 	}
-	if err := fn(&goplsReader{p: p, snapshot: snapshot}); err != nil {
+	if err := fn(&goplsReader{p: p, snapshot: snapshot, observation: observation}); err != nil {
 		return err
 	}
 	p.last = snapshot
@@ -168,9 +184,11 @@ func watchedFileChanges(root string, oldRecords, newRecords []contentRecord) []w
 	return changes
 }
 
+//nolint:govet // Fields follow provider, snapshot, observation semantics.
 type goplsReader struct {
-	p        *goplsProvider
-	snapshot SnapshotRef
+	p           *goplsProvider
+	snapshot    SnapshotRef
+	observation *snapshotObservation
 }
 
 type rpcPos struct {
@@ -249,9 +267,17 @@ func (r *goplsReader) sourceLocation(file string, sourceRange rpcRange) (Locatio
 	if err != nil {
 		return Location{}, fmt.Errorf("containing semantic location %s: %w", file, err)
 	}
-	contents, err := os.ReadFile(absolute)
-	if err != nil {
-		return Location{}, fmt.Errorf("reading semantic location %s: %w", file, err)
+	var contents []byte
+	if r.observation != nil {
+		contents, err = r.observation.source(file)
+		if err != nil {
+			return Location{}, fmt.Errorf("reading observed semantic location %s: %w", file, err)
+		}
+	} else {
+		contents, err = os.ReadFile(absolute)
+		if err != nil {
+			return Location{}, fmt.Errorf("reading semantic location %s: %w", file, err)
+		}
 	}
 	start, err := gopls.OffsetForPosition(contents, gopls.Position(sourceRange.Start))
 	if err != nil {
@@ -456,7 +482,12 @@ func (r *goplsReader) Implementations(ctx context.Context, file string, position
 		limit = maxImplementationResolution
 	}
 	for _, location := range locations.Items[:limit] {
-		match, symbolErr := r.SymbolAt(ctx, location.File, Position{Line: location.Line - 1, Character: location.Column - 1})
+		position, positionErr := r.positionForLocation(location)
+		if positionErr != nil {
+			result.Omitted++
+			continue
+		}
+		match, symbolErr := r.SymbolAt(ctx, location.File, position)
 		if symbolErr != nil {
 			result.Omitted++
 			continue
@@ -546,22 +577,26 @@ func (r *goplsReader) Calls(ctx context.Context, file string, position Position)
 	}
 	for _, item := range prepared[:limit] {
 		var incoming []struct {
-			From rpcCallItem `json:"from"`
+			FromRanges []rpcRange  `json:"fromRanges"`
+			From       rpcCallItem `json:"from"`
 		}
 		if err := r.req(ctx, "callHierarchy/incomingCalls", map[string]any{"item": item}, &incoming); err != nil {
 			return semanticCalls{}, err
 		}
 		for _, call := range incoming {
-			r.appendCall(&result, "incoming", call.From)
+			r.appendCall(&result, "incoming", call.From, call.FromRanges)
 		}
 		var outgoing []struct {
-			To rpcCallItem `json:"to"`
+			FromRanges []rpcRange  `json:"fromRanges"`
+			To         rpcCallItem `json:"to"`
 		}
 		if err := r.req(ctx, "callHierarchy/outgoingCalls", map[string]any{"item": item}, &outgoing); err != nil {
 			return semanticCalls{}, err
 		}
 		for _, call := range outgoing {
-			r.appendCall(&result, "outgoing", call.To)
+			// Outgoing fromRanges are expressed in the prepared caller, not the
+			// destination item. Focus exposes incoming caller ranges only.
+			r.appendCall(&result, "outgoing", call.To, nil)
 		}
 	}
 	sort.Slice(result.Items, func(i, j int) bool {
@@ -573,7 +608,24 @@ func (r *goplsReader) Calls(ctx context.Context, file string, position Position)
 	return result, nil
 }
 
-func (r *goplsReader) appendCall(result *semanticCalls, direction string, item rpcCallItem) {
+func (r *goplsReader) positionForLocation(location Location) (Position, error) {
+	absolute, err := r.p.workspace.Resolve(location.File)
+	if err != nil {
+		return Position{}, err
+	}
+	var contents []byte
+	if r.observation != nil {
+		contents, err = r.observation.source(location.File)
+	} else {
+		contents, err = os.ReadFile(absolute)
+	}
+	if err != nil {
+		return Position{}, err
+	}
+	return sourcePositionFromContents(filepath.Base(absolute), contents, SourcePosition{File: location.File, Line: location.Line, Column: location.Column})
+}
+
+func (r *goplsReader) appendCall(result *semanticCalls, direction string, item rpcCallItem, rawRanges []rpcRange) {
 	file, ok := r.file(item.URI)
 	if !ok {
 		result.Omitted++
@@ -584,7 +636,21 @@ func (r *goplsReader) appendCall(result *semanticCalls, direction string, item r
 		result.Omitted++
 		return
 	}
-	result.Items = append(result.Items, CallEdge{Direction: direction, Symbol: match})
+	callSites := make([]Location, 0, len(rawRanges))
+	for _, rawRange := range rawRanges {
+		location, locationOK, locationErr := r.location(rpcLocation{URI: item.URI, Range: rawRange})
+		if locationErr != nil {
+			result.Omitted++
+			continue
+		}
+		if !locationOK {
+			result.Omitted++
+			continue
+		}
+		callSites = append(callSites, location)
+	}
+	sortLocations(callSites)
+	result.Items = append(result.Items, CallEdge{Direction: direction, Symbol: match, CallSites: callSites})
 }
 
 func textDocument(root, file string) map[string]string {

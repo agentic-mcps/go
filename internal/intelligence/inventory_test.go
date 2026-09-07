@@ -72,3 +72,21 @@ func TestExportedInventoryStopsOnCancellation(t *testing.T) {
 		t.Fatalf("exportedInventory() error = %v, want context.Canceled", err)
 	}
 }
+
+func TestExportedInventoryUsesCapturedSourceBeforeDisk(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.go")
+	if err := os.WriteFile(path, []byte("not valid Go"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	source := []byte("package sample\n\nconst Answer = 42\n")
+	exported, generated, constrained, err := exportedInventoryFromSources(
+		context.Background(), dir, []string{"sample.go"}, map[string][]byte{path: source},
+	)
+	if err != nil {
+		t.Fatalf("exportedInventoryFromSources() error = %v", err)
+	}
+	if generated || constrained || len(exported) != 1 || exported[0] != "const Answer" {
+		t.Fatalf("exportedInventoryFromSources() = %v, %v, %v, want captured export", exported, generated, constrained)
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -77,6 +78,116 @@ func TestFrozenMCPV1Surface(t *testing.T) {
 	}
 	if !bytes.Equal(encoded, want) {
 		t.Fatal("MCP v1 interface differs from the frozen normalized golden")
+	}
+}
+
+func TestPostV1FocusToolIsAdditiveAndDiscoverable(t *testing.T) {
+	ctx := context.Background()
+	server := mcp.NewServer(&mcp.Implementation{Name: "agentic-go-focus", Version: "dev"}, &mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}})
+	runtime := newTestRuntime(t)
+	runtime.intelligence = &fakeIntelligence{}
+	RegisterAll(server, runtime)
+	RegisterContext(server, runtime)
+	clientTransport, serverTransport := mcp.NewInMemoryTransports()
+	serverSession, err := server.Connect(ctx, serverTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = serverSession.Close() })
+	client := mcp.NewClient(&mcp.Implementation{Name: "focus-client", Version: "test"}, nil)
+	clientSession, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = clientSession.Close() })
+	listed, err := clientSession.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(listed.Tools) != 15 {
+		t.Fatalf("post-v1 tool count = %d, want 15", len(listed.Tools))
+	}
+	for _, tool := range listed.Tools {
+		if tool.Name != "go_context" {
+			continue
+		}
+		for _, phrase := range []string{"one selector", "previous_pack_id only", "stale selectors", "verification applicability"} {
+			if !strings.Contains(tool.Description, phrase) {
+				t.Fatalf("go_context description %q missing %q", tool.Description, phrase)
+			}
+		}
+		encoded, marshalErr := json.Marshal(tool.InputSchema)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		for _, field := range []string{"previous_pack_id", "focus_file", "focus_package", "query", "symbol_ref", "max_bytes"} {
+			if !bytes.Contains(encoded, []byte(`"`+field+`"`)) {
+				t.Fatalf("go_context input schema lacks %q: %s", field, encoded)
+			}
+		}
+		result, callErr := clientSession.CallTool(ctx, &mcp.CallToolParams{Name: "go_context", Arguments: map[string]any{"base": "HEAD", "query": "Worker"}})
+		if callErr != nil || result.IsError {
+			t.Fatalf("go_context call error=%v result=%#v", callErr, result)
+		}
+		payload, marshalErr := json.Marshal(result.StructuredContent)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		var focus struct {
+			SchemaVersion string `json:"schema_version"`
+			PackID        string `json:"pack_id"`
+		}
+		if err := json.Unmarshal(payload, &focus); err != nil || focus.SchemaVersion != "agentic.focus/v1" || focus.PackID == "" {
+			t.Fatalf("go_context structured output = %s, err %v", payload, err)
+		}
+		return
+	}
+	t.Fatal("post-v1 tools/list omitted go_context")
+}
+
+func TestProductionServerInitializeInstructionsAndUniqueFocusRegistration(t *testing.T) {
+	if len(ServerInstructions) > 512 {
+		t.Fatalf("server instructions length = %d, want <= 512", len(ServerInstructions))
+	}
+	for _, phrase := range []string{"unfamiliar", "cross-package", "go_context", "before editing", "one selector", "previous_pack_id only", "stale selectors", "impact", "verification applicability", "planning guidance", "smallest task owner", "path/package scope", "trivial edits"} {
+		if !strings.Contains(ServerInstructions, phrase) {
+			t.Errorf("server instructions %q missing %q", ServerInstructions, phrase)
+		}
+	}
+
+	ctx := context.Background()
+	server := NewProductionServer(&mcp.Implementation{Name: "agentic-go-production", Version: "test"})
+	runtime := newTestRuntime(t)
+	runtime.intelligence = &fakeIntelligence{}
+	RegisterProduction(server, runtime)
+	clientTransport, serverTransport := mcp.NewInMemoryTransports()
+	serverSession, err := server.Connect(ctx, serverTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = serverSession.Close() })
+	client := mcp.NewClient(&mcp.Implementation{Name: "production-test-client", Version: "test"}, nil)
+	clientSession, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = clientSession.Close() })
+	init := clientSession.InitializeResult()
+	if init == nil || init.Instructions != ServerInstructions {
+		t.Fatalf("initialize instructions = %#v, want %q", init, ServerInstructions)
+	}
+	listed, err := clientSession.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	count := 0
+	for _, tool := range listed.Tools {
+		if tool.Name == "go_context" {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Fatalf("go_context registration count = %d, want 1", count)
 	}
 }
 

@@ -162,10 +162,12 @@ func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult,
 	if request.Limit < 1 || request.Limit > MaximumSearchLimit {
 		return SearchResult{}, fmt.Errorf("search limit must be between 1 and %d", MaximumSearchLimit)
 	}
-	snapshot, err := c.capture(ctx, "", request.Scope, request.ExpectedSnapshotID)
+	observation, err := c.observe(ctx, "", request.Scope, request.ExpectedSnapshotID)
 	if err != nil {
 		return SearchResult{}, err
 	}
+	defer observation.release()
+	snapshot := observation.snapshot
 	if !snapshot.Capabilities.WorkspaceSymbol {
 		return SearchResult{}, fmt.Errorf("the active semantic provider does not support workspace symbols")
 	}
@@ -193,7 +195,7 @@ func (c *Core) Search(ctx context.Context, request SearchRequest) (SearchResult,
 		matches, omitted = stored.Matches, stored.Omitted
 		offset, artifactID = cursor.Offset, artifact.ID
 	} else {
-		err = c.semantic.Read(ctx, snapshot, func(reader semanticReader) error {
+		err = c.readObservation(ctx, &observation, func(reader semanticReader) error {
 			result, searchErr := reader.Search(ctx, request.Query)
 			matches, omitted = result.Items, result.Omitted
 			return searchErr
@@ -263,7 +265,7 @@ func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext
 	if err := validContextBudget(request.MaxBytes); err != nil {
 		return SymbolContext{}, err
 	}
-	var snapshot SnapshotRef
+	var observation snapshotObservation
 	var file string
 	var position Position
 	var err error
@@ -275,30 +277,43 @@ func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext
 		if request.ExpectedSnapshotID != "" && request.ExpectedSnapshotID != identity.SnapshotID {
 			return SymbolContext{}, fmt.Errorf("%w: expected %s, symbol belongs to %s", ErrSnapshotChanged, request.ExpectedSnapshotID, identity.SnapshotID)
 		}
-		snapshot, err = c.capture(ctx, identity.Base, identity.Scope, identity.SnapshotID)
+		observation, err = c.observe(ctx, identity.Base, identity.Scope, identity.SnapshotID)
+		if err != nil {
+			return SymbolContext{}, err
+		}
 		file, position = identity.Path, identity.Position
 	} else {
-		snapshot, err = c.capture(ctx, "", "./...", request.ExpectedSnapshotID)
-		if err == nil {
-			var absolute string
-			absolute, err = c.workspace.Resolve(request.Position.File)
-			if err == nil {
-				file, err = c.workspace.Relative(absolute)
-			}
-			if err == nil {
-				position, err = sourcePosition(absolute, *request.Position)
-			}
+		observation, err = c.observe(ctx, "", "./...", request.ExpectedSnapshotID)
+		if err != nil {
+			return SymbolContext{}, err
 		}
 	}
-	if err != nil {
-		return SymbolContext{}, err
+	defer observation.release()
+	if request.Position != nil {
+		absolute, resolveErr := c.workspace.Resolve(request.Position.File)
+		if resolveErr != nil {
+			return SymbolContext{}, resolveErr
+		}
+		file, err = c.workspace.Relative(absolute)
+		if err != nil {
+			return SymbolContext{}, err
+		}
+		contents, sourceErr := observation.source(file)
+		if sourceErr != nil {
+			return SymbolContext{}, sourceErr
+		}
+		position, err = sourcePositionFromContents(filepath.Base(absolute), contents, *request.Position)
+		if err != nil {
+			return SymbolContext{}, err
+		}
 	}
+	snapshot := observation.snapshot
 	if !snapshot.Capabilities.DocumentSymbol {
 		return SymbolContext{}, fmt.Errorf("the active semantic provider does not support document symbols")
 	}
 	result := emptySymbolContext(snapshot, c.provider())
 	omitted := make(map[string]int)
-	err = c.semantic.Read(ctx, snapshot, func(reader semanticReader) error {
+	err = c.readObservation(ctx, &observation, func(reader semanticReader) error {
 		result.Symbol, err = reader.SymbolAt(ctx, file, position)
 		if err != nil {
 			return err
@@ -395,7 +410,7 @@ func (c *Core) Symbol(ctx context.Context, request SymbolRequest) (SymbolContext
 			Message: "the active semantic provider does not support type definitions", Locations: []Location{},
 		})
 	}
-	result.Uncertainties = append(result.Uncertainties, fileSemanticUncertainties(c.workspace, file, request.Facets.CallHierarchy)...)
+	result.Uncertainties = append(result.Uncertainties, fileSemanticUncertaintiesObserved(&observation, file, request.Facets.CallHierarchy)...)
 	sort.Slice(result.Uncertainties, func(i, j int) bool {
 		if result.Uncertainties[i].Code != result.Uncertainties[j].Code {
 			return result.Uncertainties[i].Code < result.Uncertainties[j].Code
@@ -427,19 +442,25 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 	if err := validContextBudget(request.MaxBytes); err != nil {
 		return ContextPack{}, err
 	}
-	snapshot, err := c.capture(ctx, request.Base, request.Scope, request.ExpectedSnapshotID)
+	observation, err := c.observe(ctx, request.Base, request.Scope, request.ExpectedSnapshotID)
 	if err != nil {
 		return ContextPack{}, err
 	}
-	packages, err := inventoryPackages(ctx, c.workspace, c.runner, request.Scope)
+	defer observation.release()
+	snapshot := observation.snapshot
+	packages, err := inventoryPackagesForObservation(ctx, c.workspace, c.runner, request.Scope, &observation)
 	if err != nil {
 		return ContextPack{}, err
 	}
-	packageSummaries, modules, err := summarizeInventory(ctx, c.workspace, packages)
+	sources, err := observationPackageSources(ctx, c.workspace, packages, &observation)
 	if err != nil {
 		return ContextPack{}, err
 	}
-	guidance, err := inventoryGuidance(ctx, c.workspace)
+	packageSummaries, modules, err := summarizeInventoryWithSources(ctx, c.workspace, packages, sources)
+	if err != nil {
+		return ContextPack{}, err
+	}
+	guidance, err := inventoryGuidanceObserved(ctx, &observation)
 	if err != nil {
 		return ContextPack{}, err
 	}
@@ -462,7 +483,7 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 				Message: fmt.Sprintf("workspace brief diagnostics sampled %d of %d active Go files", limit, len(files)), Locations: []Location{},
 			})
 		}
-		err = c.semantic.Read(ctx, snapshot, func(reader semanticReader) error {
+		err = c.readObservation(ctx, &observation, func(reader semanticReader) error {
 			for _, file := range files[:limit] {
 				if contextErr := ctx.Err(); contextErr != nil {
 					return contextErr
@@ -526,14 +547,33 @@ func (c *Core) Brief(ctx context.Context, request BriefRequest) (ContextPack, er
 }
 
 func (c *Core) capture(ctx context.Context, base, scope, expected string) (SnapshotRef, error) {
-	snapshot, err := c.snapshots.Capture(ctx, SnapshotRequest{Base: base, Scope: scope, Semantic: c.semantic.Identity()})
+	observation, err := c.observe(ctx, base, scope, expected)
 	if err != nil {
 		return SnapshotRef{}, err
 	}
-	if expected != "" && expected != snapshot.ID {
-		return SnapshotRef{}, fmt.Errorf("%w: expected %s, observed %s", ErrSnapshotChanged, expected, snapshot.ID)
+	defer observation.release()
+	return observation.snapshot, nil
+}
+
+func (c *Core) readObservation(ctx context.Context, observation *snapshotObservation, fn func(semanticReader) error) error {
+	if provider, ok := c.semantic.(observedSemanticProvider); ok {
+		return provider.ReadObservation(ctx, observation, fn)
 	}
-	return snapshot, nil
+	return c.semantic.Read(ctx, observation.snapshot, fn)
+}
+
+func (c *Core) observe(ctx context.Context, base, scope, expected string) (snapshotObservation, error) {
+	observation, err := c.snapshots.observe(ctx, SnapshotRequest{
+		Base: base, Scope: scope, Semantic: c.semantic.Identity(),
+	})
+	if err != nil {
+		return snapshotObservation{}, err
+	}
+	if expected != "" && expected != observation.snapshot.ID {
+		observation.release()
+		return snapshotObservation{}, fmt.Errorf("%w: expected %s, observed %s", ErrSnapshotChanged, expected, observation.snapshot.ID)
+	}
+	return observation, nil
 }
 
 func (c *Core) provider() Provider {
@@ -546,6 +586,8 @@ func (c *Core) Capabilities() Capabilities {
 	identity := c.semantic.Identity()
 	return Capabilities{
 		Provider: c.provider(), Semantic: identity.Capabilities, ContextSchema: ContextSchemaVersion,
+		FocusSchema: FocusSchemaVersion, FocusSelectors: []string{"file", "package", "position", "query", "symbol_ref"},
+		FocusRefresh: "full_replacement", FocusRelations: []string{"embedding", "examples", "generic_origins_constraints", "implementations", "interface_obligations", "lifecycle_sites", "method_sets", "type_identity"},
 		BriefBytes: DefaultBriefBytes, SymbolBytes: DefaultSymbolBytes, SearchDefault: DefaultSearchLimit,
 		SearchMaximum: MaximumSearchLimit, ArtifactMaximum: MaxArtifactChunkBytes,
 	}
@@ -572,6 +614,13 @@ func sourcePosition(path string, source SourcePosition) (Position, error) {
 	if err != nil {
 		return Position{}, err
 	}
+	return sourcePositionFromContents(filepath.Base(path), contents, source)
+}
+
+func sourcePositionFromContents(name string, contents []byte, source SourcePosition) (Position, error) {
+	if source.Line < 1 || source.Column < 1 {
+		return Position{}, fmt.Errorf("source line and column must be positive")
+	}
 	line, offset := 1, 0
 	for line < source.Line && offset < len(contents) {
 		if contents[offset] == '\n' {
@@ -580,7 +629,7 @@ func sourcePosition(path string, source SourcePosition) (Position, error) {
 		offset++
 	}
 	if line != source.Line {
-		return Position{}, fmt.Errorf("source line %d is outside %s", source.Line, filepath.Base(path))
+		return Position{}, fmt.Errorf("source line %d is outside %s", source.Line, name)
 	}
 	lineEnd := offset
 	for lineEnd < len(contents) && contents[lineEnd] != '\n' {
@@ -822,19 +871,8 @@ func inventoryGoFiles(ws *workspace.Workspace, packages []inventoryPackage) []st
 	return result
 }
 
-func fileSemanticUncertainties(ws *workspace.Workspace, file string, callsRequested bool) []Uncertainty {
-	result := []Uncertainty{{
-		Code:    "go.external_consumers",
-		Message: "references and implementations outside the configured workspace are not modeled", Locations: []Location{},
-	}}
-	absolute, err := ws.Resolve(file)
-	if err != nil {
-		return append(result, Uncertainty{Code: "source.unavailable", Message: err.Error(), Locations: []Location{}})
-	}
-	contents, err := os.ReadFile(absolute)
-	if err != nil {
-		return append(result, Uncertainty{Code: "source.unavailable", Message: "source metadata could not be inspected", Locations: []Location{}})
-	}
+func sourceSemanticUncertainties(file string, contents []byte, callsRequested bool) []Uncertainty {
+	result := []Uncertainty{}
 	location := []Location{{File: file, Line: 1, Column: 1}}
 	if strings.Contains(string(contents), "Code generated ") {
 		result = append(result, Uncertainty{
@@ -861,6 +899,18 @@ func fileSemanticUncertainties(ws *workspace.Workspace, file string, callsReques
 		})
 	}
 	return result
+}
+
+func fileSemanticUncertaintiesObserved(observation *snapshotObservation, file string, callsRequested bool) []Uncertainty {
+	result := []Uncertainty{{
+		Code:    "go.external_consumers",
+		Message: "references and implementations outside the configured workspace are not modeled", Locations: []Location{},
+	}}
+	contents, err := observation.source(file)
+	if err != nil {
+		return append(result, Uncertainty{Code: "source.unavailable", Message: err.Error(), Locations: []Location{}})
+	}
+	return append(result, sourceSemanticUncertainties(file, contents, callsRequested)...)
 }
 
 func compactChange(analysis verification.ChangeAnalysis) *ChangeContext {

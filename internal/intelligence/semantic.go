@@ -36,6 +36,10 @@ type semanticProvider interface {
 	Identity() SemanticIdentity
 }
 
+type observedSemanticProvider interface {
+	ReadObservation(context.Context, *snapshotObservation, func(semanticReader) error) error
+}
+
 // semanticMutator asks a language provider for source edits without applying
 // them. The provider wire format is normalized before crossing this seam.
 type semanticMutator interface {

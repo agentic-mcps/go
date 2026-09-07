@@ -103,9 +103,32 @@ func inventoryPackages(ctx context.Context, ws *workspace.Workspace, runner *exe
 	return packages, nil
 }
 
-func summarizeInventory(ctx context.Context, ws *workspace.Workspace, packages []inventoryPackage) ([]PackageSummary, []ModuleSummary, error) {
+func inventoryPackagesForObservation(ctx context.Context, ws *workspace.Workspace, runner *execution.Runner, scope string, observation *snapshotObservation) ([]inventoryPackage, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if observation == nil {
+		return inventoryPackages(ctx, ws, runner, scope)
+	}
+	if observation.packagesReady {
+		return append([]inventoryPackage(nil), observation.packages...), nil
+	}
+	packages, err := inventoryPackages(ctx, ws, runner, scope)
+	if err != nil {
+		return nil, err
+	}
+	observation.packages = append([]inventoryPackage(nil), packages...)
+	observation.packagesReady = true
+	return append([]inventoryPackage(nil), packages...), nil
+}
+
+func summarizeInventoryWithSources(ctx context.Context, ws *workspace.Workspace, packages []inventoryPackage, sources map[string][]byte) ([]PackageSummary, []ModuleSummary, error) {
 	result := make([]PackageSummary, 0, len(packages))
 	modules := make(map[string]ModuleSummary)
+	sourceFiles := make(map[string][]byte, len(sources))
+	for relative, source := range sources {
+		sourceFiles[filepath.Join(ws.Root(), filepath.FromSlash(relative))] = source
+	}
 	for _, p := range packages {
 		if err := ctx.Err(); err != nil {
 			return nil, nil, err
@@ -114,7 +137,7 @@ func summarizeInventory(ctx context.Context, ws *workspace.Workspace, packages [
 		if err != nil {
 			return nil, nil, err
 		}
-		exported, generated, constrained, err := exportedInventory(ctx, p.Dir, append(append([]string{}, p.GoFiles...), p.CgoFiles...))
+		exported, generated, constrained, err := exportedInventoryFromSources(ctx, p.Dir, append(append([]string{}, p.GoFiles...), p.CgoFiles...), sourceFiles)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -135,7 +158,26 @@ func summarizeInventory(ctx context.Context, ws *workspace.Workspace, packages [
 	return result, ms, nil
 }
 
+func observationPackageSources(ctx context.Context, ws *workspace.Workspace, packages []inventoryPackage, observation *snapshotObservation) (map[string][]byte, error) {
+	sources := make(map[string][]byte)
+	for _, file := range inventoryGoFiles(ws, packages) {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		source, err := observation.source(file)
+		if err != nil {
+			return nil, err
+		}
+		sources[file] = source
+	}
+	return sources, nil
+}
+
 func exportedInventory(ctx context.Context, dir string, files []string) ([]string, bool, bool, error) {
+	return exportedInventoryFromSources(ctx, dir, files, nil)
+}
+
+func exportedInventoryFromSources(ctx context.Context, dir string, files []string, sources map[string][]byte) ([]string, bool, bool, error) {
 	set := map[string]bool{}
 	generated, constrained := false, false
 	for _, name := range files {
@@ -143,9 +185,13 @@ func exportedInventory(ctx context.Context, dir string, files []string) ([]strin
 			return nil, false, false, err
 		}
 		path := filepath.Join(dir, name)
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return nil, false, false, err
+		data, found := sources[path]
+		if !found {
+			var err error
+			data, err = os.ReadFile(path)
+			if err != nil {
+				return nil, false, false, err
+			}
 		}
 		if bytes.Contains(data, []byte("Code generated ")) {
 			generated = true
@@ -245,4 +291,24 @@ func inventoryGuidance(ctx context.Context, ws *workspace.Workspace) ([]Guidance
 	})
 	sort.Slice(refs, func(i, j int) bool { return refs[i].File < refs[j].File })
 	return refs, err
+}
+
+func inventoryGuidanceObserved(ctx context.Context, observation *snapshotObservation) ([]GuidanceRef, error) {
+	refs := make([]GuidanceRef, 0)
+	for _, record := range observation.records {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		name := filepath.Base(record.Path)
+		if name != "AGENTS.md" && name != "CLAUDE.md" {
+			continue
+		}
+		data, err := observation.source(record.Path)
+		if err != nil {
+			return nil, err
+		}
+		sum := sha256.Sum256(data)
+		refs = append(refs, GuidanceRef{File: record.Path, Digest: hex.EncodeToString(sum[:])})
+	}
+	return refs, nil
 }

@@ -1,0 +1,1952 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "agentic.focus/v1"
+    },
+    "provider": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "repository_id": {
+          "type": "string"
+        },
+        "workspace": {
+          "type": "string"
+        },
+        "requested_base": {
+          "type": "string"
+        },
+        "base_commit": {
+          "type": "string"
+        },
+        "merge_base_commit": {
+          "type": "string"
+        },
+        "head_commit": {
+          "type": "string"
+        },
+        "content_digest": {
+          "type": "string"
+        },
+        "go_version": {
+          "type": "string"
+        },
+        "gopls_version": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "workspace_symbol": {
+              "type": "boolean"
+            },
+            "hover": {
+              "type": "boolean"
+            },
+            "definition": {
+              "type": "boolean"
+            },
+            "type_definition": {
+              "type": "boolean"
+            },
+            "references": {
+              "type": "boolean"
+            },
+            "implementation": {
+              "type": "boolean"
+            },
+            "document_symbol": {
+              "type": "boolean"
+            },
+            "call_hierarchy": {
+              "type": "boolean"
+            },
+            "diagnostics": {
+              "type": "boolean"
+            },
+            "rename": {
+              "type": "boolean"
+            },
+            "formatting": {
+              "type": "boolean"
+            },
+            "code_action": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "workspace_symbol",
+            "hover",
+            "definition",
+            "type_definition",
+            "references",
+            "implementation",
+            "document_symbol",
+            "call_hierarchy",
+            "diagnostics",
+            "rename",
+            "formatting",
+            "code_action"
+          ],
+          "additionalProperties": false
+        },
+        "build": {
+          "type": "object",
+          "properties": {
+            "goos": {
+              "type": "string"
+            },
+            "goarch": {
+              "type": "string"
+            },
+            "cgo_enabled": {
+              "type": "boolean"
+            },
+            "goflags": {
+              "type": "string"
+            },
+            "tags": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "workspace": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "goos",
+            "goarch",
+            "cgo_enabled",
+            "goflags",
+            "tags",
+            "workspace"
+          ],
+          "additionalProperties": false
+        },
+        "scope": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "repository_id",
+        "workspace",
+        "head_commit",
+        "content_digest",
+        "go_version",
+        "gopls_version",
+        "capabilities",
+        "build",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "change": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "previous_path": {
+                "type": "string"
+              },
+              "change": {
+                "type": "string"
+              },
+              "base_ranges": {
+                "type": [
+                  "null",
+                  "array"
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "base_ranges_total": {
+                "type": "integer"
+              },
+              "base_ranges_truncated": {
+                "type": "boolean"
+              },
+              "current_ranges": {
+                "type": [
+                  "null",
+                  "array"
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "start": {
+                      "type": "integer"
+                    },
+                    "end": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "current_ranges_total": {
+                "type": "integer"
+              },
+              "current_ranges_truncated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "change",
+              "base_ranges",
+              "base_ranges_total",
+              "base_ranges_truncated",
+              "current_ranges",
+              "current_ranges_total",
+              "current_ranges_truncated"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "files_total": {
+          "type": "integer"
+        },
+        "files_truncated": {
+          "type": "boolean"
+        },
+        "declarations": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "change": {
+                "type": "string"
+              },
+              "base_location": {
+                "type": [
+                  "null",
+                  "object"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "col": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "line"
+                ],
+                "additionalProperties": false
+              },
+              "current_location": {
+                "type": [
+                  "null",
+                  "object"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "col": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "line"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "kind",
+              "package",
+              "name",
+              "change"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "declarations_total": {
+          "type": "integer"
+        },
+        "declarations_truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "files",
+        "files_total",
+        "files_truncated",
+        "declarations",
+        "declarations_total",
+        "declarations_truncated"
+      ],
+      "additionalProperties": false
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "distance": {
+                "type": "integer"
+              },
+              "reasons": {
+                "type": [
+                  "null",
+                  "array"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "distance",
+              "reasons"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "packages_total": {
+          "type": "integer"
+        },
+        "packages_truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "packages",
+        "packages_total",
+        "packages_truncated"
+      ],
+      "additionalProperties": false
+    },
+    "risks": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "guidance": {
+            "type": "string"
+          },
+          "locations": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "col": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "file",
+                "line"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "locations_total": {
+            "type": "integer"
+          },
+          "locations_truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "reason",
+          "guidance",
+          "locations",
+          "locations_total",
+          "locations_truncated"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "uncertainties": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "check_id": {
+            "type": "string"
+          },
+          "locations": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "col": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "file",
+                "line"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "locations_total": {
+            "type": "integer"
+          },
+          "locations_truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "locations",
+          "locations_total",
+          "locations_truncated"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "report_id": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "reasons": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "next_action": {
+          "type": "string"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "applicable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "reasons",
+        "next_action",
+        "present",
+        "applicable"
+      ],
+      "additionalProperties": false
+    },
+    "observed_packages": {
+      "type": "integer"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "context": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "selection": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "symbol_ref": {
+              "type": "string"
+            },
+            "position": {
+              "type": [
+                "null",
+                "object"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "column": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "file",
+                "line",
+                "column"
+              ],
+              "additionalProperties": false
+            },
+            "file": {
+              "type": "string"
+            },
+            "package": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "candidates": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "qualified": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "column": {
+                    "type": "integer"
+                  },
+                  "end_line": {
+                    "type": "integer"
+                  },
+                  "end_column": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "line",
+                  "column"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "ref",
+              "kind",
+              "name",
+              "qualified",
+              "package",
+              "location"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "symbol": {
+          "type": [
+            "null",
+            "object"
+          ],
+          "properties": {
+            "schema_version": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "version"
+              ],
+              "additionalProperties": false
+            },
+            "snapshot": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "repository_id": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                },
+                "requested_base": {
+                  "type": "string"
+                },
+                "base_commit": {
+                  "type": "string"
+                },
+                "merge_base_commit": {
+                  "type": "string"
+                },
+                "head_commit": {
+                  "type": "string"
+                },
+                "content_digest": {
+                  "type": "string"
+                },
+                "go_version": {
+                  "type": "string"
+                },
+                "gopls_version": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "object",
+                  "properties": {
+                    "workspace_symbol": {
+                      "type": "boolean"
+                    },
+                    "hover": {
+                      "type": "boolean"
+                    },
+                    "definition": {
+                      "type": "boolean"
+                    },
+                    "type_definition": {
+                      "type": "boolean"
+                    },
+                    "references": {
+                      "type": "boolean"
+                    },
+                    "implementation": {
+                      "type": "boolean"
+                    },
+                    "document_symbol": {
+                      "type": "boolean"
+                    },
+                    "call_hierarchy": {
+                      "type": "boolean"
+                    },
+                    "diagnostics": {
+                      "type": "boolean"
+                    },
+                    "rename": {
+                      "type": "boolean"
+                    },
+                    "formatting": {
+                      "type": "boolean"
+                    },
+                    "code_action": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "workspace_symbol",
+                    "hover",
+                    "definition",
+                    "type_definition",
+                    "references",
+                    "implementation",
+                    "document_symbol",
+                    "call_hierarchy",
+                    "diagnostics",
+                    "rename",
+                    "formatting",
+                    "code_action"
+                  ],
+                  "additionalProperties": false
+                },
+                "build": {
+                  "type": "object",
+                  "properties": {
+                    "goos": {
+                      "type": "string"
+                    },
+                    "goarch": {
+                      "type": "string"
+                    },
+                    "cgo_enabled": {
+                      "type": "boolean"
+                    },
+                    "goflags": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "type": [
+                        "null",
+                        "array"
+                      ],
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "workspace": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "goos",
+                    "goarch",
+                    "cgo_enabled",
+                    "goflags",
+                    "tags",
+                    "workspace"
+                  ],
+                  "additionalProperties": false
+                },
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "repository_id",
+                "workspace",
+                "head_commit",
+                "content_digest",
+                "go_version",
+                "gopls_version",
+                "capabilities",
+                "build",
+                "scope"
+              ],
+              "additionalProperties": false
+            },
+            "symbol": {
+              "type": "object",
+              "properties": {
+                "ref": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "qualified": {
+                  "type": "string"
+                },
+                "package": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "end_line": {
+                      "type": "integer"
+                    },
+                    "end_column": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "file",
+                    "line",
+                    "column"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "ref",
+                "kind",
+                "name",
+                "qualified",
+                "package",
+                "location"
+              ],
+              "additionalProperties": false
+            },
+            "hover": {
+              "type": "string"
+            },
+            "definitions": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "truncated"
+              ],
+              "additionalProperties": false
+            },
+            "type_definitions": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "truncated"
+              ],
+              "additionalProperties": false
+            },
+            "references": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "truncated"
+              ],
+              "additionalProperties": false
+            },
+            "implementations": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ref": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "qualified": {
+                        "type": "string"
+                      },
+                      "package": {
+                        "type": "string"
+                      },
+                      "location": {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string"
+                          },
+                          "line": {
+                            "type": "integer"
+                          },
+                          "column": {
+                            "type": "integer"
+                          },
+                          "end_line": {
+                            "type": "integer"
+                          },
+                          "end_column": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "file",
+                          "line",
+                          "column"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "ref",
+                      "kind",
+                      "name",
+                      "qualified",
+                      "package",
+                      "location"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "truncated"
+              ],
+              "additionalProperties": false
+            },
+            "related_tests": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "truncated"
+              ],
+              "additionalProperties": false
+            },
+            "diagnostics": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "severity": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "source",
+                  "severity",
+                  "message",
+                  "location"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "diagnostics_total": {
+              "type": "integer"
+            },
+            "calls": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "direction": {
+                        "type": "string"
+                      },
+                      "symbol": {
+                        "type": "object",
+                        "properties": {
+                          "ref": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "qualified": {
+                            "type": "string"
+                          },
+                          "package": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": "object",
+                            "properties": {
+                              "file": {
+                                "type": "string"
+                              },
+                              "line": {
+                                "type": "integer"
+                              },
+                              "column": {
+                                "type": "integer"
+                              },
+                              "end_line": {
+                                "type": "integer"
+                              },
+                              "end_column": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "file",
+                              "line",
+                              "column"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "ref",
+                          "kind",
+                          "name",
+                          "qualified",
+                          "package",
+                          "location"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "direction",
+                      "symbol"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "truncated"
+              ],
+              "additionalProperties": false
+            },
+            "uncertainties": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "locations": {
+                    "type": [
+                      "null",
+                      "array"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file": {
+                          "type": "string"
+                        },
+                        "line": {
+                          "type": "integer"
+                        },
+                        "column": {
+                          "type": "integer"
+                        },
+                        "end_line": {
+                          "type": "integer"
+                        },
+                        "end_column": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "file",
+                        "line",
+                        "column"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "locations"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "next_cursor": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "schema_version",
+            "provider",
+            "snapshot",
+            "symbol",
+            "hover",
+            "definitions",
+            "type_definitions",
+            "references",
+            "implementations",
+            "related_tests",
+            "diagnostics",
+            "diagnostics_total",
+            "calls",
+            "uncertainties",
+            "truncated"
+          ],
+          "additionalProperties": false
+        },
+        "test_declarations": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "qualified": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "column": {
+                    "type": "integer"
+                  },
+                  "end_line": {
+                    "type": "integer"
+                  },
+                  "end_column": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "line",
+                  "column"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "ref",
+              "kind",
+              "name",
+              "qualified",
+              "package",
+              "location"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "excerpts": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "column": {
+                    "type": "integer"
+                  },
+                  "end_line": {
+                    "type": "integer"
+                  },
+                  "end_column": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "line",
+                  "column"
+                ],
+                "additionalProperties": false
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "location",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "call_sites": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "caller": {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "qualified": {
+                    "type": "string"
+                  },
+                  "package": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "ref",
+                  "kind",
+                  "name",
+                  "qualified",
+                  "package",
+                  "location"
+                ],
+                "additionalProperties": false
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  },
+                  "column": {
+                    "type": "integer"
+                  },
+                  "end_line": {
+                    "type": "integer"
+                  },
+                  "end_column": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file",
+                  "line",
+                  "column"
+                ],
+                "additionalProperties": false
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "caller",
+              "location",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reasons": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "uncertainties": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "locations": {
+                "type": [
+                  "null",
+                  "array"
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "end_line": {
+                      "type": "integer"
+                    },
+                    "end_column": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "file",
+                    "line",
+                    "column"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "locations"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "evidence_states": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "facet": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "facet",
+              "state"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "typed_evidence": {
+          "type": [
+            "null",
+            "object"
+          ],
+          "properties": {
+            "relationships": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "object": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "column": {
+                        "type": "integer"
+                      },
+                      "end_line": {
+                        "type": "integer"
+                      },
+                      "end_column": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "column"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "evidence": {
+                    "type": "string"
+                  },
+                  "build": {
+                    "type": "object",
+                    "properties": {
+                      "goos": {
+                        "type": "string"
+                      },
+                      "goarch": {
+                        "type": "string"
+                      },
+                      "cgo_enabled": {
+                        "type": "boolean"
+                      },
+                      "goflags": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": [
+                          "null",
+                          "array"
+                        ],
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "workspace": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "goos",
+                      "goarch",
+                      "cgo_enabled",
+                      "goflags",
+                      "tags",
+                      "workspace"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "availability": {
+                    "type": "string"
+                  },
+                  "limits": {
+                    "type": [
+                      "null",
+                      "array"
+                    ],
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "subject",
+                  "object",
+                  "location",
+                  "evidence",
+                  "build",
+                  "availability",
+                  "limits"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "uncertainties": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "locations": {
+                    "type": [
+                      "null",
+                      "array"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file": {
+                          "type": "string"
+                        },
+                        "line": {
+                          "type": "integer"
+                        },
+                        "column": {
+                          "type": "integer"
+                        },
+                        "end_line": {
+                          "type": "integer"
+                        },
+                        "end_column": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "file",
+                        "line",
+                        "column"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "locations"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "relationships",
+            "uncertainties",
+            "complete",
+            "truncated"
+          ],
+          "additionalProperties": false
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "selection",
+        "candidates",
+        "test_declarations",
+        "excerpts",
+        "call_sites",
+        "reasons",
+        "uncertainties",
+        "evidence_states",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "pack_id": {
+      "type": "string"
+    },
+    "refresh": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "previous_pack_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "previous_pack_id",
+        "status",
+        "message"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$id": "agentic.focus/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "required": [
+    "schema_version",
+    "provider",
+    "snapshot",
+    "change",
+    "impact",
+    "risks",
+    "uncertainties",
+    "verification",
+    "observed_packages",
+    "complete"
+  ],
+  "additionalProperties": false,
+  "title": "Agentic Focus Evidence Pack"
+}

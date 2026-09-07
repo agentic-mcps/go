@@ -9,7 +9,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
+)
+
+const (
+	maxFocusPackEntries = 32
+	maxFocusPackBytes   = 2 << 20
+	focusPackTTL        = 24 * time.Hour
 )
 
 var (
@@ -122,6 +130,63 @@ func (s *ArtifactStore) getVerified(id string) (Artifact, error) {
 		return Artifact{}, ErrArtifactCorrupt
 	}
 	return Artifact{ID: a.ID, SnapshotID: a.SnapshotID, Key: a.Key, Payload: append([]byte(nil), a.Payload...)}, nil
+}
+
+func (s *ArtifactStore) getFocusPack(id string) (Artifact, error) {
+	info, err := os.Stat(filepath.Join(s.root, id))
+	if errors.Is(err, os.ErrNotExist) || (err == nil && time.Since(info.ModTime()) > focusPackTTL) {
+		return Artifact{}, fmt.Errorf("focus pack metadata expired: %w", ErrArtifactNotFound)
+	}
+	if err != nil {
+		return Artifact{}, err
+	}
+	artifact, err := s.getVerified(id)
+	if err != nil {
+		return Artifact{}, err
+	}
+	if artifact.Key != "focus-pack/v1" {
+		return Artifact{}, ErrArtifactMismatch
+	}
+	return artifact, nil
+}
+
+func (s *ArtifactStore) pruneFocusPacks() error {
+	entries, err := os.ReadDir(s.root)
+	if err != nil {
+		return err
+	}
+	type candidate struct {
+		modified time.Time
+		path     string
+		size     int64
+	}
+	items := []candidate{}
+	var total int64
+	for _, entry := range entries {
+		if entry.IsDir() || !validID(entry.Name()) {
+			continue
+		}
+		artifact, readErr := s.getVerified(entry.Name())
+		if readErr != nil || artifact.Key != "focus-pack/v1" {
+			continue
+		}
+		info, statErr := entry.Info()
+		if statErr != nil {
+			return statErr
+		}
+		items = append(items, candidate{modified: info.ModTime(), path: filepath.Join(s.root, entry.Name()), size: info.Size()})
+		total += info.Size()
+	}
+	sort.Slice(items, func(i, j int) bool { return items[i].modified.Before(items[j].modified) })
+	for len(items) > maxFocusPackEntries || total > maxFocusPackBytes {
+		item := items[0]
+		items = items[1:]
+		total -= item.size
+		if err := os.Remove(item.path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
 }
 
 // EncodeArtifactCursor creates an opaque cursor for one artifact offset.

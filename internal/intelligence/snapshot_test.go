@@ -3,6 +3,7 @@ package intelligence
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -107,6 +108,206 @@ func TestSnapshotValidationRejectsStaleReference(t *testing.T) {
 	}
 }
 
+func TestObservationSourceVerifiesManifestOnCapturedSourceMiss(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	observation, err := snapshotter.observe(context.Background(), SnapshotRequest{
+		Scope: "./...", Semantic: SemanticIdentity{Version: "test"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer observation.release()
+	delete(observation.sources, "main.go")
+
+	original := []byte("package fixture\n\nvar Value = 1\n")
+	got, err := observation.source("main.go")
+	if err != nil || string(got) != string(original) {
+		t.Fatalf("observation.source(main.go) = %q, %v, want captured state", got, err)
+	}
+	writeSnapshotFile(t, root, "main.go", "package fixture\n\nvar Value = 2\n")
+	if _, sourceErr := observation.source("main.go"); !errors.Is(sourceErr, ErrSnapshotChanged) {
+		t.Fatalf("observation.source(main.go) after same-size rewrite error = %v, want ErrSnapshotChanged", sourceErr)
+	}
+	writeSnapshotFile(t, root, "main.go", string(original))
+	got, err = observation.source("main.go")
+	if err != nil || string(got) != string(original) {
+		t.Fatalf("observation.source(main.go) after A-B-A rewrite = %q, %v, want manifest-matching state", got, err)
+	}
+}
+
+func TestObservationSourceVerifiesActualRetentionCapMiss(t *testing.T) {
+	root := snapshotRepository(t)
+	prefix := "package fixture\n\n/*"
+	suffix := "*/\n"
+	padding := strings.Repeat("a", maximumObservationSourceBytes)
+	writeSnapshotFile(t, root, "large.go", prefix+padding+suffix)
+	snapshotter := newTestSnapshotter(t, root)
+	observation, err := snapshotter.observe(context.Background(), SnapshotRequest{
+		Scope: "./...", Semantic: SemanticIdentity{Version: "test"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer observation.release()
+	if _, found := observation.sources["large.go"]; found {
+		t.Fatal("large.go was captured despite exceeding the observation source cap")
+	}
+	if _, err := observation.source("large.go"); err != nil {
+		t.Fatalf("observation.source(large.go) error = %v, want manifest-verified source", err)
+	}
+	writeSnapshotFile(t, root, "large.go", prefix+strings.Repeat("b", len(padding))+suffix)
+	if _, err := observation.source("large.go"); !errors.Is(err, ErrSnapshotChanged) {
+		t.Fatalf("observation.source(large.go) after rewrite error = %v, want ErrSnapshotChanged", err)
+	}
+}
+
+func TestObservationIncludesGuidanceAndRejectsChangedGuidance(t *testing.T) {
+	root := snapshotRepository(t)
+	writeSnapshotFile(t, root, "AGENTS.md", "original guidance\n")
+	snapshotGit(t, root, "add", "AGENTS.md")
+	snapshotGit(t, root, "-c", "commit.gpgsign=false", "commit", "-m", "guidance")
+	snapshotter := newTestSnapshotter(t, root)
+	observation, err := snapshotter.observe(context.Background(), SnapshotRequest{
+		Scope: "./...", Semantic: SemanticIdentity{Version: "test"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer observation.release()
+
+	refs, err := inventoryGuidanceObserved(context.Background(), &observation)
+	if err != nil || len(refs) != 1 || refs[0].File != "AGENTS.md" {
+		t.Fatalf("inventoryGuidanceObserved() = %#v, %v, want AGENTS.md", refs, err)
+	}
+	writeSnapshotFile(t, root, "AGENTS.md", "changed guidance!\n")
+	if _, err := inventoryGuidanceObserved(context.Background(), &observation); !errors.Is(err, ErrSnapshotChanged) {
+		t.Fatalf("inventoryGuidanceObserved() after rewrite error = %v, want ErrSnapshotChanged", err)
+	}
+}
+
+func TestSnapshotManifestLeaseProtectsActiveEntryUntilRelease(t *testing.T) {
+	snapshotter := &Snapshotter{
+		manifests: make(map[string][]contentRecord),
+		active:    make(map[string]int),
+	}
+	for index := 0; index < maximumManifestEntries; index++ {
+		id := fmt.Sprintf("snapshot-%d", index)
+		if err := snapshotter.remember(SnapshotRef{ID: id}, []contentRecord{{Path: id, Kind: "file", Digest: id}}); err != nil {
+			t.Fatalf("remember(%q) error = %v", id, err)
+		}
+	}
+	lease, err := snapshotter.pin("snapshot-0")
+	if err != nil {
+		t.Fatalf("pin(snapshot-0) error = %v", err)
+	}
+	if err := snapshotter.remember(SnapshotRef{ID: "snapshot-new"}, []contentRecord{{Path: "new.go", Kind: "file", Digest: "new"}}); err != nil {
+		t.Fatalf("remember(snapshot-new) error = %v", err)
+	}
+	if _, found := snapshotter.manifest("snapshot-0"); !found {
+		t.Fatal("pinned manifest was evicted before lease release")
+	}
+	lease.release()
+	if err := snapshotter.remember(SnapshotRef{ID: "snapshot-final"}, []contentRecord{{Path: "final.go", Kind: "file", Digest: "final"}}); err != nil {
+		t.Fatalf("remember(snapshot-final) error = %v", err)
+	}
+	if _, found := snapshotter.manifest("snapshot-0"); found {
+		t.Fatal("released manifest remained pinned during eviction")
+	}
+}
+
+func TestSnapshotManifestAdmissionFailsWhenAllEntriesAreActive(t *testing.T) {
+	snapshotter := &Snapshotter{
+		manifests: make(map[string][]contentRecord),
+		active:    make(map[string]int),
+	}
+	leases := make([]*manifestLease, 0, maximumManifestEntries)
+	for index := 0; index < maximumManifestEntries; index++ {
+		id := fmt.Sprintf("snapshot-%d", index)
+		if err := snapshotter.remember(SnapshotRef{ID: id}, []contentRecord{{Path: id, Kind: "file", Digest: id}}); err != nil {
+			t.Fatalf("remember(%q) error = %v", id, err)
+		}
+		lease, err := snapshotter.pin(id)
+		if err != nil {
+			t.Fatalf("pin(%q) error = %v", id, err)
+		}
+		leases = append(leases, lease)
+	}
+	err := snapshotter.remember(SnapshotRef{ID: "snapshot-overflow"}, []contentRecord{{Path: "overflow.go", Kind: "file", Digest: "overflow"}})
+	if !errors.Is(err, errManifestCapacity) {
+		t.Fatalf("remember(snapshot-overflow) error = %v, want errManifestCapacity", err)
+	}
+	for _, lease := range leases {
+		lease.release()
+	}
+}
+
+func TestSnapshotManifestReplacementAccountsForRetainedBytes(t *testing.T) {
+	newSnapshotter := func() *Snapshotter {
+		return &Snapshotter{
+			manifests: make(map[string][]contentRecord),
+			active:    make(map[string]int),
+		}
+	}
+	record := func(path string, size int, value byte) []contentRecord {
+		return []contentRecord{{Path: path, Kind: "file", Digest: strings.Repeat(string(value), size)}}
+	}
+
+	t.Run("evicts inactive entry", func(t *testing.T) {
+		snapshotter := newSnapshotter()
+		if err := snapshotter.remember(SnapshotRef{ID: "target"}, record("target.go", 1<<20, 'a')); err != nil {
+			t.Fatal(err)
+		}
+		lease, err := snapshotter.pin("target")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer lease.release()
+		if err := snapshotter.remember(SnapshotRef{ID: "inactive"}, record("inactive.go", 6<<20, 'b')); err != nil {
+			t.Fatal(err)
+		}
+		if err := snapshotter.remember(SnapshotRef{ID: "target"}, record("target.go", 3<<20, 'c')); err != nil {
+			t.Fatalf("remember(target replacement) error = %v", err)
+		}
+		if _, found := snapshotter.manifest("inactive"); found {
+			t.Fatal("inactive manifest remained after replacement admission")
+		}
+		if got := manifestSize(snapshotter.manifests["target"]); got != 3<<20+len("target.go")+len("file") {
+			t.Fatalf("replacement manifest size = %d, want %d", got, 3<<20+len("target.go")+len("file"))
+		}
+	})
+
+	t.Run("rejects when all other entries are active", func(t *testing.T) {
+		snapshotter := newSnapshotter()
+		for _, item := range []struct {
+			id    string
+			path  string
+			size  int
+			value byte
+		}{
+			{id: "target", path: "target.go", size: 1 << 20, value: 'a'},
+			{id: "active", path: "active.go", size: 6 << 20, value: 'b'},
+		} {
+			if err := snapshotter.remember(SnapshotRef{ID: item.id}, record(item.path, item.size, item.value)); err != nil {
+				t.Fatal(err)
+			}
+			lease, err := snapshotter.pin(item.id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer lease.release()
+		}
+		before := append([]contentRecord(nil), snapshotter.manifests["target"]...)
+		err := snapshotter.remember(SnapshotRef{ID: "target"}, record("target.go", 3<<20, 'c'))
+		if !errors.Is(err, errManifestCapacity) {
+			t.Fatalf("remember(target replacement) error = %v, want errManifestCapacity", err)
+		}
+		if !reflect.DeepEqual(snapshotter.manifests["target"], before) {
+			t.Fatal("failed replacement changed active target manifest")
+		}
+	})
+}
+
 func TestSnapshotIncludesIgnoredActiveInputsButNotInactiveFiles(t *testing.T) {
 	root := snapshotRepository(t)
 	writeSnapshotFile(t, root, ".gitignore", "generated.go\nassets/\nnotes.tmp\n")
@@ -150,13 +351,9 @@ func TestSnapshotIncludesIgnoredActiveInputsButNotInactiveFiles(t *testing.T) {
 
 func newTestSnapshotter(t *testing.T, root string) *Snapshotter {
 	t.Helper()
-	goPath := "/Users/ashwin/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.0.darwin-arm64/bin/go"
-	if _, err := os.Stat(goPath); err != nil {
-		if resolved, lookErr := exec.LookPath("go"); lookErr == nil {
-			goPath = resolved
-		} else {
-			t.Skip("Go toolchain unavailable")
-		}
+	goPath, err := exec.LookPath("go")
+	if err != nil {
+		t.Skip("Go toolchain unavailable")
 	}
 	t.Setenv("PATH", filepath.Dir(goPath)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	ws, err := workspace.Open(context.Background(), root)

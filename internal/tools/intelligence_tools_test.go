@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/agentic-mcps/go/internal/intelligence"
@@ -19,6 +20,7 @@ type fakeIntelligence struct { //nolint:govet // Test requests are grouped by op
 	checkpoint intelligence.CheckpointRequest
 	refactor   intelligence.RefactorRequest
 	verify     verification.Request
+	focus      intelligence.FocusRequest
 }
 
 func (f *fakeIntelligence) Brief(_ context.Context, request intelligence.BriefRequest) (intelligence.ContextPack, error) {
@@ -34,6 +36,11 @@ func (f *fakeIntelligence) Search(_ context.Context, request intelligence.Search
 func (f *fakeIntelligence) Symbol(_ context.Context, request intelligence.SymbolRequest) (intelligence.SymbolContext, error) {
 	f.symbol = request
 	return intelligence.SymbolContext{Snapshot: intelligence.SnapshotRef{ID: "snap-symbol"}, Symbol: intelligence.SymbolMatch{Name: "Widget"}}, nil
+}
+
+func (f *fakeIntelligence) Focus(_ context.Context, request intelligence.FocusRequest) (intelligence.FocusResult, error) {
+	f.focus = request
+	return intelligence.FocusResult{SchemaVersion: intelligence.FocusSchemaVersion, Snapshot: intelligence.SnapshotRef{ID: "snap-focus"}, Change: verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}, FilesTotal: 1}, Impact: verification.Impact{Packages: []verification.ImpactedPackage{}, PackagesTotal: 2}, Risks: []verification.RiskArea{}, Uncertainties: []verification.Uncertainty{}, Verification: intelligence.VerificationApplicability{Reasons: []string{}}, PackID: strings.Repeat("c", 64), Refresh: &intelligence.FocusRefresh{Status: "replaced"}}, nil
 }
 
 func (f *fakeIntelligence) Begin(_ context.Context, request intelligence.BeginRequest) (intelligence.ChangeContract, error) {
@@ -61,7 +68,7 @@ func (f *fakeIntelligence) Verify(_ context.Context, request verification.Reques
 }
 
 func (*fakeIntelligence) Capabilities() intelligence.Capabilities {
-	return intelligence.Capabilities{ContextSchema: intelligence.ContextSchemaVersion}
+	return intelligence.Capabilities{ContextSchema: intelligence.ContextSchemaVersion, FocusSchema: intelligence.FocusSchemaVersion, FocusSelectors: []string{"query"}, FocusRelations: []string{}, FocusRefresh: "full_replacement"}
 }
 
 func (*fakeIntelligence) ReadArtifact(_ context.Context, cursor string, _ int64) (intelligence.ArtifactChunk, error) {
@@ -105,6 +112,16 @@ func TestIntelligenceToolsMapRequestsAndReturnCanonicalResults(t *testing.T) {
 	}
 	if fake.symbol.Ref != "ref" || !fake.symbol.Facets.CallHierarchy || !fake.symbol.Facets.TypeDefinition || fake.symbol.MaxBytes != 1000 {
 		t.Fatalf("symbol request = %#v", fake.symbol)
+	}
+	call, got, err := runtime.context(ctx, nil, ContextInput{Base: "origin/main", Package: "./internal/...", Race: true, PreviousPackID: strings.Repeat("a", 64), FocusPackage: "fixture"})
+	if err != nil || got.Snapshot.ID != "snap-focus" {
+		t.Fatalf("context = %#v, err %v", got, err)
+	}
+	if got.PackID == "" || len(call.Content) != 1 || !strings.Contains(call.Content[0].(*mcp.TextContent).Text, got.PackID) || !strings.Contains(call.Content[0].(*mcp.TextContent).Text, "refresh: replaced") {
+		t.Fatalf("MCP focus result = %#v / %#v", call, got)
+	}
+	if fake.focus.Base != "origin/main" || fake.focus.Scope != "./internal/..." || !fake.focus.Race || fake.focus.PreviousPackID == "" || fake.focus.FocusPackage != "fixture" {
+		t.Fatalf("focus request = %#v", fake.focus)
 	}
 }
 
@@ -209,6 +226,9 @@ func TestIntelligenceResourcesReturnCapabilitiesAndArtifactChunks(t *testing.T) 
 	}
 	if manifest.ContextSchema != intelligence.ContextSchemaVersion {
 		t.Fatalf("capabilities = %#v", manifest)
+	}
+	if manifest.FocusSchema != intelligence.FocusSchemaVersion || manifest.FocusRefresh != "full_replacement" || len(manifest.FocusSelectors) == 0 || manifest.FocusRelations == nil {
+		t.Fatalf("focus capabilities = %#v", manifest)
 	}
 	artifact, err := runtime.artifactResource(context.Background(), &mcp.ReadResourceRequest{Params: &mcp.ReadResourceParams{URI: "agentic-go://artifact/cursor_1"}})
 	if err != nil {

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic.eval.agent/v1alpha1",
+  "title": "Agentic Luna pilot run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "scenario_id", "task_id", "condition", "repetition", "model", "prompt", "transcript"],
+  "properties": {
+    "schema_version": {"const":"agentic.eval.agent/v1alpha1"},
+    "scenario_id": {"type":"string"}, "task_id": {"type":"string"},
+    "condition": {"enum":["baseline","focus"]}, "repetition":{"type":"integer","minimum":1,"maximum":5},
+    "model":{"const":"gpt-5.6-luna"}, "prompt":{"type":"string","minLength":1}, "transcript":{"type":"array"}, "process_error":{"type":"string"}, "stderr":{"type":"string"},
+    "source_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}, "binary_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "workspace_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}, "patch":{"type":"string"},
+    "patch_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}, "acceptance":{"type":"string"},
+    "acceptance_evidence_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}, "scope_violations":{"type":"array"},
+    "evidence_bytes":{"type":"integer"}, "tool_calls":{"type":"integer"}, "focus_tool_calls":{"type":"integer"}, "focus_failed_calls":{"type":"integer","minimum":0}, "focus_error_categories":{"type":"object","additionalProperties":{"type":"integer","minimum":1}}, "focus_result_followed_by_edit":{"type":"boolean"}, "refresh_completed":{"type":"boolean"}, "focus_delivery":{"enum":["healthy","failed"]}, "duration_ms":{"type":"integer"},
+    "operator_intervention":{"type":"boolean"}, "uncertainty":{"type":"array"}, "qualifying":{"type":"boolean"},
+    "decision_obligations":{"type":"array"}, "transcript_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "reasoning":{"type":"string"}
+  }
+}
