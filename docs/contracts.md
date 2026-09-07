@@ -6,6 +6,15 @@ assumes this file has been read first and does not repeat it.
 If a phase file conflicts with this file, this file wins — file an inconsistency
 note instead of silently picking one.
 
+Release boundaries apply to their recorded versions. The
+[v0.9 freeze](v0.9.0-release-scope.md) owns the current v1 interfaces; the
+semantic sidecar and Context Pack sections below describe their foundation.
+Sections explicitly marked historical preserve earlier proposals and do not
+authorize stale results, alternative provider lifecycles, or additional tools
+and flags. The [Go intelligence north star](go-intelligence-north-star.md)
+describes additive work; the implemented focus interface does not change the
+frozen v1 schemas.
+
 Grounded facts (verified against the local official SDK checkout at
 `v1.7.0-27-g3d6450f` on 2026-08-23; production pins stable v1.7.0):
 - `github.com/modelcontextprotocol/go-sdk` confirmed API: `mcp.NewServer`,
@@ -728,6 +737,30 @@ never persisted separately from the JSONL it summarizes.
 
 ## Cache contract — `internal/cache`
 
+### Current semantic freshness boundary
+
+Semantic results belong to an exact Snapshot Ref, package scope, build inputs,
+and provider identity. Source freshness requires content validation. File
+size, modification time, Git status, and elapsed TTL cannot establish that
+source is unchanged. A stale Snapshot Ref, Symbol Ref, or artifact cursor
+fails explicitly; it is never accepted for a short cache window.
+
+The managed long-lived gopls session and its synchronization and restart rules
+remain the provider boundary. Per-call CLI processes and open/query/close
+sessions from the historical navigation proposal do not replace that design.
+Tests and analyzers do not reuse cached execution evidence.
+
+The request-scoped observation now carries bounded captured source and pins
+bounded manifests. Observation-aware fallback reads verify content against that
+manifest. Future derived caches still require content/provider identities and
+must preserve capture and final validation, cancellation, and containment.
+
+### Historical TTL proposal (superseded)
+
+The generic cache, per-tool TTLs, and override flag below are retained design
+history, not current installation or implementation instructions. The named
+low-level navigation tools are not the frozen v1 navigation surface.
+
 Generic `TTLCache[K comparable, V any]` (Go 1.18+ generics). Cache **key**:
 
 ```
@@ -735,24 +768,15 @@ sha256(tool_name, workspace_abs_path, go_version, gopls_version,
        GOOS, GOARCH, build_tags, json.Marshal(args), source_digest)
 ```
 
-`source_digest` = a sorted hash over `(relPath, size, mtime)` for every
-`.go` file `packages.Load` resolves into the target package (and its
-same-module deps, for tools that walk deps — `go_module_risk`,
-`go_generics_map`). This is the actual correctness fix: `args` alone is not
-a valid cache key for anything that reads source — editing a file and
-re-running the identical tool call with an unmodified `Package` string must
-be a cache **miss**, not a stale hit. `go_version`/`gopls_version`/`GOOS`/
-`GOARCH`/`build_tags` are in the key because a diagnostic set is not stable
-across any of them, and this server runs as a long-lived process where the
-underlying toolchain or target platform can differ between two calls in the
-same run (a client proxying calls for two different target platforms, or a
-`gopls` restart after a version bump).
+The original `source_digest` proposal hashed `(relPath, size, mtime)` over
+resolved Go files and selected dependencies. That is insufficient: a same-size
+rewrite with a preserved modification time can change source without changing
+the key. It must not be used for current semantic freshness. Toolchain,
+provider, target platform, and build inputs also affect semantic results;
+content identity does not remove those dependencies.
 
-TTL is a **memory backstop, not the correctness mechanism** — it exists only
-to bound the cache's size and time-based blast radius (a hover result from a
-workspace state that no longer exists on disk should not live forever), not
-to decide whether a result is still valid. The `source_digest` component of
-the key is what decides validity. Default TTL table:
+TTL can govern retention, but cannot establish freshness or independently bound
+retained memory. The historical proposal used this TTL table:
 
 | Tool | TTL |
 |---|---|
@@ -762,7 +786,7 @@ the key is what decides validity. Default TTL table:
 | `go_definition`, `go_references` | 10s |
 | every test/analysis tool (Tier 1, 2, 4 fuzz/pprof) | 0 (never cached) |
 
-Override: repeatable flag `-cache-ttl tool=duration`, e.g.
+Proposed override, not a current flag: repeatable `-cache-ttl tool=duration`, e.g.
 `-cache-ttl go_diagnostics=10s -cache-ttl go_hover=5s`, parsed via
 `flag.Func` accumulating into a `map[string]time.Duration` that overlays the
 default table. No global single-value override — per-tool only, matches the
@@ -1097,6 +1121,64 @@ The phase documents retain possible navigation, audit, profiling, and creative
 tools as design material. None is committed release scope. A future tool ships
 only when repeated user pain justifies a public surface and, for analyzers, the
 fixture and external-calibration gates are satisfied.
+
+### Additive focus contract — `agentic.focus/v1`
+
+The post-v1 `go_context` tool and matching `agentic-go context` command expose
+one read-only change-consequence result without changing `agentic.context/v1`
+or `agentic.verify/v1`. Inputs select a required local base, package scope,
+expected Snapshot Ref, affected-package bound, and the verification policy whose
+applicability is being asked about. A context request never executes checks.
+
+The result binds changed files and declarations, conservative impacted packages,
+risk facts, uncertainty, and verification applicability to one Snapshot Ref.
+Applicability and outcome are independent. Applicability requires exact base and
+resolved commits, semantic snapshot, scope, build/provider context, and requested
+check policy. Missing legacy applicability metadata, or any mismatch, produces an
+explicit non-applicable result and a request-verification next action. Collections
+are non-nil. `internal/tools.RegisterAll` remains the frozen v1 inventory;
+post-v1 binaries register `go_context` additively after that inventory.
+
+Exactly one optional focus selector may be supplied: workspace query, current
+Symbol Ref, one-based UTF-8 byte source position, or the active file/package
+selector. Decision-facing callers should start with one selector group; query,
+Symbol Ref, source position, and file/package selectors are mutually exclusive.
+Ambiguous queries return
+bounded candidates before semantic expansion. A selected declaration may carry
+observed excerpts, direct incoming call-site ranges, and enclosing referenced
+test/example declarations. Selection reasons and uncertainty preserve whether
+evidence was absent, unavailable, unexamined, or omitted by bounds. The default
+focused-evidence budget is 8 KiB; required identity and uncertainty cannot be
+removed to satisfy it.
+
+A focused result with delivered evidence includes an opaque pack ID. After an
+edit, supplying that ID with the required base and no other selector performs
+a full replacement refresh against a new observation. Private metadata retains
+the original selection, selected logical declaration, and a digest manifest of
+evidence actually delivered; it is bounded to 32 entries and 2 MiB and expires
+after 24 hours. Refresh issues only current Snapshot-bound Symbol Refs and
+current locations. Stale rejection is expected and requires a fresh current
+selection; it is never bypassed. Ambiguous moves or renames require explicit
+selection. Failed resolution, unavailable semantics, and budget omission never
+establish source deletion. Delta refresh is not part of this contract.
+
+Focus selection also accepts one active Go file or package. Typed evidence is
+derived from observation-backed active source under the Snapshot build context.
+It may report compile-time interface satisfaction, pointer and value method-set
+membership, embedding, aliases and defined types, generic parameters,
+constraints and origins, provider-supported existing implementations,
+referenced examples, and bounded lifecycle-shaped method-call sites. Every
+relationship includes a workspace source location, build context, evidence
+predicate, and explicit limits. Partial typing and excluded build variants are
+reported as unavailable or unexamined; older semantics are never substituted.
+These predicates do not establish ownership, complete runtime dispatch,
+guaranteed cancellation, execution, coverage, or behavioral equivalence.
+
+The checked-in machine-readable contract is
+[`schema/focus-v1.json`](schema/focus-v1.json). The capabilities resource
+advertises its schema ID, supported selectors, full-replacement refresh mode,
+and relationship families. `tools/list` discovers `go_context` only in the
+post-v1 binary registration; `RegisterAll` and its 14-tool golden remain frozen.
 
 ## Repository verification workflow — `.github/workflows/verify.yml`
 

@@ -77,6 +77,21 @@ func TestGoplsMutatorNormalizesUTF16RenameWithoutMutationRetry(t *testing.T) {
 	}
 }
 
+func TestGoplsReaderConvertsUTF8LocationForFollowUpLookup(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	writeSnapshotFile(t, root, "unicode.go", "package fixture\n\nvar πValue = 1\n")
+	reader := &goplsReader{p: &goplsProvider{workspace: snapshots.workspace}}
+
+	position, err := reader.positionForLocation(Location{File: "unicode.go", Line: 3, Column: 7})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if position.Line != 2 || position.Character != 5 {
+		t.Fatalf("position = %#v, want line 2 character 5", position)
+	}
+}
+
 func TestGoplsMutatorRejectsOverlapsAndResourceOperations(t *testing.T) {
 	root := snapshotRepository(t)
 	snapshots := newTestSnapshotter(t, root)

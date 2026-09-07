@@ -81,7 +81,15 @@ func (c *Core) Verify(ctx context.Context, request verification.Request) (verifi
 	if err := report.Finalize(collected.Policy); err != nil {
 		return verification.Report{}, err
 	}
-	if err := c.verifications.Save(ctx, snapshot.RepositoryID, report); err != nil {
+	focusRequest := FocusRequest{
+		MinChangedCoverage: request.MinChangedCoverage, Base: request.Base, Scope: request.Package,
+		FailOn: request.FailOn, MaxPackages: request.MaxPackages, Race: request.Race,
+	}
+	if err := normalizeFocusRequest(&focusRequest); err != nil {
+		return verification.Report{}, err
+	}
+	metadata := verificationFocusMetadata{Snapshot: snapshot, Request: focusIdentity(focusRequest)}
+	if err := c.verifications.saveFocus(ctx, snapshot.RepositoryID, report, metadata); err != nil {
 		return verification.Report{}, fmt.Errorf("persisting latest verification: %w", err)
 	}
 	if contract != nil {

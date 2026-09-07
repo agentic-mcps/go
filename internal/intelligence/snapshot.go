@@ -23,6 +23,14 @@ import (
 // workspace observed by the current operation.
 var ErrSnapshotChanged = errors.New("workspace snapshot changed")
 
+var errManifestCapacity = errors.New("snapshot manifest cache capacity exhausted")
+
+const (
+	maximumManifestEntries        = 32
+	maximumManifestBytes          = 8 << 20
+	maximumObservationSourceBytes = 4 << 20
+)
+
 // CapabilityManifest is the normalized semantic-provider feature set.
 type CapabilityManifest struct {
 	WorkspaceSymbol bool `json:"workspace_symbol"`
@@ -86,12 +94,83 @@ type SnapshotRequest struct {
 }
 
 // Snapshotter captures and validates immutable workspace identities.
+//
+//nolint:govet // Fields follow capture and retention responsibilities.
 type Snapshotter struct {
-	workspace *workspace.Workspace
-	runner    *execution.Runner
-	manifests map[string][]contentRecord
-	order     []string
-	mu        sync.RWMutex
+	workspace     *workspace.Workspace
+	runner        *execution.Runner
+	manifests     map[string][]contentRecord
+	order         []string
+	active        map[string]int
+	manifestBytes int
+	mu            sync.RWMutex
+}
+
+// snapshotObservation is private request-scoped state. Its source contents
+// are bounded and are never part of a public snapshot or protocol response.
+//
+//nolint:govet // Fields follow observation identity, evidence, and ownership.
+type snapshotObservation struct {
+	snapshot      SnapshotRef
+	records       []contentRecord
+	sources       map[string][]byte
+	packages      []inventoryPackage
+	packagesReady bool
+	lease         *manifestLease
+}
+
+func (o *snapshotObservation) source(path string) ([]byte, error) {
+	if o == nil || o.lease == nil || o.lease.snapshotter == nil {
+		return nil, fmt.Errorf("snapshot observation is unavailable")
+	}
+	clean, err := cleanSnapshotPath(path)
+	if err != nil {
+		return nil, err
+	}
+	record, found := observationRecord(o.records, clean)
+	if !found || record.Kind == "deleted" {
+		return nil, fmt.Errorf("%w: source %s is not present in snapshot manifest %s", ErrSnapshotChanged, clean, o.snapshot.ID)
+	}
+	if source, found := o.sources[clean]; found {
+		return append([]byte(nil), source...), nil
+	}
+	current, source, err := o.lease.snapshotter.contentRecord(clean)
+	if err != nil {
+		return nil, err
+	}
+	if current.Kind != record.Kind || current.Digest != record.Digest {
+		return nil, fmt.Errorf("%w: source %s differs from snapshot manifest %s", ErrSnapshotChanged, clean, o.snapshot.ID)
+	}
+	return source, nil
+}
+
+func observationRecord(records []contentRecord, path string) (contentRecord, bool) {
+	index := sort.Search(len(records), func(index int) bool { return records[index].Path >= path })
+	if index >= len(records) || records[index].Path != path {
+		return contentRecord{}, false
+	}
+	return records[index], true
+}
+
+func (o *snapshotObservation) release() {
+	if o != nil && o.lease != nil {
+		o.lease.release()
+	}
+}
+
+type manifestLease struct {
+	snapshotter *Snapshotter
+	id          string
+	once        sync.Once
+}
+
+func (l *manifestLease) release() {
+	if l == nil {
+		return
+	}
+	l.once.Do(func() {
+		l.snapshotter.release(l.id)
+	})
 }
 
 // NewSnapshotter constructs a snapshot source over shared contained execution.
@@ -102,28 +181,51 @@ func NewSnapshotter(ws *workspace.Workspace, runner *execution.Runner) (*Snapsho
 	if runner == nil {
 		return nil, fmt.Errorf("runner is nil")
 	}
-	return &Snapshotter{workspace: ws, runner: runner, manifests: make(map[string][]contentRecord)}, nil
+	return &Snapshotter{
+		workspace: ws,
+		runner:    runner,
+		manifests: make(map[string][]contentRecord),
+		active:    make(map[string]int),
+	}, nil
 }
 
 // Capture observes the final worktree twice and rejects concurrent drift.
 func (s *Snapshotter) Capture(ctx context.Context, request SnapshotRequest) (SnapshotRef, error) {
-	if err := normalizeSnapshotRequest(&request); err != nil {
+	observation, err := s.observe(ctx, request)
+	if err != nil {
 		return SnapshotRef{}, err
+	}
+	defer observation.release()
+	return observation.snapshot, nil
+}
+
+func (s *Snapshotter) observe(ctx context.Context, request SnapshotRequest) (snapshotObservation, error) {
+	if err := normalizeSnapshotRequest(&request); err != nil {
+		return snapshotObservation{}, err
 	}
 	callCtx, cancel := s.runner.Deadline(ctx)
 	defer cancel()
-	first, err := s.capture(callCtx, request)
+	first, err := s.captureState(callCtx, request)
 	if err != nil {
-		return SnapshotRef{}, err
+		return snapshotObservation{}, err
 	}
-	second, err := s.capture(callCtx, request)
+	second, err := s.captureState(callCtx, request)
 	if err != nil {
-		return SnapshotRef{}, err
+		return snapshotObservation{}, err
 	}
-	if first.ID != second.ID {
-		return SnapshotRef{}, fmt.Errorf("%w during capture", ErrSnapshotChanged)
+	if first.ref.ID != second.ref.ID {
+		return snapshotObservation{}, fmt.Errorf("%w during capture", ErrSnapshotChanged)
 	}
-	return second, nil
+	lease, err := s.retain(second.ref, second.records)
+	if err != nil {
+		return snapshotObservation{}, err
+	}
+	return snapshotObservation{
+		snapshot: second.ref,
+		records:  append([]contentRecord(nil), second.records...),
+		sources:  second.sources,
+		lease:    lease,
+	}, nil
 }
 
 // Validate recaptures the supplied scope and rejects stale references.
@@ -147,6 +249,7 @@ func (s *Snapshotter) Validate(ctx context.Context, expected SnapshotRef) (Snaps
 //nolint:govet // ephemeral capture state is grouped by semantic role.
 type snapshotState struct {
 	records []contentRecord
+	sources map[string][]byte
 	status  []byte
 	index   []byte
 	ref     SnapshotRef
@@ -158,10 +261,10 @@ type contentRecord struct {
 	Digest string
 }
 
-func (s *Snapshotter) capture(ctx context.Context, request SnapshotRequest) (SnapshotRef, error) {
+func (s *Snapshotter) captureState(ctx context.Context, request SnapshotRequest) (snapshotState, error) {
 	state, err := s.readState(ctx, request)
 	if err != nil {
-		return SnapshotRef{}, err
+		return snapshotState{}, err
 	}
 	contentHash := sha256.New()
 	writeHashPart(contentHash, state.ref.HeadCommit)
@@ -189,24 +292,102 @@ func (s *Snapshotter) capture(ctx context.Context, request SnapshotRequest) (Sna
 	}
 	capabilities, err := json.Marshal(state.ref.Capabilities)
 	if err != nil {
-		return SnapshotRef{}, fmt.Errorf("encoding semantic capabilities: %w", err)
+		return snapshotState{}, fmt.Errorf("encoding semantic capabilities: %w", err)
 	}
 	identity.Write(capabilities)
 	state.ref.ID = fmt.Sprintf("sha256:%x", identity.Sum(nil))
-	s.remember(state.ref, state.records)
-	return state.ref, nil
+	return state, nil
 }
 
-func (s *Snapshotter) remember(ref SnapshotRef, records []contentRecord) {
+func (s *Snapshotter) remember(ref SnapshotRef, records []contentRecord) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, exists := s.manifests[ref.ID]; !exists {
-		s.order = append(s.order, ref.ID)
+	return s.rememberLocked(ref, records)
+}
+
+func (s *Snapshotter) retain(ref SnapshotRef, records []contentRecord) (*manifestLease, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.rememberLocked(ref, records); err != nil {
+		return nil, err
 	}
+	s.active[ref.ID]++
+	return &manifestLease{snapshotter: s, id: ref.ID}, nil
+}
+
+func (s *Snapshotter) rememberLocked(ref SnapshotRef, records []contentRecord) error {
+	bytes := manifestSize(records)
+	if bytes > maximumManifestBytes {
+		return fmt.Errorf("%w: manifest is %d bytes, maximum is %d", errManifestCapacity, bytes, maximumManifestBytes)
+	}
+	if _, exists := s.manifests[ref.ID]; exists {
+		previousBytes := manifestSize(s.manifests[ref.ID])
+		projectedBytes := s.manifestBytes - previousBytes + bytes
+		if projectedBytes > maximumManifestBytes {
+			releasableBytes := 0
+			for _, id := range s.order {
+				if id != ref.ID && s.active[id] == 0 {
+					releasableBytes += manifestSize(s.manifests[id])
+				}
+			}
+			if projectedBytes-releasableBytes > maximumManifestBytes {
+				return fmt.Errorf("%w: replacing %s requires %d bytes, %d available after inactive eviction", errManifestCapacity, ref.ID, projectedBytes, maximumManifestBytes)
+			}
+			for projectedBytes > maximumManifestBytes {
+				index := s.oldestUnpinnedIndex(ref.ID)
+				id := s.order[index]
+				projectedBytes -= manifestSize(s.manifests[id])
+				s.manifestBytes -= manifestSize(s.manifests[id])
+				delete(s.manifests, id)
+				s.order = append(s.order[:index], s.order[index+1:]...)
+			}
+		}
+		s.manifests[ref.ID] = append([]contentRecord(nil), records...)
+		s.manifestBytes = projectedBytes
+		return nil
+	}
+	for len(s.order) >= maximumManifestEntries || s.manifestBytes+bytes > maximumManifestBytes {
+		index := s.oldestUnpinnedIndex("")
+		if index < 0 {
+			return fmt.Errorf("%w: %d active entries, %d retained bytes", errManifestCapacity, len(s.order), s.manifestBytes)
+		}
+		id := s.order[index]
+		s.manifestBytes -= manifestSize(s.manifests[id])
+		delete(s.manifests, id)
+		s.order = append(s.order[:index], s.order[index+1:]...)
+	}
+	s.order = append(s.order, ref.ID)
 	s.manifests[ref.ID] = append([]contentRecord(nil), records...)
-	for len(s.order) > 32 {
-		delete(s.manifests, s.order[0])
-		s.order = s.order[1:]
+	s.manifestBytes += bytes
+	return nil
+}
+
+func (s *Snapshotter) oldestUnpinnedIndex(exclude string) int {
+	for index, id := range s.order {
+		if id != exclude && s.active[id] == 0 {
+			return index
+		}
+	}
+	return -1
+}
+
+func (s *Snapshotter) pin(id string) (*manifestLease, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, found := s.manifests[id]; !found {
+		return nil, fmt.Errorf("%w: snapshot manifest %s is unavailable", ErrSnapshotChanged, id)
+	}
+	s.active[id]++
+	return &manifestLease{snapshotter: s, id: id}, nil
+}
+
+func (s *Snapshotter) release(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if count := s.active[id]; count <= 1 {
+		delete(s.active, id)
+	} else {
+		s.active[id] = count - 1
 	}
 }
 
@@ -276,12 +457,18 @@ func (s *Snapshotter) readState(ctx context.Context, request SnapshotRequest) (s
 		return snapshotState{}, err
 	}
 	records := make([]contentRecord, 0, len(paths))
+	sources := make(map[string][]byte)
+	sourceBytes := 0
 	for _, path := range paths {
-		record, recordErr := s.contentRecord(path)
+		record, source, recordErr := s.contentRecord(path)
 		if recordErr != nil {
 			return snapshotState{}, recordErr
 		}
 		records = append(records, record)
+		if strings.HasSuffix(path, ".go") && sourceBytes+len(source) <= maximumObservationSourceBytes {
+			sources[path] = append([]byte(nil), source...)
+			sourceBytes += len(source)
+		}
 	}
 	sort.Slice(records, func(i, j int) bool { return records[i].Path < records[j].Path })
 
@@ -304,6 +491,7 @@ func (s *Snapshotter) readState(ctx context.Context, request SnapshotRequest) (s
 			Scope:           request.Scope,
 		},
 		records: records,
+		sources: sources,
 		status:  append([]byte(nil), status...),
 		index:   append([]byte(nil), index...),
 	}, nil
@@ -339,6 +527,13 @@ func (s *Snapshotter) snapshotPaths(ctx context.Context, index []byte, scope str
 	for _, path := range packageInputs {
 		paths[path] = struct{}{}
 	}
+	guidanceInputs, err := s.guidanceInputs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, path := range guidanceInputs {
+		paths[path] = struct{}{}
+	}
 	result := make([]string, 0, len(paths))
 	for path := range paths {
 		clean, cleanErr := cleanSnapshotPath(path)
@@ -349,6 +544,38 @@ func (s *Snapshotter) snapshotPaths(ctx context.Context, index []byte, scope str
 	}
 	sort.Strings(result)
 	return result, nil
+}
+
+func (s *Snapshotter) guidanceInputs(ctx context.Context) ([]string, error) {
+	paths := make([]string, 0)
+	err := filepath.WalkDir(s.workspace.Root(), func(path string, entry os.DirEntry, walkErr error) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			if path != s.workspace.Root() && (entry.Name() == ".git" || entry.Name() == "vendor") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if entry.Name() != "AGENTS.md" && entry.Name() != "CLAUDE.md" {
+			return nil
+		}
+		relative, err := s.workspace.Relative(path)
+		if err != nil {
+			return err
+		}
+		paths = append(paths, relative)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(paths)
+	return paths, nil
 }
 
 func (s *Snapshotter) goPackageInputs(ctx context.Context, scope string) ([]string, error) {
@@ -413,47 +640,60 @@ func (s *Snapshotter) goPackageInputs(ctx context.Context, scope string) ([]stri
 	return resultPaths, nil
 }
 
-func (s *Snapshotter) contentRecord(path string) (contentRecord, error) {
+func (s *Snapshotter) contentRecord(path string) (contentRecord, []byte, error) {
 	absolute := filepath.Join(s.workspace.Root(), filepath.FromSlash(path))
 	info, err := os.Lstat(absolute)
 	if errors.Is(err, os.ErrNotExist) {
-		return contentRecord{Path: path, Kind: "deleted", Digest: "sha256:" + strings.Repeat("0", 64)}, nil
+		return contentRecord{Path: path, Kind: "deleted", Digest: "sha256:" + strings.Repeat("0", 64)}, nil, nil
 	}
 	if err != nil {
-		return contentRecord{}, fmt.Errorf("inspecting snapshot path %q: %w", path, err)
+		return contentRecord{}, nil, fmt.Errorf("inspecting snapshot path %q: %w", path, err)
 	}
 	kind := "file"
 	var content []byte
+	var source []byte
 	if info.Mode()&os.ModeSymlink != 0 {
 		kind = "symlink"
 		target, readErr := os.Readlink(absolute)
 		if readErr != nil {
-			return contentRecord{}, fmt.Errorf("reading snapshot symlink %q: %w", path, readErr)
+			return contentRecord{}, nil, fmt.Errorf("reading snapshot symlink %q: %w", path, readErr)
 		}
 		resolved, resolveErr := s.workspace.Resolve(path)
 		if resolveErr != nil {
-			return contentRecord{}, resolveErr
+			return contentRecord{}, nil, resolveErr
 		}
 		resolvedContent, readErr := os.ReadFile(resolved)
 		if readErr != nil {
-			return contentRecord{}, fmt.Errorf("reading snapshot symlink target %q: %w", path, readErr)
+			return contentRecord{}, nil, fmt.Errorf("reading snapshot symlink target %q: %w", path, readErr)
 		}
+		source = resolvedContent
 		content = append([]byte(target+"\x00"), resolvedContent...)
 	} else {
 		if !info.Mode().IsRegular() {
-			return contentRecord{}, fmt.Errorf("snapshot path %q is not a regular file", path)
+			return contentRecord{}, nil, fmt.Errorf("snapshot path %q is not a regular file", path)
 		}
 		resolved, resolveErr := s.workspace.Resolve(path)
 		if resolveErr != nil {
-			return contentRecord{}, resolveErr
+			return contentRecord{}, nil, resolveErr
 		}
 		content, err = os.ReadFile(resolved)
 		if err != nil {
-			return contentRecord{}, fmt.Errorf("reading snapshot path %q: %w", path, err)
+			return contentRecord{}, nil, fmt.Errorf("reading snapshot path %q: %w", path, err)
 		}
 	}
 	digest := sha256.Sum256(content)
-	return contentRecord{Path: path, Kind: kind, Digest: fmt.Sprintf("sha256:%x", digest[:])}, nil
+	if source == nil {
+		source = content
+	}
+	return contentRecord{Path: path, Kind: kind, Digest: fmt.Sprintf("sha256:%x", digest[:])}, source, nil
+}
+
+func manifestSize(records []contentRecord) int {
+	size := 0
+	for _, record := range records {
+		size += len(record.Path) + len(record.Kind) + len(record.Digest)
+	}
+	return size
 }
 
 func (s *Snapshotter) buildConfig(ctx context.Context) (BuildConfig, error) {

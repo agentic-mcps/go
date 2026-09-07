@@ -2,8 +2,10 @@ package intelligence
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,17 +13,33 @@ import (
 	"github.com/agentic-mcps/go/internal/verification"
 )
 
+//nolint:govet // Test controls are grouped by behavior.
 type fakeSemanticProvider struct {
 	refactorErr   error
 	reader        *fakeSemanticReader
 	refactorEdits []semanticFileEdits
 	identity      SemanticIdentity
 	reads         int
+	observations  []*snapshotObservation
+	readErr       error
+	onRead        func(*snapshotObservation)
 }
 
 func (p *fakeSemanticProvider) Identity() SemanticIdentity { return p.identity }
 func (p *fakeSemanticProvider) Read(_ context.Context, _ SnapshotRef, fn func(semanticReader) error) error {
 	p.reads++
+	return fn(p.reader)
+}
+
+func (p *fakeSemanticProvider) ReadObservation(_ context.Context, observation *snapshotObservation, fn func(semanticReader) error) error {
+	p.reads++
+	p.observations = append(p.observations, observation)
+	if p.onRead != nil {
+		p.onRead(observation)
+	}
+	if p.readErr != nil {
+		return p.readErr
+	}
 	return fn(p.reader)
 }
 
@@ -136,6 +154,101 @@ func TestCoreSearchPaginatesStableSnapshotBoundSymbols(t *testing.T) {
 	}
 }
 
+func TestCoreSearchUsesOneObservationForSemanticRead(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	reader := &fakeSemanticReader{search: semanticSymbols{Items: []SymbolMatch{{
+		Name: "Value", Qualified: "fixture.Value", Kind: "go.variable", Package: "fixture",
+		Location: Location{File: "main.go", Line: 3, Column: 5},
+	}}}}
+	core := newTestCore(t, snapshotter, reader)
+
+	result, err := core.Search(context.Background(), SearchRequest{Query: "Value"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider := core.semantic.(*fakeSemanticProvider)
+	if len(provider.observations) != 1 {
+		t.Fatalf("Search() semantic observations = %d, want 1", len(provider.observations))
+	}
+	observation := provider.observations[0]
+	if observation.snapshot.ID != result.Snapshot.ID {
+		t.Fatalf("semantic observation snapshot = %q, result snapshot = %q", observation.snapshot.ID, result.Snapshot.ID)
+	}
+	source, ok := observation.sources["main.go"]
+	if !ok {
+		t.Fatal("semantic observation omitted captured main.go source")
+	}
+	digest := sha256.Sum256(source)
+	foundRecord := false
+	for _, record := range observation.records {
+		if record.Path == "main.go" {
+			foundRecord = true
+			if record.Digest != fmt.Sprintf("sha256:%x", digest[:]) {
+				t.Fatalf("captured source digest = %q, manifest digest = %q", fmt.Sprintf("sha256:%x", digest[:]), record.Digest)
+			}
+		}
+	}
+	if !foundRecord {
+		t.Fatal("semantic observation omitted main.go manifest record")
+	}
+}
+
+func TestCoreSearchReleasesObservationAfterSemanticCancellation(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	reader := &fakeSemanticReader{}
+	core := newTestCore(t, snapshotter, reader)
+	provider := core.semantic.(*fakeSemanticProvider)
+	provider.readErr = context.Canceled
+
+	_, err := core.Search(context.Background(), SearchRequest{Query: "Value"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Search() error = %v, want context.Canceled", err)
+	}
+	snapshotter.mu.RLock()
+	defer snapshotter.mu.RUnlock()
+	if len(snapshotter.active) != 0 {
+		t.Fatalf("active manifest leases after cancellation = %d, want 0", len(snapshotter.active))
+	}
+}
+
+func TestCoreSymbolReleasesObservationAfterPositionError(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	core := newTestCore(t, snapshotter, &fakeSemanticReader{})
+
+	_, err := core.Symbol(context.Background(), SymbolRequest{
+		Position: &SourcePosition{File: "main.go", Line: 100, Column: 1},
+	})
+	if err == nil {
+		t.Fatal("Symbol() error = nil, want invalid source position")
+	}
+	snapshotter.mu.RLock()
+	defer snapshotter.mu.RUnlock()
+	if len(snapshotter.active) != 0 {
+		t.Fatalf("active manifest leases after position error = %d, want 0", len(snapshotter.active))
+	}
+}
+
+func TestCoreBriefForwardsObservationToDiagnostics(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	core := newTestCore(t, snapshotter, &fakeSemanticReader{})
+
+	result, err := core.Brief(context.Background(), BriefRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider := core.semantic.(*fakeSemanticProvider)
+	if len(provider.observations) != 1 {
+		t.Fatalf("Brief() semantic observations = %d, want 1", len(provider.observations))
+	}
+	if provider.observations[0].snapshot.ID != result.Snapshot.ID {
+		t.Fatalf("Brief() diagnostic snapshot = %q, result snapshot = %q", provider.observations[0].snapshot.ID, result.Snapshot.ID)
+	}
+}
+
 func TestCoreSymbolConvertsUTF8BytesAndReportsExternalOmissions(t *testing.T) {
 	root := snapshotRepository(t)
 	writeSnapshotFile(t, root, "unicode.go", "package fixture\n\nvar πValue = 1\n")
@@ -203,7 +316,7 @@ func TestCoreCapabilitiesAndArtifactCursor(t *testing.T) {
 	snapshotter := newTestSnapshotter(t, snapshotRepository(t))
 	core := newTestCore(t, snapshotter, &fakeSemanticReader{})
 	capabilities := core.Capabilities()
-	if capabilities.Provider.Version != "v0.21.0" || !capabilities.Semantic.WorkspaceSymbol || capabilities.ContextSchema != ContextSchemaVersion {
+	if capabilities.Provider.Version != "v0.21.0" || !capabilities.Semantic.WorkspaceSymbol || capabilities.ContextSchema != ContextSchemaVersion || capabilities.FocusSchema != FocusSchemaVersion || capabilities.FocusRefresh != "full_replacement" || len(capabilities.FocusSelectors) != 5 || len(capabilities.FocusRelations) != 8 {
 		t.Fatalf("capabilities = %#v", capabilities)
 	}
 	artifact, err := core.artifacts.Put("snapshot", "detail", []byte("detail"))
