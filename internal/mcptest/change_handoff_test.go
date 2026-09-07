@@ -103,7 +103,7 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	if err := json.Unmarshal(mustJSON(t, verified.StructuredContent), &report); err != nil {
 		t.Fatal(err)
 	}
-	cleanupHandoffVerification(t, handoff.RepositoryID, report.ID)
+	cleanupHandoffVerification(t, handoff.RepositoryID)
 	if report.ID == "" || report.Snapshot.CurrentID != handoff.LatestSnapshot.ID || report.Result.Status != verification.ResultPass {
 		t.Fatalf("unified verification = %#v", report)
 	}
@@ -134,7 +134,7 @@ func TestSubprocessChangeHandoff(t *testing.T) {
 	}
 }
 
-func cleanupHandoffVerification(t *testing.T, repositoryID, reportID string) {
+func cleanupHandoffVerification(t *testing.T, repositoryID string) {
 	t.Helper()
 	cache, err := os.UserCacheDir()
 	if err != nil {
@@ -142,13 +142,8 @@ func cleanupHandoffVerification(t *testing.T, repositoryID, reportID string) {
 	}
 	repositoryDirectory := filepath.Join(cache, "agentic-go", "verifications", strings.TrimPrefix(repositoryID, "sha256:"))
 	t.Cleanup(func() {
-		for _, name := range []string{reportID + ".json", "latest.json"} {
-			if err := os.Remove(filepath.Join(repositoryDirectory, name)); err != nil && !os.IsNotExist(err) {
-				t.Errorf("remove test verification %s: %v", name, err)
-			}
-		}
-		if err := os.Remove(repositoryDirectory); err != nil && !os.IsNotExist(err) {
-			t.Errorf("remove empty test verification directory: %v", err)
+		if err := os.RemoveAll(repositoryDirectory); err != nil {
+			t.Errorf("remove test verification directory: %v", err)
 		}
 	})
 }
