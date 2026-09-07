@@ -11,6 +11,25 @@ their evidence live in
 recorded in [`decision-memo.md`](decision-memo.md); [`plan.md`](plan.md) is the
 concise product plan and routing summary.
 
+## Next-generation Go intelligence
+
+After the contributor instructions, a new agent should start with the
+[Astra analysis handoff](continuation/astra-understanding.md): product judgment,
+source evidence, confirmed observation defects, deferred work, and the next
+decision. Its quick start routes the next task without repeating the broader
+investigation. The [continuation handoff](continuation/go-intelligence.md) owns
+implementation status and the next action; the
+[Go intelligence north star](go-intelligence-north-star.md) owns the approved
+architectural direction and acceptance criteria.
+The additive post-v1 `agentic.focus/v1` evidence layer is implemented and
+locally qualified. The initial private 20-run Luna feasibility pilot found no
+treatment use because `go_context` was unused in all 10 focus runs. The later
+27-run adoption follow-up found 0/6 use with description-only discoverability,
+6/6 with generic prompt guidance, and 6/6 with the shipped skill; it still
+establishes no causal engineering benefit. See the
+[adoption results](../validation/v1.0.0/adoption-results.md). Delta refresh is
+deferred. These documents do not override frozen v1 contracts.
+
 ## Verification report contracts
 
 - [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) — change-aware
@@ -36,6 +55,8 @@ concise product plan and routing summary.
   compact snapshot-bound semantic context contract
 - [`schema/change-contract-v1.json`](schema/change-contract-v1.json):
   snapshot-bound Change Contract and Checkpoint contract
+- [`schema/focus-v1.json`](schema/focus-v1.json):
+  additive change, focused evidence, refresh, and verification-applicability contract
 - [`adr/0002-context-pack-boundary.md`](adr/0002-context-pack-boundary.md):
   why Context Packs and the intelligence service, not raw gopls or MCP, form
   the semantic product boundary

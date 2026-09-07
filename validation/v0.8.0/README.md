@@ -8,6 +8,12 @@ The checked-in local results and their limitations are summarized in
 [`summary.md`](summary.md). Exact machine-readable task evidence is in
 [`evidence.json`](evidence.json).
 
+The private Luna focus pilot report is documented in
+[`../v1.0.0/pilot-results.md`](../v1.0.0/pilot-results.md).
+
+The follow-up adoption and discoverability results are documented in
+[`../v1.0.0/adoption-results.md`](../v1.0.0/adoption-results.md).
+
 Build and run the local runner with Go 1.27. The scorer disables implicit
 toolchain downloads, and some pinned tasks require a newer Go version than the
 agentic-go module floor.
