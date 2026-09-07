@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-07
+
+### Added
+
+- Additive `go_context` MCP tool and `agentic-go context` CLI command for
+  snapshot-bound Go context, impact relationships, provenance, uncertainty,
+  refresh, and verification applicability. The current server surface is 15
+  tools; the frozen v1 surface remains 14 tools.
+- `agentic.focus/v1` evidence contract, representative goldens, and the
+  shipped Codex project skill and MCP workflow guidance for discoverable use.
+- Public adoption evidence documenting observed workflow use and its claim
+  boundaries without asserting causal engineering improvement.
+
 ## [1.0.0] - 2026-08-30
 
 ### Added
@@ -62,5 +75,6 @@ All notable changes to this project are documented here. The format follows
 - Workspace containment, bounded execution, event-driven progress, and
   optional privacy-preserving local traces.
 
-[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/agentic-mcps/go/releases/tag/v1.1.0
 [1.0.0]: https://github.com/agentic-mcps/go/releases/tag/v1.0.0
