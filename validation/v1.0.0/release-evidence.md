@@ -1,17 +1,25 @@
-# v1.0.0 release evidence
+# v1.1.0 release candidate evidence
 
-Date: 2026-08-30 (Asia/Kolkata)
+Date: 2026-09-07 (Asia/Kolkata)
 
-This record qualifies the historical personal-path v1 candidate at source
-commit `709e7d42b301f40041d80e75e9be3d74daf5c13c`. The module identity was
-`github.com/ashwingopalsamy/agentic-go`. It predates the organization module
-`github.com/agentic-mcps/go` and its signed `v1.0.0` release. The evidence files
-added afterward do not change production code, schemas, analyzer predicates,
-or protocol behavior.
+This record is the public release-candidate note for the organization module
+`github.com/agentic-mcps/go`. v1.1.0 adds the post-v1 `go_context` tool and
+`agentic.focus/v1` evidence contract while preserving the frozen v1 schemas and
+14-tool baseline. The exact tag commit and published asset digests are supplied
+by the protected-main and tag workflows; local candidate evidence below remains
+historical unless a section explicitly says otherwise.
 
-## Release identity
+## Historical v1.0.0 qualification
 
-- `agentic-go --version` reports `1.0.0` in the candidate archive.
+The retained sections below qualify the earlier personal-path v1 candidate at
+source commit `709e7d42b301f40041d80e75e9be3d74daf5c13c`. Its module identity was
+`github.com/ashwingopalsamy/agentic-go`, before the organization module and its
+signed `v1.0.0` release. The evidence files added afterward did not change
+production code, schemas, analyzer predicates, or protocol behavior.
+
+### Historical release identity
+
+- `agentic-go --version` reported `1.0.0` in the historical candidate archive.
 - Managed gopls initialization receives the effective agentic-go version.
 - Release archives contain the exact `agentic-go-gopls` v0.21.0 companion.
 - The frozen inventory remains 14 tools, seven fixed resources, one artifact
@@ -19,7 +27,7 @@ or protocol behavior.
 - The emitted schemas remain `agentic.context/v1`, `agentic.change/v1`, and
   `agentic.verify/v1`.
 
-## Verification matrix
+### Historical verification matrix
 
 All Go commands used explicit local toolchains with `GOTOOLCHAIN=local`.
 
@@ -37,7 +45,7 @@ All Go commands used explicit local toolchains with `GOTOOLCHAIN=local`.
 | GitHub Action adapters | Node 24-compatible test runner | pass, five suites |
 | Release bundles | Darwin/Linux, amd64/arm64 | pass, two byte-identical builds |
 
-## Hosted pre-tag qualification
+### Historical hosted pre-tag qualification
 
 GitHub Actions Verify run
 [`33288916240`](https://github.com/ashwingopalsamy/agentic-go/actions/runs/33288916240)
@@ -52,7 +60,7 @@ and golangci-lint runs with Go 1.26 because its released binary cannot
 type-check the Go 1.27 standard library. Go 1.27 remains covered by the full
 build, race, vet, gopls, and cross-build gates.
 
-## Deterministic candidate archives
+### Historical deterministic candidate archives
 
 Two independent four-target builds produced byte-identical files. The first
 build had these SHA-256 digests:
@@ -74,7 +82,7 @@ Publication CI rebuilds assets from the signed tag. Those published checksums
 must be verified independently and are not assumed to equal these pre-tag
 candidate hashes.
 
-## Bundled self-verification
+### Historical bundled self-verification
 
 The extracted Darwin arm64 candidate verified this repository against base
 `326a17e` with `--package ./... --format json --fail-on error`.
@@ -97,7 +105,7 @@ The extracted Darwin arm64 candidate verified this repository against base
 
 The repository worktree status was unchanged by verification.
 
-## Client and protocol smoke
+### Historical client and protocol smoke
 
 - The complete normalized MCP suite passed against the bundled pinned-gopls
   path and exercised the frozen protocol surface.
@@ -109,18 +117,13 @@ The repository worktree status was unchanged by verification.
   and the earlier Codex protocol dogfood rather than a paid model invocation.
 - Neither client smoke changed persistent client configuration.
 
-## Public-history replacement preflight
+### Historical public-history replacement preflight
 
 Fresh remote inspection matched the approved public refs:
 
 - `main`: `b3558117496ba0241314899aa5205b9297bcec80`
 - `v0.1.0` tag object: `718882d24ef6befdfdfa94e073f70afd0218ecd2`
 - `v0.1.0` peeled commit: `38d575daadb86632f9ea8d7827934b0f5a966d9c`
-
-A complete external bundle named
-`agentic-go-public-before-v1-2026-08-30.bundle` contains the former public
-`main` and `v0.1.0` histories. Its SHA-256 is
-`5cde244401fa1718dc6a63a680c17a2ca5b080ca4f66d1693c036d236bb587df`.
 
 The former public `main` tree equals curated commit `22e41bb` at tree
 `285d381f8f5f94662ea28a71eaadf67c2f26fe1c`. The peeled public `v0.1.0`
@@ -135,7 +138,7 @@ qualification. The organization repository's later signed `v1.0.0` tag is a
 separate release and remains unchanged; this record does not qualify later
 post-tag feature work.
 
-## Claim boundary
+### Historical claim boundary
 
 The v0.8 corpus and deterministic replay qualify shipped contracts. The paid
 Codex and Claude comparison did not run. A later private GPT-5.6 Luna focus
