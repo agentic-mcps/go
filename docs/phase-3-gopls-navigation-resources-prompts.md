@@ -10,6 +10,22 @@ the prompts are `audit-package`, `pre-commit-check`, `bisect-flake`, and
 
 Read `docs/contracts.md` first.
 
+## Historical navigation proposal
+
+The navigation design below predates the implemented v0.3 managed gopls
+sidecar and v0.4 Context Packs. Its per-call CLI preference, open/query/close
+lifecycle, metadata-based cache assumptions, and accepted stale-cache windows
+are superseded. They are retained as design history, not current executable
+guidance. The selected v0.1 resources and prompts remain governed by their
+release scope.
+
+For current semantic behavior, use the
+[sidecar foundation](contracts.md#v03-semantic-sidecar-foundation),
+[Context Pack boundary](contracts.md#v04-context-pack-boundary), and
+[freshness contract](contracts.md#current-semantic-freshness-boundary).
+For future focused context and refresh, start with the
+[Go intelligence handoff](continuation/go-intelligence.md).
+
 ## Grounded fact (verified 2026-08-22, https://github.com/golang/tools/blob/master/gopls/doc/command-line.md)
 The gopls CLI is experimental, not a stable compatibility contract. It exposes
 most navigation operations directly
@@ -117,11 +133,10 @@ type ReferencesOutput struct {
     References []tools.Location `json:"references"` // empty, not nil, if unused (dead code — itself a useful signal, don't error on zero)
 }
 ```
-Future cache policy: unspecified; v0.1 has no cache.
-Cache key includes `File+Line+Col` — a workspace edit between two calls at the
-same position within the TTL window returning stale data is an accepted,
-documented tradeoff (10s window, matching the roadmap table, not revisited
-here).
+Historical cache proposal: v0.1 has no cache. The earlier position-only
+`File+Line+Col` key and accepted 10s stale-data window are superseded by exact
+snapshot binding and content validation. Current stale references fail instead
+of being interpreted at the same position in changed source.
 
 ## Tool 3: `go_hover`
 

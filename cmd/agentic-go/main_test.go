@@ -43,6 +43,60 @@ func TestRunVerifyValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
 	}
 }
 
+func TestRunContextValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
+	for _, args := range [][]string{nil, {"--base", "HEAD", "--format", "yaml"}} {
+		var stdout, stderr bytes.Buffer
+		if exit := runContext(args, &stdout, &stderr); exit != 2 {
+			t.Fatalf("runContext(%v) = %d, want 2", args, exit)
+		}
+	}
+}
+
+func TestContextJSONAndTextRenderSameFocusIdentity(t *testing.T) {
+	result := intelligence.FocusResult{SchemaVersion: intelligence.FocusSchemaVersion, Snapshot: intelligence.SnapshotRef{ID: "snapshot-current"}, Change: verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}, FilesTotal: 1}, Impact: verification.Impact{Packages: []verification.ImpactedPackage{}, PackagesTotal: 2}, Risks: []verification.RiskArea{}, Uncertainties: []verification.Uncertainty{}, Verification: intelligence.VerificationApplicability{Reasons: []string{"snapshot differs"}, NextAction: "request verification", Present: true}, Complete: true, PackID: strings.Repeat("a", 64), Refresh: &intelligence.FocusRefresh{PreviousPackID: strings.Repeat("b", 64), Status: "replaced", Message: "refreshed"}}
+	var jsonOutput bytes.Buffer
+	if err := writeContextResult(&jsonOutput, "json", result); err != nil {
+		t.Fatal(err)
+	}
+	var decoded intelligence.FocusResult
+	if err := json.Unmarshal(jsonOutput.Bytes(), &decoded); err != nil {
+		t.Fatal(err)
+	}
+	var textOutput bytes.Buffer
+	if err := writeContextResult(&textOutput, "text", result); err != nil {
+		t.Fatal(err)
+	}
+	if decoded.PackID != result.PackID || !strings.Contains(textOutput.String(), result.PackID) || !strings.Contains(textOutput.String(), "refresh: replaced") || !strings.Contains(textOutput.String(), "snapshot differs") {
+		t.Fatalf("json=%s text=%s", jsonOutput.String(), textOutput.String())
+	}
+}
+
+type fakeContextService struct{ result intelligence.FocusResult }
+
+func (f fakeContextService) Focus(context.Context, intelligence.FocusRequest) (intelligence.FocusResult, error) {
+	return f.result, nil
+}
+
+func TestContextCLIWorkflowJSONAndText(t *testing.T) {
+	repoRoot, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := intelligence.FocusResult{SchemaVersion: intelligence.FocusSchemaVersion, Snapshot: intelligence.SnapshotRef{ID: "snapshot-current"}, Change: verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}}, Impact: verification.Impact{Packages: []verification.ImpactedPackage{}}, Risks: []verification.RiskArea{}, Uncertainties: []verification.Uncertainty{}, Verification: intelligence.VerificationApplicability{Reasons: []string{"snapshot differs"}, NextAction: "request verification"}, PackID: strings.Repeat("d", 64)}
+	factory := func(context.Context, *workspace.Workspace, *execution.Runner, *changeimpact.Analyzer) (contextService, func(), error) {
+		return fakeContextService{result: result}, func() {}, nil
+	}
+	for _, format := range []string{"json", "text"} {
+		var stdout, stderr bytes.Buffer
+		if exit := runContextWithFactory([]string{"--workspace", repoRoot, "--base", "HEAD", "--format", format}, &stdout, &stderr, factory); exit != 0 {
+			t.Fatalf("format %s exit=%d stderr=%s", format, exit, stderr.String())
+		}
+		if !strings.Contains(stdout.String(), result.PackID) {
+			t.Fatalf("format %s output=%s", format, stdout.String())
+		}
+	}
+}
+
 func TestRunVerifyRejectsUnpublishedOperationalFlags(t *testing.T) {
 	for _, name := range []string{"--max-concurrent-loads", "--max-tool-seconds"} {
 		t.Run(name, func(t *testing.T) {

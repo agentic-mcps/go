@@ -26,11 +26,21 @@ type Runtime struct {
 	providerVersion string
 }
 
+// ServerInstructions is the concise decision rule surfaced during MCP
+// initialize so clients can discover the focused context workflow.
+const ServerInstructions = "For unfamiliar or cross-package Go changes, call go_context before editing with base and one selector (query, symbol_ref, file+line+column, or focus_file/focus_package). After editing, refresh with base and previous_pack_id only; stale selectors or refs mean select current evidence. Use it for impact and verification applicability, but treat reverse-dependency evidence as planning guidance: edit only the smallest task owner within supplied path/package scope; skip trivial edits."
+
+// NewProductionServer creates the configured MCP server used by the binary.
+func NewProductionServer(implementation *mcp.Implementation) *mcp.Server {
+	return mcp.NewServer(implementation, &mcp.ServerOptions{Instructions: ServerInstructions, Capabilities: &mcp.ServerCapabilities{}})
+}
+
 // IntelligenceService is the narrow read-only seam used by v0.4 MCP adapters.
 type IntelligenceService interface {
 	Brief(context.Context, intelligence.BriefRequest) (intelligence.ContextPack, error)
 	Search(context.Context, intelligence.SearchRequest) (intelligence.SearchResult, error)
 	Symbol(context.Context, intelligence.SymbolRequest) (intelligence.SymbolContext, error)
+	Focus(context.Context, intelligence.FocusRequest) (intelligence.FocusResult, error)
 	Begin(context.Context, intelligence.BeginRequest) (intelligence.ChangeContract, error)
 	Checkpoint(context.Context, intelligence.CheckpointRequest) (intelligence.Checkpoint, error)
 	Refactor(context.Context, intelligence.RefactorRequest) (intelligence.RefactorResult, error)
@@ -87,6 +97,13 @@ func RegisterAll(server *mcp.Server, runtime *Runtime) {
 	RegisterRefactor(server, runtime)
 	RegisterResources(server, runtime)
 	RegisterPrompts(server)
+}
+
+// RegisterProduction installs the complete current production surface. The
+// frozen RegisterAll inventory remains separate so post-v1 tools stay additive.
+func RegisterProduction(server *mcp.Server, runtime *Runtime) {
+	RegisterAll(server, runtime)
+	RegisterContext(server, runtime)
 }
 
 func (r *Runtime) resolvePackage(ctx context.Context, pattern string) (string, error) {

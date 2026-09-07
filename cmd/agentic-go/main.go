@@ -38,6 +38,8 @@ func run(args []string) int {
 		switch args[0] {
 		case "verify":
 			return runVerify(args[1:], os.Stdout, os.Stderr)
+		case "context":
+			return runContext(args[1:], os.Stdout, os.Stderr)
 		case "doctor":
 			return runDoctor(args[1:], os.Stdout, os.Stderr, defaultDoctorDependencies())
 		case "mcp-config":
@@ -152,11 +154,8 @@ func runMCP(args []string) int {
 		return 1
 	}
 
-	server := mcp.NewServer(
-		&mcp.Implementation{Name: "agentic-go", Version: version},
-		&mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}},
-	)
-	tools.RegisterAll(server, runtime)
+	server := tools.NewProductionServer(&mcp.Implementation{Name: "agentic-go", Version: version})
+	tools.RegisterProduction(server, runtime)
 
 	if err := server.Run(ctx, &mcp.StdioTransport{}); err != nil && !errors.Is(err, context.Canceled) {
 		logger.Error("server stopped", "error", err)
@@ -172,6 +171,10 @@ type optionalPercentage struct {
 
 type verificationService interface {
 	Verify(context.Context, verification.Request) (verification.Report, error)
+}
+
+type contextService interface {
+	Focus(context.Context, intelligence.FocusRequest) (intelligence.FocusResult, error)
 }
 
 type verificationServiceFactory func(
@@ -199,6 +202,127 @@ func (p *optionalPercentage) Set(value string) error {
 
 func runVerify(args []string, stdout, stderr io.Writer) int {
 	return runVerifyWithFactory(args, stdout, stderr, newUnifiedVerificationService)
+}
+
+func runContext(args []string, stdout, stderr io.Writer) int {
+	return runContextWithFactory(args, stdout, stderr, func(ctx context.Context, ws *workspace.Workspace, runner *execution.Runner, impact *changeimpact.Analyzer) (contextService, func(), error) {
+		service, closeService, err := newUnifiedVerificationService(ctx, ws, runner, impact)
+		if err != nil {
+			return nil, closeService, err
+		}
+		focused, ok := service.(contextService)
+		if !ok {
+			closeService()
+			return nil, func() {}, errors.New("verification service does not support context focus")
+		}
+		return focused, closeService, nil
+	})
+}
+
+type contextServiceFactory func(context.Context, *workspace.Workspace, *execution.Runner, *changeimpact.Analyzer) (contextService, func(), error)
+
+func runContextWithFactory(args []string, stdout, stderr io.Writer, factory contextServiceFactory) int {
+	flags := flag.NewFlagSet("agentic-go context", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	base := flags.String("base", "", "required local commit or ref")
+	workspacePath := flags.String("workspace", ".", "Go workspace root")
+	packagePattern := flags.String("package", "./...", "Go package scope")
+	format := flags.String("format", "text", "context format: text or json")
+	race := flags.Bool("race", false, "require race evidence for applicability")
+	failOn := flags.String("fail-on", "error", "verification severity policy")
+	maxPackages := flags.Int("max-packages", 200, "maximum affected package closure")
+	query := flags.String("query", "", "one focus selector: query, symbol-ref, file+line+column, or focus-file/package")
+	symbolRef := flags.String("symbol-ref", "", "one current snapshot-bound focus selector; stale refs are rejected")
+	file := flags.String("file", "", "source-position selector; use with line and column")
+	line := flags.Int("line", 0, "source-position line; use with file and column")
+	column := flags.Int("column", 0, "source-position one-based UTF-8 byte column; use with file and line")
+	maxBytes := flags.Int("max-bytes", intelligence.DefaultBriefBytes, "focused evidence budget")
+	previousPackID := flags.String("previous-pack-id", "", "full refresh selector; use with base only after editing")
+	focusFile := flags.String("focus-file", "", "one active Go file focus selector")
+	focusPackage := flags.String("focus-package", "", "one active Go package focus selector")
+	var minimumCoverage optionalPercentage
+	flags.Var(&minimumCoverage, "min-changed-coverage", "verification coverage policy from 0 through 100")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 || strings.TrimSpace(*base) == "" || (*format != "text" && *format != "json") {
+		_, _ = fmt.Fprintln(stderr, "agentic-go context: --base is required; --format must be text or json")
+		return 2
+	}
+	if invalidCLIArgument(*base) || invalidCLIArgument(*packagePattern) {
+		_, _ = fmt.Fprintln(stderr, "agentic-go context: base and package must each be one local argument")
+		return 2
+	}
+	threshold := verification.FailOn(*failOn)
+	switch threshold {
+	case verification.FailOnError, verification.FailOnWarning, verification.FailOnInfo, verification.FailOnNone:
+	default:
+		_, _ = fmt.Fprintln(stderr, "agentic-go context: --fail-on must be error, warning, info, or none")
+		return 2
+	}
+	if *maxPackages < 1 || *maxPackages > 500 || (minimumCoverage.set && (minimumCoverage.value < 0 || minimumCoverage.value > 100)) {
+		_, _ = fmt.Fprintln(stderr, "agentic-go context: invalid verification policy")
+		return 2
+	}
+	request := intelligence.FocusRequest{Base: *base, Scope: *packagePattern, FailOn: verification.FailOn(*failOn), MaxPackages: *maxPackages, Race: *race, Query: *query, SymbolRef: intelligence.SymbolRef(*symbolRef), MaxBytes: *maxBytes, PreviousPackID: *previousPackID, FocusFile: *focusFile, FocusPackage: *focusPackage}
+	if *file != "" || *line != 0 || *column != 0 {
+		request.Position = &intelligence.SourcePosition{File: *file, Line: *line, Column: *column}
+	}
+	if minimumCoverage.set {
+		request.MinChangedCoverage = &minimumCoverage.value
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	ws, err := workspace.Open(ctx, *workspacePath)
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "agentic-go context: workspace preflight failed: %v\n", err)
+		return 2
+	}
+	runner, err := execution.New(ws, execution.Config{})
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "agentic-go context: execution setup failed: %v\n", err)
+		return 2
+	}
+	impact, err := changeimpact.New(ws, runner)
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "agentic-go context: change analysis setup failed: %v\n", err)
+		return 2
+	}
+	service, closeService, err := factory(ctx, ws, runner, impact)
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "agentic-go context: setup failed: %v\n", err)
+		return 2
+	}
+	defer closeService()
+	result, err := service.Focus(ctx, request)
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "agentic-go context: %v\n", err)
+		return 2
+	}
+	if err := writeContextResult(stdout, *format, result); err != nil {
+		_, _ = fmt.Fprintf(stderr, "agentic-go context: writing text: %v\n", err)
+		return 2
+	}
+	return 0
+}
+
+func writeContextResult(stdout io.Writer, format string, result intelligence.FocusResult) error {
+	if format == "json" {
+		return json.NewEncoder(stdout).Encode(result)
+	}
+	if _, err := fmt.Fprintf(stdout, "%s\nAnalysis complete: %t\nVerification present: %t\nNext action: %s\n", intelligence.FocusSummary(result), result.Complete, result.Verification.Present, result.Verification.NextAction); err != nil {
+		return err
+	}
+	for _, reason := range result.Verification.Reasons {
+		if _, err := fmt.Fprintf(stdout, "Applicability: %s\n", reason); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func invalidCLIArgument(value string) bool {
+	return strings.TrimSpace(value) != value || strings.HasPrefix(value, "-") || strings.ContainsRune(value, 0)
 }
 
 func runVerifyWithFactory(args []string, stdout, stderr io.Writer, factory verificationServiceFactory) int {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/agentic-mcps/go/internal/intelligence"
+	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -38,6 +39,28 @@ type SymbolContextInput struct {
 	TypeDefinition     bool   `json:"type_definition,omitempty"`
 }
 
+// ContextInput is the additive go_context MCP input contract.
+//
+//nolint:govet // Field order follows the public input contract.
+type ContextInput struct {
+	Base               string   `json:"base" jsonschema:"local commit or ref to compare with HEAD and the final worktree"`
+	Package            string   `json:"package,omitempty" jsonschema:"Go package scope; default ./..."`
+	ExpectedSnapshotID string   `json:"expected_snapshot_id,omitempty" jsonschema:"reject unless this snapshot is current"`
+	FailOn             string   `json:"fail_on,omitempty" jsonschema:"verification severity policy: error, warning, info, or none"`
+	MinChangedCoverage *float64 `json:"min_changed_coverage,omitempty" jsonschema:"verification coverage policy from 0 through 100"`
+	MaxPackages        int      `json:"max_packages,omitempty" jsonschema:"maximum affected package closure; default 200"`
+	Race               bool     `json:"race,omitempty" jsonschema:"require race evidence for applicability"`
+	Query              string   `json:"query,omitempty" jsonschema:"one mutually exclusive focus selector; start with query, symbol_ref, file+line+column, focus_file, or focus_package"`
+	SymbolRef          string   `json:"symbol_ref,omitempty" jsonschema:"one mutually exclusive current snapshot-bound focus selector; stale refs are rejected"`
+	File               string   `json:"file,omitempty" jsonschema:"source-position focus selector; provide with line and column; mutually exclusive with query and symbol_ref"`
+	Line               int      `json:"line,omitempty" jsonschema:"source-position selector line; use with file and column"`
+	Column             int      `json:"column,omitempty" jsonschema:"source-position selector one-based UTF-8 byte column; use with file and line"`
+	MaxBytes           int      `json:"max_bytes,omitempty" jsonschema:"focused evidence budget; default 8192"`
+	PreviousPackID     string   `json:"previous_pack_id,omitempty" jsonschema:"full-replacement refresh selector; after edits send base and this only; stale selectors and refs are rejected"`
+	FocusFile          string   `json:"focus_file,omitempty" jsonschema:"one mutually exclusive active Go file selector; start with one selector"`
+	FocusPackage       string   `json:"focus_package,omitempty" jsonschema:"one mutually exclusive active Go package selector; start with one selector"`
+}
+
 func intelligenceAnnotations() *mcp.ToolAnnotations {
 	return &mcp.ToolAnnotations{ReadOnlyHint: true, DestructiveHint: boolPtr(false), IdempotentHint: true, OpenWorldHint: boolPtr(false)}
 }
@@ -55,6 +78,11 @@ func RegisterSearch(server *mcp.Server, runtime *Runtime) {
 // RegisterSymbolContext registers the symbol-context adapter.
 func RegisterSymbolContext(server *mcp.Server, runtime *Runtime) {
 	mcp.AddTool(server, &mcp.Tool{Name: "go_symbol_context", Description: "Returns source-grounded context and relationships for one Go symbol.", Annotations: intelligenceAnnotations()}, runtime.symbolContext)
+}
+
+// RegisterContext adds the post-v1 focus tool after the frozen registry.
+func RegisterContext(server *mcp.Server, runtime *Runtime) {
+	mcp.AddTool(server, &mcp.Tool{Name: "go_context", Description: "Before editing unfamiliar or cross-package Go code, call with base and one selector group (query, symbol_ref, file+line+column, or focus_file/focus_package) to map impact and verification applicability. After editing, refresh with base and previous_pack_id only; stale selectors and refs are expected to be rejected, so select current evidence.", Annotations: intelligenceAnnotations()}, runtime.context)
 }
 
 func (r *Runtime) requireIntelligence() (IntelligenceService, error) {
@@ -119,4 +147,28 @@ func (r *Runtime) symbolContext(ctx context.Context, _ *mcp.CallToolRequest, inp
 		return nil, intelligence.SymbolContext{}, fmt.Errorf("resolving symbol context: %w", err)
 	}
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("symbol context for %s at snapshot %s; canonical context is in structuredContent", result.Symbol.Name, result.Snapshot.ID)}}}, result, nil
+}
+
+func (r *Runtime) context(ctx context.Context, _ *mcp.CallToolRequest, input ContextInput) (*mcp.CallToolResult, intelligence.FocusResult, error) {
+	service, err := r.requireIntelligence()
+	if err != nil {
+		return nil, intelligence.FocusResult{}, err
+	}
+	request := intelligence.FocusRequest{
+		Base: input.Base, Scope: input.Package, ExpectedSnapshotID: input.ExpectedSnapshotID,
+		FailOn: verification.FailOn(input.FailOn), MinChangedCoverage: input.MinChangedCoverage,
+		MaxPackages: input.MaxPackages, Race: input.Race, Query: input.Query,
+		SymbolRef: intelligence.SymbolRef(input.SymbolRef), MaxBytes: input.MaxBytes,
+		PreviousPackID: input.PreviousPackID,
+		FocusFile:      input.FocusFile, FocusPackage: input.FocusPackage,
+	}
+	if input.File != "" || input.Line != 0 || input.Column != 0 {
+		request.Position = &intelligence.SourcePosition{File: input.File, Line: input.Line, Column: input.Column}
+	}
+	result, err := service.Focus(ctx, request)
+	if err != nil {
+		return nil, intelligence.FocusResult{}, fmt.Errorf("building change context: %w", err)
+	}
+	text := intelligence.FocusSummary(result) + "; canonical evidence is in structuredContent"
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: text}}}, result, nil
 }
