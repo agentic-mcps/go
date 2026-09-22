@@ -3,6 +3,9 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -21,6 +24,7 @@ type fakeIntelligence struct { //nolint:govet // Test requests are grouped by op
 	refactor   intelligence.RefactorRequest
 	verify     verification.Request
 	focus      intelligence.FocusRequest
+	focusErr   error
 }
 
 func (f *fakeIntelligence) Brief(_ context.Context, request intelligence.BriefRequest) (intelligence.ContextPack, error) {
@@ -40,6 +44,9 @@ func (f *fakeIntelligence) Symbol(_ context.Context, request intelligence.Symbol
 
 func (f *fakeIntelligence) Focus(_ context.Context, request intelligence.FocusRequest) (intelligence.FocusResult, error) {
 	f.focus = request
+	if f.focusErr != nil {
+		return intelligence.FocusResult{}, f.focusErr
+	}
 	return intelligence.FocusResult{SchemaVersion: intelligence.FocusSchemaVersion, Snapshot: intelligence.SnapshotRef{ID: "snap-focus"}, Change: verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}, FilesTotal: 1}, Impact: verification.Impact{Packages: []verification.ImpactedPackage{}, PackagesTotal: 2}, Risks: []verification.RiskArea{}, Uncertainties: []verification.Uncertainty{}, Verification: intelligence.VerificationApplicability{Reasons: []string{}}, PackID: strings.Repeat("c", 64), Refresh: &intelligence.FocusRefresh{Status: "replaced"}}, nil
 }
 
@@ -212,6 +219,81 @@ func TestIntelligenceToolsRejectInvalidInputAndMissingService(t *testing.T) {
 	if _, _, err := runtime.checkpointChange(context.Background(), nil, CheckpointChangeInput{ContractID: "chg_1"}); err == nil {
 		t.Fatal("missing expected snapshot unexpectedly succeeded")
 	}
+}
+
+func TestContextTraceRecordsBoundedSuccess(t *testing.T) {
+	traceRoot := t.TempDir()
+	tracer, err := trace.NewWithBaseDir(traceRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tracer.Close() }()
+	fake := &fakeIntelligence{}
+	runtime := &Runtime{intelligence: fake, tracer: tracer}
+
+	input := ContextInput{Base: "HEAD", Query: "SensitiveSymbol"}
+	if _, _, err := runtime.context(context.Background(), nil, input); err != nil {
+		t.Fatal(err)
+	}
+	fake.focusErr = errors.New("provider failure for SensitiveSymbol in internal/private.go")
+	if _, _, err := runtime.context(context.Background(), nil, input); err == nil {
+		t.Fatal("context unexpectedly succeeded")
+	}
+	summary, err := tracer.Summary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !summary.Enabled || summary.RecordsConsidered != 2 || len(summary.Tools) != 1 || summary.Tools[0].Tool != "go_context" || summary.Tools[0].Calls != 2 || summary.Tools[0].ErrorCount != 1 {
+		t.Fatalf("trace summary = %#v", summary)
+	}
+	payload := readTracePayload(t, traceRoot)
+	for _, forbidden := range []string{"SensitiveSymbol", "internal/private.go", "building change context"} {
+		if strings.Contains(payload, forbidden) {
+			t.Fatalf("trace payload contains %q: %s", forbidden, payload)
+		}
+	}
+	if !strings.Contains(payload, `"result_summary":"changed_files=1; impacted_packages=2; complete=false; truncated=false; verification_applicable=false; refresh=replaced"`) || !strings.Contains(payload, `"error_kind":"internal"`) {
+		t.Fatalf("trace payload = %s", payload)
+	}
+}
+
+func TestContextTraceClassifiesCancellationAndPreservesToolError(t *testing.T) {
+	traceRoot := t.TempDir()
+	tracer, err := trace.NewWithBaseDir(traceRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tracer.Close() }()
+	runtime := &Runtime{intelligence: &fakeIntelligence{focusErr: context.Canceled}, tracer: tracer}
+
+	_, _, err = runtime.context(context.Background(), nil, ContextInput{Base: "HEAD", Query: "SensitiveSymbol"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("context error = %v, want cancellation", err)
+	}
+	summary, err := tracer.Summary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(summary.Tools) != 1 || summary.Tools[0].ErrorCount != 1 {
+		t.Fatalf("trace summary = %#v", summary)
+	}
+	payload := readTracePayload(t, traceRoot)
+	if !strings.Contains(payload, `"error_kind":"cancelled"`) || !strings.Contains(payload, `"result_summary":""`) {
+		t.Fatalf("trace payload = %s", payload)
+	}
+}
+
+func readTracePayload(t *testing.T, root string) string {
+	t.Helper()
+	paths, err := filepath.Glob(filepath.Join(root, "*", "trace.jsonl"))
+	if err != nil || len(paths) != 1 {
+		t.Fatalf("trace files = %v, err %v", paths, err)
+	}
+	payload, err := os.ReadFile(paths[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(payload)
 }
 
 func TestIntelligenceResourcesReturnCapabilitiesAndArtifactChunks(t *testing.T) {

@@ -2,10 +2,13 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/agentic-mcps/go/internal/intelligence"
+	"github.com/agentic-mcps/go/internal/trace"
 	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -149,7 +152,25 @@ func (r *Runtime) symbolContext(ctx context.Context, _ *mcp.CallToolRequest, inp
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("symbol context for %s at snapshot %s; canonical context is in structuredContent", result.Symbol.Name, result.Snapshot.ID)}}}, result, nil
 }
 
-func (r *Runtime) context(ctx context.Context, _ *mcp.CallToolRequest, input ContextInput) (*mcp.CallToolResult, intelligence.FocusResult, error) {
+func (r *Runtime) context(ctx context.Context, _ *mcp.CallToolRequest, input ContextInput) (call *mcp.CallToolResult, result intelligence.FocusResult, returnErr error) {
+	started := time.Now()
+	var tracer *trace.Tracer
+	if r != nil {
+		tracer = r.tracer
+	}
+	defer func() {
+		if tracer == nil {
+			return
+		}
+		event := trace.Event{Tool: "go_context", Args: input, Duration: time.Since(started)}
+		if returnErr != nil {
+			event.ErrorKind = contextTraceErrorKind(returnErr)
+		} else {
+			event.ResultSummary = contextTraceSummary(result)
+		}
+		_ = tracer.Record(event)
+	}()
+
 	service, err := r.requireIntelligence()
 	if err != nil {
 		return nil, intelligence.FocusResult{}, err
@@ -165,10 +186,38 @@ func (r *Runtime) context(ctx context.Context, _ *mcp.CallToolRequest, input Con
 	if input.File != "" || input.Line != 0 || input.Column != 0 {
 		request.Position = &intelligence.SourcePosition{File: input.File, Line: input.Line, Column: input.Column}
 	}
-	result, err := service.Focus(ctx, request)
+	result, err = service.Focus(ctx, request)
 	if err != nil {
 		return nil, intelligence.FocusResult{}, fmt.Errorf("building change context: %w", err)
 	}
 	text := intelligence.FocusSummary(result) + "; canonical evidence is in structuredContent"
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: text}}}, result, nil
+}
+
+func contextTraceErrorKind(err error) trace.ErrorKind {
+	switch {
+	case errors.Is(err, context.Canceled):
+		return trace.ErrorCancelled
+	case errors.Is(err, context.DeadlineExceeded):
+		return trace.ErrorDeadline
+	default:
+		return trace.ErrorInternal
+	}
+}
+
+func contextTraceSummary(result intelligence.FocusResult) string {
+	truncated := false
+	if result.Context != nil {
+		truncated = result.Context.Truncated
+	}
+	refresh := "none"
+	if result.Refresh != nil {
+		switch result.Refresh.Status {
+		case "replaced":
+			refresh = "replaced"
+		default:
+			refresh = "other"
+		}
+	}
+	return fmt.Sprintf("changed_files=%d; impacted_packages=%d; complete=%t; truncated=%t; verification_applicable=%t; refresh=%s", result.Change.FilesTotal, result.Impact.PackagesTotal, result.Complete, truncated, result.Verification.Applicable, refresh)
 }
