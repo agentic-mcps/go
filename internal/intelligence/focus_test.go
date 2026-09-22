@@ -349,3 +349,178 @@ func TestFocusUnsupportedDocumentSymbolsReturnsUnavailableEvidence(t *testing.T)
 		t.Fatalf("unsupported focus = %#v", result)
 	}
 }
+
+func TestFocusFacetApplicabilityFollowsDeclarationKind(t *testing.T) {
+	tests := []struct {
+		name                string
+		kind                string
+		typeDefinitionState string
+		callsState          string
+		wantTypeCalls       int
+		wantCalls           int
+	}{
+		{name: "function", kind: "go.function", typeDefinitionState: "unexamined", callsState: "examined_and_absent", wantTypeCalls: 0, wantCalls: 1},
+		{name: "method", kind: "go.method", typeDefinitionState: "unexamined", callsState: "examined_and_absent", wantTypeCalls: 0, wantCalls: 1},
+		{name: "type", kind: "go.type", typeDefinitionState: "examined_and_absent", callsState: "unexamined", wantTypeCalls: 1, wantCalls: 0},
+		{name: "variable", kind: "go.variable", typeDefinitionState: "examined_and_absent", callsState: "unexamined", wantTypeCalls: 1, wantCalls: 0},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := snapshotRepository(t)
+			writeSnapshotFile(t, root, "main.go", "package fixture\n\nfunc Value() {}\ntype Worker struct{}\nvar Count int\n")
+			snapshotter := newTestSnapshotter(t, root)
+			reader := &fakeSemanticReader{symbol: SymbolMatch{Name: test.name, Qualified: "fixture." + test.name, Kind: test.kind, Location: Location{File: "main.go", Line: 3, Column: 1}}}
+			core := newTestCore(t, snapshotter, reader)
+			core.semantic.(*fakeSemanticProvider).identity.Capabilities.CallHierarchy = true
+			observation, err := core.observe(context.Background(), "HEAD", "./...", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer observation.release()
+
+			result, err := core.focusContext(context.Background(), &observation, FocusRequest{Position: &SourcePosition{File: "main.go", Line: 3, Column: 1}, MaxBytes: DefaultBriefBytes})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if reader.typeDefinitionCalls != test.wantTypeCalls || reader.callsCalls != test.wantCalls {
+				t.Fatalf("provider calls = type_definition:%d calls:%d, want type_definition:%d calls:%d", reader.typeDefinitionCalls, reader.callsCalls, test.wantTypeCalls, test.wantCalls)
+			}
+			if !hasEvidenceState(result.EvidenceStates, "type_definition", test.typeDefinitionState) || !hasEvidenceState(result.EvidenceStates, "direct_callers", test.callsState) {
+				t.Fatalf("evidence states = %#v, want type_definition=%s direct_callers=%s", result.EvidenceStates, test.typeDefinitionState, test.callsState)
+			}
+		})
+	}
+}
+
+func TestFocusFacetStatesDoNotClaimIncompleteEvidenceAbsent(t *testing.T) {
+	tests := []struct {
+		name     string
+		calls    semanticCalls
+		maxBytes int
+	}{
+		{
+			name:  "incoming edge without source sites",
+			calls: semanticCalls{Items: []CallEdge{{Direction: "incoming", Symbol: SymbolMatch{Name: "Caller", Qualified: "fixture.Caller", Kind: "go.function"}}}},
+		},
+		{
+			name:  "provider omitted edges",
+			calls: semanticCalls{Omitted: 1},
+		},
+		{
+			name:     "budget truncated edge",
+			calls:    semanticCalls{Items: []CallEdge{{Direction: "incoming", Symbol: SymbolMatch{Name: "Caller", Qualified: "fixture." + strings.Repeat("Caller", 2000), Kind: "go.function", Package: strings.Repeat("fixture", 500)}}}},
+			maxBytes: 4096,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := snapshotRepository(t)
+			writeSnapshotFile(t, root, "main.go", "package fixture\n\nfunc Value() {}\n")
+			snapshotter := newTestSnapshotter(t, root)
+			reader := &fakeSemanticReader{
+				symbol: SymbolMatch{Name: "Value", Qualified: "fixture.Value", Kind: "go.function", Location: Location{File: "main.go", Line: 3, Column: 1}},
+				calls:  test.calls,
+			}
+			core := newTestCore(t, snapshotter, reader)
+			core.semantic.(*fakeSemanticProvider).identity.Capabilities.CallHierarchy = true
+			observation, err := core.observe(context.Background(), "HEAD", "./...", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer observation.release()
+
+			maxBytes := test.maxBytes
+			if maxBytes == 0 {
+				maxBytes = DefaultBriefBytes
+			}
+			result, err := core.focusContext(context.Background(), &observation, FocusRequest{Position: &SourcePosition{File: "main.go", Line: 3, Column: 1}, MaxBytes: maxBytes})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !hasEvidenceState(result.EvidenceStates, "direct_callers", "gathered_but_omitted") || hasEvidenceState(result.EvidenceStates, "direct_callers", "examined_and_absent") {
+				t.Fatalf("incomplete caller evidence = %#v", result.EvidenceStates)
+			}
+		})
+	}
+}
+
+func TestFocusUnsupportedFacetStatesAreExplicit(t *testing.T) {
+	root := snapshotRepository(t)
+	writeSnapshotFile(t, root, "main.go", "package fixture\n\ntype Worker struct{}\n")
+	snapshotter := newTestSnapshotter(t, root)
+	reader := &fakeSemanticReader{symbol: SymbolMatch{Name: "Worker", Qualified: "fixture.Worker", Kind: "go.type", Location: Location{File: "main.go", Line: 3, Column: 6}}}
+	core := newTestCore(t, snapshotter, reader)
+	provider := core.semantic.(*fakeSemanticProvider)
+	provider.identity.Capabilities.CallHierarchy = false
+	provider.identity.Capabilities.TypeDefinition = false
+	observation, err := core.observe(context.Background(), "HEAD", "./...", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer observation.release()
+
+	result, err := core.focusContext(context.Background(), &observation, FocusRequest{Position: &SourcePosition{File: "main.go", Line: 3, Column: 6}, MaxBytes: DefaultBriefBytes})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reader.typeDefinitionCalls != 0 || reader.callsCalls != 0 || !hasEvidenceState(result.EvidenceStates, "type_definition", "unavailable") || !hasEvidenceState(result.EvidenceStates, "direct_callers", "unavailable") {
+		t.Fatalf("unsupported facet result = %#v, provider calls type_definition:%d calls:%d", result.EvidenceStates, reader.typeDefinitionCalls, reader.callsCalls)
+	}
+}
+
+func TestFocusFacetProviderErrorsPropagate(t *testing.T) {
+	tests := []struct {
+		name  string
+		kind  string
+		err   error
+		calls bool
+	}{
+		{name: "type definition cancellation", kind: "go.type", err: context.Canceled},
+		{name: "call hierarchy stale snapshot", kind: "go.function", err: ErrSnapshotChanged, calls: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := snapshotRepository(t)
+			writeSnapshotFile(t, root, "main.go", "package fixture\n\ntype Worker struct{}\nfunc Value() {}\n")
+			snapshotter := newTestSnapshotter(t, root)
+			reader := &fakeSemanticReader{symbol: SymbolMatch{Name: "selected", Qualified: "fixture.selected", Kind: test.kind, Location: Location{File: "main.go", Line: 3, Column: 1}}}
+			if test.calls {
+				reader.callsErr = test.err
+			} else {
+				reader.typeDefinitionErr = test.err
+			}
+			core := newTestCore(t, snapshotter, reader)
+			core.semantic.(*fakeSemanticProvider).identity.Capabilities.CallHierarchy = true
+			observation, err := core.observe(context.Background(), "HEAD", "./...", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer observation.release()
+
+			_, err = core.focusContext(context.Background(), &observation, FocusRequest{Position: &SourcePosition{File: "main.go", Line: 3, Column: 1}, MaxBytes: DefaultBriefBytes})
+			if !errors.Is(err, test.err) {
+				t.Fatalf("focusContext() error = %v, want %v", err, test.err)
+			}
+		})
+	}
+}
+
+func TestHasIncomingCallWithoutSites(t *testing.T) {
+	tests := []struct {
+		name  string
+		calls []CallEdge
+		want  bool
+	}{
+		{name: "empty", calls: nil, want: false},
+		{name: "outgoing", calls: []CallEdge{{Direction: "outgoing"}}, want: false},
+		{name: "incoming with site", calls: []CallEdge{{Direction: "incoming", CallSites: []Location{{File: "main.go"}}}}, want: false},
+		{name: "incoming without site", calls: []CallEdge{{Direction: "incoming"}}, want: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := hasIncomingCallWithoutSites(test.calls); got != test.want {
+				t.Fatalf("hasIncomingCallWithoutSites() = %t, want %t", got, test.want)
+			}
+		})
+	}
+}

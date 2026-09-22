@@ -35,9 +35,9 @@ become stale.
 
 ## Current status
 
-As of 2026-09-06 at reviewed HEAD `284df97`, **stage 2, coherent
-observation**, and the additive focus slice are **implemented in the current
-uncommitted change**.
+As of 2026-09-22, this branch is based on the signed `v1.1.0` release. **Stage
+2, coherent observation**, and the additive focus slice are shipped in that
+release.
 The observation-correctness follow-up closed the source-confirmed gaps recorded
 by the Astra review.
 The change preserves the existing exact content-based Snapshot Ref and v1
@@ -48,7 +48,7 @@ post-v1 capabilities and are not frozen v1 interfaces. The broader roadmap
 stages remain partially implemented or pending and must not be inferred as
 complete from this slice.
 
-Implemented in the current uncommitted change:
+Implemented in v1.1.0:
 
 - `Snapshotter.observe` performs the existing two-pass capture, rejects drift,
   retains the exact manifest, and returns captured source bytes for the
@@ -82,13 +82,28 @@ Focused correctness tests cover captured-source precedence, same-size and
 A→B→A rewrites on a source-cap miss, guidance identity and mismatch rejection,
 Brief observation forwarding, Symbol position-error lease release, active
 manifest protection, fail-closed admission, and replacement byte accounting.
-The focused Slice 1 test command and `git diff --check` passed. Broader repository
-verification is recorded separately at handoff; no benchmark, evaluation,
-publication, commit, tag, or push was performed.
+Those historical checks qualify the v1.1.0 release work; they do not qualify
+later changes. The current v1.2 candidate separately passed the full
+repository gates (`go test ./...`, `go test -race ./...`, `go vet ./...`,
+`go build ./...`, and `git diff --check`). No benchmark, evaluation,
+publication, tag, or push was performed.
 
 Stage 2 does not introduce a public interface or a general derived cache.
 Derived parsing/semantic caching, useful-context selection, richer
 relationships, refresh, and verification lineage remain later-stage work.
+
+## Current post-v1.1.0 follow-up
+
+The current `codex/v1.2-reliability` follow-up narrows focus semantic expansion
+by the selected declaration kind. Function and method selections do not request
+type definitions, and non-callable declarations do not request call hierarchy.
+Skipped facets are reported as unexamined rather than as examined-and-absent
+evidence; incomplete provider evidence is not reported as absent. This is a
+bounded reliability fix for observed provider failures; the public MCP
+inventory and `agentic.focus/v1` schema remain unchanged. Focused package
+validation and full repository gates have passed. The prerequisite snapshot
+input fix is committed locally as `5ff6902`; the focus follow-up remains the
+current gated slice.
 
 ## Findings recorded from the documentation and targeted source inspection
 

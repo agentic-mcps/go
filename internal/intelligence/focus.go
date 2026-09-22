@@ -494,7 +494,28 @@ func (c *Core) focusContext(ctx context.Context, observation *snapshotObservatio
 		result.Excerpts = excerpts
 		result.Uncertainties = append(result.Uncertainties, uncertainties...)
 		if len(result.CallSites) == 0 {
-			result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "examined_and_absent"})
+			switch {
+			case !observation.snapshot.Capabilities.CallHierarchy:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "unavailable", Reason: "the active semantic provider does not support call hierarchy"})
+			case !isCallableSymbol(focused.Symbol.Kind):
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "unexamined", Reason: "call hierarchy expansion is limited to function and method declarations"})
+			case focused.Calls.Truncated || focused.Calls.Total > len(focused.Calls.Items) || hasIncomingCallWithoutSites(focused.Calls.Items):
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "gathered_but_omitted", Reason: "call hierarchy evidence was incomplete or lacked source call sites"})
+			default:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "examined_and_absent"})
+			}
+		}
+		if isCallableSymbol(focused.Symbol.Kind) {
+			result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "unexamined", Reason: "type definitions are not applicable to function and method declarations"})
+		} else {
+			switch {
+			case !observation.snapshot.Capabilities.TypeDefinition:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "unavailable", Reason: "the active semantic provider does not support type definitions"})
+			case focused.TypeDefinitions.Truncated || focused.TypeDefinitions.Total > len(focused.TypeDefinitions.Items):
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "gathered_but_omitted", Reason: "type-definition evidence was bounded or omitted"})
+			case focused.TypeDefinitions.Total == 0:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "examined_and_absent"})
+			}
 		}
 		if len(tests) == 0 {
 			result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "related_tests", State: "examined_and_absent"})
@@ -547,7 +568,7 @@ func (c *Core) focusSymbol(ctx context.Context, reader semanticReader, observati
 		result.Definitions = locationSet(locations)
 		omitted["definitions"] = locations.Omitted
 	}
-	if observation.snapshot.Capabilities.TypeDefinition {
+	if observation.snapshot.Capabilities.TypeDefinition && !isCallableSymbol(result.Symbol.Kind) {
 		locations, readErr := reader.TypeDefinition(ctx, file, position)
 		if readErr != nil {
 			return nil, nil, nil, nil, readErr
@@ -588,7 +609,7 @@ func (c *Core) focusSymbol(ctx context.Context, reader semanticReader, observati
 		}
 		result.DiagnosticsTotal = len(result.Diagnostics)
 	}
-	if observation.snapshot.Capabilities.CallHierarchy {
+	if observation.snapshot.Capabilities.CallHierarchy && isCallableSymbol(result.Symbol.Kind) {
 		calls, readErr := reader.Calls(ctx, file, position)
 		if readErr != nil {
 			return nil, nil, nil, nil, readErr
@@ -662,6 +683,19 @@ func (c *Core) focusTestDeclarations(ctx context.Context, reader semanticReader,
 func isGoTestEntry(name string) bool {
 	for _, prefix := range []string{"Test", "Benchmark", "Fuzz", "Example"} {
 		if strings.HasPrefix(name, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func isCallableSymbol(kind string) bool {
+	return kind == "go.function" || kind == "go.method"
+}
+
+func hasIncomingCallWithoutSites(calls []CallEdge) bool {
+	for _, call := range calls {
+		if call.Direction == "incoming" && len(call.CallSites) == 0 {
 			return true
 		}
 	}
