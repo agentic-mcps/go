@@ -349,6 +349,17 @@ func TestSnapshotIncludesIgnoredActiveInputsButNotInactiveFiles(t *testing.T) {
 	}
 }
 
+func TestSnapshotIgnoresGitDirectoryMarkers(t *testing.T) {
+	root := snapshotRepository(t)
+	writeSnapshotFile(t, root, ".gitignore", "ignored/\n")
+	writeSnapshotFile(t, root, "ignored/checkout/go.mod", "module example.test/ignored\n\ngo 1.25.0\n")
+
+	snapshotter := newTestSnapshotter(t, root)
+	if _, err := snapshotter.Capture(context.Background(), SnapshotRequest{Semantic: SemanticIdentity{Version: "test"}}); err != nil {
+		t.Fatalf("Capture() with ignored nested checkout = %v", err)
+	}
+}
+
 func newTestSnapshotter(t *testing.T, root string) *Snapshotter {
 	t.Helper()
 	goPath, err := exec.LookPath("go")

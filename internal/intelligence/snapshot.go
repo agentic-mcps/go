@@ -508,13 +508,13 @@ func (s *Snapshotter) snapshotPaths(ctx context.Context, index []byte, scope str
 	if err != nil {
 		return nil, fmt.Errorf("reading untracked content: %w", err)
 	}
-	addNULPaths(paths, untracked)
+	addNULFilePaths(paths, untracked)
 	ignoredInputs, err := s.gitBytes(ctx, "ls-files", "--others", "--ignored", "--exclude-standard", "-z", "--",
 		"go.mod", "go.sum", "go.work", "go.work.sum", ":(glob)**/*.go", ":(glob)**/go.mod", ":(glob)**/go.sum", ":(glob)**/go.work", ":(glob)**/go.work.sum")
 	if err != nil {
 		return nil, fmt.Errorf("reading ignored Go inputs: %w", err)
 	}
-	addNULPaths(paths, ignoredInputs)
+	addNULFilePaths(paths, ignoredInputs)
 	for _, entry := range bytes.Split(index, []byte{0}) {
 		if len(entry) > 2 && entry[0] >= 'a' && entry[0] <= 'z' && entry[1] == ' ' {
 			paths[string(entry[2:])] = struct{}{}
@@ -773,6 +773,15 @@ func addNULPaths(destination map[string]struct{}, data []byte) {
 		if len(value) > 0 {
 			destination[filepath.ToSlash(string(value))] = struct{}{}
 		}
+	}
+}
+
+func addNULFilePaths(destination map[string]struct{}, data []byte) {
+	for _, value := range bytes.Split(data, []byte{0}) {
+		if len(value) == 0 || bytes.HasSuffix(value, []byte{'/'}) {
+			continue
+		}
+		destination[filepath.ToSlash(string(value))] = struct{}{}
 	}
 }
 
