@@ -232,11 +232,11 @@ func TestContextTraceRecordsBoundedSuccess(t *testing.T) {
 	runtime := &Runtime{intelligence: fake, tracer: tracer}
 
 	input := ContextInput{Base: "HEAD", Query: "SensitiveSymbol"}
-	if _, _, err := runtime.context(context.Background(), nil, input); err != nil {
+	if _, _, err = runtime.context(context.Background(), nil, input); err != nil {
 		t.Fatal(err)
 	}
 	fake.focusErr = errors.New("provider failure for SensitiveSymbol in internal/private.go")
-	if _, _, err := runtime.context(context.Background(), nil, input); err == nil {
+	if _, _, err = runtime.context(context.Background(), nil, input); err == nil {
 		t.Fatal("context unexpectedly succeeded")
 	}
 	summary, err := tracer.Summary()
