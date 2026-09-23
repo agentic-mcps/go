@@ -143,6 +143,11 @@ type verificationFocusMetadata struct {
 	Request  focusPolicyIdentity `json:"request"`
 }
 
+type verificationAssessment struct {
+	Report        *verification.Report
+	Applicability VerificationApplicability
+}
+
 type focusPolicyIdentity struct {
 	MinChangedCoverage *float64            `json:"min_changed_coverage,omitempty"`
 	Base               string              `json:"base"`
@@ -243,7 +248,7 @@ func (c *Core) Focus(ctx context.Context, request FocusRequest) (FocusResult, er
 	if analysis.Repository.BaseCommit != observation.snapshot.BaseCommit || analysis.Repository.MergeBaseCommit != observation.snapshot.MergeBaseCommit || analysis.Repository.HeadCommit != observation.snapshot.HeadCommit {
 		return FocusResult{}, fmt.Errorf("%w while analyzing change consequences", ErrSnapshotChanged)
 	}
-	applicability, err := c.verificationApplicability(ctx, observation.snapshot, focusIdentity(request))
+	assessment, err := c.assessVerificationApplicability(ctx, observation.snapshot, focusIdentity(request))
 	if err != nil {
 		return FocusResult{}, err
 	}
@@ -256,9 +261,10 @@ func (c *Core) Focus(ctx context.Context, request FocusRequest) (FocusResult, er
 	result := FocusResult{
 		SchemaVersion: FocusSchemaVersion, Provider: c.provider(), Snapshot: observation.snapshot,
 		Change: analysis.Change, Impact: analysis.Impact, Risks: nonNilRisks(analysis.Risks),
-		Uncertainties: nonNilVerificationUncertainties(analysis.Uncertainties), Verification: applicability,
+		Uncertainties: nonNilVerificationUncertainties(analysis.Uncertainties), Verification: assessment.Applicability,
 		ObservedPackages: analysis.ObservedPackages, Complete: analysis.Complete, Context: focused, Refresh: refresh,
 	}
+	applyFocusAction(&result, assessment.Report)
 	if focused != nil {
 		selection := focused.Selection
 		if previous != nil {
@@ -898,12 +904,20 @@ func focusIdentity(request FocusRequest) focusPolicyIdentity {
 }
 
 func (c *Core) verificationApplicability(ctx context.Context, snapshot SnapshotRef, requested focusPolicyIdentity) (VerificationApplicability, error) {
-	report, metadata, err := c.verifications.currentFocus(ctx, snapshot.RepositoryID)
-	if errors.Is(err, ErrVerificationNotFound) {
-		return VerificationApplicability{Reasons: []string{"no stored verification report exists for this repository"}, NextAction: "request verification for the current snapshot and policy"}, nil
-	}
+	assessment, err := c.assessVerificationApplicability(ctx, snapshot, requested)
 	if err != nil {
 		return VerificationApplicability{}, err
+	}
+	return assessment.Applicability, nil
+}
+
+func (c *Core) assessVerificationApplicability(ctx context.Context, snapshot SnapshotRef, requested focusPolicyIdentity) (verificationAssessment, error) {
+	report, metadata, err := c.verifications.currentFocus(ctx, snapshot.RepositoryID)
+	if errors.Is(err, ErrVerificationNotFound) {
+		return verificationAssessment{Applicability: VerificationApplicability{Reasons: []string{"no stored verification report exists for this repository"}, NextAction: "request verification for the current snapshot and policy"}}, nil
+	}
+	if err != nil {
+		return verificationAssessment{}, err
 	}
 	reasons := make([]string, 0)
 	if metadata == nil {
@@ -914,6 +928,9 @@ func (c *Core) verificationApplicability(ctx context.Context, snapshot SnapshotR
 		}
 		if report.Snapshot.CurrentID != snapshot.ID {
 			reasons = append(reasons, "workspace snapshot differs")
+		}
+		if !reflect.DeepEqual(metadata.Snapshot, snapshot) || metadata.Snapshot.ID != report.Snapshot.CurrentID {
+			reasons = append(reasons, "stored applicability snapshot differs")
 		}
 		if metadata.Request.Scope != requested.Scope {
 			reasons = append(reasons, "package scope differs")
@@ -933,7 +950,10 @@ func (c *Core) verificationApplicability(ctx context.Context, snapshot SnapshotR
 	if !applicable {
 		next = "request verification for the current snapshot and policy"
 	}
-	return VerificationApplicability{ReportID: report.ID, Outcome: report.Result.Status, Reasons: reasons, NextAction: next, Present: true, Applicable: applicable}, nil
+	return verificationAssessment{
+		Applicability: VerificationApplicability{ReportID: report.ID, Outcome: report.Result.Status, Reasons: reasons, NextAction: next, Present: true, Applicable: applicable},
+		Report:        &report,
+	}, nil
 }
 
 func nonNilRisks(items []verification.RiskArea) []verification.RiskArea {

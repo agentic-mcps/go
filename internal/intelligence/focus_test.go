@@ -244,6 +244,35 @@ func TestVerificationApplicabilityHandlesMissingAndLegacyMetadata(t *testing.T) 
 	}
 }
 
+func TestVerificationApplicabilityRejectsMismatchedStoredSnapshotMetadata(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	core := newTestCore(t, snapshotter, &fakeSemanticReader{})
+	snapshot, err := core.capture(context.Background(), "HEAD", "./...", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := normalizedFocusRequest(t, FocusRequest{Base: "HEAD", Scope: "./..."})
+	report := verification.NewReport("test", verification.Repository{SnapshotID: snapshot.ID})
+	report.Snapshot.CurrentID = snapshot.ID
+	if err := report.Finalize(verification.Policy{}); err != nil {
+		t.Fatal(err)
+	}
+	metadata := verificationFocusMetadata{Snapshot: snapshot, Request: focusIdentity(request)}
+	metadata.Snapshot.ContentDigest = "sha256:mismatched"
+	if err := core.verifications.saveFocus(context.Background(), snapshot.RepositoryID, report, metadata); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := core.verificationApplicability(context.Background(), snapshot, focusIdentity(request))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Applicable || !containsReason(got.Reasons, "stored applicability snapshot") {
+		t.Fatalf("verificationApplicability() = %#v, want stored snapshot mismatch", got)
+	}
+}
+
 func TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion(t *testing.T) {
 	root := snapshotRepository(t)
 	snapshotter := newTestSnapshotter(t, root)
