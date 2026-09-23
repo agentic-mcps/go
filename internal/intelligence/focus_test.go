@@ -149,6 +149,7 @@ func TestFocusWorkflowBeforeEditRefreshAndVerificationStaleness(t *testing.T) {
 		symbol: SymbolMatch{Name: "Worker", Qualified: "fixture.Worker", Kind: "go.type", Package: "fixture", Location: Location{File: "worker.go", Line: 3, Column: 6}},
 	}
 	core := newTestCore(t, snapshotter, reader)
+	core.semantic.(*fakeSemanticProvider).identity.Capabilities.CallHierarchy = true
 	seed, err := core.capture(context.Background(), "HEAD", "./...", "")
 	if err != nil {
 		t.Fatal(err)
@@ -191,6 +192,9 @@ func TestFocusWorkflowBeforeEditRefreshAndVerificationStaleness(t *testing.T) {
 	}
 	if after.Verification.Applicable || !containsReason(after.Verification.Reasons, "workspace snapshot") {
 		t.Fatalf("verification applicability = %#v", after.Verification)
+	}
+	if after.Verification.NextAction != "request verification for the current snapshot and matching policy" {
+		t.Fatalf("stale verification next action = %q", after.Verification.NextAction)
 	}
 	if _, err := core.Symbol(context.Background(), SymbolRequest{Ref: oldRef, MaxBytes: DefaultSymbolBytes}); !errors.Is(err, ErrSnapshotChanged) {
 		t.Fatalf("old Symbol Ref error = %v", err)
