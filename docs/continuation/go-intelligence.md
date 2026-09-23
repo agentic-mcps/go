@@ -10,8 +10,8 @@ The product direction is a deterministic, snapshot-bound evidence compiler for
 Go coding agents. Its central workflow is edit, refresh, verify, inspect
 evidence, then reconsider what the evidence requires. The goal is to help an
 agent understand what to revisit before treating a Go change as complete.
-Effectiveness claims require comparative evidence and are not established by
-the historical pilots or the recent deterministic dry run.
+Effectiveness claims require comparative evidence. The private Luna studies
+record workflow adoption, but do not establish comparative product value.
 
 The full approved architectural direction is in the canonical
 [Go intelligence north-star plan](../go-intelligence-north-star.md). Approval
@@ -88,11 +88,9 @@ A→B→A rewrites on a source-cap miss, guidance identity and mismatch rejectio
 Brief observation forwarding, Symbol position-error lease release, active
 manifest protection, fail-closed admission, and replacement byte accounting.
 Those checks qualify the historical v1.1.0 work; they do not qualify later
-changes. The v0.8 task, adoption, and pilot records below are historical. A
-recent deterministic evaluation dry run validated local harness inputs and
-replay records; it was not a live baseline-versus-agentic-go comparison and
-supports no model, speed, token, quality, adoption, or causal improvement
-claim.
+changes. The v0.8 task, adoption, and pilot records below are historical. Two
+private local Luna studies provide bounded instruction-use and workflow
+adoption observations; comparative product value remains unproven.
 
 In the v1.1.0 implementation, Stage 2 added no public interface or general
 derived cache. The post-v1 focus and refresh capabilities described below were
@@ -277,11 +275,20 @@ refresh. Raw artifacts remain private and ignored.
 
 ## Current next action
 
-Finish this documentation reconciliation, then run the agreed repository
-gates and scope checks. After that, decide whether to run a separate Luna-only
-live pilot using the validated source checkouts. No live with/without
-comparison has yet been completed. Defer any new release label until a
-reliability milestone passes.
+The local evaluation milestone is partial. The 20-run discoverability pilot
+qualified all runs and kept all runs scope-safe, but its 10 focus runs made no
+`go_context` calls. The 12-run integrated adoption follow-up also qualified
+all runs and kept them scope-safe; all six integrated runs discovered the
+shipped skill, used `go_context`, refreshed after editing, and used the
+evidence. The integrated arm combines the skill and MCP surface, so it does
+not establish MCP-alone causality or comparative product value.
+
+Inspect the six integrated transcripts to determine whether context or refresh
+evidence changed a necessary edit or verification decision and to identify
+avoidable repeated work behind the longer integrated duration. Use that
+inspection to justify at most one bounded guidance improvement. Keep both
+studies as regression evidence, not fresh proof of product superiority. Defer
+any new release label until a reliability milestone passes.
 
 ## Standing continuation instruction
 

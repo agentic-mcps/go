@@ -43,11 +43,15 @@ what needs reconsideration after an edit.
 | Verify a change | Request executed verification explicitly and identify the snapshot to which that evidence belongs. |
 
 The historical private 20-run Luna feasibility pilot and 27-run adoption
-follow-up record workflow and instruction-use observations. They do not show
-causal improvement in engineering outcomes. A later deterministic dry run
-validated evaluation harness inputs and replay records, but did not compare
-live model runs with and without agentic-go. No model, speed, token, quality,
-adoption, or causal improvement claim is supported by those results. The
+follow-up record workflow and instruction-use observations. A new private
+20-run discoverability pilot qualified all runs and kept them scope-safe, but
+its 10 focus runs made no `go_context` calls. A 12-run integrated adoption
+follow-up also qualified all runs and kept them scope-safe; all six integrated
+runs discovered the shipped skill, used `go_context`, refreshed after editing,
+and used the evidence. The integrated arm combines the skill and MCP surface.
+These results do not establish MCP-alone causality, improved correctness,
+productivity, token efficiency, speed, statistical significance, or broad
+model generalization. External and multi-model evaluation remain pending. The
 historical adoption report is in
 [validation/v1.0.0/adoption-results.md](../validation/v1.0.0/adoption-results.md).
 
@@ -299,10 +303,13 @@ the workflow improves task outcomes.
 These records establish observed instruction-surface use and safety only. They
 do not support causal speed, token, reliability, adoption, performance, or
 generalization claims. Keep focus and full-replacement refresh; defer delta
-refresh. The current next step is to finish documentation reconciliation and
-run repository gates. Then decide whether to conduct a separate Luna-only live
-pilot. Defer any new release label until a reliability milestone passes. Raw
-artifacts remain private and ignored.
+refresh. The current next step is to inspect the six integrated transcripts
+for whether context or refresh evidence changed a necessary edit or
+verification decision, and for avoidable repeated work behind the longer
+integrated duration. Use that inspection to justify at most one bounded
+guidance improvement. Keep the studies as regression evidence, not fresh proof
+of product superiority. Defer any new release label until a reliability
+milestone passes. Raw artifacts remain private and ignored.
 
 ## Delivery order and completion criteria
 

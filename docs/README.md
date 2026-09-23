@@ -29,13 +29,24 @@ guidance to existing MCP text, and Slice 1B refines private evidence projection
 guidance. Both preserve the frozen public MCP inventory and
 `agentic.focus/v1` schema.
 
-The v0.8/v1.0 pilot and adoption reports are historical instruction-use and
-workflow evidence, not proof of causal engineering benefit. The recent
-deterministic evaluation dry run validated harness inputs and replay records;
-it did not compare live model runs with and without agentic-go. See the
-[historical adoption results](../validation/v1.0.0/adoption-results.md).
-Delta refresh remains deferred. These documents do not override frozen v1
-contracts.
+Private local Luna evaluations now include a 20-run discoverability pilot and
+a 12-run integrated adoption follow-up. In the focus arm, capability delivery
+was healthy in 10/10 runs, but no run called `go_context`. All six integrated
+runs discovered the shipped skill, called `go_context`, refreshed after
+editing, and used the evidence. Integrated median duration was 431,641 ms
+versus 223,758 ms for baseline, about 93% higher; median tool calls were 24
+versus 26. Astra judged workflow adoption locally demonstrated for the
+combined skill and MCP surface, with comparative
+product value still unproven. They do not establish MCP-alone causality,
+improved correctness, productivity, token efficiency, or speed, statistical
+significance, generalization, or production readiness. Both studies used two
+scenarios and `gpt-5.6-luna` at max reasoning. The integrated follow-up used
+three repetitions per scenario per arm. Reports remain private and are not
+tracked. See the
+[historical adoption results](../validation/v1.0.0/adoption-results.md) for
+older v0.8/v1.0 evidence. The two current studies are regression evidence, not
+fresh proof of product superiority. Delta refresh remains deferred. These
+documents do not override frozen v1 contracts.
 
 ## Verification report contracts
 
