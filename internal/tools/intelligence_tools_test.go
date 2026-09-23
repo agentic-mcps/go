@@ -16,15 +16,16 @@ import (
 )
 
 type fakeIntelligence struct { //nolint:govet // Test requests are grouped by operation.
-	brief      intelligence.BriefRequest
-	search     intelligence.SearchRequest
-	symbol     intelligence.SymbolRequest
-	begin      intelligence.BeginRequest
-	checkpoint intelligence.CheckpointRequest
-	refactor   intelligence.RefactorRequest
-	verify     verification.Request
-	focus      intelligence.FocusRequest
-	focusErr   error
+	brief       intelligence.BriefRequest
+	search      intelligence.SearchRequest
+	symbol      intelligence.SymbolRequest
+	begin       intelligence.BeginRequest
+	checkpoint  intelligence.CheckpointRequest
+	refactor    intelligence.RefactorRequest
+	verify      verification.Request
+	focus       intelligence.FocusRequest
+	focusResult *intelligence.FocusResult
+	focusErr    error
 }
 
 func (f *fakeIntelligence) Brief(_ context.Context, request intelligence.BriefRequest) (intelligence.ContextPack, error) {
@@ -46,6 +47,9 @@ func (f *fakeIntelligence) Focus(_ context.Context, request intelligence.FocusRe
 	f.focus = request
 	if f.focusErr != nil {
 		return intelligence.FocusResult{}, f.focusErr
+	}
+	if f.focusResult != nil {
+		return *f.focusResult, nil
 	}
 	return intelligence.FocusResult{SchemaVersion: intelligence.FocusSchemaVersion, Snapshot: intelligence.SnapshotRef{ID: "snap-focus"}, Change: verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}, FilesTotal: 1}, Impact: verification.Impact{Packages: []verification.ImpactedPackage{}, PackagesTotal: 2}, Risks: []verification.RiskArea{}, Uncertainties: []verification.Uncertainty{}, Verification: intelligence.VerificationApplicability{Reasons: []string{}}, PackID: strings.Repeat("c", 64), Refresh: &intelligence.FocusRefresh{Status: "replaced"}}, nil
 }

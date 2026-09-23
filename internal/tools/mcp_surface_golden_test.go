@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/agentic-mcps/go/internal/intelligence"
+	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -85,7 +87,8 @@ func TestPostV1FocusToolIsAdditiveAndDiscoverable(t *testing.T) {
 	ctx := context.Background()
 	server := mcp.NewServer(&mcp.Implementation{Name: "agentic-go-focus", Version: "dev"}, &mcp.ServerOptions{Capabilities: &mcp.ServerCapabilities{}})
 	runtime := newTestRuntime(t)
-	runtime.intelligence = &fakeIntelligence{}
+	fake := &fakeIntelligence{}
+	runtime.intelligence = fake
 	RegisterAll(server, runtime)
 	RegisterContext(server, runtime)
 	clientTransport, serverTransport := mcp.NewInMemoryTransports()
@@ -125,20 +128,76 @@ func TestPostV1FocusToolIsAdditiveAndDiscoverable(t *testing.T) {
 				t.Fatalf("go_context input schema lacks %q: %s", field, encoded)
 			}
 		}
-		result, callErr := clientSession.CallTool(ctx, &mcp.CallToolParams{Name: "go_context", Arguments: map[string]any{"base": "HEAD", "query": "Worker"}})
-		if callErr != nil || result.IsError {
-			t.Fatalf("go_context call error=%v result=%#v", callErr, result)
+		actions := []struct {
+			name       string
+			outcome    verification.ResultStatus
+			nextAction string
+			present    bool
+			applicable bool
+		}{
+			{name: "non-applicable", nextAction: "request verification for the current snapshot and policy"},
+			{name: "findings", outcome: verification.ResultFindings, present: true, applicable: true, nextAction: "inspect the reported finding locations"},
+			{name: "unavailable", outcome: verification.ResultIncomplete, present: true, applicable: true, nextAction: "complete or refresh the requested evidence"},
+			{name: "bounded-pass", outcome: verification.ResultPass, present: true, applicable: true, nextAction: "review the requested checks and their stated limits"},
 		}
-		payload, marshalErr := json.Marshal(result.StructuredContent)
-		if marshalErr != nil {
-			t.Fatal(marshalErr)
-		}
-		var focus struct {
-			SchemaVersion string `json:"schema_version"`
-			PackID        string `json:"pack_id"`
-		}
-		if err := json.Unmarshal(payload, &focus); err != nil || focus.SchemaVersion != "agentic.focus/v1" || focus.PackID == "" {
-			t.Fatalf("go_context structured output = %s, err %v", payload, err)
+		for _, action := range actions {
+			t.Run(action.name, func(t *testing.T) {
+				privateReason := strings.Repeat("private verification reason ", 64)
+				fake.focusResult = &intelligence.FocusResult{
+					SchemaVersion: intelligence.FocusSchemaVersion,
+					Snapshot:      intelligence.SnapshotRef{ID: "snap-focus"},
+					Change:        verification.Change{Files: []verification.ChangedFile{}, Declarations: []verification.ChangedDeclaration{}, FilesTotal: 1},
+					Impact:        verification.Impact{Packages: []verification.ImpactedPackage{}, PackagesTotal: 2},
+					Risks:         []verification.RiskArea{},
+					Uncertainties: []verification.Uncertainty{},
+					Verification: intelligence.VerificationApplicability{
+						Outcome: action.outcome, Reasons: []string{privateReason}, NextAction: action.nextAction,
+						Present: action.present, Applicable: action.applicable,
+					},
+					PackID: strings.Repeat("c", 64),
+				}
+
+				result, callErr := clientSession.CallTool(ctx, &mcp.CallToolParams{Name: "go_context", Arguments: map[string]any{"base": "HEAD", "query": "Worker"}})
+				if callErr != nil || result.IsError {
+					t.Fatalf("go_context call error=%v result=%#v", callErr, result)
+				}
+				if len(result.Content) != 1 {
+					t.Fatalf("go_context text content count = %d, want 1", len(result.Content))
+				}
+				content, ok := result.Content[0].(*mcp.TextContent)
+				if !ok {
+					t.Fatalf("go_context content = %T, want text", result.Content[0])
+				}
+				if !strings.Contains(content.Text, "next_action: "+action.nextAction) {
+					t.Errorf("go_context text %q missing next action %q", content.Text, action.nextAction)
+				}
+				if strings.Contains(content.Text, "private verification reason") || len(content.Text) > 512 {
+					t.Errorf("go_context text is not concise or includes reasons: length=%d", len(content.Text))
+				}
+
+				payload, marshalErr := json.Marshal(result.StructuredContent)
+				if marshalErr != nil {
+					t.Fatal(marshalErr)
+				}
+				var focus struct {
+					SchemaVersion string `json:"schema_version"`
+					PackID        string `json:"pack_id"`
+					Verification  struct {
+						Outcome    verification.ResultStatus `json:"outcome"`
+						NextAction string                    `json:"next_action"`
+						Reasons    []string                  `json:"reasons"`
+						Present    bool                      `json:"present"`
+						Applicable bool                      `json:"applicable"`
+					} `json:"verification"`
+				}
+				if err := json.Unmarshal(payload, &focus); err != nil || focus.SchemaVersion != "agentic.focus/v1" || focus.PackID == "" {
+					t.Fatalf("go_context structured output = %s, err %v", payload, err)
+				}
+				if focus.Verification.Outcome != action.outcome || focus.Verification.Present != action.present || focus.Verification.Applicable != action.applicable ||
+					focus.Verification.NextAction != action.nextAction || len(focus.Verification.Reasons) != 1 || focus.Verification.Reasons[0] != privateReason {
+					t.Fatalf("go_context structured verification = %#v, want action %#v and original reason", focus.Verification, action)
+				}
+			})
 		}
 		return
 	}

@@ -190,7 +190,7 @@ func (r *Runtime) context(ctx context.Context, _ *mcp.CallToolRequest, input Con
 	if err != nil {
 		return nil, intelligence.FocusResult{}, fmt.Errorf("building change context: %w", err)
 	}
-	text := intelligence.FocusSummary(result) + "; canonical evidence is in structuredContent"
+	text := intelligence.FocusSummary(result) + "; canonical evidence is in structuredContent; next_action: " + result.Verification.NextAction
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: text}}}, result, nil
 }
 
