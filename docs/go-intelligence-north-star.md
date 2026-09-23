@@ -51,8 +51,19 @@ runs discovered the shipped skill, used `go_context`, refreshed after editing,
 and used the evidence. The integrated arm combines the skill and MCP surface.
 These results do not establish MCP-alone causality, improved correctness,
 productivity, token efficiency, speed, statistical significance, or broad
-model generalization. External and multi-model evaluation remain pending. The
-historical adoption report is in
+model generalization. External and multi-model evaluation remain pending. A
+review of all six integrated traces found no transcript proving that context
+improved the necessary code edit. In gRPC run 3, refreshed context prompted
+broader `./...` verification, which was incomplete due to the output cap;
+focused verification later passed after a stale-snapshot rejection. Client-go
+runs made 3-4 context calls each and gRPC runs made 4-5, including ambiguous
+or unhelpful initial selections and repeated verification after incomplete or
+stale results. The bounded guidance improvement is to narrow ambiguity with
+returned current candidates, finish each batch of edits and formatting before
+refreshing, and refresh again after further edits or stale-snapshot rejection
+while avoiding redundant refreshes when the snapshot is unchanged. This trace review does
+not establish causal edit-quality or product value. The historical adoption
+report is in
 [validation/v1.0.0/adoption-results.md](../validation/v1.0.0/adoption-results.md).
 
 Keep Go-only, local, deterministic operation; pinned gopls; source provenance;
@@ -303,13 +314,11 @@ the workflow improves task outcomes.
 These records establish observed instruction-surface use and safety only. They
 do not support causal speed, token, reliability, adoption, performance, or
 generalization claims. Keep focus and full-replacement refresh; defer delta
-refresh. The current next step is to inspect the six integrated transcripts
-for whether context or refresh evidence changed a necessary edit or
-verification decision, and for avoidable repeated work behind the longer
-integrated duration. Use that inspection to justify at most one bounded
-guidance improvement. Keep the studies as regression evidence, not fresh proof
-of product superiority. Defer any new release label until a reliability
-milestone passes. Raw artifacts remain private and ignored.
+refresh. Trace review is complete and its bounded guidance improvement is
+recorded in the project skill. Keep the studies as regression evidence, not
+fresh proof of product superiority. External and multi-model evaluation remain
+pending. Defer any new release label until a reliability milestone passes.
+Raw artifacts remain private and ignored.
 
 ## Delivery order and completion criteria
 

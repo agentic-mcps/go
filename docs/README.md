@@ -45,8 +45,18 @@ three repetitions per scenario per arm. Reports remain private and are not
 tracked. See the
 [historical adoption results](../validation/v1.0.0/adoption-results.md) for
 older v0.8/v1.0 evidence. The two current studies are regression evidence, not
-fresh proof of product superiority. Delta refresh remains deferred. These
-documents do not override frozen v1 contracts.
+fresh proof of product superiority. Review of the six integrated traces is
+complete: no transcript establishes that context improved the necessary code
+edit. In gRPC run 3, refreshed context prompted broader `./...` verification,
+which hit the output cap; focused verification later passed after a stale
+snapshot rejection. Client-go runs made 3-4 context calls each, and gRPC runs
+made 4-5, including ambiguous or unhelpful selections. The bounded guidance
+improvement is to narrow ambiguity using returned candidates, finish each batch
+of edits and formatting before refreshing, and refresh again after further
+edits or stale-snapshot rejection while avoiding redundant refreshes when the
+snapshot is unchanged. This observation does not establish causal edit-quality or product
+value. External and multi-model evaluation remain pending. Delta refresh
+remains deferred. These documents do not override frozen v1 contracts.
 
 ## Verification report contracts
 

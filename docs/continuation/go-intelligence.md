@@ -275,20 +275,27 @@ refresh. Raw artifacts remain private and ignored.
 
 ## Current next action
 
-The local evaluation milestone is partial. The 20-run discoverability pilot
-qualified all runs and kept all runs scope-safe, but its 10 focus runs made no
-`go_context` calls. The 12-run integrated adoption follow-up also qualified
-all runs and kept them scope-safe; all six integrated runs discovered the
-shipped skill, used `go_context`, refreshed after editing, and used the
-evidence. The integrated arm combines the skill and MCP surface, so it does
-not establish MCP-alone causality or comparative product value.
+The six integrated traces have been reviewed. No transcript proves that
+`go_context` improved the necessary code edit. In gRPC run 3, refreshed context
+showed broader affected scope and the agent explicitly said this prompted
+`./...` verification. That attempt was incomplete due to the output cap;
+focused verification later passed after a stale-snapshot rejection. Client-go
+runs made 3-4 context calls each, including ambiguous or unhelpful initial
+selections. gRPC runs made 4-5 calls each; runs 1 and 3 repeated verification
+after incomplete or stale results, and run 2 had a failing root test run and a
+failing narrowed observability rerun.
 
-Inspect the six integrated transcripts to determine whether context or refresh
-evidence changed a necessary edit or verification decision and to identify
-avoidable repeated work behind the longer integrated duration. Use that
-inspection to justify at most one bounded guidance improvement. Keep both
-studies as regression evidence, not fresh proof of product superiority. Defer
-any new release label until a reliability milestone passes.
+The bounded guidance improvement is recorded in the
+[`agentic-go-context` skill](../../.agents/skills/agentic-go-context/SKILL.md):
+narrow an ambiguous result using returned current candidates instead of
+repeating the broad query; finish each batch of edits and formatting before
+refreshing; and refresh again after further edits or stale-snapshot rejection
+while avoiding redundant refreshes when the snapshot is unchanged. This evidence does not
+establish causal edit-quality or product value. The combined skill and MCP
+workflow observations do not establish MCP-alone causality. Keep the studies
+as regression evidence, not fresh proof of product superiority. External and
+multi-model evaluation remain pending. Defer any new release label until a
+reliability milestone passes.
 
 ## Standing continuation instruction
 
@@ -298,7 +305,8 @@ approved direction, and unverified proposals visibly distinct. Replace stale
 status rather than appending a conversation transcript. Record relevant source
 paths, decisions, evidence actually gathered, limitations, and the exact next
 step. Do not add benchmark or evaluation claims unless a future request
-explicitly includes them.
+explicitly includes them. Context gathering does not execute checks or prove
+correctness.
 
 ## Copy-paste continuation prompt
 
