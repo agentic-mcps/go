@@ -6,13 +6,12 @@ This document preserves the current product understanding for a future agent
 working in another account or session. It is independent of conversation
 history, account identity, private memory, and previous tool output.
 
-The user’s end goal is a flagship Go MCP and language-server/code-navigator
-experience usable through any coding agent. It should materially remove the
-repeated investigation normally required to understand and change unfamiliar
-Go code: the agent should receive compact, source-grounded context for the
-next change, understand implementation obligations and existing examples,
-retain orientation after edits, and see what changed. “1000x” and quality
-rankings express ambition, not measured or promised results.
+The product direction is a deterministic, snapshot-bound evidence compiler for
+Go coding agents. Its central workflow is edit, refresh, verify, inspect
+evidence, then reconsider what the evidence requires. The goal is to help an
+agent understand what to revisit before treating a Go change as complete.
+Effectiveness claims require comparative evidence and are not established by
+the historical pilots or the recent deterministic dry run.
 
 The full approved architectural direction is in the canonical
 [Go intelligence north-star plan](../go-intelligence-north-star.md). Approval
@@ -35,19 +34,24 @@ become stale.
 
 ## Current status
 
-As of 2026-09-22, this branch prepares the signed `v1.2.0` release from the
-`v1.1.0` baseline. **Stage
-2, coherent observation**, and the additive focus slice are shipped in that
-release.
-The observation-correctness follow-up closed the source-confirmed gaps recorded
-by the Astra review.
-The change preserves the existing exact content-based Snapshot Ref and v1
-interfaces while threading a private request-scoped observation through the
-intelligence paths. The implemented additive slice includes `go_context`,
-`agentic-go context --format text|json`, and `agentic.focus/v1`; these remain
-post-v1 capabilities and are not frozen v1 interfaces. The broader roadmap
-stages remain partially implemented or pending and must not be inferred as
-complete from this slice.
+`v1.2.1` (tag `67f54b7`) is the latest released baseline. This branch,
+`codex/v1.2-reliability`, contains unreleased work after that release, including
+commits `8e65ce1` and `71099dc`. Do not describe this branch as a release
+candidate or assign a new release label before a reliability milestone passes.
+
+The current product wedge is to make the edit, refresh, verify, and inspect
+loop dependable enough that a coding agent knows what to reconsider before
+declaring a Go change complete. The system provides deterministic,
+snapshot-bound context and verification evidence; it does not decide that the
+engineering task itself is complete.
+
+The public MCP inventory and `agentic.focus/v1` schema remain frozen. Slice 1A
+adds `next_action` to existing MCP text using the existing structured
+`Verification.NextAction`. Slice 1B refines the private projection with
+cause-specific guidance for stale or unavailable evidence, truncation, budget
+omission, advisory findings, and passing checks with limits. Slice 1A changes
+existing MCP text rendering; Slice 1B changes private projection guidance.
+Neither changes inventory, structured fields, or schemas.
 
 Implemented in v1.1.0:
 
@@ -83,30 +87,29 @@ Focused correctness tests cover captured-source precedence, same-size and
 A→B→A rewrites on a source-cap miss, guidance identity and mismatch rejection,
 Brief observation forwarding, Symbol position-error lease release, active
 manifest protection, fail-closed admission, and replacement byte accounting.
-Those historical checks qualify the v1.1.0 release work; they do not qualify
-later changes. The v1.2.0 candidate separately passed the full
-repository gates (`go test ./...`, `go test -race ./...`, `go vet ./...`,
-`go build ./...`, and `git diff --check`). The v0.8 task, adoption, and pilot
-definitions validate, and two available private server replays pass. No
-three-tier model evaluation or productivity claim is included.
+Those checks qualify the historical v1.1.0 work; they do not qualify later
+changes. The v0.8 task, adoption, and pilot records below are historical. A
+recent deterministic evaluation dry run validated local harness inputs and
+replay records; it was not a live baseline-versus-agentic-go comparison and
+supports no model, speed, token, quality, adoption, or causal improvement
+claim.
 
-Stage 2 does not introduce a public interface or a general derived cache.
-Derived parsing/semantic caching, useful-context selection, richer
-relationships, refresh, and verification lineage remain later-stage work.
+In the v1.1.0 implementation, Stage 2 added no public interface or general
+derived cache. The post-v1 focus and refresh capabilities described below were
+added later; the frozen v1 contracts remain unchanged.
 
-## v1.2.0 reliability release
+## Current reliability work
 
-The `codex/v1.2-reliability` release narrows focus semantic expansion
-by the selected declaration kind. Function and method selections do not request
-type definitions, and non-callable declarations do not request call hierarchy.
-Skipped facets are reported as unexamined rather than as examined-and-absent
-evidence; incomplete provider evidence is not reported as absent. This is a
-bounded reliability fix for observed provider failures; the public MCP
-inventory and `agentic.focus/v1` schema remain unchanged. Focused package
-validation and full repository gates have passed. The prerequisite snapshot
-input fix is committed as `5ff6902`, the focus follow-up as `4381456`, and
-bounded outcome tracing as `7cb2117`. The release metadata preserves the
-existing 15-tool current surface and frozen v1 contracts.
+The post-v1.2.1 branch work improves how agents interpret existing evidence.
+The four private projection outcomes are `verification_needed`,
+`finding_inspection_needed`, `evidence_unavailable`, and
+`requested_checks_passed_with_limits`. Stale, mismatched, legacy, missing, or
+policy-incompatible reports do not yield current repair targets. Findings are
+actionable for inspection only when their source locations remain valid.
+Incomplete, cancelled, truncated, provider-failed, and unknown evidence stays
+unavailable. A passing requested check is not a declaration that the task is
+complete. The follow-up guidance is bounded, provenance-linked, and
+non-mutating.
 
 ## Findings recorded from the documentation and targeted source inspection
 
@@ -150,17 +153,17 @@ replay from model outcomes. The reviewed [v1 release evidence](../../validation/
 does not establish a paid model pilot or comparative agent advantage. These are
 historical document statements, not checks rerun in this session.
 
-The initial review recommended a comparative pilot. The user then explicitly
-redirected the strategy toward material product behavior, not eval/benchmark
-milestones. The resulting plan follows that correction: context selection,
-coherent reads, Go-specific relationships, and explicit refresh. The user chose
-additive interface evolution and focused correctness checks when asked.
+Comparative evaluation is not a product milestone for this reliability work.
+Prioritize material product behavior: context selection, coherent reads,
+Go-specific relationships, explicit refresh, and trustworthy verification
+applicability. Additive post-v1 interfaces are documented separately from the
+frozen v1 contracts.
 
 These are repository observations and design opportunities, not claims that
 the current runtime is fast, relevant, or superior to other tools. Those
 properties have not been verified in this documentation task.
 
-## Important limits and exact next action
+## Important limits
 
 The approved plan is architectural direction, not an already-frozen wire
 specification. Implementation must resolve and record these local facts in the
@@ -225,7 +228,7 @@ replacement with current locations and Symbol Refs. Expiry requires a fresh
 request; changed selectors are rejected; ambiguous moves or renames require a
 current candidate selection. Failed resolution and budget omission are marked
 unavailable and never reported as confirmed deletion. Delta refresh remains
-deferred. The next separately authorized extension is delta refresh.
+deferred.
 
 The four planned Go relationship families are now implemented sequentially in
 the focused evidence layer. Declaration, file, and package selection can return
@@ -262,19 +265,23 @@ implementation request is sufficient to begin the next pending stage without
 asking again for the same authorization. The private adoption harness links
 the existing client-go and grpc-go tasks, validates sanitized records, hashes
 transcripts, and produces deterministic condition summaries without changing
-the frozen v0.8 corpus. The 27-run adoption follow-up is complete: description
-alone produced 0/6 focus use, generic prompt guidance produced 6/6, the shipped
-skill produced 6/6, initial integrated safety was 5/6, and the scope-wording
-rerun was 3/3 acceptance-pass, qualifying, and scope-safe. Provider failures
-remain the next reliability issue. See the [tracked adoption
-results](../../validation/v1.0.0/adoption-results.md) for exact gates, metrics,
-identities, and limitations. Retain focus and full replacement; defer delta
-refresh. The next slice is release hardening, instruction-surface
-discoverability, and provider-failure investigation. Raw artifacts remain
-private and ignored.
-The v1.2.0 publication workflow is separately authorized. Public publication
-preserves existing tags and history and does not claim that the paid model
-comparison ran.
+the frozen v0.8 corpus. The historical 27-run adoption follow-up is complete:
+description alone produced 0/6 focus use, generic prompt guidance produced
+6/6, the shipped skill produced 6/6, initial integrated safety was 5/6, and the
+scope-wording rerun was 3/3 acceptance-pass, qualifying, and scope-safe. See
+the [tracked adoption results](../../validation/v1.0.0/adoption-results.md)
+for exact gates, metrics,
+identities, and limitations. These historical results do not establish
+comparative engineering benefit. Retain focus and full replacement; defer delta
+refresh. Raw artifacts remain private and ignored.
+
+## Current next action
+
+Finish this documentation reconciliation, then run the agreed repository
+gates and scope checks. After that, decide whether to run a separate Luna-only
+live pilot using the validated source checkouts. No live with/without
+comparison has yet been completed. Defer any new release label until a
+reliability milestone passes.
 
 ## Standing continuation instruction
 
@@ -293,9 +300,8 @@ Use this prompt only when the user separately authorizes further work:
 ```text
 Read docs/continuation/astra-understanding.md and this handoff first. Observation,
 verification applicability, declaration selection, and full-replacement refresh
-and focus-v1 stabilization are complete. Inspect the current diff and choose a
-new explicitly authorized objective. Delta refresh, general derived caches,
-expanded refactoring, and speculative test selection remain outside the
-completed scope. Preserve existing tags and public history when continuing the
-reliability work.
+are implemented. Continue the current reliability milestone from the current
+next action in this handoff. Delta refresh, general derived caches, expanded
+refactoring, and speculative test selection remain deferred. Preserve existing
+tags and public history.
 ```

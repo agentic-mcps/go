@@ -1,11 +1,19 @@
 # Go intelligence for navigating, generating, and changing code
 
-Status: approved architectural direction, revised 2026-09-06. Stage 2 focus is
-implemented as an additive post-v1 capability; the frozen v1 inventory and
-contracts are unchanged. The [Astra analysis](continuation/astra-understanding.md)
-narrows the next work around release hardening and tool discoverability.
-`go_context`, `agentic-go context`, and `agentic.focus/v1` are implemented
-capabilities, but are not part of the frozen v1 contract.
+Status: approved product direction, revised 2026-09-23. `v1.2.1` (tag
+`67f54b7`) is the latest released baseline. The current
+`codex/v1.2-reliability` branch contains unreleased post-v1.2.1 work. The
+product is a deterministic, snapshot-bound evidence compiler for Go coding
+agents. Its wedge is a dependable edit, refresh, verify, inspect loop that
+helps an agent know what to reconsider before treating a change as complete.
+
+The `go_context`, `agentic-go context`, and `agentic.focus/v1` capabilities are
+post-v1 additions. Slice 1A adds next-action guidance to existing MCP text
+using existing structured verification data. Slice 1B refines the private
+evidence projection with cause-specific guidance. Both preserve the frozen
+public MCP inventory and `agentic.focus/v1` schema. See the
+[continuation handoff](continuation/go-intelligence.md) for current milestone
+status and next action.
 
 Start with the [continuation handoff](continuation/go-intelligence.md) for
 implementation status, source pointers, and the exact next step. Existing
@@ -15,11 +23,10 @@ behavior.
 
 ## End goal and observable workflows
 
-Develop agentic-go around one complete workflow:
+The core workflow is:
 
 ```text
-Locate relevant code -> understand obligations and existing patterns
-  -> external agent edits -> refresh consequences -> request verification
+context -> edit -> refresh -> verify -> inspect evidence -> reconsider or continue
 ```
 
 A coding agent should be able to answer four questions from compact,
@@ -35,13 +42,14 @@ what needs reconsideration after an edit.
 | Continue after an edit | Refresh the previous selection with current locations and evidence differences, without mandatory Change Contract setup. |
 | Verify a change | Request executed verification explicitly and identify the snapshot to which that evidence belongs. |
 
-The ambition is exceptional usefulness across coding agents. "1000x" and
-"top 0.0001%" describe ambition, not measured performance, quality rankings,
-or acceptance criteria. No comparative evaluation or benchmark campaign is a
-product milestone. The private 20-run Luna paired feasibility pilot and its
-27-run adoption follow-up are complete; their results are evidence for the next
-engineering decision only, not product claims. The tracked adoption report is
-in [validation/v1.0.0/adoption-results.md](../validation/v1.0.0/adoption-results.md).
+The historical private 20-run Luna feasibility pilot and 27-run adoption
+follow-up record workflow and instruction-use observations. They do not show
+causal improvement in engineering outcomes. A later deterministic dry run
+validated evaluation harness inputs and replay records, but did not compare
+live model runs with and without agentic-go. No model, speed, token, quality,
+adoption, or causal improvement claim is supported by those results. The
+historical adoption report is in
+[validation/v1.0.0/adoption-results.md](../validation/v1.0.0/adoption-results.md).
 
 Keep Go-only, local, deterministic operation; pinned gopls; source provenance;
 explicit uncertainty; and existing containment and guarded-refactor guarantees.
@@ -278,21 +286,23 @@ evidence with its observed snapshot so later edits cannot make an older passing
 report appear current. Preserve verification result semantics, conservative
 package selection, and the distinction between context and executed evidence.
 
-## Adoption result and next decision
+## Historical adoption evidence and next decision
 
 The 27-run Luna/max adoption follow-up contains an 18-run canonical three-arm
 matrix, six integrated-skill diagnostics, and three scope-wording reruns.
 Description-only discoverability produced 0/6 focus use; generic prompt
 guidance produced 6/6; and the shipped skill produced 6/6. Initial integrated
 safety was 5/6, while the scope-wording rerun was 3/3 acceptance-pass,
-qualifying, and scope-safe. Provider failures remain the next reliability issue.
+qualifying, and scope-safe. These are historical observations, not proof that
+the workflow improves task outcomes.
 
 These records establish observed instruction-surface use and safety only. They
 do not support causal speed, token, reliability, adoption, performance, or
-generalization claims. Retain focus and full-replacement refresh, defer delta
-refresh, and prioritize release hardening, discoverability, instruction-surface
-placement, and provider-failure investigation. Raw artifacts remain private and
-ignored.
+generalization claims. Keep focus and full-replacement refresh; defer delta
+refresh. The current next step is to finish documentation reconciliation and
+run repository gates. Then decide whether to conduct a separate Luna-only live
+pilot. Defer any new release label until a reliability milestone passes. Raw
+artifacts remain private and ignored.
 
 ## Delivery order and completion criteria
 
@@ -328,10 +338,9 @@ decisions and the evidence actually gathered in the handoff.
 - Equivalent evidence across CLI text, CLI JSON, and MCP, accounting for
   rendered budgets and deliberate compatibility checks for existing v1 tools.
 
-These cases specify future focused correctness work. Add or run checks only
-within the implementation request's authorization and report only checks
-actually performed. No test, build, benchmark, or validation command is part
-of this documentation stage.
+These cases specify future focused correctness work. This documentation change
+introduces no new tests or benchmarks. Complete the agreed repository gates and
+scope checks before committing.
 
 ## Boundaries and implementation decisions
 
@@ -347,12 +356,14 @@ of this documentation stage.
   introduced by this work.
 - No broad comparative evaluation, paid model run, or benchmark campaign is a
   release gate. The private Luna focus and adoption follow-up are recorded
-  evidence only and do not establish causal engineering improvement. Automatic
-  commits, tags, and releases remain outside this implementation direction;
-  separately authorized publication must preserve existing public history.
-- Existing uncommitted documentation work is preserved. The accepted immediate
-  deliverable is stage 1; product stages require a later implementation
-  instruction.
+  evidence only and do not establish causal engineering improvement. Local
+  Conventional Commits are authorized after the agreed gates and scope checks
+  pass. Pushes, tags, and releases require separate authorization and must
+  preserve existing public history.
+- The documentation stage and the implemented observation, context, focus, and
+  verification slices are recorded above. Continue only from the current
+  handoff next action with an explicit bounded implementation slice; later
+  roadmap rows are not complete merely because they are listed here.
 
 The behavioral decisions above govern future implementation. Exact new wire
 fields, cache capacities, serialized budget accounting, and typed extraction

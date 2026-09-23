@@ -21,14 +21,21 @@ investigation. The [continuation handoff](continuation/go-intelligence.md) owns
 implementation status and the next action; the
 [Go intelligence north star](go-intelligence-north-star.md) owns the approved
 architectural direction and acceptance criteria.
-The additive post-v1 `agentic.focus/v1` evidence layer is implemented and
-locally qualified. The initial private 20-run Luna feasibility pilot found no
-treatment use because `go_context` was unused in all 10 focus runs. The later
-27-run adoption follow-up found 0/6 use with description-only discoverability,
-6/6 with generic prompt guidance, and 6/6 with the shipped skill; it still
-establishes no causal engineering benefit. See the
-[adoption results](../validation/v1.0.0/adoption-results.md). Delta refresh is
-deferred. These documents do not override frozen v1 contracts.
+`v1.2.1` (tag `67f54b7`) is the latest released baseline. The current
+`codex/v1.2-reliability` branch contains unreleased post-v1.2.1 work. Its
+product direction is a deterministic, snapshot-bound evidence compiler that
+supports the edit, refresh, verify, inspect loop. Slice 1A adds next-action
+guidance to existing MCP text, and Slice 1B refines private evidence projection
+guidance. Both preserve the frozen public MCP inventory and
+`agentic.focus/v1` schema.
+
+The v0.8/v1.0 pilot and adoption reports are historical instruction-use and
+workflow evidence, not proof of causal engineering benefit. The recent
+deterministic evaluation dry run validated harness inputs and replay records;
+it did not compare live model runs with and without agentic-go. See the
+[historical adoption results](../validation/v1.0.0/adoption-results.md).
+Delta refresh remains deferred. These documents do not override frozen v1
+contracts.
 
 ## Verification report contracts
 
