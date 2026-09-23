@@ -58,6 +58,20 @@ snapshot is unchanged. This observation does not establish causal edit-quality o
 value. External and multi-model evaluation remain pending. Delta refresh
 remains deferred. These documents do not override frozen v1 contracts.
 
+A post-guidance regression used six integrated Luna runs, with three
+repetitions on each of two scenarios. All six qualified, passed acceptance,
+stayed within scope, and required no operator intervention. All six called
+`go_context`, refreshed after edits, and recorded evidence use. Five focus
+calls failed: three client-go calls returned `invalid_input` for invalid
+symbol references, and two calls in grpc-go run 1 returned `stale_snapshot`
+because an observed semantic location was absent from the snapshot manifest.
+grpc-go runs 2 and 3 had no failed focus calls. This shows workflow adoption
+continued while exposing failure categories; it does not establish improved
+quality, correctness, productivity, speed, or product value. Before changing
+provider behavior, classify these failures as expected strict rejection, agent
+misuse, or a reproducible provider defect. External and multi-model evaluation
+remain pending.
+
 ## Verification report contracts
 
 - [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) — change-aware

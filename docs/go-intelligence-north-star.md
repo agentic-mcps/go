@@ -66,6 +66,21 @@ not establish causal edit-quality or product value. The historical adoption
 report is in
 [validation/v1.0.0/adoption-results.md](../validation/v1.0.0/adoption-results.md).
 
+A post-guidance regression comprised six integrated Luna runs, with three
+repetitions on each of two scenarios. All six qualified, passed acceptance,
+had zero scope violations and zero operator interventions, and used
+`go_context`, refreshed after edits, and recorded evidence use. Five focus
+calls failed: three client-go calls reported `invalid_input` for invalid
+symbol references, and two calls in grpc-go run 1 reported `stale_snapshot`
+because an observed semantic location was absent from the snapshot manifest;
+grpc-go runs 2 and 3 had no failed focus calls. Workflow adoption remained
+possible while the failures exposed categories to investigate. The result does
+not establish that guidance improved quality, correctness, productivity,
+speed, or product value. Before changing provider behavior, classify the
+invalid-symbol-reference and stale-snapshot failures as expected strict
+rejection, agent misuse, or a reproducible provider defect. External and
+multi-model evaluation remain pending.
+
 Keep Go-only, local, deterministic operation; pinned gopls; source provenance;
 explicit uncertainty; and existing containment and guarded-refactor guarantees.
 The intelligence implementation owns context selection. gopls supplies semantic

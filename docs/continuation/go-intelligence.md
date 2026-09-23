@@ -275,6 +275,26 @@ refresh. Raw artifacts remain private and ignored.
 
 ## Current next action
 
+The post-guidance regression used six integrated Luna runs, with three
+repetitions on each of two scenarios. All six qualified, passed acceptance,
+stayed within scope, and required no operator intervention. All six used
+`go_context`, refreshed after edits, and recorded evidence use. Five focus
+calls failed: client-go had three `invalid_input` failures reporting invalid
+symbol references; grpc-go run 1 had two `stale_snapshot` failures reporting
+an observed semantic location absent from the snapshot manifest. grpc-go runs
+2 and 3 had no failed focus calls. This shows continued workflow adoption
+while exposing failure categories. It does not establish improved quality,
+correctness, productivity, speed, or product value. External and multi-model
+evaluation remain pending.
+
+Before changing provider behavior, classify the invalid-symbol-reference and
+stale-snapshot failures as expected strict rejection, agent misuse, or a
+reproducible provider defect. Inspect the run inputs, selectors, snapshot
+identities, and provider responses to distinguish these cases, while preserving
+strict stale rejection and the frozen public contracts.
+
+## Earlier trace review
+
 The six integrated traces have been reviewed. No transcript proves that
 `go_context` improved the necessary code edit. In gRPC run 3, refreshed context
 showed broader affected scope and the agent explicitly said this prompted
