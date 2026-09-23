@@ -16,8 +16,8 @@ Install the organization release over the existing binary names:
 
 ```sh
 curl --fail --location --silent --show-error \
-  https://raw.githubusercontent.com/agentic-mcps/go/v1.2.0/scripts/install.sh \
-  | bash -s -- 1.2.0
+  https://raw.githubusercontent.com/agentic-mcps/go/v1.2.1/scripts/install.sh \
+  | bash -s -- 1.2.1
 
 agentic-go --version
 agentic-go doctor
@@ -26,7 +26,7 @@ agentic-go doctor
 Update GitHub Actions references to:
 
 ```yaml
-- uses: agentic-mcps/go@v1.2.0
+- uses: agentic-mcps/go@v1.2.1
 ```
 
 Update source-checkout or advanced `go install` commands to use

@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-23
+
+### Added
+
+- Deterministic `go_context` evidence-to-action guidance for verification,
+  finding inspection, unavailable evidence, and bounded passing checks.
+
+### Fixed
+
+- Stale, incomplete, truncated, mismatched, and invalid-location evidence now
+  fails closed before producing current action guidance.
+
 ## [1.2.0] - 2026-09-23
 
 ### Added
@@ -92,7 +104,8 @@ All notable changes to this project are documented here. The format follows
 - Workspace containment, bounded execution, event-driven progress, and
   optional privacy-preserving local traces.
 
-[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/agentic-mcps/go/releases/tag/v1.2.1
 [1.2.0]: https://github.com/agentic-mcps/go/releases/tag/v1.2.0
 [1.1.0]: https://github.com/agentic-mcps/go/releases/tag/v1.1.0
 [1.0.0]: https://github.com/agentic-mcps/go/releases/tag/v1.0.0
