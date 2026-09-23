@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-23
+
+### Added
+
+- Bounded opt-in `go_context` trace outcomes with privacy-preserving aggregate
+  summaries and cancellation, deadline, and internal failure categories.
+- Focus-facet evidence tests covering callable declarations, type declarations,
+  variables and fields, unsupported capabilities, cancellation, and stale
+  references.
+
+### Fixed
+
+- Snapshot observation now ignores Git directory markers emitted by status
+  commands while preserving strict file and content validation.
+- Focus expansion now reports applicability and evidence states accurately and
+  preserves provider and snapshot errors.
+
 ## [1.1.0] - 2026-09-07
 
 ### Added
@@ -75,6 +92,7 @@ All notable changes to this project are documented here. The format follows
 - Workspace containment, bounded execution, event-driven progress, and
   optional privacy-preserving local traces.
 
-[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/agentic-mcps/go/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/agentic-mcps/go/releases/tag/v1.2.0
 [1.1.0]: https://github.com/agentic-mcps/go/releases/tag/v1.1.0
 [1.0.0]: https://github.com/agentic-mcps/go/releases/tag/v1.0.0

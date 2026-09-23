@@ -10,14 +10,14 @@
   <a href="#install"><img src="assets/brand/pills/install.svg" alt="Install agentic-go"></a>
   <a href="#connect"><img src="assets/brand/pills/mcp-setup.svg" alt="Connect MCP"></a>
   <a href="https://agentic-mcps.github.io/go/docs/"><img src="assets/brand/pills/docs.svg" alt="Read docs"></a>
-  <a href="https://github.com/agentic-mcps/go/releases/tag/v1.1.0"><img src="assets/brand/pills/release.svg" alt="v1.1.0 release"></a>
+  <a href="https://github.com/agentic-mcps/go/releases/tag/v1.2.0"><img src="assets/brand/pills/release.svg" alt="v1.2.0 release"></a>
 </p>
 
 <p align="center"><a href="https://agentic-mcps.github.io/go/">Website</a> · <a href="https://agentic-mcps.github.io/go/docs/">Docs</a> · <a href="#install">Install</a> · <a href="#connect">Connect</a> · <a href="#workflow">Workflow</a> · <a href="#capabilities">Capabilities</a> · <a href="#faq">FAQ</a></p>
 
 `agentic-go` is a local Go MCP server and CLI. It gives an external coding agent semantic context, change continuity, guarded refactoring, and executed verification without embedding an LLM or becoming an agent framework.
 
-The v1.1.0 server exposes 15 MCP tools: the frozen v1 surface of 14 tools plus the additive `go_context` tool under `agentic.focus/v1`. The seven resources, resource template, six prompts, and frozen v1 schemas remain unchanged.
+The v1.2.0 server exposes 15 MCP tools: the frozen v1 surface of 14 tools plus the additive `go_context` tool under `agentic.focus/v1`. This release hardens snapshot observation, focus applicability evidence, and bounded private tracing. The seven resources, resource template, six prompts, and frozen v1 schemas remain unchanged.
 
 ## Install
 
@@ -28,7 +28,7 @@ brew install agentic-mcps/tap/agentic-go
 agentic-go --version
 ```
 
-That installs `agentic-go`, the pinned `agentic-go-gopls` companion, and `agentic-go-vet`. The Homebrew tap is maintained separately; the signed v1.1.0 release archive and checksum installer below are the canonical versioned distribution path.
+That installs `agentic-go`, the pinned `agentic-go-gopls` companion, and `agentic-go-vet`. The Homebrew tap is maintained separately; the signed v1.2.0 release archive and checksum installer below are the canonical versioned distribution path.
 
 For an agent workflow, install the binary first, then print the client-native
 MCP entry for the current workspace:
@@ -44,8 +44,8 @@ edit your client configuration.
 <summary>Install from the release archive instead</summary>
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.1.0/scripts/install.sh \
-  | bash -s -- 1.1.0
+curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.2.0/scripts/install.sh \
+  | bash -s -- 1.2.0
 ```
 
 The installer places the binaries in `~/.local/bin` and verifies the release checksum before replacing them.

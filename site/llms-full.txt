@@ -44,7 +44,7 @@ agentic-go --version
 
 ### Standalone Shell Installer
 ```sh
-curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.1.0/scripts/install.sh | bash -s -- 1.1.0
+curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.2.0/scripts/install.sh | bash -s -- 1.2.0
 ```
 
 ### MCP Configuration (Claude Desktop, Cursor, Cline)
@@ -61,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.1.0/scripts/inst
 
 ---
 
-## 4. MCP Surface Inventory (v1.1.0)
+## 4. MCP Surface Inventory (v1.2.0)
 
 ### 15 Current Tools
 1. `go_workspace_brief` (read-only): Returns top-level module map, package list, and entry points.

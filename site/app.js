@@ -516,7 +516,7 @@ const DOCS_SEARCH_INDEX = [
     title: "Protocol Contracts & Schemas",
     path: "/go/docs/contracts/",
     relPath: "docs/contracts/",
-    summary: "Frozen v1 specification for 14 MCP tools, 7 resources, 6 prompts, and JSON schemas, plus the additive go_context tool in v1.1.0.",
+    summary: "Frozen v1 specification for 14 MCP tools, 7 resources, 6 prompts, and JSON schemas, plus the additive go_context tool in v1.2.0.",
     keywords: "contracts, schemas, protocol, tools, 14 tools, 15 tools, go_context, resources, prompts, agentic.context/v1, agentic.change/v1, agentic.verify/v1, agentic.focus/v1"
   },
   {
@@ -689,11 +689,11 @@ function generateInstallCommandPayload(params = {}) {
     command = 'brew install agentic-mcps/tap/agentic-go\nagentic-go --version';
     instructions = 'Installs agentic-go, agentic-go-gopls companion, and agentic-go-vet via official Homebrew tap.';
   } else if (method === 'curl') {
-    command = 'curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.1.0/scripts/install.sh | bash -s -- 1.1.0';
-    instructions = 'Downloads and installs the latest pinned v1.1.0 release binaries to /usr/local/bin or ~/.local/bin.';
+    command = 'curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.2.0/scripts/install.sh | bash -s -- 1.2.0';
+    instructions = 'Downloads and installs the latest pinned v1.2.0 release binaries to /usr/local/bin or ~/.local/bin.';
   } else {
-    const archiveName = `agentic-go_1.1.0_${os}_${arch}.tar.gz`;
-    command = `curl -LO https://github.com/agentic-mcps/go/releases/download/v1.1.0/${archiveName}\ntar -xzf ${archiveName}\nsudo mv agentic-go agentic-go-gopls agentic-go-vet /usr/local/bin/`;
+    const archiveName = `agentic-go_1.2.0_${os}_${arch}.tar.gz`;
+    command = `curl -LO https://github.com/agentic-mcps/go/releases/download/v1.2.0/${archiveName}\ntar -xzf ${archiveName}\nsudo mv agentic-go agentic-go-gopls agentic-go-vet /usr/local/bin/`;
     instructions = `Direct binary archive installation for ${os}/${arch}.`;
   }
 
@@ -920,7 +920,7 @@ function initWebMCP() {
       execute: async () => {
         const data = {
           brew: "brew install agentic-mcps/tap/agentic-go",
-          curl: "curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.1.0/scripts/install.sh | bash -s -- 1.1.0",
+      curl: "curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.2.0/scripts/install.sh | bash -s -- 1.2.0",
           mcpConfig: {
             mcpServers: {
               "agentic-go": {
@@ -1000,7 +1000,7 @@ function initWebMCP() {
     },
     {
       name: "get_tool_catalog",
-      description: "Returns the current v1.1.0 surface of agentic-go: 15 tools (14 frozen v1 tools plus additive go_context), 7 resources, 1 resource template, and 6 prompts.",
+      description: "Returns the current v1.2.0 surface of agentic-go: 15 tools (14 frozen v1 tools plus additive go_context), 7 resources, 1 resource template, and 6 prompts.",
       inputSchema: {
         type: "object",
         properties: {},
@@ -1008,7 +1008,7 @@ function initWebMCP() {
       },
       execute: async () => {
         const catalog = {
-          releaseVersion: "1.1.0",
+          releaseVersion: "1.2.0",
           toolsCount: 15,
           frozenToolsCount: 14,
           tools: [

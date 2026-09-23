@@ -35,7 +35,8 @@ become stale.
 
 ## Current status
 
-As of 2026-09-22, this branch is based on the signed `v1.1.0` release. **Stage
+As of 2026-09-22, this branch prepares the signed `v1.2.0` release from the
+`v1.1.0` baseline. **Stage
 2, coherent observation**, and the additive focus slice are shipped in that
 release.
 The observation-correctness follow-up closed the source-confirmed gaps recorded
@@ -83,18 +84,19 @@ A→B→A rewrites on a source-cap miss, guidance identity and mismatch rejectio
 Brief observation forwarding, Symbol position-error lease release, active
 manifest protection, fail-closed admission, and replacement byte accounting.
 Those historical checks qualify the v1.1.0 release work; they do not qualify
-later changes. The current v1.2 candidate separately passed the full
+later changes. The v1.2.0 candidate separately passed the full
 repository gates (`go test ./...`, `go test -race ./...`, `go vet ./...`,
-`go build ./...`, and `git diff --check`). No benchmark, evaluation,
-publication, tag, or push was performed.
+`go build ./...`, and `git diff --check`). The v0.8 task, adoption, and pilot
+definitions validate, and two available private server replays pass. No
+three-tier model evaluation or productivity claim is included.
 
 Stage 2 does not introduce a public interface or a general derived cache.
 Derived parsing/semantic caching, useful-context selection, richer
 relationships, refresh, and verification lineage remain later-stage work.
 
-## Current post-v1.1.0 follow-up
+## v1.2.0 reliability release
 
-The current `codex/v1.2-reliability` follow-up narrows focus semantic expansion
+The `codex/v1.2-reliability` release narrows focus semantic expansion
 by the selected declaration kind. Function and method selections do not request
 type definitions, and non-callable declarations do not request call hierarchy.
 Skipped facets are reported as unexamined rather than as examined-and-absent
@@ -102,8 +104,9 @@ evidence; incomplete provider evidence is not reported as absent. This is a
 bounded reliability fix for observed provider failures; the public MCP
 inventory and `agentic.focus/v1` schema remain unchanged. Focused package
 validation and full repository gates have passed. The prerequisite snapshot
-input fix is committed locally as `5ff6902`; the focus follow-up remains the
-current gated slice.
+input fix is committed as `5ff6902`, the focus follow-up as `4381456`, and
+bounded outcome tracing as `7cb2117`. The release metadata preserves the
+existing 15-tool current surface and frozen v1 contracts.
 
 ## Findings recorded from the documentation and targeted source inspection
 
@@ -269,9 +272,9 @@ identities, and limitations. Retain focus and full replacement; defer delta
 refresh. The next slice is release hardening, instruction-surface
 discoverability, and provider-failure investigation. Raw artifacts remain
 private and ignored.
-This handoff predates the separately authorized publication workflow. Public
-publication must preserve existing tags and history, and does not create a new
-release or claim that the paid comparison ran.
+The v1.2.0 publication workflow is separately authorized. Public publication
+preserves existing tags and history and does not claim that the paid model
+comparison ran.
 
 ## Standing continuation instruction
 
@@ -292,7 +295,7 @@ Read docs/continuation/astra-understanding.md and this handoff first. Observatio
 verification applicability, declaration selection, and full-replacement refresh
 and focus-v1 stabilization are complete. Inspect the current diff and choose a
 new explicitly authorized objective. Delta refresh, general derived caches,
-expanded refactoring, speculative test selection, and release creation remain
-outside the completed scope. Publication is separately authorized only when a
-maintainer explicitly requests it; preserve existing tags and public history.
+expanded refactoring, and speculative test selection remain outside the
+completed scope. Preserve existing tags and public history when continuing the
+reliability work.
 ```

@@ -7,7 +7,7 @@ This is a convenience index for humans and coding agents. It is not a ranking or
 ## Start
 
 - [README](https://github.com/agentic-mcps/go/blob/main/README.md): installation, MCP setup, workflow, capabilities, compatibility, and trust boundary.
-- [v1.1.0 release](https://github.com/agentic-mcps/go/releases/tag/v1.1.0): supported archives and checksums.
+- [v1.2.0 release](https://github.com/agentic-mcps/go/releases/tag/v1.2.0): supported archives and checksums.
 - [Module migration](https://github.com/agentic-mcps/go/blob/main/docs/module-migration.md): separate personal and organization module identities.
 
 ## Contracts
