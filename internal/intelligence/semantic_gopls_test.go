@@ -291,6 +291,43 @@ func TestGoplsReaderNormalizesSymbolsLocationsAndDiagnostics(t *testing.T) {
 	}
 }
 
+func TestGoplsReaderOmitsWorkspaceSymbolsOutsideObservationManifest(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshots := newTestSnapshotter(t, root)
+	root = snapshots.workspace.Root()
+	writeSnapshotFile(t, root, "value.go", "package sample\n\nfunc Value() {}\n")
+	writeSnapshotFile(t, root, "dependency.go", "package sample\n\nfunc Dependency() {}\n")
+	rpc := &fakeGoplsRPC{responses: map[string]json.RawMessage{
+		"workspace/symbol": json.RawMessage(`[{
+			"name":"Value","kind":12,"containerName":"example.test/sample",
+			"location":{"uri":"` + fileURI(root, "value.go") + `","range":{"start":{"line":2,"character":5},"end":{"line":2,"character":10}}}
+		},{
+			"name":"Dependency","kind":12,"containerName":"example.test/dependency",
+			"location":{"uri":"` + fileURI(root, "dependency.go") + `","range":{"start":{"line":2,"character":5},"end":{"line":2,"character":15}}}
+		}]`),
+	}}
+	reader := &goplsReader{
+		p:        &goplsProvider{manager: rpc, root: root, workspace: snapshots.workspace},
+		snapshot: SnapshotRef{ID: "snapshot", Scope: "./internal/xds/rbac"},
+		observation: &snapshotObservation{
+			lease:   &manifestLease{snapshotter: snapshots, id: "snapshot"},
+			records: []contentRecord{{Path: "value.go", Kind: "file", Digest: "value"}},
+			sources: map[string][]byte{"value.go": []byte("package sample\n\nfunc Value() {}\n")},
+		},
+	}
+	search, err := reader.Search(context.Background(), "Value")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(search.Items) != 1 || search.Omitted != 1 || search.Items[0].Name != "Value" {
+		t.Fatalf("search = %#v, want one retained symbol and one omitted location", search)
+	}
+	reader.observation.records = []contentRecord{{Path: "dependency.go", Kind: "file", Digest: "sha256:stale"}}
+	if _, err := reader.Search(context.Background(), "Dependency"); !errors.Is(err, ErrSnapshotChanged) {
+		t.Fatalf("changed observed workspace symbol error = %v, want ErrSnapshotChanged", err)
+	}
+}
+
 func TestGoplsReaderConvertsUTF16RangesToUTF8ByteColumns(t *testing.T) {
 	root := snapshotRepository(t)
 	snapshots := newTestSnapshotter(t, root)

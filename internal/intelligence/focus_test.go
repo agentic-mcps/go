@@ -300,6 +300,31 @@ func TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion(t *testing.T) {
 	}
 }
 
+func TestFocusContextPreservesUncertaintyForOmittedWorkspaceSymbols(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotter := newTestSnapshotter(t, root)
+	reader := &fakeSemanticReader{search: semanticSymbols{
+		Items:   []SymbolMatch{{Name: "Value", Qualified: "fixture.Value", Kind: "go.function", Package: "fixture", Location: Location{File: "main.go", Line: 3, Column: 1}}},
+		Omitted: 1,
+	}}
+	core := newTestCore(t, snapshotter, reader)
+	observation, err := core.observe(context.Background(), "HEAD", "./...", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer observation.release()
+	result, err := core.focusContext(context.Background(), &observation, FocusRequest{Query: "value", MaxBytes: DefaultBriefBytes})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Symbol != nil || !hasEvidenceState(result.EvidenceStates, "declarations", "gathered_but_omitted") || hasEvidenceState(result.EvidenceStates, "declarations", "examined_and_absent") {
+		t.Fatalf("focusContext(omitted query results) = %#v", result)
+	}
+	if !containsUncertainty(result.Uncertainties, "semantic.external_locations") {
+		t.Fatalf("focusContext(omitted query results) uncertainties = %#v", result.Uncertainties)
+	}
+}
+
 func hasEvidenceState(states []EvidenceState, facet, state string) bool {
 	for _, candidate := range states {
 		if candidate.Facet == facet && candidate.State == state {

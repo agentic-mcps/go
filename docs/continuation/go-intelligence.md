@@ -287,11 +287,27 @@ while exposing failure categories. It does not establish improved quality,
 correctness, productivity, speed, or product value. External and multi-model
 evaluation remain pending.
 
-Before changing provider behavior, classify the invalid-symbol-reference and
-stale-snapshot failures as expected strict rejection, agent misuse, or a
-reproducible provider defect. Inspect the run inputs, selectors, snapshot
-identities, and provider responses to distinguish these cases, while preserving
-strict stale rejection and the frozen public contracts.
+The failure audit classified the three client-go invalid-input calls as agent
+misuse or ref reconstruction: each failed ref had an invalid version field or
+inconsistent identity, while valid query-issued refs succeeded. The two gRPC
+stale-snapshot calls were repeated without an intervening edit; workspace-symbol
+search returned a location inside the workspace but outside the active snapshot
+manifest. The provider now omits such unbound workspace locations as bounded
+uncertainty while continuing to propagate stale errors for manifest entries that
+changed or disappeared. Strict stale rejection and the frozen public contracts
+remain unchanged.
+
+Focused tests cover malformed refs, current observation membership, and omitted
+workspace-symbol uncertainty. The private audit remains at
+`/Users/ashwin/agentic-go-eval-audits/20260924-failure-verdicts.md`.
+
+The six-run integrated Luna rerun completed with 6/6 qualification, 6/6
+acceptance, zero scope violations, zero operator interventions, zero failed
+focus calls, and complete refresh and evidence-use signals. Skill discovery was
+6/6. Median duration was 411,537 ms, median tool calls were 31, and median
+transcript evidence was 450,293 bytes. These are diagnostic regression values,
+not evidence of improved speed, correctness, productivity, or product value.
+External and multi-model evaluation remain pending.
 
 ## Earlier trace review
 

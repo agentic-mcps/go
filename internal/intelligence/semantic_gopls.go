@@ -343,6 +343,12 @@ func (r *goplsReader) Search(ctx context.Context, query string) (semanticSymbols
 			result.Omitted++
 			continue
 		}
+		if r.observation != nil {
+			if _, found := observationRecord(r.observation.records, file); !found {
+				result.Omitted++
+				continue
+			}
+		}
 		match, err := r.symbol(candidate.Name, candidate.Kind, candidate.ContainerName, file, sourceRange)
 		if err != nil {
 			return semanticSymbols{}, err

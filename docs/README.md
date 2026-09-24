@@ -68,9 +68,17 @@ because an observed semantic location was absent from the snapshot manifest.
 grpc-go runs 2 and 3 had no failed focus calls. This shows workflow adoption
 continued while exposing failure categories; it does not establish improved
 quality, correctness, productivity, speed, or product value. Before changing
-provider behavior, classify these failures as expected strict rejection, agent
-misuse, or a reproducible provider defect. External and multi-model evaluation
-remain pending.
+provider behavior, the audit classified the client-go failures as malformed or
+reconstructed refs and the gRPC failures as unbound workspace locations. The
+provider now omits unbound locations with bounded uncertainty while preserving
+strict stale rejection. External and multi-model evaluation remain pending.
+
+After the failure remediation, six integrated Luna reruns completed with 6/6
+qualification, 6/6 acceptance, zero scope violations, zero operator
+interventions, zero failed focus calls, and complete refresh and evidence-use
+signals. The median duration was 411,537 ms and the median tool-call count was
+31. This is diagnostic regression evidence only and does not establish product
+value or comparative engineering benefit.
 
 ## Verification report contracts
 

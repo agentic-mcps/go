@@ -17,9 +17,11 @@ refresh after edits.
    `base` and `previous_pack_id` only; omit old selectors and Symbol Refs.
    Refresh again after further edits or stale-snapshot rejection; avoid
    redundant refreshes while the snapshot is unchanged.
-4. Stale rejection is expected: stop and select current evidence; never bypass
+4. Never reuse a Symbol Ref returned before an edit. After a stale rejection,
+   refresh or select a current candidate; do not retry the stale selector.
+5. Stale rejection is expected: stop and select current evidence; never bypass
    it.
-5. Use the result for impact and verification applicability. Treat impact and
+6. Use the result for impact and verification applicability. Treat impact and
    reverse-dependency evidence as planning guidance, not authorization to edit
    affected packages; edit only the smallest task owner within supplied
    path/package scope. Skip trivial edits and preserve uncertainty when

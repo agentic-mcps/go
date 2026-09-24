@@ -415,6 +415,12 @@ func (c *Core) focusContext(ctx context.Context, observation *snapshotObservatio
 			} else {
 				result.Candidates = append(result.Candidates, normalized...)
 			}
+			if matches.Omitted > 0 {
+				result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "semantic.external_locations", Message: fmt.Sprintf("%d workspace symbol locations were omitted because they were outside the active snapshot observation", matches.Omitted), Locations: []Location{}})
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "declarations", State: "gathered_but_omitted", Reason: "some workspace symbol locations were outside the active snapshot observation"})
+				result.Reasons = append(result.Reasons, "query returned incomplete workspace candidates; select a retained current candidate or use a narrower file or package selector")
+				break
+			}
 			switch len(normalized) {
 			case 0:
 				result.Reasons = append(result.Reasons, "query returned no declarations")

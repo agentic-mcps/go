@@ -76,10 +76,18 @@ because an observed semantic location was absent from the snapshot manifest;
 grpc-go runs 2 and 3 had no failed focus calls. Workflow adoption remained
 possible while the failures exposed categories to investigate. The result does
 not establish that guidance improved quality, correctness, productivity,
-speed, or product value. Before changing provider behavior, classify the
-invalid-symbol-reference and stale-snapshot failures as expected strict
-rejection, agent misuse, or a reproducible provider defect. External and
-multi-model evaluation remain pending.
+speed, or product value. The failure audit classified the three client-go
+invalid-input calls as malformed or reconstructed Symbol Refs and the two
+gRPC stale calls as workspace-symbol locations outside the active observation
+manifest. Such locations are now omitted with bounded uncertainty; changed or
+missing manifest entries still fail closed as stale. External and multi-model
+evaluation remain pending.
+
+The follow-up six-run integrated Luna rerun passed qualification and acceptance
+in every run, with zero scope violations, zero operator interventions, zero
+failed focus calls, and complete refresh and evidence-use signals. Median
+duration was 411,537 ms and median tool calls were 31. This remains diagnostic
+regression evidence, not a claim of improved quality, speed, or product value.
 
 Keep Go-only, local, deterministic operation; pinned gopls; source provenance;
 explicit uncertainty; and existing containment and guarded-refactor guarantees.

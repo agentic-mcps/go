@@ -32,7 +32,7 @@ const (
 )
 
 // Guidance is the generic treatment instruction.
-const Guidance = "For an unfamiliar Go change, call go_context with base and one selector: query, symbol_ref, or file with line and column. After editing, refresh with base and previous_pack_id only; stale selectors and refs are expected to be rejected."
+const Guidance = "For an unfamiliar Go change, call go_context with base and one selector: query, symbol_ref, or file with line and column. After editing, refresh with base and previous_pack_id only; never reuse a Symbol Ref from before an edit. Stale selectors and refs are expected to be rejected, so select current evidence."
 
 // Scenario describes an adoption task.
 type Scenario struct {
