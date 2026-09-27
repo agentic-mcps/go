@@ -36,8 +36,8 @@ type nativeMeasurement struct {
 
 type rgLine struct {
 	path string
-	line int
 	text string
+	line int
 }
 
 // ProbeRG returns the first version line without recording the executable path.
@@ -99,8 +99,8 @@ func runNativeRG(parent context.Context, workspace string, query Query, source a
 		}
 	}
 	return nativeMeasurement{
-		ranking: ranking,
-		totalLatency: latency(totalSamples),
+		ranking:        ranking,
+		totalLatency:   latency(totalSamples),
 		commandLatency: latency(commandSamples),
 		rankingLatency: latency(rankingSamples),
 	}, nil

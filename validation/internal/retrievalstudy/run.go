@@ -15,8 +15,10 @@ import (
 	"github.com/agentic-mcps/go/internal/intelligence/retrieval"
 )
 
-const retrievalGranularity = "go_declaration_name_anchor"
-const candidatePoolAuditLimit = 10_000
+const (
+	retrievalGranularity    = "go_declaration_name_anchor"
+	candidatePoolAuditLimit = 10_000
+)
 
 // Options configures one pinned, model-free retrieval screen.
 type Options struct {
@@ -65,9 +67,9 @@ func Execute(parent context.Context, options Options) (returnErr error) {
 	}
 	archiveStarted := time.Now()
 	repository, source, err := exportCommit(parent, options.RepositoryPath, workspace, manifest, archiveLimits{
-		maxSourceBytes: options.MaxSourceBytes,
-		maxFileBytes:   options.MaxFileBytes,
-		timeout:        options.Timeout,
+		maxSourceBytes:      options.MaxSourceBytes,
+		maxFileBytes:        options.MaxFileBytes,
+		timeout:             options.Timeout,
 		indexTextCandidates: options.TextAblation,
 	})
 	archiveMS := float64(time.Since(archiveStarted)) / float64(time.Millisecond)
@@ -120,9 +122,9 @@ func Execute(parent context.Context, options Options) (returnErr error) {
 		if err = parent.Err(); err != nil {
 			return err
 		}
-		retrievalRanking, retrievalTimings, retrievalProfiles, searchResult, err := measureRetrieval(parent, query, source, repository, options)
-		if err != nil {
-			return err
+		retrievalRanking, retrievalTimings, retrievalProfiles, searchResult, retrievalErr := measureRetrieval(parent, query, source, repository, options)
+		if retrievalErr != nil {
+			return retrievalErr
 		}
 		if searchResult != nil && firstSearchResult == nil {
 			copyResult := *searchResult
@@ -139,21 +141,21 @@ func Execute(parent context.Context, options Options) (returnErr error) {
 			heapSample(&peakHeap)
 		}
 
-		native, err := runNativeRG(parent, workspace, query, source, query.Gold, options.Repetitions, nativeLimits{
+		native, nativeErr := runNativeRG(parent, workspace, query, source, query.Gold, options.Repetitions, nativeLimits{
 			timeout: options.Timeout, outputBytes: options.RGOutputBytes, lineCount: options.RGLineLimit,
 		})
-		if err != nil {
-			return fmt.Errorf("native rg query %q: %w", query.ID, err)
+		if nativeErr != nil {
+			return fmt.Errorf("native rg query %q: %w", query.ID, nativeErr)
 		}
 		heapSample(&peakHeap)
 
 		queryResult := QueryResult{
 			ID: query.ID, Text: query.Text, Gold: append([]GoldSpan(nil), query.Gold...),
 			Retrieval: retrievalRanking, RetrievalTimings: retrievalTimings,
-			RetrievalProfiles: retrievalProfiles,
+			RetrievalProfiles:      retrievalProfiles,
 			RetrievalCandidatePool: retrievalCandidatePool,
-			TextCandidateAblation: textCandidateAblation,
-			NativeRG: native.ranking, NativeRGLatency: native.totalLatency,
+			TextCandidateAblation:  textCandidateAblation,
+			NativeRG:               native.ranking, NativeRGLatency: native.totalLatency,
 			NativeRGCommandLatency: native.commandLatency,
 			NativeRGRankingLatency: native.rankingLatency,
 		}
@@ -217,15 +219,15 @@ func Execute(parent context.Context, options Options) (returnErr error) {
 		SchemaVersion: reportVersion, CreatedUTC: created,
 		Repository: repository, Stratum: manifest.Stratum,
 		Reproducibility: reproducibility,
-		GoVersion: runtime.Version(), GOOS: runtime.GOOS, GOARCH: runtime.GOARCH,
+		GoVersion:       runtime.Version(), GOOS: runtime.GOOS, GOARCH: runtime.GOARCH,
 		RGVersion: rgVersion, SnapshotExportMS: archiveMS,
 		RetrievalTimingNote: "Cache.SearchProfiled reports parse, aggregation and rank stages; its total covers the full Go declaration candidate retrieval call. Top-5 is scored from the prefix of the same top-10 result, so top-5 and top-10 timing samples are identical and the large corpus is not parsed twice for two cutoffs. The optional text candidate ablation uses the same scorer over a bounded mixed candidate pool and is reported separately. This screen measures the candidate retrieval kernel, not full go_context output or semantic resolution.",
 		NativeRGWorkflow: NativeWorkflow{
 			CommandTemplate: "rg --no-ignore --hidden --glob-case-insensitive --no-heading --with-filename --line-number --color never --fixed-strings --ignore-case --text --null [supported-source globs] -e <sorted unique query token>... -- .",
-			Tokenizer: "retrieval Unicode letter/digit/underscore tokenizer with lower-to-upper camel-case splits; duplicate tokens removed and sorted",
-			Ranking: []string{"distinct query tokens present on line descending", "query-token occurrences on line descending", "repository-relative path ascending", "line ascending"},
-			Globs: append([]string(nil), nativeGlobs...),
-			PathScope: "Git-archive files with supported source suffixes only; archive ignores checkout working-tree changes",
+			Tokenizer:       "retrieval Unicode letter/digit/underscore tokenizer with lower-to-upper camel-case splits; duplicate tokens removed and sorted",
+			Ranking:         []string{"distinct query tokens present on line descending", "query-token occurrences on line descending", "repository-relative path ascending", "line ascending"},
+			Globs:           append([]string(nil), nativeGlobs...),
+			PathScope:       "Git-archive files with supported source suffixes only; archive ignores checkout working-tree changes",
 		},
 		GoPackages: goPackages, Coverage: source.coverage, TextCandidateIndex: textCandidateIndex,
 		Configuration: Configuration{
@@ -448,7 +450,7 @@ func measureTextAblation(parent context.Context, query Query, source archivedSou
 		Ranking: ranking, CandidatePool: textPool,
 		Latency: latency([]float64{wallMS}), Profile: textProfile,
 		IndexedTextFragments: textResult.TextIndexedFragments,
-		SkippedTextFiles: textResult.TextSkippedFiles,
+		SkippedTextFiles:     textResult.TextSkippedFiles,
 		MaximumTextFragments: retrieval.MaximumTextLineFragments,
 	}, nil
 }
@@ -546,7 +548,7 @@ func unavailableRanking(reason string) Ranking {
 		Status: "unavailable", Complete: false, IncompleteReason: reason,
 		Candidates: []Candidate{}, CandidateCountComplete: false,
 		Granularity: retrievalGranularity,
-		Metrics: Metrics{}, Misses: EvidenceMisses{ByTypeAt5: map[string]int{}, ByTypeAt10: map[string]int{}},
+		Metrics:     Metrics{}, Misses: EvidenceMisses{ByTypeAt5: map[string]int{}, ByTypeAt10: map[string]int{}},
 	}
 }
 
@@ -577,9 +579,9 @@ func summarize(queries []QueryResult) (Summary, error) {
 		goplsQuery = append(goplsQuery, query.GoplsQueryLatency.Samples...)
 	}
 	summary := Summary{
-		Retrieval: ArmSummary{At5: aggregateRankings(retrievalRankings, 5), At10: aggregateRankings(retrievalRankings, 10)},
-		NativeRG: ArmSummary{At5: aggregateRankings(nativeRankings, 5), At10: aggregateRankings(nativeRankings, 10)},
-		Gopls: ArmSummary{At5: aggregateRankings(goplsRankings, 5), At10: aggregateRankings(goplsRankings, 10)},
+		Retrieval:          ArmSummary{At5: aggregateRankings(retrievalRankings, 5), At10: aggregateRankings(retrievalRankings, 10)},
+		NativeRG:           ArmSummary{At5: aggregateRankings(nativeRankings, 5), At10: aggregateRankings(nativeRankings, 10)},
+		Gopls:              ArmSummary{At5: aggregateRankings(goplsRankings, 5), At10: aggregateRankings(goplsRankings, 10)},
 		RetrievalColdP50MS: make(map[string]float64), RetrievalColdP95MS: make(map[string]float64),
 		RetrievalWarmP50MS: make(map[string]float64), RetrievalWarmP95MS: make(map[string]float64),
 		RetrievalStages: RetrievalStageSummary{Cold: make(map[string]RetrievalStageLatencySummary), Warm: make(map[string]RetrievalStageLatencySummary)},

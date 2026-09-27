@@ -12,11 +12,11 @@ func TestCandidatePoolAuditSeparatesCoverageFromRanking(t *testing.T) {
 		{Type: "test", Path: "focus_test.go", StartLine: 20, EndLine: 22},
 	}
 	source := archivedSource{
-		coverage: Coverage{SourceArchiveComplete: true},
+		coverage:           Coverage{SourceArchiveComplete: true},
 		textCandidateIndex: TextCandidateIndexCoverage{Status: "complete"},
 	}
 	result := retrieval.Result{
-		Candidates: []retrieval.Candidate{{Path: "docs/contracts.md", Line: 11, Kind: "text.line"}},
+		Candidates:     []retrieval.Candidate{{Path: "docs/contracts.md", Line: 11, Kind: "text.line"}},
 		CandidateCount: 1, Complete: true,
 	}
 	audit := candidatePoolAudit(result, gold, source, true)
@@ -31,7 +31,7 @@ func TestCandidatePoolAuditSeparatesCoverageFromRanking(t *testing.T) {
 func TestCandidatePoolAuditMarksCappedResultsPartial(t *testing.T) {
 	source := archivedSource{coverage: Coverage{SourceArchiveComplete: true}}
 	result := retrieval.Result{
-		Candidates: []retrieval.Candidate{{Path: "docs/contracts.md", Line: 11}},
+		Candidates:     []retrieval.Candidate{{Path: "docs/contracts.md", Line: 11}},
 		CandidateCount: candidatePoolAuditLimit + 1, Complete: true, Truncated: true,
 	}
 	audit := candidatePoolAudit(result, []GoldSpan{{Type: "documentation", Path: "docs/contracts.md", StartLine: 10, EndLine: 12}}, source, false)

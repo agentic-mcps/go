@@ -49,19 +49,19 @@ func sourceIdentity(parent context.Context, sourceRepository string, timeout tim
 	}
 	sort.Strings(paths)
 	for _, relative := range paths {
-		if err := parent.Err(); err != nil {
-			return Reproducibility{}, err
+		if contextErr := parent.Err(); contextErr != nil {
+			return Reproducibility{}, contextErr
 		}
 		if !filepath.IsLocal(filepath.FromSlash(relative)) || path.Clean(relative) != relative {
 			return Reproducibility{}, fmt.Errorf("untracked study-source path is unsafe")
 		}
-		if err := writeField(dirtyDigest, []byte(relative)); err != nil {
-			return Reproducibility{}, err
+		if fieldErr := writeField(dirtyDigest, []byte(relative)); fieldErr != nil {
+			return Reproducibility{}, fieldErr
 		}
 		filename := filepath.Join(root, filepath.FromSlash(relative))
-		info, err := os.Lstat(filename)
-		if err != nil {
-			return Reproducibility{}, fmt.Errorf("inspecting an untracked study-source file: %w", err)
+		info, statErr := os.Lstat(filename)
+		if statErr != nil {
+			return Reproducibility{}, fmt.Errorf("inspecting an untracked study-source file: %w", statErr)
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
 			target, readlinkErr := os.Readlink(filename)
@@ -87,9 +87,9 @@ func sourceIdentity(parent context.Context, sourceRepository string, timeout tim
 		if _, writeErr := dirtyDigest.Write(binaryLength); writeErr != nil {
 			return Reproducibility{}, writeErr
 		}
-		file, err := os.Open(filename)
-		if err != nil {
-			return Reproducibility{}, fmt.Errorf("opening an untracked study-source file: %w", err)
+		file, openErr := os.Open(filename)
+		if openErr != nil {
+			return Reproducibility{}, fmt.Errorf("opening an untracked study-source file: %w", openErr)
 		}
 		_, copyErr := copyContext(parent, dirtyDigest, file)
 		closeErr := file.Close()
@@ -107,8 +107,9 @@ func sourceIdentity(parent context.Context, sourceRepository string, timeout tim
 	retrievalDigest := sha256.Sum256(retrievalSource)
 	dirtyHex := hex.EncodeToString(dirtyDigest.Sum(nil))
 	return Reproducibility{
-		StudySourceCommit: strings.TrimSpace(commit),
-		DirtyDiffSHA256: dirtyHex, ManifestSHA256: manifestSHA256,
+		StudySourceCommit:     strings.TrimSpace(commit),
+		DirtyDiffSHA256:       dirtyHex,
+		ManifestSHA256:        manifestSHA256,
 		RetrievalSourceSHA256: hex.EncodeToString(retrievalDigest[:]),
 	}, nil
 }

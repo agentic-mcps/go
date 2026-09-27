@@ -73,7 +73,7 @@ func (session *goplsSession) search(parent context.Context, timeout time.Duratio
 	}
 	samples := make([]float64, 0, repetitions)
 	var candidates []Candidate
-	var complete = true
+	complete := true
 	var reason string
 	for repetition := 0; repetition < repetitions; repetition++ {
 		if err := parent.Err(); err != nil {

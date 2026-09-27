@@ -169,7 +169,7 @@ func TestCreateRequiresNewOutputOutsideSourceRepository(t *testing.T) {
 	source, runner := sourceViewRunner(t, repository)
 	for name, output := range map[string]string{
 		"inside repository": filepath.Join(repository, "nested-view"),
-		"existing path":    repository,
+		"existing path":     repository,
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Create(context.Background(), runner, source, Request{OutputPath: output}); err == nil {

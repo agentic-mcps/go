@@ -26,14 +26,14 @@ import (
 )
 
 const (
-	maximumTextCandidateFiles    = 100_000
-	maximumTextCandidateFileSize = 1 << 20
-	maximumTextCandidateBytes    = 64 << 20
+	maximumTextCandidateFiles     = 100_000
+	maximumTextCandidateFileSize  = 1 << 20
+	maximumTextCandidateBytes     = 64 << 20
 	maximumTextCandidateFragments = retrieval.MaximumTextLineFragments
 )
 
 type sourceMeta struct {
-	lines int
+	lines  int
 	goFile bool
 }
 
@@ -181,11 +181,11 @@ func archiveSelection(parent context.Context, repositoryRoot, commit string, tim
 		}
 		separator := bytes.IndexByte(record, '\t')
 		if separator < 0 {
-			return nil, Coverage{}, nil, fmt.Errorf("Git tree entry has an invalid record")
+			return nil, Coverage{}, nil, fmt.Errorf("git tree entry has an invalid record")
 		}
 		metadata := strings.Fields(string(record[:separator]))
 		if len(metadata) < 3 {
-			return nil, Coverage{}, nil, fmt.Errorf("Git tree entry has incomplete metadata")
+			return nil, Coverage{}, nil, fmt.Errorf("git tree entry has incomplete metadata")
 		}
 		mode, objectType := metadata[0], metadata[1]
 		name := string(record[separator+1:])
@@ -204,11 +204,11 @@ func archiveSelection(parent context.Context, repositoryRoot, commit string, tim
 			continue
 		}
 		if len(metadata) < 4 {
-			return nil, Coverage{}, nil, fmt.Errorf("Git tree entry has no blob size")
+			return nil, Coverage{}, nil, fmt.Errorf("git tree entry has no blob size")
 		}
 		size, parseErr := strconv.ParseInt(metadata[3], 10, 64)
 		if parseErr != nil || size < 0 {
-			return nil, Coverage{}, nil, fmt.Errorf("Git tree entry has an invalid blob size")
+			return nil, Coverage{}, nil, fmt.Errorf("git tree entry has an invalid blob size")
 		}
 		coverage.TrackedRegularFiles++
 		coverage.TrackedRegularBytes += size
@@ -432,21 +432,21 @@ func readArchive(reader *tar.Reader, workspace string, expected map[string]archi
 	return source, nil
 }
 
-var errArchivePathEncoding = errors.New("Git archive path is not valid UTF-8")
+var errArchivePathEncoding = errors.New("git archive path is not valid UTF-8")
 
 func archivePath(headerName string) (string, bool, error) {
 	if headerName == "repo/" || headerName == "repo" {
 		return "", true, nil
 	}
 	if !strings.HasPrefix(headerName, "repo/") {
-		return "", false, fmt.Errorf("Git archive entry %q escaped its expected prefix", headerName)
+		return "", false, fmt.Errorf("git archive entry %q escaped its expected prefix", headerName)
 	}
 	name := strings.TrimSuffix(strings.TrimPrefix(headerName, "repo/"), "/")
 	if name == "" {
 		return "", true, nil
 	}
 	if !filepath.IsLocal(filepath.FromSlash(name)) || path.Clean(name) != name {
-		return "", false, fmt.Errorf("Git archive contains an unsafe path")
+		return "", false, fmt.Errorf("git archive contains an unsafe path")
 	}
 	if !utf8.ValidString(name) {
 		return "", false, errArchivePathEncoding

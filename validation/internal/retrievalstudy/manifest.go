@@ -2,9 +2,9 @@ package retrievalstudy
 
 import (
 	"bytes"
-	"encoding/json"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -15,16 +15,17 @@ import (
 	"unicode"
 )
 
-var fullCommitPattern = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
-var repositoryIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9.:-]*/[a-z0-9_.-]+(/[a-z0-9_.-]+)*$`)
-
-var evidenceTypes = map[string]struct{}{
-	"declaration": {},
-	"caller":      {},
-	"test":        {},
-	"documentation": {},
-	"configuration": {},
-}
+var (
+	fullCommitPattern   = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	repositoryIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9.:-]*/[a-z0-9_.-]+(/[a-z0-9_.-]+)*$`)
+	evidenceTypes       = map[string]struct{}{
+		"declaration":   {},
+		"caller":        {},
+		"test":          {},
+		"documentation": {},
+		"configuration": {},
+	}
+)
 
 // LoadManifest decodes a strict, versioned JSON manifest and validates all
 // fields that do not depend on the archived source tree.
