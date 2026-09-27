@@ -1,0 +1,4091 @@
+{
+  "schema_version": "agentic-go.retrieval-report/v1",
+  "created_utc": "2026-09-27T05:11:24.265084Z",
+  "repository": {
+    "id": "local/go-1.27-interactive-tour",
+    "commit": "61ca6068c067756caf8d98b0a933163b39894416",
+    "tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b"
+  },
+  "reproducibility": {
+    "study_source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+    "dirty_diff_sha256": "fbf8781eecd2b0c882bfeeeb459b3abe026f6ba1981b818e14a30503cbcd772b",
+    "manifest_sha256": "d7bacb3d7299f9b0da853fc25e74c400828eeebe1ef5f42b389691a118caf818",
+    "retrieval_source_sha256": "936e91c612d19e5605a2e6fbada165a2a177b26301a621871c7f16dc9477b411"
+  },
+  "stratum": "small",
+  "go_version": "go1.27.0",
+  "goos": "darwin",
+  "goarch": "arm64",
+  "rg_version": "ripgrep 15.2.0 (rev e89fff89ac)",
+  "snapshot_export_ms": 354.8695,
+  "retrieval_timing_note": "Cache.SearchProfiled reports parse, aggregation and rank stages; its total covers the full Go declaration candidate retrieval call. Top-5 is scored from the prefix of the same top-10 result, so top-5 and top-10 timing samples are identical and the large corpus is not parsed twice for two cutoffs. The screen measures the candidate retrieval kernel, not full go_context output or semantic resolution.",
+  "native_rg_workflow": {
+    "command_template": "rg --no-ignore --hidden --glob-case-insensitive --no-heading --with-filename --line-number --color never --fixed-strings --ignore-case --text --null [supported-source globs] -e \u003csorted unique query token\u003e... -- .",
+    "tokenizer": "retrieval Unicode letter/digit/underscore tokenizer with lower-to-upper camel-case splits; duplicate tokens removed and sorted",
+    "ranking_order": [
+      "distinct query tokens present on line descending",
+      "query-token occurrences on line descending",
+      "repository-relative path ascending",
+      "line ascending"
+    ],
+    "globs": [
+      "*.go",
+      "*.md",
+      "*.rst",
+      "*.txt",
+      "*.yaml",
+      "*.yml",
+      "*.json",
+      "*.toml",
+      "*.proto",
+      "*.mod",
+      "*.sum",
+      "*.work",
+      "Makefile",
+      "GNUmakefile",
+      "Dockerfile",
+      "Containerfile",
+      ".gitignore",
+      ".editorconfig",
+      ".gitattributes"
+    ],
+    "path_scope": "Git-archive files with supported source suffixes only; archive ignores checkout working-tree changes"
+  },
+  "go_package_inventory": {
+    "status": "partial",
+    "command": "go list -e -json ./...",
+    "package_count": 1,
+    "packages_with_errors": 1,
+    "latency_ms": 7.143208,
+    "timeout_ms": 300000,
+    "captured_output_bytes": 227,
+    "captured_output_limit_bytes": 16777216,
+    "output_truncated": false,
+    "error": "one or more listed packages had load errors",
+    "coverage": "partial_package_load_errors"
+  },
+  "coverage": {
+    "tracked_regular_files": 18345,
+    "tracked_regular_bytes": 564209653,
+    "expected_supported_source_files": 930,
+    "expected_supported_source_bytes": 12460533,
+    "supported_source_files": 930,
+    "supported_source_bytes": 12460533,
+    "go_files": 17,
+    "go_bytes": 9444,
+    "go_files_with_declarations": 17,
+    "go_parse_incomplete_files": 2,
+    "supported_text_files": 913,
+    "supported_text_bytes": 12451089,
+    "rejected_text_files": 0,
+    "rejected_text_bytes": 0,
+    "symlinks_not_indexed": 0,
+    "other_archive_entries_ignored": 0,
+    "archive_omitted_source_files": 0,
+    "archive_omitted_source_bytes": 0,
+    "archive_transformed_source_files": 0,
+    "archive_transformed_source_bytes": 0,
+    "source_archive_complete": true,
+    "text_indexed_by_retrieval": 0
+  },
+  "configuration": {
+    "repetitions": 3,
+    "command_timeout_ms": 300000,
+    "search_timeout_ms": 300000,
+    "max_source_bytes": 2147483648,
+    "max_file_bytes": 268435456,
+    "native_rg_output_limit_bytes": 67108864,
+    "native_rg_line_limit": 100000
+  },
+  "gopls": {
+    "status": "unknown_completeness",
+    "version": "v0.21.0",
+    "completeness_note": "workspace/symbol result caps and exhaustive workspace coverage are not established; per-query scores cover returned candidates",
+    "initialize_ms": 48.226916,
+    "query_latency": {
+      "samples_ms": [
+        17.770333,
+        2.470667,
+        2.214542,
+        2.607459,
+        2.443625,
+        2.537,
+        2.478625,
+        2.528292,
+        2.487375,
+        2.566,
+        2.20975,
+        2.248792
+      ],
+      "p50_ms": 2.478625,
+      "p95_ms": 17.770333,
+      "min_ms": 2.20975,
+      "max_ms": 17.770333
+    },
+    "candidate_granularity": "workspace_symbol_anchor"
+  },
+  "queries": [
+    {
+      "id": "small-1",
+      "query": "What does the UUID time ordering example actually execute, and where does the project explain why it cares about sorted inserts?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "examples/02_uuid_v7/main.go",
+          "start_line": 9,
+          "end_line": 20,
+          "label": "UUID example main declaration"
+        },
+        {
+          "type": "documentation",
+          "path": "README.md",
+          "start_line": 23,
+          "end_line": 24,
+          "label": "clustered-index motivation"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more Go files could not be parsed completely",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 8,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 1,
+          "missed_at_10": 1,
+          "missed_at_5_by_type": {
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/02_uuid_v7/main.go",
+            "line": 9,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "ExecuteTrade",
+            "kind": "go.method",
+            "container": "main"
+          },
+          {
+            "path": "examples/17_db_row_column_scanner/main.go",
+            "line": 11,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 39,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 15,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/08_synctest_consensus/main.go",
+            "line": 7,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          }
+        ],
+        "candidate_count": 8,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.533375,
+              0.452416,
+              0.457208
+            ],
+            "p50_ms": 0.457208,
+            "p95_ms": 0.533375,
+            "min_ms": 0.452416,
+            "max_ms": 0.533375
+          },
+          "5": {
+            "samples_ms": [
+              0.533375,
+              0.452416,
+              0.457208
+            ],
+            "p50_ms": 0.457208,
+            "p95_ms": 0.533375,
+            "min_ms": 0.452416,
+            "max_ms": 0.533375
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.073875,
+              0.059917,
+              0.059875
+            ],
+            "p50_ms": 0.059917,
+            "p95_ms": 0.073875,
+            "min_ms": 0.059875,
+            "max_ms": 0.073875
+          },
+          "5": {
+            "samples_ms": [
+              0.073875,
+              0.059917,
+              0.059875
+            ],
+            "p50_ms": 0.059917,
+            "p95_ms": 0.073875,
+            "min_ms": 0.059875,
+            "max_ms": 0.073875
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.530917,
+                "parse_ms": 0.42575,
+                "aggregate_ms": 0.044917,
+                "rank_ms": 0.051333,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.452292,
+                "parse_ms": 0.362626,
+                "aggregate_ms": 0.040415,
+                "rank_ms": 0.041625,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.457042,
+                "parse_ms": 0.359668,
+                "aggregate_ms": 0.041999,
+                "rank_ms": 0.050292,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.530917,
+                0.452292,
+                0.457042
+              ],
+              "p50_ms": 0.457042,
+              "p95_ms": 0.530917,
+              "min_ms": 0.452292,
+              "max_ms": 0.530917
+            },
+            "parse": {
+              "samples_ms": [
+                0.42575,
+                0.362626,
+                0.359668
+              ],
+              "p50_ms": 0.362626,
+              "p95_ms": 0.42575,
+              "min_ms": 0.359668,
+              "max_ms": 0.42575
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.044917,
+                0.040415,
+                0.041999
+              ],
+              "p50_ms": 0.041999,
+              "p95_ms": 0.044917,
+              "min_ms": 0.040415,
+              "max_ms": 0.044917
+            },
+            "rank": {
+              "samples_ms": [
+                0.051333,
+                0.041625,
+                0.050292
+              ],
+              "p50_ms": 0.050292,
+              "p95_ms": 0.051333,
+              "min_ms": 0.041625,
+              "max_ms": 0.051333
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.530917,
+                "parse_ms": 0.42575,
+                "aggregate_ms": 0.044917,
+                "rank_ms": 0.051333,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.452292,
+                "parse_ms": 0.362626,
+                "aggregate_ms": 0.040415,
+                "rank_ms": 0.041625,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.457042,
+                "parse_ms": 0.359668,
+                "aggregate_ms": 0.041999,
+                "rank_ms": 0.050292,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.530917,
+                0.452292,
+                0.457042
+              ],
+              "p50_ms": 0.457042,
+              "p95_ms": 0.530917,
+              "min_ms": 0.452292,
+              "max_ms": 0.530917
+            },
+            "parse": {
+              "samples_ms": [
+                0.42575,
+                0.362626,
+                0.359668
+              ],
+              "p50_ms": 0.362626,
+              "p95_ms": 0.42575,
+              "min_ms": 0.359668,
+              "max_ms": 0.42575
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.044917,
+                0.040415,
+                0.041999
+              ],
+              "p50_ms": 0.041999,
+              "p95_ms": 0.044917,
+              "min_ms": 0.040415,
+              "max_ms": 0.044917
+            },
+            "rank": {
+              "samples_ms": [
+                0.051333,
+                0.041625,
+                0.050292
+              ],
+              "p50_ms": 0.050292,
+              "p95_ms": 0.051333,
+              "min_ms": 0.041625,
+              "max_ms": 0.051333
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.073792,
+                "parse_ms": 0,
+                "aggregate_ms": 0.0295,
+                "rank_ms": 0.041417,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.059833,
+                "parse_ms": 0,
+                "aggregate_ms": 0.019375,
+                "rank_ms": 0.038875,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.059792,
+                "parse_ms": 0,
+                "aggregate_ms": 0.01875,
+                "rank_ms": 0.039542,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.073792,
+                0.059833,
+                0.059792
+              ],
+              "p50_ms": 0.059833,
+              "p95_ms": 0.073792,
+              "min_ms": 0.059792,
+              "max_ms": 0.073792
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.0295,
+                0.019375,
+                0.01875
+              ],
+              "p50_ms": 0.019375,
+              "p95_ms": 0.0295,
+              "min_ms": 0.01875,
+              "max_ms": 0.0295
+            },
+            "rank": {
+              "samples_ms": [
+                0.041417,
+                0.038875,
+                0.039542
+              ],
+              "p50_ms": 0.039542,
+              "p95_ms": 0.041417,
+              "min_ms": 0.038875,
+              "max_ms": 0.041417
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.073792,
+                "parse_ms": 0,
+                "aggregate_ms": 0.0295,
+                "rank_ms": 0.041417,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.059833,
+                "parse_ms": 0,
+                "aggregate_ms": 0.019375,
+                "rank_ms": 0.038875,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.059792,
+                "parse_ms": 0,
+                "aggregate_ms": 0.01875,
+                "rank_ms": 0.039542,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.073792,
+                0.059833,
+                0.059792
+              ],
+              "p50_ms": 0.059833,
+              "p95_ms": 0.073792,
+              "min_ms": 0.059792,
+              "max_ms": 0.073792
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.0295,
+                0.019375,
+                0.01875
+              ],
+              "p50_ms": 0.019375,
+              "p95_ms": 0.0295,
+              "min_ms": 0.01875,
+              "max_ms": 0.0295
+            },
+            "rank": {
+              "samples_ms": [
+                0.041417,
+                0.038875,
+                0.039542
+              ],
+              "p50_ms": 0.039542,
+              "p95_ms": 0.041417,
+              "min_ms": 0.038875,
+              "max_ms": 0.041417
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 246
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 246
+          },
+          {
+            "path": "node_modules/.pnpm/debug@4.4.3/node_modules/debug/README.md",
+            "line": 136,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "node_modules/debug/README.md",
+            "line": 136,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "node_modules/.pnpm/lilconfig@3.1.3/node_modules/lilconfig/readme.md",
+            "line": 50,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 7
+          },
+          {
+            "path": "node_modules/lilconfig/readme.md",
+            "line": 50,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 7
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 106,
+            "matched_unique_terms": 4,
+            "matched_occurrences": 23
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 106,
+            "matched_unique_terms": 4,
+            "matched_occurrences": 23
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 143,
+            "matched_unique_terms": 4,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 143,
+            "matched_unique_terms": 4,
+            "matched_occurrences": 14
+          }
+        ],
+        "candidate_count": 54335,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "about",
+          "actually",
+          "and",
+          "cares",
+          "does",
+          "example",
+          "execute",
+          "explain",
+          "inserts",
+          "it",
+          "ordering",
+          "project",
+          "sorted",
+          "the",
+          "time",
+          "uuid",
+          "what",
+          "where",
+          "why"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          199.438708,
+          234.285292,
+          229.455125
+        ],
+        "p50_ms": 229.455125,
+        "p95_ms": 234.285292,
+        "min_ms": 199.438708,
+        "max_ms": 234.285292
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          75.265458,
+          113.596125,
+          97.984
+        ],
+        "p50_ms": 97.984,
+        "p95_ms": 113.596125,
+        "min_ms": 75.265458,
+        "max_ms": 113.596125
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          124.17325,
+          120.689167,
+          131.471125
+        ],
+        "p50_ms": 124.17325,
+        "p95_ms": 131.471125,
+        "min_ms": 120.689167,
+        "max_ms": 131.471125
+      },
+      "gopls_query": "main",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent.Inst",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 7,
+            "name": "main.Header",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 11,
+            "name": "main.Payload",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 27,
+            "name": "main.StockOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 16,
+            "name": "main.WireMessage",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 8,
+            "name": "main.MatchingOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/10_gofix_modernize/main.go",
+            "line": 8,
+            "name": "main.ModernOrderBook",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/10_gofix_modernize",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 11,
+            "name": "main.TradeDispatcher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 33,
+            "name": "main.SettlementRecord",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 11,
+            "name": "main.CaseInsensitiveHasher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC.Code",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 8,
+            "name": "main.Header.TraceID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 13,
+            "name": "main.Payload.Amount",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 29,
+            "name": "main.StockOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 12,
+            "name": "main.Payload.Account",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 9,
+            "name": "main.MatchingOrder.ID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 30,
+            "name": "main.StockOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 18,
+            "name": "main.WireMessage.Data",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 11,
+            "name": "main.MatchingOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 28,
+            "name": "main.StockOrder.Symbol",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 12,
+            "name": "main.MatchingOrder.Side",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 17,
+            "name": "main.WireMessage.Header",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 10,
+            "name": "main.MatchingOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 12,
+            "name": "main.TradeDispatcher.DeskID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 36,
+            "name": "main.SettlementRecord.Status",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 13,
+            "name": "main.CaseInsensitiveHasher.Hash",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 17,
+            "name": "main.CaseInsensitiveHasher.Equal",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 34,
+            "name": "main.SettlementRecord.AssetClass",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 35,
+            "name": "main.SettlementRecord.SettledAmt",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "main.TradeDispatcher.ExecuteTrade",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 32,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          17.770333,
+          2.470667,
+          2.214542
+        ],
+        "p50_ms": 2.470667,
+        "p95_ms": 17.770333,
+        "min_ms": 2.214542,
+        "max_ms": 17.770333
+      }
+    },
+    {
+      "id": "small-2",
+      "query": "In the payment webhook security example, what duplicate key payload and rejection behavior are shown, and which JSON feature does the tour say this covers?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "examples/03_json_v2/main.go",
+          "start_line": 8,
+          "end_line": 15,
+          "label": "JSON example main declaration"
+        },
+        {
+          "type": "documentation",
+          "path": "README.md",
+          "start_line": 25,
+          "end_line": 26,
+          "label": "JSON v2 security topic"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more Go files could not be parsed completely",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 1,
+          "missed_at_10": 1,
+          "missed_at_5_by_type": {
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/03_json_v2/main.go",
+            "line": 8,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 11,
+            "name": "Payload",
+            "kind": "go.type",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/02_uuid_v7/main.go",
+            "line": 9,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/17_db_row_column_scanner/main.go",
+            "line": 11,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 39,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 16,
+            "name": "WireMessage",
+            "kind": "go.type",
+            "container": "main"
+          },
+          {
+            "path": "examples/06_crypto_mldsa/main.go",
+            "line": 7,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "ExecuteTrade",
+            "kind": "go.method",
+            "container": "main"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.439417,
+              0.368958,
+              0.46825
+            ],
+            "p50_ms": 0.439417,
+            "p95_ms": 0.46825,
+            "min_ms": 0.368958,
+            "max_ms": 0.46825
+          },
+          "5": {
+            "samples_ms": [
+              0.439417,
+              0.368958,
+              0.46825
+            ],
+            "p50_ms": 0.439417,
+            "p95_ms": 0.46825,
+            "min_ms": 0.368958,
+            "max_ms": 0.46825
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.072792,
+              0.06925,
+              0.070084
+            ],
+            "p50_ms": 0.070084,
+            "p95_ms": 0.072792,
+            "min_ms": 0.06925,
+            "max_ms": 0.072792
+          },
+          "5": {
+            "samples_ms": [
+              0.072792,
+              0.06925,
+              0.070084
+            ],
+            "p50_ms": 0.070084,
+            "p95_ms": 0.072792,
+            "min_ms": 0.06925,
+            "max_ms": 0.072792
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.439292,
+                "parse_ms": 0.343334,
+                "aggregate_ms": 0.041041,
+                "rank_ms": 0.048708,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.368875,
+                "parse_ms": 0.284334,
+                "aggregate_ms": 0.036208,
+                "rank_ms": 0.045083,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.468125,
+                "parse_ms": 0.364957,
+                "aggregate_ms": 0.04446,
+                "rank_ms": 0.054125,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.439292,
+                0.368875,
+                0.468125
+              ],
+              "p50_ms": 0.439292,
+              "p95_ms": 0.468125,
+              "min_ms": 0.368875,
+              "max_ms": 0.468125
+            },
+            "parse": {
+              "samples_ms": [
+                0.343334,
+                0.284334,
+                0.364957
+              ],
+              "p50_ms": 0.343334,
+              "p95_ms": 0.364957,
+              "min_ms": 0.284334,
+              "max_ms": 0.364957
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.041041,
+                0.036208,
+                0.04446
+              ],
+              "p50_ms": 0.041041,
+              "p95_ms": 0.04446,
+              "min_ms": 0.036208,
+              "max_ms": 0.04446
+            },
+            "rank": {
+              "samples_ms": [
+                0.048708,
+                0.045083,
+                0.054125
+              ],
+              "p50_ms": 0.048708,
+              "p95_ms": 0.054125,
+              "min_ms": 0.045083,
+              "max_ms": 0.054125
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.439292,
+                "parse_ms": 0.343334,
+                "aggregate_ms": 0.041041,
+                "rank_ms": 0.048708,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.368875,
+                "parse_ms": 0.284334,
+                "aggregate_ms": 0.036208,
+                "rank_ms": 0.045083,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.468125,
+                "parse_ms": 0.364957,
+                "aggregate_ms": 0.04446,
+                "rank_ms": 0.054125,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.439292,
+                0.368875,
+                0.468125
+              ],
+              "p50_ms": 0.439292,
+              "p95_ms": 0.468125,
+              "min_ms": 0.368875,
+              "max_ms": 0.468125
+            },
+            "parse": {
+              "samples_ms": [
+                0.343334,
+                0.284334,
+                0.364957
+              ],
+              "p50_ms": 0.343334,
+              "p95_ms": 0.364957,
+              "min_ms": 0.284334,
+              "max_ms": 0.364957
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.041041,
+                0.036208,
+                0.04446
+              ],
+              "p50_ms": 0.041041,
+              "p95_ms": 0.04446,
+              "min_ms": 0.036208,
+              "max_ms": 0.04446
+            },
+            "rank": {
+              "samples_ms": [
+                0.048708,
+                0.045083,
+                0.054125
+              ],
+              "p50_ms": 0.048708,
+              "p95_ms": 0.054125,
+              "min_ms": 0.045083,
+              "max_ms": 0.054125
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.07275,
+                "parse_ms": 0,
+                "aggregate_ms": 0.025875,
+                "rank_ms": 0.044041,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.069167,
+                "parse_ms": 0,
+                "aggregate_ms": 0.024584,
+                "rank_ms": 0.0425,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.070042,
+                "parse_ms": 0,
+                "aggregate_ms": 0.025958,
+                "rank_ms": 0.04225,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.07275,
+                0.069167,
+                0.070042
+              ],
+              "p50_ms": 0.070042,
+              "p95_ms": 0.07275,
+              "min_ms": 0.069167,
+              "max_ms": 0.07275
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.025875,
+                0.024584,
+                0.025958
+              ],
+              "p50_ms": 0.025875,
+              "p95_ms": 0.025958,
+              "min_ms": 0.024584,
+              "max_ms": 0.025958
+            },
+            "rank": {
+              "samples_ms": [
+                0.044041,
+                0.0425,
+                0.04225
+              ],
+              "p50_ms": 0.0425,
+              "p95_ms": 0.044041,
+              "min_ms": 0.04225,
+              "max_ms": 0.044041
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.07275,
+                "parse_ms": 0,
+                "aggregate_ms": 0.025875,
+                "rank_ms": 0.044041,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.069167,
+                "parse_ms": 0,
+                "aggregate_ms": 0.024584,
+                "rank_ms": 0.0425,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.070042,
+                "parse_ms": 0,
+                "aggregate_ms": 0.025958,
+                "rank_ms": 0.04225,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.07275,
+                0.069167,
+                0.070042
+              ],
+              "p50_ms": 0.070042,
+              "p95_ms": 0.07275,
+              "min_ms": 0.069167,
+              "max_ms": 0.07275
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.025875,
+                0.024584,
+                0.025958
+              ],
+              "p50_ms": 0.025875,
+              "p95_ms": 0.025958,
+              "min_ms": 0.024584,
+              "max_ms": 0.025958
+            },
+            "rank": {
+              "samples_ms": [
+                0.044041,
+                0.0425,
+                0.04225
+              ],
+              "p50_ms": 0.0425,
+              "p95_ms": 0.044041,
+              "min_ms": 0.04225,
+              "max_ms": 0.044041
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 324
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 324
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 128,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 27
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 128,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 27
+          },
+          {
+            "path": "README.md",
+            "line": 5,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 7
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 106,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 29
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 106,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 29
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 10,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 18
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 10,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 18
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/LICENSE.txt",
+            "line": 33,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 15
+          }
+        ],
+        "candidate_count": 72273,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "and",
+          "are",
+          "behavior",
+          "covers",
+          "does",
+          "duplicate",
+          "example",
+          "feature",
+          "in",
+          "json",
+          "key",
+          "payload",
+          "payment",
+          "rejection",
+          "say",
+          "security",
+          "shown",
+          "the",
+          "this",
+          "tour",
+          "webhook",
+          "what",
+          "which"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          240.048251,
+          196.074458,
+          193.53729099999998
+        ],
+        "p50_ms": 196.074458,
+        "p95_ms": 240.048251,
+        "min_ms": 193.53729099999998,
+        "max_ms": 240.048251
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          85.675459,
+          41.773667,
+          42.573333
+        ],
+        "p50_ms": 42.573333,
+        "p95_ms": 85.675459,
+        "min_ms": 41.773667,
+        "max_ms": 85.675459
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          154.372792,
+          154.300791,
+          150.963958
+        ],
+        "p50_ms": 154.300791,
+        "p95_ms": 154.372792,
+        "min_ms": 150.963958,
+        "max_ms": 154.372792
+      },
+      "gopls_query": "main",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent.Inst",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 7,
+            "name": "main.Header",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 11,
+            "name": "main.Payload",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 27,
+            "name": "main.StockOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 16,
+            "name": "main.WireMessage",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 8,
+            "name": "main.MatchingOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/10_gofix_modernize/main.go",
+            "line": 8,
+            "name": "main.ModernOrderBook",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/10_gofix_modernize",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 11,
+            "name": "main.TradeDispatcher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 33,
+            "name": "main.SettlementRecord",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 11,
+            "name": "main.CaseInsensitiveHasher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC.Code",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 8,
+            "name": "main.Header.TraceID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 13,
+            "name": "main.Payload.Amount",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 29,
+            "name": "main.StockOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 12,
+            "name": "main.Payload.Account",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 9,
+            "name": "main.MatchingOrder.ID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 30,
+            "name": "main.StockOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 18,
+            "name": "main.WireMessage.Data",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 11,
+            "name": "main.MatchingOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 28,
+            "name": "main.StockOrder.Symbol",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 12,
+            "name": "main.MatchingOrder.Side",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 17,
+            "name": "main.WireMessage.Header",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 10,
+            "name": "main.MatchingOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 12,
+            "name": "main.TradeDispatcher.DeskID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 36,
+            "name": "main.SettlementRecord.Status",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 13,
+            "name": "main.CaseInsensitiveHasher.Hash",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 17,
+            "name": "main.CaseInsensitiveHasher.Equal",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 34,
+            "name": "main.SettlementRecord.AssetClass",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 35,
+            "name": "main.SettlementRecord.SettledAmt",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "main.TradeDispatcher.ExecuteTrade",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 32,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          2.607459,
+          2.443625,
+          2.537
+        ],
+        "p50_ms": 2.537,
+        "p95_ms": 2.607459,
+        "min_ms": 2.443625,
+        "max_ms": 2.607459
+      }
+    },
+    {
+      "id": "small-3",
+      "query": "What happens in the goroutine leak example if the named profiler is unavailable, and what capability does the README say it demonstrates?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "examples/05_goroutine_leak/main.go",
+          "start_line": 8,
+          "end_line": 15,
+          "label": "goroutine example main declaration"
+        },
+        {
+          "type": "documentation",
+          "path": "README.md",
+          "start_line": 19,
+          "end_line": 20,
+          "label": "profiler capability"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more Go files could not be parsed completely",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 1,
+          "missed_at_10": 1,
+          "missed_at_5_by_type": {
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/05_goroutine_leak/main.go",
+            "line": 8,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/17_db_row_column_scanner/main.go",
+            "line": 11,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/02_uuid_v7/main.go",
+            "line": 9,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 11,
+            "name": "TradeDispatcher",
+            "kind": "go.type",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "ExecuteTrade",
+            "kind": "go.method",
+            "container": "main"
+          },
+          {
+            "path": "examples/03_json_v2/main.go",
+            "line": 8,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 39,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/11_type_inference/main.go",
+            "line": 12,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.4025,
+              0.391,
+              0.3945
+            ],
+            "p50_ms": 0.3945,
+            "p95_ms": 0.4025,
+            "min_ms": 0.391,
+            "max_ms": 0.4025
+          },
+          "5": {
+            "samples_ms": [
+              0.4025,
+              0.391,
+              0.3945
+            ],
+            "p50_ms": 0.3945,
+            "p95_ms": 0.4025,
+            "min_ms": 0.391,
+            "max_ms": 0.4025
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.055125,
+              0.051,
+              0.049
+            ],
+            "p50_ms": 0.051,
+            "p95_ms": 0.055125,
+            "min_ms": 0.049,
+            "max_ms": 0.055125
+          },
+          "5": {
+            "samples_ms": [
+              0.055125,
+              0.051,
+              0.049
+            ],
+            "p50_ms": 0.051,
+            "p95_ms": 0.055125,
+            "min_ms": 0.049,
+            "max_ms": 0.055125
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.402333,
+                "parse_ms": 0.318211,
+                "aggregate_ms": 0.034414,
+                "rank_ms": 0.044417,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.390917,
+                "parse_ms": 0.305834,
+                "aggregate_ms": 0.034124,
+                "rank_ms": 0.045208,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.394333,
+                "parse_ms": 0.315042,
+                "aggregate_ms": 0.03425,
+                "rank_ms": 0.038875,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.402333,
+                0.390917,
+                0.394333
+              ],
+              "p50_ms": 0.394333,
+              "p95_ms": 0.402333,
+              "min_ms": 0.390917,
+              "max_ms": 0.402333
+            },
+            "parse": {
+              "samples_ms": [
+                0.318211,
+                0.305834,
+                0.315042
+              ],
+              "p50_ms": 0.315042,
+              "p95_ms": 0.318211,
+              "min_ms": 0.305834,
+              "max_ms": 0.318211
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.034414,
+                0.034124,
+                0.03425
+              ],
+              "p50_ms": 0.03425,
+              "p95_ms": 0.034414,
+              "min_ms": 0.034124,
+              "max_ms": 0.034414
+            },
+            "rank": {
+              "samples_ms": [
+                0.044417,
+                0.045208,
+                0.038875
+              ],
+              "p50_ms": 0.044417,
+              "p95_ms": 0.045208,
+              "min_ms": 0.038875,
+              "max_ms": 0.045208
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.402333,
+                "parse_ms": 0.318211,
+                "aggregate_ms": 0.034414,
+                "rank_ms": 0.044417,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.390917,
+                "parse_ms": 0.305834,
+                "aggregate_ms": 0.034124,
+                "rank_ms": 0.045208,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.394333,
+                "parse_ms": 0.315042,
+                "aggregate_ms": 0.03425,
+                "rank_ms": 0.038875,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.402333,
+                0.390917,
+                0.394333
+              ],
+              "p50_ms": 0.394333,
+              "p95_ms": 0.402333,
+              "min_ms": 0.390917,
+              "max_ms": 0.402333
+            },
+            "parse": {
+              "samples_ms": [
+                0.318211,
+                0.305834,
+                0.315042
+              ],
+              "p50_ms": 0.315042,
+              "p95_ms": 0.318211,
+              "min_ms": 0.305834,
+              "max_ms": 0.318211
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.034414,
+                0.034124,
+                0.03425
+              ],
+              "p50_ms": 0.03425,
+              "p95_ms": 0.034414,
+              "min_ms": 0.034124,
+              "max_ms": 0.034414
+            },
+            "rank": {
+              "samples_ms": [
+                0.044417,
+                0.045208,
+                0.038875
+              ],
+              "p50_ms": 0.044417,
+              "p95_ms": 0.045208,
+              "min_ms": 0.038875,
+              "max_ms": 0.045208
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.055125,
+                "parse_ms": 0,
+                "aggregate_ms": 0.018875,
+                "rank_ms": 0.034167,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.051,
+                "parse_ms": 0,
+                "aggregate_ms": 0.016,
+                "rank_ms": 0.03325,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.048958,
+                "parse_ms": 0,
+                "aggregate_ms": 0.014042,
+                "rank_ms": 0.033458,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.055125,
+                0.051,
+                0.048958
+              ],
+              "p50_ms": 0.051,
+              "p95_ms": 0.055125,
+              "min_ms": 0.048958,
+              "max_ms": 0.055125
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.018875,
+                0.016,
+                0.014042
+              ],
+              "p50_ms": 0.016,
+              "p95_ms": 0.018875,
+              "min_ms": 0.014042,
+              "max_ms": 0.018875
+            },
+            "rank": {
+              "samples_ms": [
+                0.034167,
+                0.03325,
+                0.033458
+              ],
+              "p50_ms": 0.033458,
+              "p95_ms": 0.034167,
+              "min_ms": 0.03325,
+              "max_ms": 0.034167
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.055125,
+                "parse_ms": 0,
+                "aggregate_ms": 0.018875,
+                "rank_ms": 0.034167,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.051,
+                "parse_ms": 0,
+                "aggregate_ms": 0.016,
+                "rank_ms": 0.03325,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.048958,
+                "parse_ms": 0,
+                "aggregate_ms": 0.014042,
+                "rank_ms": 0.033458,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.055125,
+                0.051,
+                0.048958
+              ],
+              "p50_ms": 0.051,
+              "p95_ms": 0.055125,
+              "min_ms": 0.048958,
+              "max_ms": 0.055125
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.018875,
+                0.016,
+                0.014042
+              ],
+              "p50_ms": 0.016,
+              "p95_ms": 0.018875,
+              "min_ms": 0.014042,
+              "max_ms": 0.018875
+            },
+            "rank": {
+              "samples_ms": [
+                0.034167,
+                0.03325,
+                0.033458
+              ],
+              "p50_ms": 0.033458,
+              "p95_ms": 0.034167,
+              "min_ms": 0.03325,
+              "max_ms": 0.034167
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 304
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 304
+          },
+          {
+            "path": "node_modules/.pnpm/rollup@4.62.4/node_modules/rollup/README.md",
+            "line": 69,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "node_modules/rollup/README.md",
+            "line": 69,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 106,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 27
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 106,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 27
+          },
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 108,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 15
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 108,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 15
+          },
+          {
+            "path": "node_modules/.pnpm/jsesc@3.1.0/node_modules/jsesc/README.md",
+            "line": 157,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "node_modules/jsesc/README.md",
+            "line": 157,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 14
+          }
+        ],
+        "candidate_count": 83661,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "and",
+          "capability",
+          "demonstrates",
+          "does",
+          "example",
+          "goroutine",
+          "happens",
+          "if",
+          "in",
+          "is",
+          "it",
+          "leak",
+          "named",
+          "profiler",
+          "readme",
+          "say",
+          "the",
+          "unavailable",
+          "what"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          219.617167,
+          215.59575,
+          217.058001
+        ],
+        "p50_ms": 217.058001,
+        "p95_ms": 219.617167,
+        "min_ms": 215.59575,
+        "max_ms": 219.617167
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          46.282792,
+          45.091833,
+          44.303459
+        ],
+        "p50_ms": 45.091833,
+        "p95_ms": 46.282792,
+        "min_ms": 44.303459,
+        "max_ms": 46.282792
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          173.334375,
+          170.503917,
+          172.754542
+        ],
+        "p50_ms": 172.754542,
+        "p95_ms": 173.334375,
+        "min_ms": 170.503917,
+        "max_ms": 173.334375
+      },
+      "gopls_query": "main",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent.Inst",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 7,
+            "name": "main.Header",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 11,
+            "name": "main.Payload",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 27,
+            "name": "main.StockOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 16,
+            "name": "main.WireMessage",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 8,
+            "name": "main.MatchingOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/10_gofix_modernize/main.go",
+            "line": 8,
+            "name": "main.ModernOrderBook",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/10_gofix_modernize",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 11,
+            "name": "main.TradeDispatcher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 33,
+            "name": "main.SettlementRecord",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 11,
+            "name": "main.CaseInsensitiveHasher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC.Code",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 8,
+            "name": "main.Header.TraceID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 13,
+            "name": "main.Payload.Amount",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 29,
+            "name": "main.StockOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 12,
+            "name": "main.Payload.Account",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 9,
+            "name": "main.MatchingOrder.ID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 30,
+            "name": "main.StockOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 18,
+            "name": "main.WireMessage.Data",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 11,
+            "name": "main.MatchingOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 28,
+            "name": "main.StockOrder.Symbol",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 12,
+            "name": "main.MatchingOrder.Side",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 17,
+            "name": "main.WireMessage.Header",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 10,
+            "name": "main.MatchingOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 12,
+            "name": "main.TradeDispatcher.DeskID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 36,
+            "name": "main.SettlementRecord.Status",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 13,
+            "name": "main.CaseInsensitiveHasher.Hash",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 17,
+            "name": "main.CaseInsensitiveHasher.Equal",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 34,
+            "name": "main.SettlementRecord.AssetClass",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 35,
+            "name": "main.SettlementRecord.SettledAmt",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "main.TradeDispatcher.ExecuteTrade",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 32,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          2.478625,
+          2.528292,
+          2.487375
+        ],
+        "p50_ms": 2.487375,
+        "p95_ms": 2.528292,
+        "min_ms": 2.478625,
+        "max_ms": 2.528292
+      }
+    },
+    {
+      "id": "small-4",
+      "query": "How does the database row and column example convert a string value and handle a conversion failure?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "examples/17_db_row_column_scanner/main.go",
+          "start_line": 11,
+          "end_line": 21,
+          "label": "database example main declaration"
+        },
+        {
+          "type": "documentation",
+          "path": "README.md",
+          "start_line": 37,
+          "end_line": 38,
+          "label": "database scanning topic"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more Go files could not be parsed completely",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 2,
+            "hit_gold_spans": 1,
+            "recall": 0.5,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 1,
+          "missed_at_10": 1,
+          "missed_at_5_by_type": {
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/17_db_row_column_scanner/main.go",
+            "line": 11,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/15_http_improvements/main.go",
+            "line": 15,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/02_uuid_v7/main.go",
+            "line": 9,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 39,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 21,
+            "name": "main",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 33,
+            "name": "SettlementRecord",
+            "kind": "go.type",
+            "container": "main"
+          },
+          {
+            "path": "examples/11_type_inference/main.go",
+            "line": 10,
+            "name": "sanitize",
+            "kind": "go.function",
+            "container": "main"
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 13,
+            "name": "Hash",
+            "kind": "go.method",
+            "container": "main"
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "BIC",
+            "kind": "go.type",
+            "container": "main"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.42675,
+              0.39375,
+              0.388042
+            ],
+            "p50_ms": 0.39375,
+            "p95_ms": 0.42675,
+            "min_ms": 0.388042,
+            "max_ms": 0.42675
+          },
+          "5": {
+            "samples_ms": [
+              0.42675,
+              0.39375,
+              0.388042
+            ],
+            "p50_ms": 0.39375,
+            "p95_ms": 0.42675,
+            "min_ms": 0.388042,
+            "max_ms": 0.42675
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              0.0565,
+              0.051583,
+              0.047209
+            ],
+            "p50_ms": 0.051583,
+            "p95_ms": 0.0565,
+            "min_ms": 0.047209,
+            "max_ms": 0.0565
+          },
+          "5": {
+            "samples_ms": [
+              0.0565,
+              0.051583,
+              0.047209
+            ],
+            "p50_ms": 0.051583,
+            "p95_ms": 0.0565,
+            "min_ms": 0.047209,
+            "max_ms": 0.0565
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.426666,
+                "parse_ms": 0.344166,
+                "aggregate_ms": 0.037876,
+                "rank_ms": 0.0385,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.393666,
+                "parse_ms": 0.317001,
+                "aggregate_ms": 0.034874,
+                "rank_ms": 0.037542,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.388,
+                "parse_ms": 0.312377,
+                "aggregate_ms": 0.035331,
+                "rank_ms": 0.036041,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.426666,
+                0.393666,
+                0.388
+              ],
+              "p50_ms": 0.393666,
+              "p95_ms": 0.426666,
+              "min_ms": 0.388,
+              "max_ms": 0.426666
+            },
+            "parse": {
+              "samples_ms": [
+                0.344166,
+                0.317001,
+                0.312377
+              ],
+              "p50_ms": 0.317001,
+              "p95_ms": 0.344166,
+              "min_ms": 0.312377,
+              "max_ms": 0.344166
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.037876,
+                0.034874,
+                0.035331
+              ],
+              "p50_ms": 0.035331,
+              "p95_ms": 0.037876,
+              "min_ms": 0.034874,
+              "max_ms": 0.037876
+            },
+            "rank": {
+              "samples_ms": [
+                0.0385,
+                0.037542,
+                0.036041
+              ],
+              "p50_ms": 0.037542,
+              "p95_ms": 0.0385,
+              "min_ms": 0.036041,
+              "max_ms": 0.0385
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.426666,
+                "parse_ms": 0.344166,
+                "aggregate_ms": 0.037876,
+                "rank_ms": 0.0385,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.393666,
+                "parse_ms": 0.317001,
+                "aggregate_ms": 0.034874,
+                "rank_ms": 0.037542,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              },
+              {
+                "search_ms": 0.388,
+                "parse_ms": 0.312377,
+                "aggregate_ms": 0.035331,
+                "rank_ms": 0.036041,
+                "file_visits": 34,
+                "cache_hits": 17,
+                "files_parsed": 17
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.426666,
+                0.393666,
+                0.388
+              ],
+              "p50_ms": 0.393666,
+              "p95_ms": 0.426666,
+              "min_ms": 0.388,
+              "max_ms": 0.426666
+            },
+            "parse": {
+              "samples_ms": [
+                0.344166,
+                0.317001,
+                0.312377
+              ],
+              "p50_ms": 0.317001,
+              "p95_ms": 0.344166,
+              "min_ms": 0.312377,
+              "max_ms": 0.344166
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.037876,
+                0.034874,
+                0.035331
+              ],
+              "p50_ms": 0.035331,
+              "p95_ms": 0.037876,
+              "min_ms": 0.034874,
+              "max_ms": 0.037876
+            },
+            "rank": {
+              "samples_ms": [
+                0.0385,
+                0.037542,
+                0.036041
+              ],
+              "p50_ms": 0.037542,
+              "p95_ms": 0.0385,
+              "min_ms": 0.036041,
+              "max_ms": 0.0385
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 0.0565,
+                "parse_ms": 0,
+                "aggregate_ms": 0.021041,
+                "rank_ms": 0.032708,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.0515,
+                "parse_ms": 0,
+                "aggregate_ms": 0.017875,
+                "rank_ms": 0.032,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.047125,
+                "parse_ms": 0,
+                "aggregate_ms": 0.016,
+                "rank_ms": 0.029791,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.0565,
+                0.0515,
+                0.047125
+              ],
+              "p50_ms": 0.0515,
+              "p95_ms": 0.0565,
+              "min_ms": 0.047125,
+              "max_ms": 0.0565
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.021041,
+                0.017875,
+                0.016
+              ],
+              "p50_ms": 0.017875,
+              "p95_ms": 0.021041,
+              "min_ms": 0.016,
+              "max_ms": 0.021041
+            },
+            "rank": {
+              "samples_ms": [
+                0.032708,
+                0.032,
+                0.029791
+              ],
+              "p50_ms": 0.032,
+              "p95_ms": 0.032708,
+              "min_ms": 0.029791,
+              "max_ms": 0.032708
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 0.0565,
+                "parse_ms": 0,
+                "aggregate_ms": 0.021041,
+                "rank_ms": 0.032708,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.0515,
+                "parse_ms": 0,
+                "aggregate_ms": 0.017875,
+                "rank_ms": 0.032,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 0.047125,
+                "parse_ms": 0,
+                "aggregate_ms": 0.016,
+                "rank_ms": 0.029791,
+                "file_visits": 34,
+                "cache_hits": 34,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                0.0565,
+                0.0515,
+                0.047125
+              ],
+              "p50_ms": 0.0515,
+              "p95_ms": 0.0565,
+              "min_ms": 0.047125,
+              "max_ms": 0.0565
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                0.021041,
+                0.017875,
+                0.016
+              ],
+              "p50_ms": 0.017875,
+              "p95_ms": 0.021041,
+              "min_ms": 0.016,
+              "max_ms": 0.021041
+            },
+            "rank": {
+              "samples_ms": [
+                0.032708,
+                0.032,
+                0.029791
+              ],
+              "p50_ms": 0.032,
+              "p95_ms": 0.032708,
+              "min_ms": 0.029791,
+              "max_ms": 0.032708
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "ripgrep output exceeded the configured matching-line limit",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "node_modules/.pnpm/typescript@5.7.3/node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 288
+          },
+          {
+            "path": "node_modules/typescript/ThirdPartyNoticeText.txt",
+            "line": 109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 288
+          },
+          {
+            "path": "node_modules/.pnpm/baseline-browser-mapping@2.11.15/node_modules/baseline-browser-mapping/README.md",
+            "line": 368,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "node_modules/baseline-browser-mapping/README.md",
+            "line": 368,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "node_modules/.pnpm/fraction.js@5.3.4/node_modules/fraction.js/README.md",
+            "line": 419,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "node_modules/fraction.js/README.md",
+            "line": 419,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "node_modules/.pnpm/jsesc@3.1.0/node_modules/jsesc/README.md",
+            "line": 252,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 11
+          },
+          {
+            "path": "node_modules/jsesc/README.md",
+            "line": 252,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 11
+          },
+          {
+            "path": "node_modules/.pnpm/cssesc@3.0.0/node_modules/cssesc/README.md",
+            "line": 74,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "node_modules/.pnpm/postcss-selector-parser@6.1.4/node_modules/postcss-selector-parser/API.md",
+            "line": 317,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 10
+          }
+        ],
+        "candidate_count": 100000,
+        "candidate_count_complete": false,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "and",
+          "column",
+          "conversion",
+          "convert",
+          "database",
+          "does",
+          "example",
+          "failure",
+          "handle",
+          "how",
+          "row",
+          "string",
+          "the",
+          "value"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          228.875791,
+          227.197167,
+          229.329793
+        ],
+        "p50_ms": 228.875791,
+        "p95_ms": 229.329793,
+        "min_ms": 227.197167,
+        "max_ms": 229.329793
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          41.455708,
+          42.094917,
+          43.584709
+        ],
+        "p50_ms": 42.094917,
+        "p95_ms": 43.584709,
+        "min_ms": 41.455708,
+        "max_ms": 43.584709
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          187.420083,
+          185.10225,
+          185.745084
+        ],
+        "p50_ms": 185.745084,
+        "p95_ms": 187.420083,
+        "min_ms": 185.10225,
+        "max_ms": 187.420083
+      },
+      "gopls_query": "main",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 2,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 2,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent.Inst",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 6,
+            "name": "main.Agent",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 7,
+            "name": "main.Header",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 11,
+            "name": "main.Payload",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 27,
+            "name": "main.StockOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 16,
+            "name": "main.WireMessage",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 8,
+            "name": "main.MatchingOrder",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/10_gofix_modernize/main.go",
+            "line": 8,
+            "name": "main.ModernOrderBook",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/10_gofix_modernize",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 11,
+            "name": "main.TradeDispatcher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 33,
+            "name": "main.SettlementRecord",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 11,
+            "name": "main.CaseInsensitiveHasher",
+            "kind": "struct",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 23
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 5,
+            "name": "main.BIC.Code",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 8,
+            "name": "main.Header.TraceID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 13,
+            "name": "main.Payload.Amount",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 29,
+            "name": "main.StockOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 12,
+            "name": "main.Payload.Account",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 9,
+            "name": "main.MatchingOrder.ID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 30,
+            "name": "main.StockOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 18,
+            "name": "main.WireMessage.Data",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 11,
+            "name": "main.MatchingOrder.Qty",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 28,
+            "name": "main.StockOrder.Symbol",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 12,
+            "name": "main.MatchingOrder.Side",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/09_struct_selectors/main.go",
+            "line": 17,
+            "name": "main.WireMessage.Header",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/09_struct_selectors",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/04_malloc_fastpath/main.go",
+            "line": 10,
+            "name": "main.MatchingOrder.Price",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/04_malloc_fastpath",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 12,
+            "name": "main.TradeDispatcher.DeskID",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 36,
+            "name": "main.SettlementRecord.Status",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 13,
+            "name": "main.CaseInsensitiveHasher.Hash",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/12_cutlast_hasher/main.go",
+            "line": 17,
+            "name": "main.CaseInsensitiveHasher.Equal",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/12_cutlast_hasher",
+            "provider_kind": 6
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 34,
+            "name": "main.SettlementRecord.AssetClass",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 35,
+            "name": "main.SettlementRecord.SettledAmt",
+            "kind": "field",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 8
+          },
+          {
+            "path": "examples/01_generic_methods/main.go",
+            "line": 16,
+            "name": "main.TradeDispatcher.ExecuteTrade",
+            "kind": "method",
+            "container": "_/var/folders/8x/1dnx6kfj1zbd6f2zktjt6bpr0000gn/T/agentic-go-retrievalbench-3345777984/snapshot/examples/01_generic_methods",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 32,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          2.566,
+          2.20975,
+          2.248792
+        ],
+        "p50_ms": 2.248792,
+        "p95_ms": 2.566,
+        "min_ms": 2.20975,
+        "max_ms": 2.566
+      }
+    }
+  ],
+  "summary": {
+    "retrieval": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "native_rg": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 3,
+        "complete_queries": 3,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 3,
+        "complete_queries": 3,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "gopls": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "gopls_status": "unknown_completeness",
+    "retrieval_stages": {
+      "cold_by_limit": {
+        "10": {
+          "search_p50_ms": 0.402333,
+          "search_p95_ms": 0.530917,
+          "parse_p50_ms": 0.318211,
+          "parse_p95_ms": 0.42575,
+          "aggregate_p50_ms": 0.036208,
+          "aggregate_p95_ms": 0.044917,
+          "rank_p50_ms": 0.044417,
+          "rank_p95_ms": 0.054125
+        },
+        "5": {
+          "search_p50_ms": 0.402333,
+          "search_p95_ms": 0.530917,
+          "parse_p50_ms": 0.318211,
+          "parse_p95_ms": 0.42575,
+          "aggregate_p50_ms": 0.036208,
+          "aggregate_p95_ms": 0.044917,
+          "rank_p50_ms": 0.044417,
+          "rank_p95_ms": 0.054125
+        }
+      },
+      "warm_by_limit": {
+        "10": {
+          "search_p50_ms": 0.0565,
+          "search_p95_ms": 0.073792,
+          "parse_p50_ms": 0,
+          "parse_p95_ms": 0,
+          "aggregate_p50_ms": 0.018875,
+          "aggregate_p95_ms": 0.0295,
+          "rank_p50_ms": 0.034167,
+          "rank_p95_ms": 0.044041
+        },
+        "5": {
+          "search_p50_ms": 0.0565,
+          "search_p95_ms": 0.073792,
+          "parse_p50_ms": 0,
+          "parse_p95_ms": 0,
+          "aggregate_p50_ms": 0.018875,
+          "aggregate_p95_ms": 0.0295,
+          "rank_p50_ms": 0.034167,
+          "rank_p95_ms": 0.044041
+        }
+      }
+    },
+    "retrieval_cold_p50_ms_by_limit": {
+      "10": 0.4025,
+      "5": 0.4025
+    },
+    "retrieval_cold_p95_ms_by_limit": {
+      "10": 0.533375,
+      "5": 0.533375
+    },
+    "retrieval_warm_p50_ms_by_limit": {
+      "10": 0.0565,
+      "5": 0.0565
+    },
+    "retrieval_warm_p95_ms_by_limit": {
+      "10": 0.073875,
+      "5": 0.073875
+    },
+    "native_rg_p50_ms": 219.617167,
+    "native_rg_p95_ms": 240.048251,
+    "native_rg_candidate_gather_p50_ms": 44.303459,
+    "native_rg_candidate_gather_p95_ms": 113.596125,
+    "native_rg_ranking_p50_ms": 154.372792,
+    "native_rg_ranking_p95_ms": 187.420083,
+    "gopls_query_p50_ms": 2.478625,
+    "gopls_query_p95_ms": 17.770333
+  },
+  "heap": {
+    "start_heap_alloc_bytes": 2071792,
+    "end_heap_alloc_bytes": 128907464,
+    "peak_sampled_heap_alloc_bytes": 128907464,
+    "end_heap_sys_bytes": 166854656,
+    "total_alloc_bytes": 1993164592,
+    "num_gc": 76
+  }
+}

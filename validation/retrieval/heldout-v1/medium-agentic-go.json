@@ -1,0 +1,57 @@
+{
+  "version": "agentic-go.retrieval-study/v1",
+  "repository_id": "github.com/agentic-mcps/go",
+  "commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+  "tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+  "stratum": "medium",
+  "queries": [
+    {
+      "id": "medium-1",
+      "query": "After I edit and reuse a prior context pack, how does the system resolve its declaration against the new observation, and when must I select again instead of treating unresolved evidence as deletion?",
+      "gopls_query": "resolveRefreshSymbol",
+      "gold": [
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 193, "end_line": 280, "label": "Core.Focus refresh handling"},
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 281, "end_line": 311, "label": "refresh symbol resolution"},
+        {"type": "test", "path": "internal/intelligence/focus_test.go", "start_line": 84, "end_line": 140, "label": "refresh and unresolved evidence tests"},
+        {"type": "documentation", "path": "docs/contracts.md", "start_line": 1154, "end_line": 1163, "label": "focus refresh contract"},
+        {"type": "caller", "path": "internal/tools/intelligence_tools.go", "start_line": 155, "end_line": 195, "label": "MCP Runtime.context mapping"}
+      ]
+    },
+    {
+      "id": "medium-2",
+      "query": "If a workspace symbol query matches several declarations or the provider omits locations, what does go_context return before expanding relationships?",
+      "gopls_query": "focusContext",
+      "gold": [
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 86, "end_line": 103, "label": "FocusContext declaration"},
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 377, "end_line": 552, "label": "query selection and candidate bounds"},
+        {"type": "test", "path": "internal/intelligence/focus_test.go", "start_line": 280, "end_line": 326, "label": "ambiguous and omitted symbol tests"},
+        {"type": "documentation", "path": "docs/contracts.md", "start_line": 1142, "end_line": 1152, "label": "selector and candidate contract"},
+        {"type": "caller", "path": "internal/tools/intelligence_tools.go", "start_line": 155, "end_line": 195, "label": "MCP Runtime.context mapping"}
+      ]
+    },
+    {
+      "id": "medium-3",
+      "query": "After selecting a function, how does focused context gather direct callers and referenced test declarations, and what should an agent infer from those links?",
+      "gopls_query": "focusTestDeclarations",
+      "gold": [
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 377, "end_line": 552, "label": "focused context and incoming call evidence"},
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 554, "end_line": 656, "label": "symbol relationship gathering"},
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 658, "end_line": 693, "label": "test declaration resolution"},
+        {"type": "test", "path": "internal/intelligence/focus_test.go", "start_line": 337, "end_line": 359, "label": "direct call site context test"},
+        {"type": "documentation", "path": "docs/go-intelligence-north-star.md", "start_line": 213, "end_line": 240, "label": "relationship evidence limits"}
+      ]
+    },
+    {
+      "id": "medium-4",
+      "query": "How does a context request keep source bytes tied to one observation and reject a worktree change that occurs before it returns?",
+      "gopls_query": "observe",
+      "gold": [
+        {"type": "declaration", "path": "internal/intelligence/snapshot.go", "start_line": 122, "end_line": 144, "label": "captured source digest check"},
+        {"type": "declaration", "path": "internal/intelligence/snapshot.go", "start_line": 202, "end_line": 228, "label": "double capture observation"},
+        {"type": "declaration", "path": "internal/intelligence/snapshot.go", "start_line": 231, "end_line": 246, "label": "snapshot validation"},
+        {"type": "test", "path": "internal/intelligence/snapshot_test.go", "start_line": 95, "end_line": 137, "label": "stale reference and source digest tests"},
+        {"type": "declaration", "path": "internal/intelligence/focus.go", "start_line": 193, "end_line": 280, "label": "final focus validation"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "version": "agentic-go.retrieval-study/v1",
+  "repository_id": "local/go-1.27-interactive-tour",
+  "commit": "61ca6068c067756caf8d98b0a933163b39894416",
+  "tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+  "stratum": "small",
+  "queries": [
+    {
+      "id": "small-1",
+      "query": "What does the UUID time ordering example actually execute, and where does the project explain why it cares about sorted inserts?",
+      "gopls_query": "main",
+      "gold": [
+        {"type": "declaration", "path": "examples/02_uuid_v7/main.go", "start_line": 9, "end_line": 20, "label": "UUID example main declaration"},
+        {"type": "documentation", "path": "README.md", "start_line": 23, "end_line": 24, "label": "clustered-index motivation"}
+      ]
+    },
+    {
+      "id": "small-2",
+      "query": "In the payment webhook security example, what duplicate key payload and rejection behavior are shown, and which JSON feature does the tour say this covers?",
+      "gopls_query": "main",
+      "gold": [
+        {"type": "declaration", "path": "examples/03_json_v2/main.go", "start_line": 8, "end_line": 15, "label": "JSON example main declaration"},
+        {"type": "documentation", "path": "README.md", "start_line": 25, "end_line": 26, "label": "JSON v2 security topic"}
+      ]
+    },
+    {
+      "id": "small-3",
+      "query": "What happens in the goroutine leak example if the named profiler is unavailable, and what capability does the README say it demonstrates?",
+      "gopls_query": "main",
+      "gold": [
+        {"type": "declaration", "path": "examples/05_goroutine_leak/main.go", "start_line": 8, "end_line": 15, "label": "goroutine example main declaration"},
+        {"type": "documentation", "path": "README.md", "start_line": 19, "end_line": 20, "label": "profiler capability"}
+      ]
+    },
+    {
+      "id": "small-4",
+      "query": "How does the database row and column example convert a string value and handle a conversion failure?",
+      "gopls_query": "main",
+      "gold": [
+        {"type": "declaration", "path": "examples/17_db_row_column_scanner/main.go", "start_line": 11, "end_line": 21, "label": "database example main declaration"},
+        {"type": "documentation", "path": "README.md", "start_line": 37, "end_line": 38, "label": "database scanning topic"}
+      ]
+    }
+  ]
+}

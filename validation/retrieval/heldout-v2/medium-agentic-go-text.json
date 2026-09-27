@@ -1,0 +1,48 @@
+{
+  "version": "agentic-go.retrieval-study/v1",
+  "repository_id": "github.com/agentic-mcps/go",
+  "commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+  "tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+  "stratum": "medium",
+  "queries": [
+    {
+      "id": "medium-text-1",
+      "query": "Which public column unit is exposed in context results, and where does the adapter translate the language server's coordinate unit?",
+      "gold": [
+        {"type": "documentation", "path": "docs/contracts.md", "start_line": 118, "end_line": 124, "label": "public coordinate and LSP adapter contract"},
+        {"type": "documentation", "path": "docs/adr/0002-context-pack-boundary.md", "start_line": 8, "end_line": 12, "label": "snapshot and coordinate boundary"},
+        {"type": "declaration", "path": "internal/gopls/position.go", "start_line": 9, "end_line": 17, "label": "UTF-16 position type and byte offset conversion"},
+        {"type": "declaration", "path": "internal/gopls/position.go", "start_line": 41, "end_line": 42, "label": "LSP position to byte offset conversion"}
+      ]
+    },
+    {
+      "id": "medium-text-2",
+      "query": "Which positive and negative evidence must accompany each analyzer rule before it can be trusted as precise?",
+      "gold": [
+        {"type": "documentation", "path": "docs/phase-4a-index.md", "start_line": 86, "end_line": 94, "label": "positive and near-miss fixture requirements"},
+        {"type": "documentation", "path": "docs/phase-4a-index.md", "start_line": 108, "end_line": 114, "label": "per-rule positive and near-miss verification assertions"},
+        {"type": "documentation", "path": "docs/v0.9.0-release-scope.md", "start_line": 135, "end_line": 137, "label": "rule release evidence gate"},
+        {"type": "documentation", "path": "docs/plan.md", "start_line": 79, "end_line": 82, "label": "predicate fixture and calibration gate"}
+      ]
+    },
+    {
+      "id": "medium-text-3",
+      "query": "How can a client page through the complete overflow detail after a context response reaches its byte limit, and how does each cursor continue the artifact?",
+      "gold": [
+        {"type": "documentation", "path": "docs/contracts.md", "start_line": 126, "end_line": 132, "label": "bounded content-addressed artifact pagination"},
+        {"type": "documentation", "path": "docs/adr/0002-context-pack-boundary.md", "start_line": 14, "end_line": 17, "label": "compact response overflow and opaque cursors"},
+        {"type": "declaration", "path": "internal/intelligence/artifact.go", "start_line": 193, "end_line": 193, "label": "opaque cursor encoding"},
+        {"type": "declaration", "path": "internal/intelligence/artifact.go", "start_line": 205, "end_line": 205, "label": "opaque cursor validation"},
+        {"type": "declaration", "path": "internal/intelligence/artifact_read.go", "start_line": 39, "end_line": 91, "label": "ReadChunk consumes the cursor offset and emits the next cursor"}
+      ]
+    },
+    {
+      "id": "medium-text-4",
+      "query": "What does workspace containment guarantee about isolation when verification executes the repository's tests and analyzers?",
+      "gold": [
+        {"type": "documentation", "path": "docs/contracts.md", "start_line": 86, "end_line": 90, "label": "verification trust boundary and containment limits"},
+        {"type": "documentation", "path": "docs/v0.2.0-release-scope.md", "start_line": 475, "end_line": 479, "label": "subprocess containment and target-code trust boundary"}
+      ]
+    }
+  ]
+}

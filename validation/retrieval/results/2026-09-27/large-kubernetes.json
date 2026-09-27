@@ -1,0 +1,3525 @@
+{
+  "schema_version": "agentic-go.retrieval-report/v1",
+  "created_utc": "2026-09-27T05:13:12.612263Z",
+  "repository": {
+    "id": "github.com/kubernetes/kubernetes",
+    "commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+    "tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1"
+  },
+  "reproducibility": {
+    "study_source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+    "dirty_diff_sha256": "ff1b5179afab1669ad43f3d5c0ba6fa8101a5ceb60bba07e0c08a3503ad1e9bc",
+    "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389",
+    "retrieval_source_sha256": "936e91c612d19e5605a2e6fbada165a2a177b26301a621871c7f16dc9477b411"
+  },
+  "stratum": "large",
+  "go_version": "go1.27.0",
+  "goos": "darwin",
+  "goarch": "arm64",
+  "rg_version": "ripgrep 15.2.0 (rev e89fff89ac)",
+  "snapshot_export_ms": 2966.797125,
+  "retrieval_timing_note": "Cache.SearchProfiled reports parse, aggregation and rank stages; its total covers the full Go declaration candidate retrieval call. Top-5 is scored from the prefix of the same top-10 result, so top-5 and top-10 timing samples are identical and the large corpus is not parsed twice for two cutoffs. The screen measures the candidate retrieval kernel, not full go_context output or semantic resolution.",
+  "native_rg_workflow": {
+    "command_template": "rg --no-ignore --hidden --glob-case-insensitive --no-heading --with-filename --line-number --color never --fixed-strings --ignore-case --text --null [supported-source globs] -e \u003csorted unique query token\u003e... -- .",
+    "tokenizer": "retrieval Unicode letter/digit/underscore tokenizer with lower-to-upper camel-case splits; duplicate tokens removed and sorted",
+    "ranking_order": [
+      "distinct query tokens present on line descending",
+      "query-token occurrences on line descending",
+      "repository-relative path ascending",
+      "line ascending"
+    ],
+    "globs": [
+      "*.go",
+      "*.md",
+      "*.rst",
+      "*.txt",
+      "*.yaml",
+      "*.yml",
+      "*.json",
+      "*.toml",
+      "*.proto",
+      "*.mod",
+      "*.sum",
+      "*.work",
+      "Makefile",
+      "GNUmakefile",
+      "Dockerfile",
+      "Containerfile",
+      ".gitignore",
+      ".editorconfig",
+      ".gitattributes"
+    ],
+    "path_scope": "Git-archive files with supported source suffixes only; archive ignores checkout working-tree changes"
+  },
+  "go_package_inventory": {
+    "status": "partial",
+    "command": "go list -e -json ./...",
+    "package_count": 1472,
+    "packages_with_errors": 120,
+    "latency_ms": 2518.914125,
+    "timeout_ms": 300000,
+    "captured_output_bytes": 34891731,
+    "captured_output_limit_bytes": 16777216,
+    "output_truncated": false,
+    "error": "one or more listed packages had load errors",
+    "coverage": "partial_package_load_errors"
+  },
+  "coverage": {
+    "tracked_regular_files": 31407,
+    "tracked_regular_bytes": 280097507,
+    "expected_supported_source_files": 26746,
+    "expected_supported_source_bytes": 263775809,
+    "supported_source_files": 26744,
+    "supported_source_bytes": 263770221,
+    "go_files": 17856,
+    "go_bytes": 188240197,
+    "go_files_with_declarations": 16718,
+    "go_parse_incomplete_files": 0,
+    "supported_text_files": 8888,
+    "supported_text_bytes": 75530024,
+    "rejected_text_files": 0,
+    "rejected_text_bytes": 0,
+    "symlinks_not_indexed": 2,
+    "other_archive_entries_ignored": 0,
+    "archive_omitted_source_files": 0,
+    "archive_omitted_source_bytes": 0,
+    "archive_transformed_source_files": 2,
+    "archive_transformed_source_bytes": 5588,
+    "source_archive_complete": false,
+    "source_archive_incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+    "text_indexed_by_retrieval": 0
+  },
+  "configuration": {
+    "repetitions": 1,
+    "command_timeout_ms": 300000,
+    "search_timeout_ms": 300000,
+    "max_source_bytes": 2147483648,
+    "max_file_bytes": 268435456,
+    "native_rg_output_limit_bytes": 67108864,
+    "native_rg_line_limit": 100000
+  },
+  "gopls": {
+    "status": "partial",
+    "version": "v0.21.0",
+    "completeness_note": "workspace/symbol result caps and exhaustive workspace coverage are not established; per-query scores cover returned candidates",
+    "initialize_ms": 42.158833,
+    "query_latency": {
+      "samples_ms": [
+        1073.64425,
+        34.273167,
+        33.123792,
+        32.125417
+      ],
+      "p50_ms": 33.123792,
+      "p95_ms": 1073.64425,
+      "min_ms": 32.125417,
+      "max_ms": 1073.64425
+    },
+    "candidate_granularity": "workspace_symbol_anchor"
+  },
+  "queries": [
+    {
+      "id": "large-1",
+      "query": "How does a Deployment define rollout progress, report a timed out rollout, and schedule a later progress check?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "staging/src/k8s.io/api/apps/v1/types.go",
+          "start_line": 419,
+          "end_line": 464,
+          "label": "DeploymentSpec and progress deadline field"
+        },
+        {
+          "type": "declaration",
+          "path": "pkg/controller/deployment/progress.go",
+          "start_line": 36,
+          "end_line": 95,
+          "label": "rollout status and timeout handling"
+        },
+        {
+          "type": "declaration",
+          "path": "pkg/controller/deployment/util/deployment_util.go",
+          "start_line": 770,
+          "end_line": 809,
+          "label": "DeploymentTimedOut"
+        },
+        {
+          "type": "declaration",
+          "path": "pkg/controller/deployment/progress.go",
+          "start_line": 160,
+          "end_line": 199,
+          "label": "stuck deployment requeue"
+        },
+        {
+          "type": "test",
+          "path": "pkg/controller/deployment/progress_test.go",
+          "start_line": 196,
+          "end_line": 363,
+          "label": "rollout status tests"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 3,
+            "gold_spans": 5,
+            "hit_gold_spans": 3,
+            "recall": 0.6,
+            "precision": 0.6,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 3,
+            "gold_spans": 5,
+            "hit_gold_spans": 3,
+            "recall": 0.6,
+            "precision": 0.3,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "declaration": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "pkg/controller/deployment/util/deployment_util.go",
+            "line": 770,
+            "name": "DeploymentTimedOut",
+            "kind": "go.function",
+            "container": "util"
+          },
+          {
+            "path": "pkg/controller/deployment/progress.go",
+            "line": 160,
+            "name": "requeueStuckDeployment",
+            "kind": "go.method",
+            "container": "deployment"
+          },
+          {
+            "path": "pkg/controller/deployment/progress.go",
+            "line": 36,
+            "name": "syncRolloutStatus",
+            "kind": "go.method",
+            "container": "deployment"
+          },
+          {
+            "path": "staging/src/k8s.io/kubectl/pkg/util/deployment/deployment.go",
+            "line": 56,
+            "name": "TimedOutReason",
+            "kind": "go.const",
+            "container": "deployment"
+          },
+          {
+            "path": "staging/src/k8s.io/kubectl/pkg/cmd/rollout/rollout.go",
+            "line": 34,
+            "name": "rolloutExample",
+            "kind": "go.var",
+            "container": "rollout"
+          },
+          {
+            "path": "pkg/controller/deployment/util/deployment_util.go",
+            "line": 85,
+            "name": "TimedOutReason",
+            "kind": "go.const",
+            "container": "util"
+          },
+          {
+            "path": "staging/src/k8s.io/kubectl/pkg/cmd/rollout/rollout_restart.go",
+            "line": 65,
+            "name": "restartExample",
+            "kind": "go.var",
+            "container": "rollout"
+          },
+          {
+            "path": "staging/src/k8s.io/kubectl/pkg/cmd/rollout/rollout_status.go",
+            "line": 58,
+            "name": "statusExample",
+            "kind": "go.var",
+            "container": "rollout"
+          },
+          {
+            "path": "staging/src/k8s.io/kubectl/pkg/cmd/rollout/rollout_resume.go",
+            "line": 81,
+            "name": "NewCmdRolloutResume",
+            "kind": "go.function",
+            "container": "rollout"
+          },
+          {
+            "path": "staging/src/k8s.io/kubectl/pkg/cmd/rollout/rollout_restart.go",
+            "line": 88,
+            "name": "NewCmdRolloutRestart",
+            "kind": "go.function",
+            "container": "rollout"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              10486.156416
+            ],
+            "p50_ms": 10486.156416,
+            "p95_ms": 10486.156416,
+            "min_ms": 10486.156416,
+            "max_ms": 10486.156416
+          },
+          "5": {
+            "samples_ms": [
+              10486.156416
+            ],
+            "p50_ms": 10486.156416,
+            "p95_ms": 10486.156416,
+            "min_ms": 10486.156416,
+            "max_ms": 10486.156416
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              9619.335084
+            ],
+            "p50_ms": 9619.335084,
+            "p95_ms": 9619.335084,
+            "min_ms": 9619.335084,
+            "max_ms": 9619.335084
+          },
+          "5": {
+            "samples_ms": [
+              9619.335084
+            ],
+            "p50_ms": 9619.335084,
+            "p95_ms": 9619.335084,
+            "min_ms": 9619.335084,
+            "max_ms": 9619.335084
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 10486.1545,
+                "parse_ms": 9602.351435,
+                "aggregate_ms": 424.787961,
+                "rank_ms": 459.00373,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                10486.1545
+              ],
+              "p50_ms": 10486.1545,
+              "p95_ms": 10486.1545,
+              "min_ms": 10486.1545,
+              "max_ms": 10486.1545
+            },
+            "parse": {
+              "samples_ms": [
+                9602.351435
+              ],
+              "p50_ms": 9602.351435,
+              "p95_ms": 9602.351435,
+              "min_ms": 9602.351435,
+              "max_ms": 9602.351435
+            },
+            "aggregate": {
+              "samples_ms": [
+                424.787961
+              ],
+              "p50_ms": 424.787961,
+              "p95_ms": 424.787961,
+              "min_ms": 424.787961,
+              "max_ms": 424.787961
+            },
+            "rank": {
+              "samples_ms": [
+                459.00373
+              ],
+              "p50_ms": 459.00373,
+              "p95_ms": 459.00373,
+              "min_ms": 459.00373,
+              "max_ms": 459.00373
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 10486.1545,
+                "parse_ms": 9602.351435,
+                "aggregate_ms": 424.787961,
+                "rank_ms": 459.00373,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                10486.1545
+              ],
+              "p50_ms": 10486.1545,
+              "p95_ms": 10486.1545,
+              "min_ms": 10486.1545,
+              "max_ms": 10486.1545
+            },
+            "parse": {
+              "samples_ms": [
+                9602.351435
+              ],
+              "p50_ms": 9602.351435,
+              "p95_ms": 9602.351435,
+              "min_ms": 9602.351435,
+              "max_ms": 9602.351435
+            },
+            "aggregate": {
+              "samples_ms": [
+                424.787961
+              ],
+              "p50_ms": 424.787961,
+              "p95_ms": 424.787961,
+              "min_ms": 424.787961,
+              "max_ms": 424.787961
+            },
+            "rank": {
+              "samples_ms": [
+                459.00373
+              ],
+              "p50_ms": 459.00373,
+              "p95_ms": 459.00373,
+              "min_ms": 459.00373,
+              "max_ms": 459.00373
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9619.334875,
+                "parse_ms": 8783.864439,
+                "aggregate_ms": 375.315025,
+                "rank_ms": 460.151202,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9619.334875
+              ],
+              "p50_ms": 9619.334875,
+              "p95_ms": 9619.334875,
+              "min_ms": 9619.334875,
+              "max_ms": 9619.334875
+            },
+            "parse": {
+              "samples_ms": [
+                8783.864439
+              ],
+              "p50_ms": 8783.864439,
+              "p95_ms": 8783.864439,
+              "min_ms": 8783.864439,
+              "max_ms": 8783.864439
+            },
+            "aggregate": {
+              "samples_ms": [
+                375.315025
+              ],
+              "p50_ms": 375.315025,
+              "p95_ms": 375.315025,
+              "min_ms": 375.315025,
+              "max_ms": 375.315025
+            },
+            "rank": {
+              "samples_ms": [
+                460.151202
+              ],
+              "p50_ms": 460.151202,
+              "p95_ms": 460.151202,
+              "min_ms": 460.151202,
+              "max_ms": 460.151202
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9619.334875,
+                "parse_ms": 8783.864439,
+                "aggregate_ms": 375.315025,
+                "rank_ms": 460.151202,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9619.334875
+              ],
+              "p50_ms": 9619.334875,
+              "p95_ms": 9619.334875,
+              "min_ms": 9619.334875,
+              "max_ms": 9619.334875
+            },
+            "parse": {
+              "samples_ms": [
+                8783.864439
+              ],
+              "p50_ms": 8783.864439,
+              "p95_ms": 8783.864439,
+              "min_ms": 8783.864439,
+              "max_ms": 8783.864439
+            },
+            "aggregate": {
+              "samples_ms": [
+                375.315025
+              ],
+              "p50_ms": 375.315025,
+              "p95_ms": 375.315025,
+              "min_ms": 375.315025,
+              "max_ms": 375.315025
+            },
+            "rank": {
+              "samples_ms": [
+                460.151202
+              ],
+              "p50_ms": 460.151202,
+              "p95_ms": 460.151202,
+              "min_ms": 460.151202,
+              "max_ms": 460.151202
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "ripgrep output exceeded the configured matching-line limit",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "declaration": 4,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 4,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "api/openapi-spec/v3/apis__admissionregistration.k8s.io__v1_openapi.json",
+            "line": 976,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 3181,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 4751,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 6329,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "api/openapi-spec/v3/apis__admissionregistration.k8s.io__v1_openapi.json",
+            "line": 315,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 2105,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 4146,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 5433,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 59315,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 8
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 61030,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 8
+          }
+        ],
+        "candidate_count": 100000,
+        "candidate_count_complete": false,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "and",
+          "check",
+          "define",
+          "deployment",
+          "does",
+          "how",
+          "later",
+          "out",
+          "progress",
+          "report",
+          "rollout",
+          "schedule",
+          "timed"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          162.919667
+        ],
+        "p50_ms": 162.919667,
+        "p95_ms": 162.919667,
+        "min_ms": 162.919667,
+        "max_ms": 162.919667
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          37.015
+        ],
+        "p50_ms": 37.015,
+        "p95_ms": 37.015,
+        "min_ms": 37.015,
+        "max_ms": 37.015
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          125.904667
+        ],
+        "p50_ms": 125.904667,
+        "p95_ms": 125.904667,
+        "min_ms": 125.904667,
+        "max_ms": 125.904667
+      },
+      "gopls_query": "syncRolloutStatus",
+      "gopls": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 2,
+            "relevant_candidates": 2,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.4,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 2,
+            "relevant_candidates": 2,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 3,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "declaration": 3
+          },
+          "missed_at_10_by_type": {
+            "declaration": 3
+          }
+        },
+        "candidates": [
+          {
+            "path": "pkg/controller/deployment/progress_test.go",
+            "line": 196,
+            "name": "TestSyncRolloutStatus",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/controller/deployment",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/controller/deployment/progress.go",
+            "line": 36,
+            "name": "DeploymentController.syncRolloutStatus",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/controller/deployment",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 2,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          1073.64425
+        ],
+        "p50_ms": 1073.64425,
+        "p95_ms": 1073.64425,
+        "min_ms": 1073.64425,
+        "max_ms": 1073.64425
+      }
+    },
+    {
+      "id": "large-2",
+      "query": "After a Pod fails scheduling, how can a cluster event move it to the active queue, backoff queue, or leave it unschedulable?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+          "start_line": 197,
+          "end_line": 249,
+          "label": "queueing hint API"
+        },
+        {
+          "type": "declaration",
+          "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+          "start_line": 583,
+          "end_line": 679,
+          "label": "event hint requeue decision"
+        },
+        {
+          "type": "declaration",
+          "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+          "start_line": 1811,
+          "end_line": 1852,
+          "label": "move to active or backoff queue"
+        },
+        {
+          "type": "test",
+          "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+          "start_line": 2480,
+          "end_line": 2658,
+          "label": "queueing hint outcomes"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 4,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 4,
+            "hit_gold_spans": 1,
+            "recall": 0.25,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 0.1111111111111111
+          }
+        },
+        "misses": {
+          "gold_spans": 4,
+          "missed_at_5": 4,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "declaration": 3,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 2,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 1776,
+            "name": "MoveAllToActiveOrBackoffQueue",
+            "kind": "go.method",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 1706,
+            "name": "moveAllToActiveOrBackoffQueue",
+            "kind": "go.method",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 1786,
+            "name": "requeueEntityWithQueueingStrategy",
+            "kind": "go.method",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 816,
+            "name": "moveToActiveQ",
+            "kind": "go.method",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/active_queue.go",
+            "line": 158,
+            "name": "activeQueue",
+            "kind": "go.type",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 4167,
+            "name": "moveAllToActiveOrBackoffQ",
+            "kind": "go.var",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/backoff_queue.go",
+            "line": 84,
+            "name": "backoffQueue",
+            "kind": "go.type",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 852,
+            "name": "moveToBackoffQ",
+            "kind": "go.method",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 1811,
+            "name": "moveEntitiesToActiveOrBackoffQueue",
+            "kind": "go.method",
+            "container": "queue"
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 1043,
+            "name": "determineSchedulingHintForInFlightPod",
+            "kind": "go.method",
+            "container": "queue"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              9972.202709
+            ],
+            "p50_ms": 9972.202709,
+            "p95_ms": 9972.202709,
+            "min_ms": 9972.202709,
+            "max_ms": 9972.202709
+          },
+          "5": {
+            "samples_ms": [
+              9972.202709
+            ],
+            "p50_ms": 9972.202709,
+            "p95_ms": 9972.202709,
+            "min_ms": 9972.202709,
+            "max_ms": 9972.202709
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              9830.433917
+            ],
+            "p50_ms": 9830.433917,
+            "p95_ms": 9830.433917,
+            "min_ms": 9830.433917,
+            "max_ms": 9830.433917
+          },
+          "5": {
+            "samples_ms": [
+              9830.433917
+            ],
+            "p50_ms": 9830.433917,
+            "p95_ms": 9830.433917,
+            "min_ms": 9830.433917,
+            "max_ms": 9830.433917
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9972.202375,
+                "parse_ms": 9058.662661,
+                "aggregate_ms": 386.876055,
+                "rank_ms": 526.653908,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9972.202375
+              ],
+              "p50_ms": 9972.202375,
+              "p95_ms": 9972.202375,
+              "min_ms": 9972.202375,
+              "max_ms": 9972.202375
+            },
+            "parse": {
+              "samples_ms": [
+                9058.662661
+              ],
+              "p50_ms": 9058.662661,
+              "p95_ms": 9058.662661,
+              "min_ms": 9058.662661,
+              "max_ms": 9058.662661
+            },
+            "aggregate": {
+              "samples_ms": [
+                386.876055
+              ],
+              "p50_ms": 386.876055,
+              "p95_ms": 386.876055,
+              "min_ms": 386.876055,
+              "max_ms": 386.876055
+            },
+            "rank": {
+              "samples_ms": [
+                526.653908
+              ],
+              "p50_ms": 526.653908,
+              "p95_ms": 526.653908,
+              "min_ms": 526.653908,
+              "max_ms": 526.653908
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9972.202375,
+                "parse_ms": 9058.662661,
+                "aggregate_ms": 386.876055,
+                "rank_ms": 526.653908,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9972.202375
+              ],
+              "p50_ms": 9972.202375,
+              "p95_ms": 9972.202375,
+              "min_ms": 9972.202375,
+              "max_ms": 9972.202375
+            },
+            "parse": {
+              "samples_ms": [
+                9058.662661
+              ],
+              "p50_ms": 9058.662661,
+              "p95_ms": 9058.662661,
+              "min_ms": 9058.662661,
+              "max_ms": 9058.662661
+            },
+            "aggregate": {
+              "samples_ms": [
+                386.876055
+              ],
+              "p50_ms": 386.876055,
+              "p95_ms": 386.876055,
+              "min_ms": 386.876055,
+              "max_ms": 386.876055
+            },
+            "rank": {
+              "samples_ms": [
+                526.653908
+              ],
+              "p50_ms": 526.653908,
+              "p95_ms": 526.653908,
+              "min_ms": 526.653908,
+              "max_ms": 526.653908
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9830.433709,
+                "parse_ms": 8906.953676,
+                "aggregate_ms": 410.183013,
+                "rank_ms": 513.293394,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9830.433709
+              ],
+              "p50_ms": 9830.433709,
+              "p95_ms": 9830.433709,
+              "min_ms": 9830.433709,
+              "max_ms": 9830.433709
+            },
+            "parse": {
+              "samples_ms": [
+                8906.953676
+              ],
+              "p50_ms": 8906.953676,
+              "p95_ms": 8906.953676,
+              "min_ms": 8906.953676,
+              "max_ms": 8906.953676
+            },
+            "aggregate": {
+              "samples_ms": [
+                410.183013
+              ],
+              "p50_ms": 410.183013,
+              "p95_ms": 410.183013,
+              "min_ms": 410.183013,
+              "max_ms": 410.183013
+            },
+            "rank": {
+              "samples_ms": [
+                513.293394
+              ],
+              "p50_ms": 513.293394,
+              "p95_ms": 513.293394,
+              "min_ms": 513.293394,
+              "max_ms": 513.293394
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9830.433709,
+                "parse_ms": 8906.953676,
+                "aggregate_ms": 410.183013,
+                "rank_ms": 513.293394,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9830.433709
+              ],
+              "p50_ms": 9830.433709,
+              "p95_ms": 9830.433709,
+              "min_ms": 9830.433709,
+              "max_ms": 9830.433709
+            },
+            "parse": {
+              "samples_ms": [
+                8906.953676
+              ],
+              "p50_ms": 8906.953676,
+              "p95_ms": 8906.953676,
+              "min_ms": 8906.953676,
+              "max_ms": 8906.953676
+            },
+            "aggregate": {
+              "samples_ms": [
+                410.183013
+              ],
+              "p50_ms": 410.183013,
+              "p95_ms": 410.183013,
+              "min_ms": 410.183013,
+              "max_ms": 410.183013
+            },
+            "rank": {
+              "samples_ms": [
+                513.293394
+              ],
+              "p50_ms": 513.293394,
+              "p95_ms": 513.293394,
+              "min_ms": 513.293394,
+              "max_ms": 513.293394
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "ripgrep output exceeded the configured matching-line limit",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 4,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 4,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 4,
+          "missed_at_5": 4,
+          "missed_at_10": 4,
+          "missed_at_5_by_type": {
+            "declaration": 3,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 3,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 2263,
+            "matched_unique_terms": 10,
+            "matched_occurrences": 23
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 3669,
+            "matched_unique_terms": 10,
+            "matched_occurrences": 23
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 3633,
+            "matched_unique_terms": 10,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "cmd/kube-scheduler/app/options/deprecated.go",
+            "line": 53,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 20
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 2239,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 2936,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 38
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 1947,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 37
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 3606,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 2297,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.29.md",
+            "line": 3668,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 14
+          }
+        ],
+        "candidate_count": 100000,
+        "candidate_count_complete": false,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "active",
+          "after",
+          "backoff",
+          "can",
+          "cluster",
+          "event",
+          "fails",
+          "how",
+          "it",
+          "leave",
+          "move",
+          "or",
+          "pod",
+          "queue",
+          "scheduling",
+          "the",
+          "to",
+          "unschedulable"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          187.760333
+        ],
+        "p50_ms": 187.760333,
+        "p95_ms": 187.760333,
+        "min_ms": 187.760333,
+        "max_ms": 187.760333
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          54.05625
+        ],
+        "p50_ms": 54.05625,
+        "p95_ms": 54.05625,
+        "min_ms": 54.05625,
+        "max_ms": 54.05625
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          133.704083
+        ],
+        "p50_ms": 133.704083,
+        "p95_ms": 133.704083,
+        "min_ms": 133.704083,
+        "max_ms": 133.704083
+      },
+      "gopls_query": "QueueingHint",
+      "gopls": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 2,
+            "gold_spans": 4,
+            "hit_gold_spans": 1,
+            "recall": 0.25,
+            "precision": 0.4,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 3,
+            "gold_spans": 4,
+            "hit_gold_spans": 1,
+            "recall": 0.25,
+            "precision": 0.3,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 4,
+          "missed_at_5": 3,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "declaration": 2,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 2,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 241,
+            "name": "QueueingHint",
+            "kind": "class",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 5
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 221,
+            "name": "QueueingHintFn",
+            "kind": "function",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 337,
+            "name": "QueueingHintMap",
+            "kind": "class",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 5
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 266,
+            "name": "QueueingHintFunction",
+            "kind": "struct",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 23
+          },
+          {
+            "path": "pkg/scheduler/metrics/metrics.go",
+            "line": 99,
+            "name": "QueueingHintResultError",
+            "kind": "constant",
+            "container": "k8s.io/kubernetes/pkg/scheduler/metrics",
+            "provider_kind": 14
+          },
+          {
+            "path": "pkg/scheduler/metrics/metrics.go",
+            "line": 97,
+            "name": "QueueingHintResultQueue",
+            "kind": "constant",
+            "container": "k8s.io/kubernetes/pkg/scheduler/metrics",
+            "provider_kind": 14
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 334,
+            "name": "QueueingHintMapPerProfile",
+            "kind": "class",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 5
+          },
+          {
+            "path": "pkg/scheduler/metrics/metrics.go",
+            "line": 98,
+            "name": "QueueingHintResultQueueSkip",
+            "kind": "constant",
+            "container": "k8s.io/kubernetes/pkg/scheduler/metrics",
+            "provider_kind": 14
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 204,
+            "name": "ClusterEventWithHint.QueueingHintFn",
+            "kind": "field",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 268,
+            "name": "QueueingHintFunction.QueueingHintFn",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 239,
+            "name": "PreQueueingHintFn",
+            "kind": "function",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources_test.go",
+            "line": 6175,
+            "name": "TestPreQueueingHint",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 226,
+            "name": "PreQueueingHintResult",
+            "kind": "struct",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 23
+          },
+          {
+            "path": "pkg/features/kube_features.go",
+            "line": 1048,
+            "name": "SchedulerPreQueueingHints",
+            "kind": "constant",
+            "container": "k8s.io/kubernetes/pkg/features",
+            "provider_kind": 14
+          },
+          {
+            "path": "pkg/scheduler/scheduler_test.go",
+            "line": 678,
+            "name": "Test_buildQueueingHintMap",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/metrics/metrics.go",
+            "line": 166,
+            "name": "PreQueueingHintEvaluations",
+            "kind": "variable",
+            "container": "k8s.io/kubernetes/pkg/scheduler/metrics",
+            "provider_kind": 13
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10558,
+            "name": "TestPreQueueingHint_Metrics",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 340,
+            "name": "WithQueueingHintMapPerProfile",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10686,
+            "name": "TestPreQueueingHint_NilObjects",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "test/integration/scheduler/preemption/deferred_resize_preemption_test.go",
+            "line": 452,
+            "name": "TestDeferredResizeQueueingHints",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/preemption",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10463,
+            "name": "TestPreQueueingHint_FlushRescue",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 91,
+            "name": "TestPreQueueingHintNarrowsPodSet",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10715,
+            "name": "TestPreQueueingHint_ErrorFallback",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10209,
+            "name": "TestPriorityQueue_PreQueueingHint",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10610,
+            "name": "TestPreQueueingHint_PodGroupLookup",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/framework/plugins/dynamicresources/prequeueing_race_test.go",
+            "line": 29,
+            "name": "TestPreQueueingHint_PodNotYetIndexed",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources_test.go",
+            "line": 6288,
+            "name": "TestPreQueueingHint_WithPodInIndexer",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10869,
+            "name": "TestPreQueueingHint_PerPluginNarrowing",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10765,
+            "name": "TestPreQueueingHint_CPGDisablesNarrowing",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 10819,
+            "name": "TestPreQueueingHint_WildcardSkipsNarrowing",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources_test.go",
+            "line": 6323,
+            "name": "TestPreQueueingHint_SharedClaimMultiplePods",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/framework/plugins/dynamicresources/prequeueing_race_test.go",
+            "line": 68,
+            "name": "TestPreQueueingHint_DeleteEventWithPodInIndexer",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 2480,
+            "name": "TestPriorityQueue_MoveAllToActiveOrBackoffQueueWithQueueingHint",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 207,
+            "name": "ClusterEventWithHint.PreQueueingHintFn",
+            "kind": "field",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 269,
+            "name": "QueueingHintFunction.PreQueueingHintFn",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/metrics/metric_recorder.go",
+            "line": 211,
+            "name": "MetricAsyncRecorder.ObserveQueueingHintDurationAsync",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/scheduler/metrics",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 252,
+            "name": "QueueingHint.String",
+            "kind": "method",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 228,
+            "name": "PreQueueingHintResult.Pods",
+            "kind": "field",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 8
+          },
+          {
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "line": 227,
+            "name": "PreQueueingHintResult.AllPods",
+            "kind": "field",
+            "container": "k8s.io/kube-scheduler/framework",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 267,
+            "name": "QueueingHintFunction.PluginName",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 683,
+            "name": "queueingHintToLabel",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/metrics/metrics.go",
+            "line": 175,
+            "name": "queueingHintExecutionDuration",
+            "kind": "variable",
+            "container": "k8s.io/kubernetes/pkg/scheduler/metrics",
+            "provider_kind": 13
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 234,
+            "name": "PriorityQueue.queueingHintMap",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 83,
+            "name": "preQueueingHintPlugin.queueingHint",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 6
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 290,
+            "name": "priorityQueueOptions.queueingHintMap",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 50,
+            "name": "preQueueingHintPlugin.queueingHintCalls",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/scheduler.go",
+            "line": 407,
+            "name": "buildQueueingHintMap",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/scheduler.go",
+            "line": 403,
+            "name": "defaultQueueingHintFn",
+            "kind": "variable",
+            "container": "k8s.io/kubernetes/pkg/scheduler",
+            "provider_kind": 13
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 49,
+            "name": "preQueueingHintPlugin",
+            "kind": "struct",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 23
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 2142,
+            "name": "preQueueingHintPodKeys",
+            "kind": "struct",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 23
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "line": 141,
+            "name": "makeEmptyQueueingHintMapPerProfile",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go",
+            "line": 321,
+            "name": "DynamicResources.preQueueingHint",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources",
+            "provider_kind": 6
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 262,
+            "name": "PriorityQueue.isPreQueueingHintsEnabled",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 2151,
+            "name": "PriorityQueue.runPreQueueingHintPlugins",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 6
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 52,
+            "name": "preQueueingHintPlugin.targetPod",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 1043,
+            "name": "PriorityQueue.determineSchedulingHintForInFlightPod",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 6
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 58,
+            "name": "preQueueingHintPlugin.Name",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 6
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 62,
+            "name": "preQueueingHintPlugin.Filter",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 6
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 2144,
+            "name": "preQueueingHintPodKeys.perPlugin",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "line": 2143,
+            "name": "preQueueingHintPodKeys.candidatePods",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/pkg/scheduler/backend/queue",
+            "provider_kind": 8
+          },
+          {
+            "path": "test/integration/scheduler/prequeueinghint/prequeueinghint_test.go",
+            "line": 70,
+            "name": "preQueueingHintPlugin.EventsToRegister",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/prequeueinghint",
+            "provider_kind": 6
+          },
+          {
+            "path": "test/integration/scheduler/queueing/queue_test.go",
+            "line": 606,
+            "name": "queueing.fakePermitPlugin.schedulingHint",
+            "kind": "field",
+            "container": "k8s.io/kubernetes/test/integration/scheduler/queueing",
+            "provider_kind": 8
+          }
+        ],
+        "candidate_count": 62,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          34.273167
+        ],
+        "p50_ms": 34.273167,
+        "p95_ms": 34.273167,
+        "min_ms": 34.273167,
+        "max_ms": 34.273167
+      }
+    },
+    {
+      "id": "large-3",
+      "query": "When context is canceled while a client go controller is watching, which loops stop and is the underlying watch closed?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+          "start_line": 126,
+          "end_line": 142,
+          "label": "Controller cancellation contract"
+        },
+        {
+          "type": "caller",
+          "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+          "start_line": 172,
+          "end_line": 209,
+          "label": "controller context propagation"
+        },
+        {
+          "type": "declaration",
+          "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go",
+          "start_line": 423,
+          "end_line": 434,
+          "label": "Reflector.RunWithContext"
+        },
+        {
+          "type": "declaration",
+          "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go",
+          "start_line": 561,
+          "end_line": 620,
+          "label": "watch cancellation and stop"
+        },
+        {
+          "type": "test",
+          "path": "staging/src/k8s.io/client-go/tools/cache/reflector_test.go",
+          "start_line": 88,
+          "end_line": 202,
+          "label": "watch cancellation tests"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 0.16666666666666666
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 4,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 3,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "pkg/controlplane/controller/kubernetesservice/controller.go",
+            "line": 50,
+            "name": "Controller",
+            "kind": "go.type",
+            "container": "kubernetesservice"
+          },
+          {
+            "path": "vendor/go.etcd.io/etcd/server/v3/etcdserver/api/v3rpc/watch.go",
+            "line": 163,
+            "name": "Watch",
+            "kind": "go.method",
+            "container": "v3rpc"
+          },
+          {
+            "path": "vendor/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc/client.go",
+            "line": 30,
+            "name": "client",
+            "kind": "go.type",
+            "container": "otlptracegrpc"
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/watch/mux.go",
+            "line": 315,
+            "name": "Stop",
+            "kind": "go.method",
+            "container": "watch"
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/watch/watch.go",
+            "line": 30,
+            "name": "Interface",
+            "kind": "go.type",
+            "container": "watch"
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+            "line": 126,
+            "name": "Controller",
+            "kind": "go.type",
+            "container": "cache"
+          },
+          {
+            "path": "vendor/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc/client.go",
+            "line": 141,
+            "name": "Stop",
+            "kind": "go.method",
+            "container": "otlptracegrpc"
+          },
+          {
+            "path": "staging/src/k8s.io/apiserver/pkg/registry/generic/registry/decorated_watcher.go",
+            "line": 47,
+            "name": "run",
+            "kind": "go.method",
+            "container": "registry"
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/util/wait/wait.go",
+            "line": 120,
+            "name": "ContextForChannel",
+            "kind": "go.function",
+            "container": "wait"
+          },
+          {
+            "path": "staging/src/k8s.io/component-helpers/apimachinery/lease/controller.go",
+            "line": 58,
+            "name": "controller",
+            "kind": "go.type",
+            "container": "lease"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              9825.356709
+            ],
+            "p50_ms": 9825.356709,
+            "p95_ms": 9825.356709,
+            "min_ms": 9825.356709,
+            "max_ms": 9825.356709
+          },
+          "5": {
+            "samples_ms": [
+              9825.356709
+            ],
+            "p50_ms": 9825.356709,
+            "p95_ms": 9825.356709,
+            "min_ms": 9825.356709,
+            "max_ms": 9825.356709
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              9718.073208
+            ],
+            "p50_ms": 9718.073208,
+            "p95_ms": 9718.073208,
+            "min_ms": 9718.073208,
+            "max_ms": 9718.073208
+          },
+          "5": {
+            "samples_ms": [
+              9718.073208
+            ],
+            "p50_ms": 9718.073208,
+            "p95_ms": 9718.073208,
+            "min_ms": 9718.073208,
+            "max_ms": 9718.073208
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9825.356542,
+                "parse_ms": 8930.541213,
+                "aggregate_ms": 412.821294,
+                "rank_ms": 481.978244,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9825.356542
+              ],
+              "p50_ms": 9825.356542,
+              "p95_ms": 9825.356542,
+              "min_ms": 9825.356542,
+              "max_ms": 9825.356542
+            },
+            "parse": {
+              "samples_ms": [
+                8930.541213
+              ],
+              "p50_ms": 8930.541213,
+              "p95_ms": 8930.541213,
+              "min_ms": 8930.541213,
+              "max_ms": 8930.541213
+            },
+            "aggregate": {
+              "samples_ms": [
+                412.821294
+              ],
+              "p50_ms": 412.821294,
+              "p95_ms": 412.821294,
+              "min_ms": 412.821294,
+              "max_ms": 412.821294
+            },
+            "rank": {
+              "samples_ms": [
+                481.978244
+              ],
+              "p50_ms": 481.978244,
+              "p95_ms": 481.978244,
+              "min_ms": 481.978244,
+              "max_ms": 481.978244
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9825.356542,
+                "parse_ms": 8930.541213,
+                "aggregate_ms": 412.821294,
+                "rank_ms": 481.978244,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9825.356542
+              ],
+              "p50_ms": 9825.356542,
+              "p95_ms": 9825.356542,
+              "min_ms": 9825.356542,
+              "max_ms": 9825.356542
+            },
+            "parse": {
+              "samples_ms": [
+                8930.541213
+              ],
+              "p50_ms": 8930.541213,
+              "p95_ms": 8930.541213,
+              "min_ms": 8930.541213,
+              "max_ms": 8930.541213
+            },
+            "aggregate": {
+              "samples_ms": [
+                412.821294
+              ],
+              "p50_ms": 412.821294,
+              "p95_ms": 412.821294,
+              "min_ms": 412.821294,
+              "max_ms": 412.821294
+            },
+            "rank": {
+              "samples_ms": [
+                481.978244
+              ],
+              "p50_ms": 481.978244,
+              "p95_ms": 481.978244,
+              "min_ms": 481.978244,
+              "max_ms": 481.978244
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9718.072916,
+                "parse_ms": 8822.765985,
+                "aggregate_ms": 419.004866,
+                "rank_ms": 476.297024,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9718.072916
+              ],
+              "p50_ms": 9718.072916,
+              "p95_ms": 9718.072916,
+              "min_ms": 9718.072916,
+              "max_ms": 9718.072916
+            },
+            "parse": {
+              "samples_ms": [
+                8822.765985
+              ],
+              "p50_ms": 8822.765985,
+              "p95_ms": 8822.765985,
+              "min_ms": 8822.765985,
+              "max_ms": 8822.765985
+            },
+            "aggregate": {
+              "samples_ms": [
+                419.004866
+              ],
+              "p50_ms": 419.004866,
+              "p95_ms": 419.004866,
+              "min_ms": 419.004866,
+              "max_ms": 419.004866
+            },
+            "rank": {
+              "samples_ms": [
+                476.297024
+              ],
+              "p50_ms": 476.297024,
+              "p95_ms": 476.297024,
+              "min_ms": 476.297024,
+              "max_ms": 476.297024
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9718.072916,
+                "parse_ms": 8822.765985,
+                "aggregate_ms": 419.004866,
+                "rank_ms": 476.297024,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9718.072916
+              ],
+              "p50_ms": 9718.072916,
+              "p95_ms": 9718.072916,
+              "min_ms": 9718.072916,
+              "max_ms": 9718.072916
+            },
+            "parse": {
+              "samples_ms": [
+                8822.765985
+              ],
+              "p50_ms": 8822.765985,
+              "p95_ms": 8822.765985,
+              "min_ms": 8822.765985,
+              "max_ms": 8822.765985
+            },
+            "aggregate": {
+              "samples_ms": [
+                419.004866
+              ],
+              "p50_ms": 419.004866,
+              "p95_ms": 419.004866,
+              "min_ms": 419.004866,
+              "max_ms": 419.004866
+            },
+            "rank": {
+              "samples_ms": [
+                476.297024
+              ],
+              "p50_ms": 476.297024,
+              "p95_ms": 476.297024,
+              "min_ms": 476.297024,
+              "max_ms": 476.297024
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "ripgrep output exceeded the configured matching-line limit",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 3,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 3,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "CHANGELOG/CHANGELOG-1.36.md",
+            "line": 907,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.36.md",
+            "line": 2097,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.16.md",
+            "line": 2964,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 25
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.18.md",
+            "line": 3122,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 25
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.12.md",
+            "line": 1153,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.12.md",
+            "line": 2064,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.36.md",
+            "line": 1108,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.36.md",
+            "line": 2217,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.14.md",
+            "line": 1124,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 8
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.14.md",
+            "line": 1932,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 8
+          }
+        ],
+        "candidate_count": 100000,
+        "candidate_count_complete": false,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "and",
+          "canceled",
+          "client",
+          "closed",
+          "context",
+          "controller",
+          "go",
+          "is",
+          "loops",
+          "stop",
+          "the",
+          "underlying",
+          "watch",
+          "watching",
+          "when",
+          "which",
+          "while"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          245.482542
+        ],
+        "p50_ms": 245.482542,
+        "p95_ms": 245.482542,
+        "min_ms": 245.482542,
+        "max_ms": 245.482542
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          27.71425
+        ],
+        "p50_ms": 27.71425,
+        "p95_ms": 27.71425,
+        "min_ms": 27.71425,
+        "max_ms": 27.71425
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          217.768292
+        ],
+        "p50_ms": 217.768292,
+        "p95_ms": 217.768292,
+        "min_ms": 217.768292,
+        "max_ms": 217.768292
+      },
+      "gopls_query": "RunWithContext",
+      "gopls": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 2,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.4,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 2,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 3,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go",
+            "line": 423,
+            "name": "Reflector.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/tools/cache",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+            "line": 136,
+            "name": "Controller.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/tools/cache",
+            "provider_kind": 6
+          },
+          {
+            "path": "pkg/controlplane/controller/legacytokentracking/controller.go",
+            "line": 121,
+            "name": "Controller.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/controlplane/controller/legacytokentracking",
+            "provider_kind": 6
+          },
+          {
+            "path": "pkg/controlplane/controller/apiserverleasegc/gc_controller.go",
+            "line": 80,
+            "name": "Controller.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/controlplane/controller/apiserverleasegc",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apiserver/pkg/server/routes/debugsocket.go",
+            "line": 75,
+            "name": "DebugSocket.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiserver/pkg/server/routes",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apiextensions-apiserver/pkg/controller/finalizer/crd_finalizer.go",
+            "line": 271,
+            "name": "CRDFinalizer.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiextensions-apiserver/pkg/controller/finalizer",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/shared_informer.go",
+            "line": 202,
+            "name": "SharedInformer.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/tools/cache",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/cloud-provider/controllers/node/node_controller.go",
+            "line": 170,
+            "name": "CloudNodeController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/cloud-provider/controllers/node",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apiextensions-apiserver/pkg/controller/nonstructuralschema/nonstructuralschema_controller.go",
+            "line": 198,
+            "name": "ConditionController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiextensions-apiserver/pkg/controller/nonstructuralschema",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/kube-aggregator/pkg/controllers/openapiv3/controller.go",
+            "line": 84,
+            "name": "AggregationController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/kube-aggregator/pkg/controllers/openapiv3",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/kube-aggregator/pkg/controllers/openapi/controller.go",
+            "line": 82,
+            "name": "AggregationController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/kube-aggregator/pkg/controllers/openapi",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apiextensions-apiserver/pkg/controller/establish/establishing_controller.go",
+            "line": 77,
+            "name": "EstablishingController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiextensions-apiserver/pkg/controller/establish",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apiextensions-apiserver/pkg/controller/status/naming_controller.go",
+            "line": 301,
+            "name": "NamingConditionController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiextensions-apiserver/pkg/controller/status",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/restmapper/category_expansion.go",
+            "line": 181,
+            "name": "restmapper.UnionCategoryExpanderWithContext",
+            "kind": "class",
+            "container": "k8s.io/client-go/restmapper",
+            "provider_kind": 5
+          },
+          {
+            "path": "staging/src/k8s.io/streaming/pkg/runtime/runtime.go",
+            "line": 48,
+            "name": "runtime.HandleCrashWithContext",
+            "kind": "function",
+            "container": "k8s.io/streaming/pkg/runtime",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/util/runtime/runtime.go",
+            "line": 78,
+            "name": "runtime.HandleCrashWithContext",
+            "kind": "function",
+            "container": "k8s.io/apimachinery/pkg/util/runtime",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/streaming/pkg/runtime/runtime.go",
+            "line": 35,
+            "name": "runtime.HandleErrorWithContext",
+            "kind": "function",
+            "container": "k8s.io/streaming/pkg/runtime",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/util/runtime/runtime.go",
+            "line": 228,
+            "name": "runtime.HandleErrorWithContext",
+            "kind": "function",
+            "container": "k8s.io/apimachinery/pkg/util/runtime",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/restmapper/category_expansion.go",
+            "line": 186,
+            "name": "restmapper.UnionCategoryExpanderWithContext.ExpandWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/restmapper",
+            "provider_kind": 6
+          },
+          {
+            "path": "test/integration/logs/benchmark/contextual-logging/benchmark_test.go",
+            "line": 79,
+            "name": "BenchmarkRecursionWithContext",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/test/integration/logs/benchmark/contextual-logging",
+            "provider_kind": 12
+          },
+          {
+            "path": "test/integration/logs/benchmark/contextual-logging/benchmark_test.go",
+            "line": 126,
+            "name": "BenchmarkRecursionWithContextAndLog",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/test/integration/logs/benchmark/contextual-logging",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/apiserver/pkg/storage/testing/store_tests.go",
+            "line": 2294,
+            "name": "RunTestDeleteWithConflictAndMissingExpectedTransformOrDecodeError",
+            "kind": "function",
+            "container": "k8s.io/apiserver/pkg/storage/testing",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/fake/discovery.go",
+            "line": 63,
+            "name": "FakeDiscovery.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery/fake",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/discovery_client.go",
+            "line": 815,
+            "name": "DiscoveryClient.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/cached/disk/cached_discovery.go",
+            "line": 84,
+            "name": "CachedDiscoveryClient.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery/cached/disk",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/discovery_client.go",
+            "line": 359,
+            "name": "ServerResourcesInterfaceWithContext.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/util/wait/backoff.go",
+            "line": 222,
+            "name": "JitterUntilWithContext",
+            "kind": "function",
+            "container": "k8s.io/apimachinery/pkg/util/wait",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/discovery_client.go",
+            "line": 376,
+            "name": "ServerResourcesInterfaceWithContext.ServerPreferredNamespacedResourcesWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go",
+            "line": 138,
+            "name": "runnable.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/kube-aggregator/pkg/apiserver",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+            "line": 172,
+            "name": "controller.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/tools/cache",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/shared_informer.go",
+            "line": 771,
+            "name": "dummyController.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/tools/cache",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/tools/cache/shared_informer.go",
+            "line": 841,
+            "name": "sharedIndexInformer.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/tools/cache",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apiserver/pkg/server/genericapiserver.go",
+            "line": 536,
+            "name": "preparedGenericAPIServer.RunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiserver/pkg/server",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/apimachinery/pkg/util/wait/wait.go",
+            "line": 157,
+            "name": "runConditionWithCrashProtectionWithContext",
+            "kind": "function",
+            "container": "k8s.io/apimachinery/pkg/util/wait",
+            "provider_kind": 12
+          },
+          {
+            "path": "staging/src/k8s.io/apiserver/pkg/server/genericapiserver.go",
+            "line": 762,
+            "name": "preparedGenericAPIServer.NonBlockingRunWithContext",
+            "kind": "method",
+            "container": "k8s.io/apiserver/pkg/server",
+            "provider_kind": 6
+          },
+          {
+            "path": "pkg/kubelet/clustertrustbundle/clustertrustbundle_manager_test.go",
+            "line": 708,
+            "name": "fakeDiscovery.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/kubelet/clustertrustbundle",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/cached/memory/memcache.go",
+            "line": 112,
+            "name": "memCacheClient.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery/cached/memory",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/discovery_client.go",
+            "line": 395,
+            "name": "serverResourcesInterfaceWrapper.ServerResourcesForGroupVersionWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery",
+            "provider_kind": 6
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/discovery/discovery_client.go",
+            "line": 407,
+            "name": "serverResourcesInterfaceWrapper.ServerPreferredNamespacedResourcesWithContext",
+            "kind": "method",
+            "container": "k8s.io/client-go/discovery",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 39,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          33.123792
+        ],
+        "p50_ms": 33.123792,
+        "p95_ms": 33.123792,
+        "min_ms": 33.123792,
+        "max_ms": 33.123792
+      }
+    },
+    {
+      "id": "large-4",
+      "query": "When a concurrent resource update conflicts, what must the retry callback do on each attempt, and which errors cause another attempt?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "staging/src/k8s.io/client-go/util/retry/util.go",
+          "start_line": 48,
+          "end_line": 105,
+          "label": "retry policy and RetryOnConflict"
+        },
+        {
+          "type": "test",
+          "path": "staging/src/k8s.io/client-go/util/retry/util_test.go",
+          "start_line": 30,
+          "end_line": 73,
+          "label": "retry error classification tests"
+        },
+        {
+          "type": "caller",
+          "path": "staging/src/k8s.io/client-go/examples/create-update-delete-deployment/main.go",
+          "start_line": 46,
+          "end_line": 142,
+          "label": "fetch and update callback in example main"
+        }
+      ],
+      "retrieval": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 3,
+            "hit_gold_spans": 1,
+            "recall": 0.3333333333333333,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 3,
+            "hit_gold_spans": 1,
+            "recall": 0.3333333333333333,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 3,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "staging/src/k8s.io/client-go/util/retry/util.go",
+            "line": 103,
+            "name": "RetryOnConflict",
+            "kind": "go.function",
+            "container": "retry"
+          },
+          {
+            "path": "vendor/google.golang.org/grpc/stream.go",
+            "line": 930,
+            "name": "withRetry",
+            "kind": "go.method",
+            "container": "grpc"
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/rest/with_retry.go",
+            "line": 117,
+            "name": "withRetry",
+            "kind": "go.type",
+            "container": "rest"
+          },
+          {
+            "path": "test/e2e_node/dra_test.go",
+            "line": 92,
+            "name": "retryTestTimeout",
+            "kind": "go.const",
+            "container": "e2enode"
+          },
+          {
+            "path": "vendor/google.golang.org/grpc/stream.go",
+            "line": 688,
+            "name": "clientStream",
+            "kind": "go.type",
+            "container": "grpc"
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/rest/with_retry.go",
+            "line": 238,
+            "name": "After",
+            "kind": "go.method",
+            "container": "rest"
+          },
+          {
+            "path": "vendor/google.golang.org/grpc/stream.go",
+            "line": 897,
+            "name": "retryLocked",
+            "kind": "go.method",
+            "container": "grpc"
+          },
+          {
+            "path": "staging/src/k8s.io/component-helpers/apimachinery/lease/controller.go",
+            "line": 41,
+            "name": "maxUpdateRetries",
+            "kind": "go.const",
+            "container": "lease"
+          },
+          {
+            "path": "staging/src/k8s.io/client-go/rest/with_retry.go",
+            "line": 53,
+            "name": "WithRetry",
+            "kind": "go.type",
+            "container": "rest"
+          },
+          {
+            "path": "pkg/kubelet/cm/qos_container_manager_linux.go",
+            "line": 309,
+            "name": "retrySetMemoryReserve",
+            "kind": "go.method",
+            "container": "cm"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              9779.406292
+            ],
+            "p50_ms": 9779.406292,
+            "p95_ms": 9779.406292,
+            "min_ms": 9779.406292,
+            "max_ms": 9779.406292
+          },
+          "5": {
+            "samples_ms": [
+              9779.406292
+            ],
+            "p50_ms": 9779.406292,
+            "p95_ms": 9779.406292,
+            "min_ms": 9779.406292,
+            "max_ms": 9779.406292
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              9764.410542
+            ],
+            "p50_ms": 9764.410542,
+            "p95_ms": 9764.410542,
+            "min_ms": 9764.410542,
+            "max_ms": 9764.410542
+          },
+          "5": {
+            "samples_ms": [
+              9764.410542
+            ],
+            "p50_ms": 9764.410542,
+            "p95_ms": 9764.410542,
+            "min_ms": 9764.410542,
+            "max_ms": 9764.410542
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9779.406,
+                "parse_ms": 8857.83704,
+                "aggregate_ms": 404.708951,
+                "rank_ms": 516.852717,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9779.406
+              ],
+              "p50_ms": 9779.406,
+              "p95_ms": 9779.406,
+              "min_ms": 9779.406,
+              "max_ms": 9779.406
+            },
+            "parse": {
+              "samples_ms": [
+                8857.83704
+              ],
+              "p50_ms": 8857.83704,
+              "p95_ms": 8857.83704,
+              "min_ms": 8857.83704,
+              "max_ms": 8857.83704
+            },
+            "aggregate": {
+              "samples_ms": [
+                404.708951
+              ],
+              "p50_ms": 404.708951,
+              "p95_ms": 404.708951,
+              "min_ms": 404.708951,
+              "max_ms": 404.708951
+            },
+            "rank": {
+              "samples_ms": [
+                516.852717
+              ],
+              "p50_ms": 516.852717,
+              "p95_ms": 516.852717,
+              "min_ms": 516.852717,
+              "max_ms": 516.852717
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9779.406,
+                "parse_ms": 8857.83704,
+                "aggregate_ms": 404.708951,
+                "rank_ms": 516.852717,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9779.406
+              ],
+              "p50_ms": 9779.406,
+              "p95_ms": 9779.406,
+              "min_ms": 9779.406,
+              "max_ms": 9779.406
+            },
+            "parse": {
+              "samples_ms": [
+                8857.83704
+              ],
+              "p50_ms": 8857.83704,
+              "p95_ms": 8857.83704,
+              "min_ms": 8857.83704,
+              "max_ms": 8857.83704
+            },
+            "aggregate": {
+              "samples_ms": [
+                404.708951
+              ],
+              "p50_ms": 404.708951,
+              "p95_ms": 404.708951,
+              "min_ms": 404.708951,
+              "max_ms": 404.708951
+            },
+            "rank": {
+              "samples_ms": [
+                516.852717
+              ],
+              "p50_ms": 516.852717,
+              "p95_ms": 516.852717,
+              "min_ms": 516.852717,
+              "max_ms": 516.852717
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 9764.410208,
+                "parse_ms": 8865.355173,
+                "aggregate_ms": 382.417618,
+                "rank_ms": 516.634002,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9764.410208
+              ],
+              "p50_ms": 9764.410208,
+              "p95_ms": 9764.410208,
+              "min_ms": 9764.410208,
+              "max_ms": 9764.410208
+            },
+            "parse": {
+              "samples_ms": [
+                8865.355173
+              ],
+              "p50_ms": 8865.355173,
+              "p95_ms": 8865.355173,
+              "min_ms": 8865.355173,
+              "max_ms": 8865.355173
+            },
+            "aggregate": {
+              "samples_ms": [
+                382.417618
+              ],
+              "p50_ms": 382.417618,
+              "p95_ms": 382.417618,
+              "min_ms": 382.417618,
+              "max_ms": 382.417618
+            },
+            "rank": {
+              "samples_ms": [
+                516.634002
+              ],
+              "p50_ms": 516.634002,
+              "p95_ms": 516.634002,
+              "min_ms": 516.634002,
+              "max_ms": 516.634002
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 9764.410208,
+                "parse_ms": 8865.355173,
+                "aggregate_ms": 382.417618,
+                "rank_ms": 516.634002,
+                "file_visits": 35712,
+                "cache_hits": 0,
+                "files_parsed": 35712
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                9764.410208
+              ],
+              "p50_ms": 9764.410208,
+              "p95_ms": 9764.410208,
+              "min_ms": 9764.410208,
+              "max_ms": 9764.410208
+            },
+            "parse": {
+              "samples_ms": [
+                8865.355173
+              ],
+              "p50_ms": 8865.355173,
+              "p95_ms": 8865.355173,
+              "min_ms": 8865.355173,
+              "max_ms": 8865.355173
+            },
+            "aggregate": {
+              "samples_ms": [
+                382.417618
+              ],
+              "p50_ms": 382.417618,
+              "p95_ms": 382.417618,
+              "min_ms": 382.417618,
+              "max_ms": 382.417618
+            },
+            "rank": {
+              "samples_ms": [
+                516.634002
+              ],
+              "p50_ms": 516.634002,
+              "p95_ms": 516.634002,
+              "min_ms": 516.634002,
+              "max_ms": 516.634002
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "ripgrep output exceeded the configured matching-line limit",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 3,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 3,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 3,
+          "missed_at_5": 3,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 26732,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 40
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 1986,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 30
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 4027,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 30
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 5314,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 30
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 36966,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 26
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 8553,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 24
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 11285,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 24
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.33.md",
+            "line": 858,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "CHANGELOG/CHANGELOG-1.36.md",
+            "line": 2109,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "pkg/generated/openapi/zz_generated.openapi.go",
+            "line": 28338,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 59
+          }
+        ],
+        "candidate_count": 100000,
+        "candidate_count_complete": false,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "and",
+          "another",
+          "attempt",
+          "callback",
+          "cause",
+          "concurrent",
+          "conflicts",
+          "do",
+          "each",
+          "errors",
+          "must",
+          "on",
+          "resource",
+          "retry",
+          "the",
+          "update",
+          "what",
+          "when",
+          "which"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          194.55504200000001
+        ],
+        "p50_ms": 194.55504200000001,
+        "p95_ms": 194.55504200000001,
+        "min_ms": 194.55504200000001,
+        "max_ms": 194.55504200000001
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          29.548209
+        ],
+        "p50_ms": 29.548209,
+        "p95_ms": 29.548209,
+        "min_ms": 29.548209,
+        "max_ms": 29.548209
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          165.006833
+        ],
+        "p50_ms": 165.006833,
+        "p95_ms": 165.006833,
+        "min_ms": 165.006833,
+        "max_ms": 165.006833
+      },
+      "gopls_query": "RetryOnConflict",
+      "gopls": {
+        "status": "partial",
+        "complete": false,
+        "metrics_usable": false,
+        "incomplete_reason": "one or more supported source paths are symlinks and were not indexed",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 4,
+            "relevant_candidates": 1,
+            "gold_spans": 3,
+            "hit_gold_spans": 1,
+            "recall": 0.3333333333333333,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 4,
+            "relevant_candidates": 1,
+            "gold_spans": 3,
+            "hit_gold_spans": 1,
+            "recall": 0.3333333333333333,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 3,
+          "missed_at_5": 2,
+          "missed_at_10": 2,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "staging/src/k8s.io/client-go/util/retry/util.go",
+            "line": 103,
+            "name": "RetryOnConflict",
+            "kind": "function",
+            "container": "k8s.io/client-go/util/retry",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/controller/namespace/deletion/namespaced_resources_deleter_test.go",
+            "line": 255,
+            "name": "TestRetryOnConflictError",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/controller/namespace/deletion",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/registry/rbac/rest/storage_rbac.go",
+            "line": 158,
+            "name": "retryOnConflictOrServiceUnavailable",
+            "kind": "function",
+            "container": "k8s.io/kubernetes/pkg/registry/rbac/rest",
+            "provider_kind": 12
+          },
+          {
+            "path": "pkg/controller/namespace/deletion/namespaced_resources_deleter.go",
+            "line": 245,
+            "name": "namespacedResourcesDeleter.retryOnConflictError",
+            "kind": "method",
+            "container": "k8s.io/kubernetes/pkg/controller/namespace/deletion",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 4,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          32.125417
+        ],
+        "p50_ms": 32.125417,
+        "p95_ms": 32.125417,
+        "min_ms": 32.125417,
+        "max_ms": 32.125417
+      }
+    }
+  ],
+  "summary": {
+    "retrieval": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "native_rg": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "gopls": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 0,
+        "complete_queries": 0,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "gopls_status": "partial",
+    "retrieval_stages": {
+      "cold_by_limit": {
+        "10": {
+          "search_p50_ms": 9825.356542,
+          "search_p95_ms": 10486.1545,
+          "parse_p50_ms": 8930.541213,
+          "parse_p95_ms": 9602.351435,
+          "aggregate_p50_ms": 404.708951,
+          "aggregate_p95_ms": 424.787961,
+          "rank_p50_ms": 481.978244,
+          "rank_p95_ms": 526.653908
+        },
+        "5": {
+          "search_p50_ms": 9825.356542,
+          "search_p95_ms": 10486.1545,
+          "parse_p50_ms": 8930.541213,
+          "parse_p95_ms": 9602.351435,
+          "aggregate_p50_ms": 404.708951,
+          "aggregate_p95_ms": 424.787961,
+          "rank_p50_ms": 481.978244,
+          "rank_p95_ms": 526.653908
+        }
+      },
+      "warm_by_limit": {
+        "10": {
+          "search_p50_ms": 9718.072916,
+          "search_p95_ms": 9830.433709,
+          "parse_p50_ms": 8822.765985,
+          "parse_p95_ms": 8906.953676,
+          "aggregate_p50_ms": 382.417618,
+          "aggregate_p95_ms": 419.004866,
+          "rank_p50_ms": 476.297024,
+          "rank_p95_ms": 516.634002
+        },
+        "5": {
+          "search_p50_ms": 9718.072916,
+          "search_p95_ms": 9830.433709,
+          "parse_p50_ms": 8822.765985,
+          "parse_p95_ms": 8906.953676,
+          "aggregate_p50_ms": 382.417618,
+          "aggregate_p95_ms": 419.004866,
+          "rank_p50_ms": 476.297024,
+          "rank_p95_ms": 516.634002
+        }
+      }
+    },
+    "retrieval_cold_p50_ms_by_limit": {
+      "10": 9825.356709,
+      "5": 9825.356709
+    },
+    "retrieval_cold_p95_ms_by_limit": {
+      "10": 10486.156416,
+      "5": 10486.156416
+    },
+    "retrieval_warm_p50_ms_by_limit": {
+      "10": 9718.073208,
+      "5": 9718.073208
+    },
+    "retrieval_warm_p95_ms_by_limit": {
+      "10": 9830.433917,
+      "5": 9830.433917
+    },
+    "native_rg_p50_ms": 187.760333,
+    "native_rg_p95_ms": 245.482542,
+    "native_rg_candidate_gather_p50_ms": 29.548209,
+    "native_rg_candidate_gather_p95_ms": 54.05625,
+    "native_rg_ranking_p50_ms": 133.704083,
+    "native_rg_ranking_p95_ms": 217.768292,
+    "gopls_query_p50_ms": 33.123792,
+    "gopls_query_p95_ms": 1073.64425
+  },
+  "heap": {
+    "start_heap_alloc_bytes": 336337880,
+    "end_heap_alloc_bytes": 357850616,
+    "peak_sampled_heap_alloc_bytes": 582976592,
+    "end_heap_sys_bytes": 938475520,
+    "total_alloc_bytes": 101744742976,
+    "num_gc": 296
+  }
+}

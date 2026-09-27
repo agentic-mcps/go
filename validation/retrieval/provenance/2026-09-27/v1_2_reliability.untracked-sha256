@@ -1,0 +1,5 @@
+4b3fbf7882974b9a14bce58e510b4b46b1fc3dfa6e78af85e74b76163f3ff292  docs/research/codebase-indexing-retrieval.md
+3d85204f2b537d09d7b537427d852ec0a964e581a21670e858ed196f09f94dc3  internal/intelligence/retrieval/index.go
+219104c563710e5394346c434c41bd8e611c05a9b9bb1111a3e78eaa234011e9  internal/intelligence/retrieval/index_test.go
+2267b58f47f8eaade322ee376d51764e34c20267ef723bcb199d01b23d59bf70  validation/v1.0.0/adoption-remediation-2026-09-24.md
+04db27ad4bb1fb1ab33f5049107beb5848860a65ed3aea34fa8d022021d80c5e  validation/v1.0.0/command-activity-audit-2026-09-25.md
