@@ -28,14 +28,14 @@ func sourceIdentity(parent context.Context, sourceRepository string, timeout tim
 		return Reproducibility{}, fmt.Errorf("reading study source commit: %w", err)
 	}
 	dirtyDigest := sha256.New()
-	if _, err := dirtyDigest.Write([]byte("agentic-go-dirty-diff/v1\x00")); err != nil {
-		return Reproducibility{}, err
+	if _, writeErr := dirtyDigest.Write([]byte("agentic-go-dirty-diff/v1\x00")); writeErr != nil {
+		return Reproducibility{}, writeErr
 	}
-	if err := hashGitOutput(parent, timeout, root, dirtyDigest, "diff", "--binary", "HEAD", "--"); err != nil {
-		return Reproducibility{}, fmt.Errorf("hashing tracked study-source changes: %w", err)
+	if hashErr := hashGitOutput(parent, timeout, root, dirtyDigest, "diff", "--binary", "HEAD", "--"); hashErr != nil {
+		return Reproducibility{}, fmt.Errorf("hashing tracked study-source changes: %w", hashErr)
 	}
-	if _, err := dirtyDigest.Write([]byte("\x00untracked-files\x00")); err != nil {
-		return Reproducibility{}, err
+	if _, writeErr := dirtyDigest.Write([]byte("\x00untracked-files\x00")); writeErr != nil {
+		return Reproducibility{}, writeErr
 	}
 	untracked, err := gitTextBytes(parent, timeout, root, "ls-files", "--others", "--exclude-standard", "-z")
 	if err != nil {
@@ -64,28 +64,28 @@ func sourceIdentity(parent context.Context, sourceRepository string, timeout tim
 			return Reproducibility{}, fmt.Errorf("inspecting an untracked study-source file: %w", err)
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
-			target, err := os.Readlink(filename)
-			if err != nil {
-				return Reproducibility{}, fmt.Errorf("reading an untracked symlink: %w", err)
+			target, readlinkErr := os.Readlink(filename)
+			if readlinkErr != nil {
+				return Reproducibility{}, fmt.Errorf("reading an untracked symlink: %w", readlinkErr)
 			}
-			if _, err := dirtyDigest.Write([]byte("symlink\x00")); err != nil {
-				return Reproducibility{}, err
+			if _, writeErr := dirtyDigest.Write([]byte("symlink\x00")); writeErr != nil {
+				return Reproducibility{}, writeErr
 			}
-			if err := writeField(dirtyDigest, []byte(target)); err != nil {
-				return Reproducibility{}, err
+			if fieldErr := writeField(dirtyDigest, []byte(target)); fieldErr != nil {
+				return Reproducibility{}, fieldErr
 			}
 			continue
 		}
 		if !info.Mode().IsRegular() {
 			return Reproducibility{}, fmt.Errorf("untracked study-source entry is not a regular file")
 		}
-		if _, err := dirtyDigest.Write([]byte("file\x00")); err != nil {
-			return Reproducibility{}, err
+		if _, writeErr := dirtyDigest.Write([]byte("file\x00")); writeErr != nil {
+			return Reproducibility{}, writeErr
 		}
 		binaryLength := make([]byte, 8)
 		binary.BigEndian.PutUint64(binaryLength, uint64(info.Size()))
-		if _, err := dirtyDigest.Write(binaryLength); err != nil {
-			return Reproducibility{}, err
+		if _, writeErr := dirtyDigest.Write(binaryLength); writeErr != nil {
+			return Reproducibility{}, writeErr
 		}
 		file, err := os.Open(filename)
 		if err != nil {

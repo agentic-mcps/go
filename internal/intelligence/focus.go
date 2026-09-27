@@ -184,12 +184,12 @@ type storedFocusSymbol struct {
 }
 
 type focusRetrievalStatus struct {
-	used         bool
-	complete     bool
-	truncated    bool
 	fallback     string
 	indexedFiles int
 	skippedFiles int
+	used         bool
+	complete     bool
+	truncated    bool
 }
 
 //nolint:govet // Field order keeps persisted evidence readable.

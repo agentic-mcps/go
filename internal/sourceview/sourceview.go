@@ -26,6 +26,7 @@ import (
 	"github.com/agentic-mcps/go/internal/workspace"
 )
 
+// SchemaVersion identifies the branch source-view metadata contract.
 const (
 	SchemaVersion      = "agentic.branch-view/v1"
 	metadataConfigKey  = "agentic-go.branch-view"
@@ -33,9 +34,8 @@ const (
 	maximumOverlaySize = 8 << 20
 )
 
-var (
-	ErrStale = errors.New("branch source view is stale")
-)
+// ErrStale indicates that a branch source view no longer matches its selected ref.
+var ErrStale = errors.New("branch source view is stale")
 
 // Marker is private per-worktree provenance used to reject a moved branch ref.
 // It is stored in the linked worktree's Git metadata, not in repository files.
@@ -52,25 +52,25 @@ type Marker struct {
 
 // Request selects a branch source view and an optional exact dirty overlay.
 type Request struct {
-	Branch        string
-	OutputPath    string
-	IncludeDirty  bool
+	Branch       string
+	OutputPath   string
+	IncludeDirty bool
 }
 
 // Result identifies the materialized source tree and any known checkout gaps.
 //
 //nolint:govet // Field order matches the CLI JSON response.
 type Result struct {
-	SchemaVersion      string   `json:"schema_version"`
-	RequestedBranch    string   `json:"requested_branch"`
-	Branch             string   `json:"branch"`
-	Ref                string   `json:"ref"`
-	Commit             string   `json:"commit"`
-	Tree               string   `json:"tree"`
-	ViewPath           string   `json:"view_path"`
-	OverlayIncluded    bool     `json:"overlay_included"`
-	OverlayDigest      string   `json:"overlay_digest,omitempty"`
-	CheckoutComplete  bool     `json:"checkout_complete"`
+	SchemaVersion       string   `json:"schema_version"`
+	RequestedBranch     string   `json:"requested_branch"`
+	Branch              string   `json:"branch"`
+	Ref                 string   `json:"ref"`
+	Commit              string   `json:"commit"`
+	Tree                string   `json:"tree"`
+	ViewPath            string   `json:"view_path"`
+	OverlayIncluded     bool     `json:"overlay_included"`
+	OverlayDigest       string   `json:"overlay_digest,omitempty"`
+	CheckoutComplete    bool     `json:"checkout_complete"`
 	CheckoutLimitations []string `json:"checkout_limitations"`
 }
 
@@ -84,14 +84,14 @@ type selectedBranch struct {
 
 type overlayFile struct {
 	path    string
-	mode    fs.FileMode
 	content []byte
+	mode    fs.FileMode
 }
 
 type overlay struct {
-	patch []byte
-	files []overlayFile
 	digest string
+	patch  []byte
+	files  []overlayFile
 }
 
 // Create resolves a branch to an exact commit, creates a detached worktree at
@@ -150,8 +150,8 @@ func Create(ctx context.Context, runner *execution.Runner, source *workspace.Wor
 		}
 	}()
 
-	if _, err := gitBytes(ctx, runner, "worktree", "add", "--detach", "--", outputPath, branch.commit); err != nil {
-		return Result{}, fmt.Errorf("creating detached branch view: %w", err)
+	if _, addErr := gitBytes(ctx, runner, "worktree", "add", "--detach", "--", outputPath, branch.commit); addErr != nil {
+		return Result{}, fmt.Errorf("creating detached branch view: %w", addErr)
 	}
 	created = true
 
@@ -252,7 +252,7 @@ func ReadMarker(ctx context.Context, runner *execution.Runner) (Marker, bool, er
 		return Marker{}, false, fmt.Errorf("resolving worktree Git directory: %w", err)
 	}
 	if !filepath.IsAbs(gitDir) {
-		return Marker{}, false, errors.New("Git returned a non-absolute worktree directory")
+		return Marker{}, false, errors.New("git returned a non-absolute worktree directory")
 	}
 	configPath := filepath.Join(gitDir, "config.worktree")
 	value, exitCode, err := gitRun(ctx, runner, "config", "--file", configPath, "--get", metadataConfigKey)
@@ -278,8 +278,8 @@ func ReadMarker(ctx context.Context, runner *execution.Runner) (Marker, bool, er
 		return Marker{}, false, fmt.Errorf("decoding branch source view metadata: %w", err)
 	}
 	var marker Marker
-	if err := json.Unmarshal(data, &marker); err != nil {
-		return Marker{}, false, fmt.Errorf("parsing branch source view metadata: %w", err)
+	if unmarshalErr := json.Unmarshal(data, &marker); unmarshalErr != nil {
+		return Marker{}, false, fmt.Errorf("parsing branch source view metadata: %w", unmarshalErr)
 	}
 	markerCommit, found, err := resolveCommit(ctx, runner, metadataRef)
 	if err != nil {
@@ -333,7 +333,7 @@ func resolveBranch(ctx context.Context, runner *execution.Runner, requested stri
 	tree, err := gitText(ctx, runner, "rev-parse", "--verify", "--end-of-options", commit+"^{tree}")
 	if err != nil || !validObjectID(tree) {
 		if err == nil {
-			err = errors.New("Git returned an invalid tree object ID")
+			err = errors.New("git returned an invalid tree object ID")
 		}
 		return selectedBranch{}, fmt.Errorf("resolving branch tree: %w", err)
 	}
@@ -369,7 +369,7 @@ func resolveCommit(ctx context.Context, runner *execution.Runner, ref string) (s
 	}
 	commit := strings.TrimSpace(string(output))
 	if !validObjectID(commit) {
-		return "", false, errors.New("Git returned an invalid commit object ID")
+		return "", false, errors.New("git returned an invalid commit object ID")
 	}
 	return commit, true, nil
 }
@@ -431,7 +431,7 @@ func checkoutLimitations(ctx context.Context, runner *execution.Runner, commit s
 	return []string{fmt.Sprintf("%d Git submodule entries are not initialized in this branch view", modules)}, nil
 }
 
-func captureOverlay(ctx context.Context, runner *execution.Runner, sourceRoot, commit string) (overlay, error) {
+func captureOverlay(ctx context.Context, runner *execution.Runner, sourceRoot, commit string) (captured overlay, returnErr error) {
 	head, err := gitText(ctx, runner, "rev-parse", "--verify", "HEAD^{commit}")
 	if err != nil {
 		return overlay{}, fmt.Errorf("resolving source checkout HEAD: %w", err)
@@ -472,7 +472,11 @@ func captureOverlay(ctx context.Context, runner *execution.Runner, sourceRoot, c
 	if err != nil {
 		return overlay{}, fmt.Errorf("opening source workspace root: %w", err)
 	}
-	defer sourceDirectory.Close()
+	defer func() {
+		if closeErr := sourceDirectory.Close(); closeErr != nil {
+			returnErr = errors.Join(returnErr, fmt.Errorf("closing source workspace root: %w", closeErr))
+		}
+	}()
 	for _, path := range paths {
 		if err := ctx.Err(); err != nil {
 			return overlay{}, err
@@ -541,23 +545,27 @@ func applyPatch(ctx context.Context, runner *execution.Runner, viewPath string, 
 	}
 	patchPath := file.Name()
 	defer func() { _ = os.Remove(patchPath) }()
-	if _, err := file.Write(patch); err != nil {
+	if _, writeErr := file.Write(patch); writeErr != nil {
 		_ = file.Close()
-		return fmt.Errorf("writing temporary overlay patch: %w", err)
+		return fmt.Errorf("writing temporary overlay patch: %w", writeErr)
 	}
-	if err := file.Close(); err != nil {
-		return fmt.Errorf("closing temporary overlay patch: %w", err)
+	if closeErr := file.Close(); closeErr != nil {
+		return fmt.Errorf("closing temporary overlay patch: %w", closeErr)
 	}
 	_, err = gitBytes(ctx, runner, "apply", "--binary", "--whitespace=nowarn", patchPath)
 	return err
 }
 
-func copyOverlayFiles(root string, files []overlayFile) error {
+func copyOverlayFiles(root string, files []overlayFile) (returnErr error) {
 	viewRoot, err := os.OpenRoot(root)
 	if err != nil {
 		return fmt.Errorf("opening selected worktree root: %w", err)
 	}
-	defer viewRoot.Close()
+	defer func() {
+		if closeErr := viewRoot.Close(); closeErr != nil {
+			returnErr = errors.Join(returnErr, fmt.Errorf("closing selected worktree root: %w", closeErr))
+		}
+	}()
 	for _, file := range files {
 		if err := makeContainedParents(viewRoot, file.path); err != nil {
 			return err
@@ -600,8 +608,8 @@ func makeContainedParents(root *os.Root, relative string) error {
 		}
 		info, err := root.Lstat(current)
 		if errors.Is(err, fs.ErrNotExist) {
-			if err := root.Mkdir(current, 0o755); err != nil && !errors.Is(err, fs.ErrExist) {
-				return fmt.Errorf("creating overlay directory: %w", err)
+			if mkdirErr := root.Mkdir(current, 0o755); mkdirErr != nil && !errors.Is(mkdirErr, fs.ErrExist) {
+				return fmt.Errorf("creating overlay directory: %w", mkdirErr)
 			}
 			info, err = root.Lstat(current)
 		}
@@ -625,11 +633,11 @@ func writeMarker(ctx context.Context, runner *execution.Runner, marker Marker) e
 		return err
 	}
 	if !filepath.IsAbs(gitDir) {
-		return errors.New("Git returned a non-absolute worktree directory")
+		return errors.New("git returned a non-absolute worktree directory")
 	}
 	encoded := base64.RawURLEncoding.EncodeToString(data)
-	if _, err := gitBytes(ctx, runner, "config", "--file", filepath.Join(gitDir, "config.worktree"), "--replace-all", metadataConfigKey, encoded); err != nil {
-		return err
+	if _, writeErr := gitBytes(ctx, runner, "config", "--file", filepath.Join(gitDir, "config.worktree"), "--replace-all", metadataConfigKey, encoded); writeErr != nil {
+		return writeErr
 	}
 	_, err = gitBytes(ctx, runner, "update-ref", metadataRef, marker.Commit)
 	return err

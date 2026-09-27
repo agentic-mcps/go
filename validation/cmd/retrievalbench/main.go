@@ -52,5 +52,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "retrievalbench:", err)
 		os.Exit(1)
 	}
-	fmt.Fprintln(os.Stdout, "retrieval report written")
+	if _, err := fmt.Fprintln(os.Stdout, "retrieval report written"); err != nil {
+		os.Exit(1)
+	}
 }

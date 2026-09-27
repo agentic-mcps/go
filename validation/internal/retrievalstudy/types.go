@@ -4,8 +4,10 @@ package retrievalstudy
 
 import "time"
 
+// ManifestVersion identifies the accepted retrieval-study manifest schema.
 const ManifestVersion = "agentic-go.retrieval-study/v1"
 
+// Manifest describes one repository snapshot and its reviewed retrieval questions.
 type Manifest struct {
 	Version      string  `json:"version"`
 	RepositoryID string  `json:"repository_id"`
@@ -15,6 +17,7 @@ type Manifest struct {
 	Queries      []Query `json:"queries"`
 }
 
+// Query is one held-out question and its independently reviewed gold spans.
 type Query struct {
 	ID         string     `json:"id"`
 	Text       string     `json:"query"`
@@ -22,6 +25,7 @@ type Query struct {
 	Gold       []GoldSpan `json:"gold"`
 }
 
+// GoldSpan identifies a source range that is relevant evidence for a query.
 type GoldSpan struct {
 	Type      string `json:"type"`
 	Path      string `json:"path"`
@@ -30,12 +34,14 @@ type GoldSpan struct {
 	Label     string `json:"label,omitempty"`
 }
 
+// Repository records the exact repository objects used by a study.
 type Repository struct {
 	ID     string `json:"id"`
 	Commit string `json:"commit"`
 	Tree   string `json:"tree"`
 }
 
+// Reproducibility records the source, manifest, and retrieval-code hashes.
 type Reproducibility struct {
 	StudySourceCommit        string `json:"study_source_commit"`
 	DirtyDiffSHA256           string `json:"dirty_diff_sha256"`
@@ -43,6 +49,7 @@ type Reproducibility struct {
 	RetrievalSourceSHA256     string `json:"retrieval_source_sha256"`
 }
 
+// Coverage records which committed source files were extracted and indexed.
 type Coverage struct {
 	TrackedRegularFiles       int    `json:"tracked_regular_files"`
 	TrackedRegularBytes       int64  `json:"tracked_regular_bytes"`
@@ -69,6 +76,7 @@ type Coverage struct {
 	TextIndexedByRetrieval    int    `json:"text_indexed_by_retrieval"`
 }
 
+// TextCandidateIndexCoverage describes bounded text capture for the private ablation.
 type TextCandidateIndexCoverage struct {
 	Status                string `json:"status"`
 	Reason                string `json:"reason,omitempty"`
@@ -84,6 +92,7 @@ type TextCandidateIndexCoverage struct {
 	MaximumFragments      int    `json:"maximum_fragments_per_query"`
 }
 
+// GoPackageInventory reports the bounded `go list` inventory result.
 type GoPackageInventory struct {
 	Status          string  `json:"status"`
 	Command         string  `json:"command"`
@@ -98,6 +107,7 @@ type GoPackageInventory struct {
 	Coverage        string  `json:"coverage"`
 }
 
+// Candidate is one source anchor returned by a retrieval workflow.
 type Candidate struct {
 	Path                string `json:"path"`
 	Line                int    `json:"line"`
@@ -109,6 +119,7 @@ type Candidate struct {
 	MatchedOccurrences  int    `json:"matched_occurrences,omitempty"`
 }
 
+// CutoffMetrics scores one ranked candidate list at a fixed result limit.
 type CutoffMetrics struct {
 	RetrievedCandidates int     `json:"retrieved_candidates"`
 	RelevantCandidates  int     `json:"relevant_candidates"`
@@ -119,11 +130,13 @@ type CutoffMetrics struct {
 	MeanReciprocalRank  float64 `json:"mean_reciprocal_rank"`
 }
 
+// Metrics contains scores at the two benchmark cutoffs.
 type Metrics struct {
 	At5  CutoffMetrics `json:"at_5"`
 	At10 CutoffMetrics `json:"at_10"`
 }
 
+// EvidenceMisses counts reviewed spans omitted at each candidate cutoff.
 type EvidenceMisses struct {
 	GoldSpans int            `json:"gold_spans"`
 	At5       int            `json:"missed_at_5"`
@@ -132,6 +145,7 @@ type EvidenceMisses struct {
 	ByTypeAt10 map[string]int `json:"missed_at_10_by_type"`
 }
 
+// Ranking is the status, scores, and candidates for one workflow and query.
 type Ranking struct {
 	Status            string            `json:"status"`
 	Complete          bool              `json:"complete"`
@@ -146,6 +160,7 @@ type Ranking struct {
 	Tokens            []string          `json:"tokens,omitempty"`
 }
 
+// CandidatePoolAudit measures whether reviewed spans occur before top-k ranking.
 type CandidatePoolAudit struct {
 	Status              string  `json:"status"`
 	Complete            bool    `json:"complete"`
@@ -158,6 +173,7 @@ type CandidatePoolAudit struct {
 	IncompleteReason    string  `json:"incomplete_reason,omitempty"`
 }
 
+// TextCandidateResult records the evaluation-only mixed text and Go ranking.
 type TextCandidateResult struct {
 	Ranking               Ranking           `json:"ranking"`
 	CandidatePool         CandidatePoolAudit `json:"candidate_pool"`
@@ -168,6 +184,7 @@ type TextCandidateResult struct {
 	MaximumTextFragments  int               `json:"maximum_text_fragments"`
 }
 
+// Latency stores measured samples and their summary statistics in milliseconds.
 type Latency struct {
 	Samples []float64 `json:"samples_ms"`
 	P50MS   float64   `json:"p50_ms"`
@@ -176,11 +193,13 @@ type Latency struct {
 	MaxMS   float64   `json:"max_ms"`
 }
 
+// RetrievalTimings separates cold and warm query durations by result limit.
 type RetrievalTimings struct {
 	Cold map[string]Latency `json:"cold_by_limit"`
 	Warm map[string]Latency `json:"warm_by_limit"`
 }
 
+// RetrievalProfileSample stores one retrieval call's stage timings and file counts.
 type RetrievalProfileSample struct {
 	SearchMS    float64 `json:"search_ms"`
 	ParseMS     float64 `json:"parse_ms"`
@@ -191,6 +210,7 @@ type RetrievalProfileSample struct {
 	FilesParsed int     `json:"files_parsed"`
 }
 
+// RetrievalProfile aggregates stage timings for retrieval calls.
 type RetrievalProfile struct {
 	Samples   []RetrievalProfileSample `json:"samples"`
 	Search    Latency                  `json:"search"`
@@ -199,11 +219,13 @@ type RetrievalProfile struct {
 	Rank      Latency                  `json:"rank"`
 }
 
+// RetrievalProfiles groups cold and warm stage profiles by result limit.
 type RetrievalProfiles struct {
 	Cold map[string]RetrievalProfile `json:"cold_by_limit"`
 	Warm map[string]RetrievalProfile `json:"warm_by_limit"`
 }
 
+// GoplsMeasurement records the optional workspace-symbol workflow and its limits.
 type GoplsMeasurement struct {
 	Status            string            `json:"status"`
 	Version           string            `json:"version,omitempty"`
@@ -214,6 +236,7 @@ type GoplsMeasurement struct {
 	Granularity       string            `json:"candidate_granularity"`
 }
 
+// QueryResult combines gold spans, rankings, coverage, and timings for one query.
 type QueryResult struct {
 	ID                string            `json:"id"`
 	Text              string            `json:"query"`
@@ -232,6 +255,7 @@ type QueryResult struct {
 	GoplsQueryLatency  Latency           `json:"gopls_query_latency,omitempty"`
 }
 
+// AggregateMetrics contains macro and micro scores across complete queries.
 type AggregateMetrics struct {
 	Queries             int     `json:"queries"`
 	MetricsQueries      int     `json:"metrics_queries"`
@@ -243,11 +267,13 @@ type AggregateMetrics struct {
 	MicroPrecision      float64 `json:"micro_precision"`
 }
 
+// ArmSummary contains aggregate scores for both result cutoffs.
 type ArmSummary struct {
 	At5  AggregateMetrics `json:"at_5"`
 	At10 AggregateMetrics `json:"at_10"`
 }
 
+// RetrievalStageLatencySummary reports search, parse, aggregation, and rank timings.
 type RetrievalStageLatencySummary struct {
 	SearchP50MS    float64 `json:"search_p50_ms"`
 	SearchP95MS    float64 `json:"search_p95_ms"`
@@ -259,11 +285,13 @@ type RetrievalStageLatencySummary struct {
 	RankP95MS      float64 `json:"rank_p95_ms"`
 }
 
+// RetrievalStageSummary groups cold and warm stage timings by result limit.
 type RetrievalStageSummary struct {
 	Cold map[string]RetrievalStageLatencySummary `json:"cold_by_limit"`
 	Warm map[string]RetrievalStageLatencySummary `json:"warm_by_limit"`
 }
 
+// Summary contains aggregate retrieval, native-tool, gopls, and latency results.
 type Summary struct {
 	Retrieval ArmSummary `json:"retrieval"`
 	NativeRG   ArmSummary `json:"native_rg"`
@@ -284,6 +312,7 @@ type Summary struct {
 	GoplsQueryP95MS     *float64          `json:"gopls_query_p95_ms,omitempty"`
 }
 
+// HeapStats stores sampled Go runtime heap values for the benchmark process.
 type HeapStats struct {
 	StartHeapAllocBytes     uint64 `json:"start_heap_alloc_bytes"`
 	EndHeapAllocBytes       uint64 `json:"end_heap_alloc_bytes"`
@@ -293,6 +322,7 @@ type HeapStats struct {
 	NumGC                   uint32 `json:"num_gc"`
 }
 
+// Report is the complete provenance-bound result of one retrieval screen.
 type Report struct {
 	SchemaVersion string          `json:"schema_version"`
 	CreatedUTC    time.Time       `json:"created_utc"`
@@ -316,6 +346,7 @@ type Report struct {
 	Heap          HeapStats       `json:"heap"`
 }
 
+// NativeWorkflow describes the fixed ripgrep and local ranking procedure.
 type NativeWorkflow struct {
 	CommandTemplate string   `json:"command_template"`
 	Tokenizer       string   `json:"tokenizer"`
@@ -324,6 +355,7 @@ type NativeWorkflow struct {
 	PathScope       string   `json:"path_scope"`
 }
 
+// Configuration records the command bounds and repetitions used in a report.
 type Configuration struct {
 	Repetitions       int   `json:"repetitions"`
 	CommandTimeoutMS  int64 `json:"command_timeout_ms"`

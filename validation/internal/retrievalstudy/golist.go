@@ -82,10 +82,10 @@ func parseGoPackageInventory(data []byte) (int, int, error) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	for {
 		var record struct {
-			ImportPath string          `json:"ImportPath"`
-			Incomplete bool            `json:"Incomplete"`
-			Error      *packageError   `json:"Error"`
-			DepsErrors []packageError  `json:"DepsErrors"`
+			Error      *packageError  `json:"Error"`
+			ImportPath string         `json:"ImportPath"`
+			DepsErrors []packageError `json:"DepsErrors"`
+			Incomplete bool           `json:"Incomplete"`
 		}
 		if err := decoder.Decode(&record); err != nil {
 			if err == io.EOF {

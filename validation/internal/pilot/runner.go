@@ -201,6 +201,7 @@ type FocusFailureRecord struct {
 	Repeated  bool   `json:"repeated"`
 }
 
+// FocusFailureSelectorMisuse and related constants classify failed go_context calls.
 const (
 	FocusFailureSelectorMisuse = "selector_misuse"
 	FocusFailureProvider       = "provider_failure"

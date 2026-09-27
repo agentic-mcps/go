@@ -60,28 +60,28 @@ type File struct {
 // Line and Column are one-based UTF-8 byte coordinates.
 type Candidate struct {
 	Path      string
-	Line      int
-	Column    int
 	Name      string
 	Qualified string
 	Kind      string
 	Package   string
 	Score     float64
+	Line      int
+	Column    int
 }
 
 // Result reports ranked candidates and whether every eligible Go file was
 // structurally indexed. A partial result is still useful for discovery, but
 // callers must preserve the incompleteness as uncertainty.
 type Result struct {
-	Candidates       []Candidate
-	CandidateCount   int
-	IndexedFiles     int
-	SkippedFiles     int
-	TextIndexedFiles int
-	TextSkippedFiles int
+	Candidates           []Candidate
+	CandidateCount       int
+	IndexedFiles         int
+	SkippedFiles         int
+	TextIndexedFiles     int
+	TextSkippedFiles     int
 	TextIndexedFragments int
-	Complete         bool
-	Truncated        bool
+	Complete             bool
+	Truncated            bool
 }
 
 // SearchProfile reports non-overlapping work performed by one SearchProfiled
@@ -108,18 +108,18 @@ type fileKey struct {
 type cacheEntry struct {
 	key      fileKey
 	index    indexedFile
-	complete bool
 	size     int
+	complete bool
 }
 
 // Cache reuses parsed per-file fragments across observations while retaining
 // only bounded derived metadata in memory. Eviction only causes reparsing.
 type Cache struct {
+	entries map[fileKey]*list.Element
+	order   *list.List
 	mu      sync.Mutex
 	maximum int
 	bytes   int
-	entries map[fileKey]*list.Element
-	order   *list.List
 }
 
 // NewCache constructs the process-local retrieval cache.
@@ -419,8 +419,6 @@ type indexedFile struct {
 
 type fragment struct {
 	path           string
-	line           int
-	column         int
 	name           string
 	qualified      string
 	kind           string
@@ -433,6 +431,8 @@ type fragment struct {
 	packageTerms   []string
 	kindTerms      []string
 	length         int
+	line           int
+	column         int
 }
 
 func (c *Cache) fileIndex(key Key, file File) (indexedFile, bool, bool, time.Duration) {
@@ -574,7 +574,7 @@ func receiverName(fields *ast.FieldList) string {
 	if fields == nil || len(fields.List) == 0 {
 		return ""
 	}
-	var expression ast.Expr = fields.List[0].Type
+	expression := fields.List[0].Type
 	for {
 		switch typed := expression.(type) {
 		case *ast.StarExpr:

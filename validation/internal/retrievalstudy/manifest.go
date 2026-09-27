@@ -33,10 +33,13 @@ func LoadManifest(filename string) (Manifest, string, error) {
 	if err != nil {
 		return Manifest{}, "", fmt.Errorf("opening manifest: %w", err)
 	}
-	defer file.Close()
 	data, err := io.ReadAll(io.LimitReader(file, (4<<20)+1))
+	closeErr := file.Close()
 	if err != nil {
 		return Manifest{}, "", fmt.Errorf("reading manifest: %w", err)
+	}
+	if closeErr != nil {
+		return Manifest{}, "", fmt.Errorf("closing manifest: %w", closeErr)
 	}
 	if len(data) > 4<<20 {
 		return Manifest{}, "", fmt.Errorf("manifest exceeds 4 MiB")
@@ -57,6 +60,7 @@ func LoadManifest(filename string) (Manifest, string, error) {
 	return manifest, hex.EncodeToString(digest[:]), nil
 }
 
+// Validate checks the manifest fields and their source-independent constraints.
 func (manifest Manifest) Validate() error {
 	if manifest.Version != ManifestVersion {
 		return fmt.Errorf("manifest version must be %q", ManifestVersion)

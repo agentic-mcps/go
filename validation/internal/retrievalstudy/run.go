@@ -3,7 +3,9 @@ package retrievalstudy
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"math"
 	"os"
 	"path/filepath"
@@ -16,22 +18,24 @@ import (
 const retrievalGranularity = "go_declaration_name_anchor"
 const candidatePoolAuditLimit = 10_000
 
+// Options configures one pinned, model-free retrieval screen.
 type Options struct {
-	Manifest       string
-	RepositoryPath string
+	Manifest             string
+	RepositoryPath       string
 	SourceRepositoryPath string
-	Output         string
-	GoplsBinary    string
-	TextAblation   bool
-	Repetitions    int
-	Timeout        time.Duration
-	MaxSourceBytes int64
-	MaxFileBytes   int64
-	RGOutputBytes  int64
-	RGLineLimit    int
+	Output               string
+	GoplsBinary          string
+	TextAblation         bool
+	Repetitions          int
+	Timeout              time.Duration
+	MaxSourceBytes       int64
+	MaxFileBytes         int64
+	RGOutputBytes        int64
+	RGLineLimit          int
 }
 
-func Execute(parent context.Context, options Options) error {
+// Execute runs a retrieval screen and writes its provenance-bound report.
+func Execute(parent context.Context, options Options) (returnErr error) {
 	if err := validateOptions(options); err != nil {
 		return err
 	}
@@ -50,13 +54,17 @@ func Execute(parent context.Context, options Options) error {
 	if err != nil {
 		return fmt.Errorf("creating temporary benchmark workspace: %w", err)
 	}
-	defer os.RemoveAll(temporaryRoot)
+	defer func() {
+		if cleanupErr := os.RemoveAll(temporaryRoot); cleanupErr != nil {
+			returnErr = errors.Join(returnErr, fmt.Errorf("removing temporary benchmark workspace: %w", cleanupErr))
+		}
+	}()
 	workspace := filepath.Join(temporaryRoot, "snapshot")
-	if err := os.Mkdir(workspace, 0o700); err != nil {
+	if err = os.Mkdir(workspace, 0o700); err != nil {
 		return fmt.Errorf("creating snapshot workspace: %w", err)
 	}
 	archiveStarted := time.Now()
-	repository, source, err := ExportCommit(parent, options.RepositoryPath, workspace, manifest, archiveLimits{
+	repository, source, err := exportCommit(parent, options.RepositoryPath, workspace, manifest, archiveLimits{
 		maxSourceBytes: options.MaxSourceBytes,
 		maxFileBytes:   options.MaxFileBytes,
 		timeout:        options.Timeout,
@@ -66,7 +74,7 @@ func Execute(parent context.Context, options Options) error {
 	if err != nil {
 		return err
 	}
-	if err := validateGold(source, manifest); err != nil {
+	if err = validateGold(source, manifest); err != nil {
 		return err
 	}
 	goPackages, err := inventoryGoPackages(parent, workspace, options.Timeout)
@@ -107,12 +115,9 @@ func Execute(parent context.Context, options Options) error {
 	queryResults := make([]QueryResult, 0, len(manifest.Queries))
 	var firstSearchResult *retrieval.Result
 	var allGoplsLatencies []float64
-	var allNativeLatencies []float64
-	var allNativeGatherLatencies []float64
-	var allNativeRankingLatencies []float64
 	var goplsCompletedQueries int
 	for _, query := range manifest.Queries {
-		if err := parent.Err(); err != nil {
+		if err = parent.Err(); err != nil {
 			return err
 		}
 		retrievalRanking, retrievalTimings, retrievalProfiles, searchResult, err := measureRetrieval(parent, query, source, repository, options)
@@ -134,15 +139,12 @@ func Execute(parent context.Context, options Options) error {
 			heapSample(&peakHeap)
 		}
 
-		native, err := RunNativeRG(parent, workspace, query, source, query.Gold, options.Repetitions, nativeLimits{
+		native, err := runNativeRG(parent, workspace, query, source, query.Gold, options.Repetitions, nativeLimits{
 			timeout: options.Timeout, outputBytes: options.RGOutputBytes, lineCount: options.RGLineLimit,
 		})
 		if err != nil {
 			return fmt.Errorf("native rg query %q: %w", query.ID, err)
 		}
-		allNativeLatencies = append(allNativeLatencies, native.totalLatency.Samples...)
-		allNativeGatherLatencies = append(allNativeGatherLatencies, native.commandLatency.Samples...)
-		allNativeRankingLatencies = append(allNativeRankingLatencies, native.rankingLatency.Samples...)
 		heapSample(&peakHeap)
 
 		queryResult := QueryResult{
@@ -280,10 +282,10 @@ func validateGold(source archivedSource, manifest Manifest) error {
 }
 
 type searchObservation struct {
+	err      error
 	result   retrieval.Result
 	profile  retrieval.SearchProfile
 	wallTime float64
-	err      error
 }
 
 func measureRetrieval(parent context.Context, query Query, source archivedSource, repository Repository, options Options) (Ranking, RetrievalTimings, RetrievalProfiles, *retrieval.Result, error) {
@@ -623,7 +625,7 @@ func summarizeRetrievalStages(samples []RetrievalProfileSample) RetrievalStageLa
 	}
 }
 
-func writeReport(filename string, report Report) error {
+func writeReport(filename string, report Report) (returnErr error) {
 	if err := os.MkdirAll(filepath.Dir(filename), 0o755); err != nil {
 		return fmt.Errorf("creating result directory: %w", err)
 	}
@@ -632,7 +634,11 @@ func writeReport(filename string, report Report) error {
 		return fmt.Errorf("creating result file: %w", err)
 	}
 	temporaryName := file.Name()
-	defer os.Remove(temporaryName)
+	defer func() {
+		if removeErr := os.Remove(temporaryName); removeErr != nil && !errors.Is(removeErr, fs.ErrNotExist) {
+			returnErr = errors.Join(returnErr, fmt.Errorf("removing temporary result report: %w", removeErr))
+		}
+	}()
 	if err := file.Chmod(0o644); err != nil {
 		_ = file.Close()
 		return fmt.Errorf("setting result file permissions: %w", err)

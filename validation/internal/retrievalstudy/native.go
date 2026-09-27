@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-const (
-	nativeOutputLimitDefault = int64(64 << 20)
-	nativeLineLimitDefault   = 100000
-)
-
 var nativeGlobs = []string{
 	"*.go", "*.md", "*.rst", "*.txt", "*.yaml", "*.yml", "*.json",
 	"*.toml", "*.proto", "*.mod", "*.sum", "*.work", "Makefile", "GNUmakefile",
@@ -31,6 +26,7 @@ type nativeLimits struct {
 	lineCount   int
 }
 
+//nolint:govet // Keep the workflow scores adjacent to their timing breakdowns.
 type nativeMeasurement struct {
 	ranking        Ranking
 	totalLatency   Latency
@@ -60,7 +56,7 @@ func ProbeRG(parent context.Context, timeout time.Duration) (string, error) {
 	return line, nil
 }
 
-func RunNativeRG(parent context.Context, workspace string, query Query, source archivedSource, gold []GoldSpan, repetitions int, limits nativeLimits) (nativeMeasurement, error) {
+func runNativeRG(parent context.Context, workspace string, query Query, source archivedSource, gold []GoldSpan, repetitions int, limits nativeLimits) (nativeMeasurement, error) {
 	tokens := uniqueSortedTokens(query.Text)
 	commandSamples := make([]float64, 0, repetitions)
 	rankingSamples := make([]float64, 0, repetitions)
@@ -186,9 +182,7 @@ func gatherRG(parent context.Context, workspace string, tokens []string, source 
 		reason = "ripgrep exceeded the per-query timeout"
 	} else if waitErr != nil && complete {
 		var exitErr *exec.ExitError
-		if errors.As(waitErr, &exitErr) && exitErr.ExitCode() == 1 {
-			// ripgrep uses exit code 1 for a successful search with no matches.
-		} else {
+		if !errors.As(waitErr, &exitErr) || exitErr.ExitCode() != 1 {
 			complete = false
 			reason = "ripgrep exited unsuccessfully"
 		}

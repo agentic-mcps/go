@@ -118,11 +118,11 @@ func TestSearchProfiledReportsColdAndWarmWorkWithoutChangingResults(t *testing.T
 
 func TestSearchWithTextProfiledAddsBoundedTextCandidatesWithSameScorer(t *testing.T) {
 	goFiles := []File{{
-		Path: "position.go",
+		Path:     "position.go",
 		Contents: []byte("package fixture\n\n// Position converts source offsets.\nfunc Position() {}\n"),
 	}}
 	textFiles := []File{{
-		Path: "contracts.md",
+		Path:     "contracts.md",
 		Contents: []byte("Public locations use one-based UTF-8 byte columns. UTF-16 positions exist only inside the pinned LSP adapter.\n"),
 	}}
 	key := Key{Workspace: "repo", Scope: "commit", Build: "retrievalbench", Provider: "lexical-declaration-index"}

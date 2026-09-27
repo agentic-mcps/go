@@ -37,6 +37,7 @@ type sourceMeta struct {
 	goFile bool
 }
 
+//nolint:govet // Keep extracted source, file inventory, and coverage together.
 type archivedSource struct {
 	workspace          string
 	goFiles            []retrieval.File
@@ -59,9 +60,9 @@ type archiveLimits struct {
 	indexTextCandidates bool
 }
 
-// ExportCommit uses git archive for the exact manifest commit. It never reads
+// exportCommit uses git archive for the exact manifest commit. It never reads
 // from the checkout's working tree, index, or current branch.
-func ExportCommit(ctx context.Context, repositoryPath, workspace string, manifest Manifest, limits archiveLimits) (Repository, archivedSource, error) {
+func exportCommit(ctx context.Context, repositoryPath, workspace string, manifest Manifest, limits archiveLimits) (Repository, archivedSource, error) {
 	repositoryRoot, err := gitText(ctx, limits.timeout, repositoryPath, "rev-parse", "--show-toplevel")
 	if err != nil {
 		return Repository{}, archivedSource{}, fmt.Errorf("locating Git repository: %w", err)
@@ -321,7 +322,7 @@ func readArchive(reader *tar.Reader, workspace string, expected map[string]archi
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeLink {
 			continue
 		}
-		if header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
+		if header.Typeflag != tar.TypeReg {
 			continue
 		}
 		if !supportedTextPath(name) {
@@ -525,8 +526,8 @@ func sortGoFiles(files []retrieval.File) {
 }
 
 type limitedBuffer struct {
-	mu        sync.Mutex
 	buffer    bytes.Buffer
+	mu        sync.Mutex
 	limit     int
 	truncated bool
 }

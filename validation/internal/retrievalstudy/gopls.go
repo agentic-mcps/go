@@ -23,8 +23,8 @@ type goplsLocation struct {
 type goplsSymbol struct {
 	Name          string        `json:"name"`
 	ContainerName string        `json:"containerName"`
-	Kind          int           `json:"kind"`
 	Location      goplsLocation `json:"location"`
+	Kind          int           `json:"kind"`
 }
 
 type goplsSession struct {
