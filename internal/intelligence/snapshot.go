@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/sourceview"
 	"github.com/agentic-mcps/go/internal/workspace"
 )
 
@@ -420,6 +421,20 @@ func (s *Snapshotter) readState(ctx context.Context, request SnapshotRequest) (s
 	head, err := s.gitText(ctx, "rev-parse", "--verify", "HEAD^{commit}")
 	if err != nil {
 		return snapshotState{}, fmt.Errorf("resolving HEAD: %w", err)
+	}
+	if filepath.Clean(repositoryRoot) == filepath.Clean(s.workspace.Root()) {
+		gitEntry, statErr := os.Lstat(filepath.Join(repositoryRoot, ".git"))
+		if statErr != nil && !errors.Is(statErr, os.ErrNotExist) {
+			return snapshotState{}, fmt.Errorf("inspecting worktree Git marker: %w", statErr)
+		}
+		if statErr == nil && !gitEntry.IsDir() {
+			if viewErr := sourceview.Validate(ctx, s.runner, head); viewErr != nil {
+				if errors.Is(viewErr, sourceview.ErrStale) {
+					return snapshotState{}, fmt.Errorf("%w: %v", ErrSnapshotChanged, viewErr)
+				}
+				return snapshotState{}, fmt.Errorf("validating branch source view: %w", viewErr)
+			}
+		}
 	}
 	base, mergeBase := "", ""
 	if request.Base != "" {

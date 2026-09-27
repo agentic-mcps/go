@@ -114,7 +114,7 @@ func TestPostV1FocusToolIsAdditiveAndDiscoverable(t *testing.T) {
 		if tool.Name != "go_context" {
 			continue
 		}
-		for _, phrase := range []string{"one selector", "previous_pack_id only", "stale selectors", "verification applicability"} {
+		for _, phrase := range []string{"one selector", "previous_pack_id only", "stale selectors", "verification applicability", "opaque byte strings", "declaration identifier", "no evidence"} {
 			if !strings.Contains(tool.Description, phrase) {
 				t.Fatalf("go_context description %q missing %q", tool.Description, phrase)
 			}
@@ -208,7 +208,7 @@ func TestProductionServerInitializeInstructionsAndUniqueFocusRegistration(t *tes
 	if len(ServerInstructions) > 512 {
 		t.Fatalf("server instructions length = %d, want <= 512", len(ServerInstructions))
 	}
-	for _, phrase := range []string{"unfamiliar", "cross-package", "go_context", "before editing", "one selector", "previous_pack_id only", "stale selectors", "impact", "verification applicability", "planning guidance", "smallest task owner", "path/package scope", "trivial edits"} {
+	for _, phrase := range []string{"unfamiliar", "cross-package", "go_context", "before editing", "one selector", "previous_pack_id only", "stale selectors", "opaque", "declaration", "selector failure", "recover fresh"} {
 		if !strings.Contains(ServerInstructions, phrase) {
 			t.Errorf("server instructions %q missing %q", ServerInstructions, phrase)
 		}

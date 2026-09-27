@@ -298,6 +298,36 @@ func TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion(t *testing.T) {
 	if result.Symbol != nil || len(result.Candidates) != 2 || len(result.Reasons) == 0 || !hasEvidenceState(result.EvidenceStates, "relationships", "unexamined") {
 		t.Fatalf("focusContext(ambiguous query) = %#v", result)
 	}
+	if !containsUncertainty(result.Uncertainties, "retrieval.fallback") {
+		t.Fatalf("focusContext(ambiguous query) did not record retrieval fallback: %#v", result.Uncertainties)
+	}
+}
+
+func TestFocusContextUsesHybridDiscoveryBeforeSemanticSearch(t *testing.T) {
+	root := snapshotRepository(t)
+	writeSnapshotFile(t, root, "main.go", "package fixture\n\n// ProcessPayment validates and processes an incoming payment request.\nfunc ProcessPayment() {}\nfunc Unrelated() {}\n")
+	snapshotter := newTestSnapshotter(t, root)
+	reader := &fakeSemanticReader{symbol: SymbolMatch{
+		Name: "ProcessPayment", Qualified: "fixture.ProcessPayment", Kind: "go.function", Package: "fixture",
+		Location: Location{File: "main.go", Line: 4, Column: 6, EndLine: 4, EndColumn: 19},
+	}}
+	core := newTestCore(t, snapshotter, reader)
+	observation, err := core.observe(context.Background(), "HEAD", "./...", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer observation.release()
+
+	result, err := core.focusContext(context.Background(), &observation, FocusRequest{Query: "process incoming payment", MaxBytes: DefaultBriefBytes})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Symbol == nil || result.Symbol.Symbol.Name != "ProcessPayment" {
+		t.Fatalf("focusContext() symbol = %#v, want ProcessPayment", result.Symbol)
+	}
+	if containsUncertainty(result.Uncertainties, "retrieval.fallback") {
+		t.Fatalf("focusContext() unexpectedly fell back: %#v", result.Uncertainties)
+	}
 }
 
 func TestFocusContextPreservesUncertaintyForOmittedWorkspaceSymbols(t *testing.T) {

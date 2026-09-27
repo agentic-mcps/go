@@ -52,6 +52,28 @@ func TestGuidanceIsStableAndDigestable(t *testing.T) {
 	if Guidance == "" || DigestString(Guidance) == "" {
 		t.Fatal("guidance digest missing")
 	}
+	guidance := strings.ToLower(Guidance)
+	for _, phrase := range []string{
+		"opaque byte strings",
+		"copy them exactly",
+		"never decode",
+		"shorten",
+		"reconstruct",
+		"re-encode",
+		"declaration identifier",
+		"line starts",
+		"local variables",
+		"current candidate",
+		"fresh query/file selector",
+		"no evidence",
+		"do not retry the same selector",
+		"fresh evidence",
+		"previous_pack_id only",
+	} {
+		if !strings.Contains(guidance, phrase) {
+			t.Errorf("guidance %q missing %q", Guidance, phrase)
+		}
+	}
 }
 
 func TestLoadRunRecomputesStaleFocusMetrics(t *testing.T) {

@@ -85,7 +85,7 @@ func RegisterSymbolContext(server *mcp.Server, runtime *Runtime) {
 
 // RegisterContext adds the post-v1 focus tool after the frozen registry.
 func RegisterContext(server *mcp.Server, runtime *Runtime) {
-	mcp.AddTool(server, &mcp.Tool{Name: "go_context", Description: "Before editing unfamiliar or cross-package Go code, call with base and one selector group (query, symbol_ref, file+line+column, or focus_file/focus_package) to map impact and verification applicability. After editing, refresh with base and previous_pack_id only; never reuse a Symbol Ref from before an edit; stale selectors and refs are expected to be rejected, so select current evidence.", Annotations: intelligenceAnnotations()}, runtime.context)
+	mcp.AddTool(server, &mcp.Tool{Name: "go_context", Description: "Before editing unfamiliar or cross-package Go code, call go_context with base and exactly one selector group: query, symbol_ref, file+line+column, or focus_file/focus_package. Symbol Refs are opaque byte strings: copy them exactly; never decode, edit, shorten, reconstruct, or re-encode them. File coordinates must point to the declaration identifier itself, never whitespace, line starts, comments, or local variables. After ambiguity, copy one current candidate or issue a fresh query/file selector. A selector failure produces no evidence: do not retry the same selector; recover with fresh evidence. After editing, refresh with base and previous_pack_id only; stale selectors and refs require current evidence. Use results for impact and verification applicability, not correctness claims.", Annotations: intelligenceAnnotations()}, runtime.context)
 }
 
 func (r *Runtime) requireIntelligence() (IntelligenceService, error) {

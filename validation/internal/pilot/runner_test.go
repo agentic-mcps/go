@@ -2,6 +2,7 @@ package pilot
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -94,6 +95,130 @@ func TestFocusMetricsDoesNotInferRefreshOrEditFromProse(t *testing.T) {
 	if got.Evidence || got.FocusResultFollowedByEdit || got.RefreshCompleted {
 		t.Fatalf("prose was treated as workflow evidence: %+v", got)
 	}
+}
+
+func TestFocusMetricsFlagsOnlyRedundantRefreshes(t *testing.T) {
+	got := FocusMetrics(Events{Raw: []json.RawMessage{
+		focusRefreshSuccessEvent(`{"query":"Worker","max_bytes":12000}`, "pack-1", "snapshot-1", "./..."),
+		json.RawMessage(`{"type":"item.completed","item":{"type":"file_change","status":"completed"}}`),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-1","max_bytes":12000}`, "pack-2", "snapshot-2", "./..."),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-2","max_bytes":12000}`, "pack-3", "snapshot-2", "./..."),
+	}})
+	if got.RedundantRefreshes != 1 {
+		t.Fatalf("redundant refreshes = %d, want 1", got.RedundantRefreshes)
+	}
+
+	got = FocusMetrics(Events{Raw: []json.RawMessage{
+		focusRefreshSuccessEvent(`{"query":"Worker","max_bytes":12000}`, "pack-1", "snapshot-1", "./..."),
+		json.RawMessage(`{"type":"item.completed","item":{"type":"file_change","status":"completed"}}`),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-1","max_bytes":12000}`, "pack-2", "snapshot-2", "./..."),
+		json.RawMessage(`{"type":"item.completed","item":{"type":"file_change","status":"completed"}}`),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-2","max_bytes":12000}`, "pack-3", "snapshot-3", "./..."),
+	}})
+	if got.RedundantRefreshes != 0 {
+		t.Fatalf("refresh after edit was flagged: %d", got.RedundantRefreshes)
+	}
+
+	got = FocusMetrics(Events{Raw: []json.RawMessage{
+		focusRefreshSuccessEvent(`{"query":"Worker","max_bytes":12000}`, "pack-1", "snapshot-1", "./..."),
+		json.RawMessage(`{"type":"item.completed","item":{"type":"file_change","status":"completed"}}`),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-1","max_bytes":12000}`, "pack-2", "snapshot-2", "./..."),
+		focusFailureEvent(`{"previous_pack_id":"pack-2"}`, "building change context: previous pack ID is invalid"),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-2","max_bytes":12000}`, "pack-3", "snapshot-2", "./..."),
+	}})
+	if got.RedundantRefreshes != 0 {
+		t.Fatalf("refresh after stale rejection was flagged: %d", got.RedundantRefreshes)
+	}
+
+	got = FocusMetrics(Events{Raw: []json.RawMessage{
+		focusRefreshSuccessEvent(`{"query":"Worker","max_bytes":12000}`, "pack-1", "snapshot-1", "./..."),
+		json.RawMessage(`{"type":"item.completed","item":{"type":"file_change","status":"completed"}}`),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-1","max_bytes":12000}`, "pack-2", "snapshot-2", "./..."),
+		focusRefreshSuccessEvent(`{"previous_pack_id":"pack-2","max_bytes":24000}`, "pack-3", "snapshot-2", "./..."),
+	}})
+	if got.RedundantRefreshes != 0 {
+		t.Fatalf("refresh with changed evidence requirements was flagged: %d", got.RedundantRefreshes)
+	}
+}
+
+func TestFocusFailureClassificationAndRecovery(t *testing.T) {
+	e := Events{Raw: []json.RawMessage{
+		focusSuccessEvent(`{"query":"Worker"}`, "pack-1"),
+		focusFailureEvent(`{"symbol_ref":"mutated-ref"}`, "invalid Symbol Ref"),
+		focusSuccessEvent(`{"file":"internal/worker.go","line":20,"column":6}`, "pack-2"),
+		focusFailureEvent(`{"file":"internal/worker.go","line":171,"column":1}`, "gopls RPC 0: no identifier found"),
+		focusSuccessEvent(`{"file":"internal/worker.go","line":171,"column":6}`, "pack-3"),
+		focusFailureEvent(`{"file":"internal/worker.go","line":172,"column":6}`, "gopls RPC 0: provider exploded"),
+	}}
+	got := FocusMetrics(e)
+	if got.Calls != 3 || got.FailedCalls != 3 || got.FailureCauses[FocusFailureSelectorMisuse] != 2 || got.FailureCauses[FocusFailureProvider] != 1 {
+		t.Fatalf("failure metrics = %+v", got)
+	}
+	if len(got.FailureRecords) != 3 {
+		t.Fatalf("failure records = %+v", got.FailureRecords)
+	}
+	if got.FailureRecords[0].Cause != FocusFailureSelectorMisuse || got.FailureRecords[0].Selector != "symbol_ref" || got.FailureRecords[0].Reason != "invalid_symbol_ref" || !got.FailureRecords[0].Recovered {
+		t.Fatalf("symbol ref record = %+v", got.FailureRecords[0])
+	}
+	if got.FailureRecords[1].Cause != FocusFailureSelectorMisuse || got.FailureRecords[1].Reason != "invalid_declaration_coordinate" || !got.FailureRecords[1].Recovered {
+		t.Fatalf("coordinate record = %+v", got.FailureRecords[1])
+	}
+	if got.FailureRecords[2].Cause != FocusFailureProvider || got.FailureRecords[2].Reason != "provider_error" || got.FailureRecords[2].Recovered {
+		t.Fatalf("provider record = %+v", got.FailureRecords[2])
+	}
+	encoded, err := json.Marshal(got.FailureRecords)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(encoded), "mutated-ref") || strings.Contains(string(encoded), "internal/worker.go") || strings.Contains(string(encoded), "provider exploded") {
+		t.Fatalf("raw selector or provider data leaked: %s", encoded)
+	}
+}
+
+func TestFocusFailureReplaysRejectEvidenceAndDetectRepeatedSelector(t *testing.T) {
+	e := Events{Raw: []json.RawMessage{
+		focusFailureEvent(`{"file":"internal/worker.go","line":171,"column":1}`, "gopls RPC 0: no identifier found"),
+		focusFailureEvent(`{"file":"internal/worker.go","line":171,"column":1}`, "gopls RPC 0: no identifier found"),
+		focusSuccessEvent(`{"file":"internal/worker.go","line":171,"column":6}`, "pack-1"),
+	}}
+	got := FocusMetrics(e)
+	if got.Calls != 1 || got.FailedCalls != 2 || got.Evidence || got.FailureCauses[FocusFailureSelectorMisuse] != 2 {
+		t.Fatalf("replay metrics = %+v", got)
+	}
+	if len(got.FailureRecords) != 2 || !got.FailureRecords[0].Repeated || got.FailureRecords[0].Selector != "file" || got.FailureRecords[0].Reason != "invalid_declaration_coordinate" {
+		t.Fatalf("repeated selector records = %+v", got.FailureRecords)
+	}
+	if !got.FailureRecords[0].Recovered || !got.FailureRecords[1].Recovered {
+		t.Fatalf("fresh-selector recovery not recorded: %+v", got.FailureRecords)
+	}
+}
+
+func TestFocusFailureClassifiesRejectedPreviousPackAsStale(t *testing.T) {
+	got := FocusMetrics(Events{Raw: []json.RawMessage{
+		focusFailureEvent(`{"previous_pack_id":"emitted-pack"}`, "building change context: previous pack ID is invalid"),
+	}})
+	if got.ErrorCategories[focusErrorInvalidInput] != 1 {
+		t.Fatalf("historical category changed: %+v", got.ErrorCategories)
+	}
+	if got.FailureCauses[FocusFailureStaleSnapshot] != 1 || len(got.FailureRecords) != 1 {
+		t.Fatalf("stale lineage classification = %+v", got)
+	}
+	record := got.FailureRecords[0]
+	if record.Cause != FocusFailureStaleSnapshot || record.Selector != "refresh" || record.Reason != "stale_snapshot" {
+		t.Fatalf("stale lineage record = %+v", record)
+	}
+}
+
+func focusSuccessEvent(arguments, packID string) json.RawMessage {
+	return json.RawMessage(fmt.Sprintf(`{"type":"item.completed","item":{"type":"mcp_tool_call","tool":"go_context","status":"completed","arguments":%s,"result":{"structured_content":{"pack_id":"%s"}}}}`, arguments, packID))
+}
+
+func focusRefreshSuccessEvent(arguments, packID, snapshotID, scope string) json.RawMessage {
+	return json.RawMessage(fmt.Sprintf(`{"type":"item.completed","item":{"type":"mcp_tool_call","tool":"go_context","status":"completed","arguments":%s,"result":{"structured_content":{"pack_id":"%s","snapshot":{"id":"%s","scope":"%s","workspace":".","base_commit":"base"}}}}}`, arguments, packID, snapshotID, scope))
+}
+
+func focusFailureEvent(arguments, message string) json.RawMessage {
+	return json.RawMessage(fmt.Sprintf(`{"type":"item.completed","item":{"type":"mcp_tool_call","tool":"go_context","status":"failed","arguments":%s,"result":{"content":[{"type":"text","text":"%s"}]}}}`, arguments, message))
 }
 
 func TestSkillDiscoveryEvidenceRequiresSkillFileMarker(t *testing.T) {
