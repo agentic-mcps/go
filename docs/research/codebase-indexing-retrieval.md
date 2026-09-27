@@ -415,7 +415,7 @@ capture or semantic resolution?
    benchmark; it makes no claims about agent decisions, accepted changes, or
    token savings.
 
-### Later branch-supported engineering screen
+### Separate accepted-change screen (still gated)
 
 After the product can select a branch and resolve evidence against that exact
 branch's source view, run a separate matched native-versus-Agentic-Go screen
@@ -425,6 +425,32 @@ changes, consequential omissions, engineer review/rework effort, and total
 time. Do not use the historical GPT-6 Sol/high 72-run harness or mix models.
 This later screen tests engineering outcomes; it is not part of the model-free
 retrieval and repository-scale benchmark.
+
+### Completed Luna Max Q&A screen — 2026-09-28
+
+The current MCP surface was compared with a native `rg`/Go-tools/gopls
+workflow on eight pinned codebase questions, two repetitions per arm, across
+small, medium, and large repositories (32 GPT-6 Luna Max answer runs). The MCP
+was available in 12 of 16 Agentic sessions and was never called. The small
+repository sessions could not start the server because those directories had
+no `go.mod` or active `go.work`. Blind same-family Luna review scored native
+answers 8.88/10 and Agentic availability 8.81/10; six questions tied, one
+favored each arm. Median latency was 125.2 s native and 128.1 s Agentic;
+median input usage was 325,798 and 345,212 tokens, respectively.
+
+Separate prompted-use diagnostics found that broad medium-repository queries
+returned ambiguous candidates and selected evidence exceeded the default 8 KiB
+budget. A position-based selection with a 64 KiB budget returned useful
+relationship and test anchors in one medium-repository example, but no function
+bodies. On the three large-repository probes, context construction exceeded
+the 8 MiB subprocess output limit. See the [full outcome report](agentic-go-native-context-outcome-2026-09-28.md)
+and [machine-readable results](../../validation/retrieval/results/2026-09-28/agentic-go-native-context-outcome-luna-max.json).
+
+The natural Q&A screen did not establish retrieval value; it did not test
+accepted code changes, branch movement, or persistent indexing. Keep the
+accepted-change screen and persistence proposal gated. The taskset reuses the
+model-free screen's questions, and the blind reviewer is from the same Luna
+family, so these results are directional.
 
 ### Decision gates
 
@@ -500,3 +526,12 @@ codebase or guarantee that an agent will follow retrieved evidence.
   persistent retrieval product. Repair the native workflow before any future
   comparative claim; keep the reliability screen and historical Sol studies
   separate.
+- 2026-09-28: The separate 32-run GPT-6 Luna Max natural-Q&A availability
+  screen completed against native Go tools. No Agentic Go MCP tool was called;
+  blind same-family scores and latency/token usage were effectively tied.
+  Prompted-use checks found ambiguous selections, default-budget evidence
+  omissions, a large-repository output-limit failure, and module preflight
+  failures. One carefully guided medium-repository selection returned
+  navigation anchors, but did not establish general value. Do not add
+  persistence or run the accepted-change screen on this evidence. See the
+  [detailed report](agentic-go-native-context-outcome-2026-09-28.md).
