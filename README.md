@@ -17,6 +17,12 @@
 
 `agentic-go` is a local Go MCP server and CLI. It gives an external coding agent semantic context, change continuity, guarded refactoring, and executed verification without embedding an LLM or becoming an agent framework.
 
+The [product north star](docs/go-intelligence-north-star.md) targets Go engineers
+using agents throughout understanding, editing, debugging, verification, and
+review. It distinguishes current capabilities from planned workflow work and
+unproven benefits across models. See the
+[continuation handoff](docs/continuation/go-intelligence.md) for current status.
+
 The v1.2.1 server exposes 15 MCP tools: the frozen v1 surface of 14 tools plus the additive `go_context` tool under `agentic.focus/v1`. This patch release makes the edit, refresh, verify, and inspect handoff explicit while preserving snapshot lineage and fail-closed evidence. The seven resources, resource template, six prompts, and frozen v1 schemas remain unchanged.
 
 ## Install
@@ -105,6 +111,28 @@ For focused context before an edit, an MCP client can call `go_context` with the
 ```sh
 agentic-go context --base origin/main --query Worker --format text
 ```
+
+### Branch source-view preview
+
+The development branch also includes an explicit source-view command for
+checking a branch in its own exact Git worktree:
+
+```sh
+agentic-go source-view --workspace "$PWD" --branch feature/example \
+  --output ../agentic-go-feature-example --format json
+agentic-go mcp-config --client codex --workspace ../agentic-go-feature-example
+```
+
+Without `--branch`, it selects local `main`, or the configured
+`origin/HEAD` when `main` is absent. Add `--include-dirty` only when the
+source checkout's `HEAD` is exactly the selected commit; it carries staged,
+unstaged, and regular untracked changes into the view. The output names the
+branch ref, commit, tree, and any checkout limitations. Configure the agent
+with the exact view root so snapshot checks can reject a branch that moved.
+The source view is a visible detached worktree. This preview does not create a
+persistent index or automatically switch a running MCP server, and it reports
+uninitialized submodules as incomplete. External `go.work` or local
+`replace` inputs are not captured.
 
 ## Capabilities
 

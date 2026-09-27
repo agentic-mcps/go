@@ -14,6 +14,7 @@ import (
 	"github.com/agentic-mcps/go/internal/changeimpact"
 	"github.com/agentic-mcps/go/internal/execution"
 	"github.com/agentic-mcps/go/internal/intelligence"
+	"github.com/agentic-mcps/go/internal/sourceview"
 	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/agentic-mcps/go/internal/workspace"
 )
@@ -49,6 +50,76 @@ func TestRunContextValidatesArgumentsBeforeWorkspaceSetup(t *testing.T) {
 		if exit := runContext(args, &stdout, &stderr); exit != 2 {
 			t.Fatalf("runContext(%v) = %d, want 2", args, exit)
 		}
+	}
+}
+
+func TestRunSourceViewSelectsDefaultAndExplicitBranches(t *testing.T) {
+	parent := t.TempDir()
+	repository := filepath.Join(parent, "repo")
+	if err := os.Mkdir(repository, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cliGit(t, repository, "init", "-b", "main")
+	cliGit(t, repository, "config", "user.name", "Fixture")
+	cliGit(t, repository, "config", "user.email", "fixture@example.test")
+	cliWrite(t, repository, "go.mod", "module example.test/sourceviewcli\n\ngo 1.25.0\n")
+	cliWrite(t, repository, "main.go", "package fixture\n\nfunc Branch() string { return \"main\" }\n")
+	cliGit(t, repository, "add", ".")
+	cliGit(t, repository, "-c", "commit.gpgsign=false", "commit", "-m", "main")
+	mainCommit := cliGit(t, repository, "rev-parse", "HEAD")
+	cliGit(t, repository, "checkout", "-b", "feature")
+	cliWrite(t, repository, "main.go", "package fixture\n\nfunc Branch() string { return \"feature\" }\n")
+	cliGit(t, repository, "add", ".")
+	cliGit(t, repository, "-c", "commit.gpgsign=false", "commit", "-m", "feature")
+	featureCommit := cliGit(t, repository, "rev-parse", "HEAD")
+	cliGit(t, repository, "checkout", "main")
+
+	mainPath := filepath.Join(parent, "main-view")
+	var stdout, stderr bytes.Buffer
+	if exit := runSourceView([]string{"--workspace", repository, "--output", mainPath, "--format", "json"}, &stdout, &stderr); exit != 0 {
+		t.Fatalf("default source-view exit=%d stderr=%q stdout=%q", exit, stderr.String(), stdout.String())
+	}
+	var mainView map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &mainView); err != nil {
+		t.Fatalf("decoding default source view: %v\n%s", err, stdout.String())
+	}
+	if mainView["ref"] != "refs/heads/main" || mainView["commit"] != mainCommit || mainView["schema_version"] != sourceview.SchemaVersion {
+		t.Fatalf("default source view = %#v", mainView)
+	}
+	if got := cliGit(t, repository, "branch", "--show-current"); got != "main" {
+		t.Fatalf("source checkout branch = %q, want main", got)
+	}
+
+	featurePath := filepath.Join(parent, "feature-view")
+	stdout.Reset()
+	stderr.Reset()
+	if exit := runSourceView([]string{"--workspace", repository, "--branch", "feature", "--output", featurePath, "--format", "json"}, &stdout, &stderr); exit != 0 {
+		t.Fatalf("feature source-view exit=%d stderr=%q stdout=%q", exit, stderr.String(), stdout.String())
+	}
+	var featureView map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &featureView); err != nil {
+		t.Fatalf("decoding feature source view: %v\n%s", err, stdout.String())
+	}
+	resolvedParent, err := filepath.EvalSymlinks(parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if featureView["ref"] != "refs/heads/feature" || featureView["commit"] != featureCommit || featureView["view_path"] != filepath.Join(resolvedParent, "feature-view") {
+		t.Fatalf("feature source view = %#v", featureView)
+	}
+	contents, err := os.ReadFile(filepath.Join(featurePath, "main.go"))
+	if err != nil || !strings.Contains(string(contents), `return "feature"`) {
+		t.Fatalf("feature worktree contents = %q, error = %v", contents, err)
+	}
+}
+
+func TestRunSourceViewRequiresExplicitNewOutputPath(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if exit := runSourceView(nil, &stdout, &stderr); exit != 2 {
+		t.Fatalf("exit = %d, want 2", exit)
+	}
+	if stdout.Len() != 0 || !strings.Contains(stderr.String(), "--output is required") {
+		t.Fatalf("stdout=%q stderr=%q", stdout.String(), stderr.String())
 	}
 }
 

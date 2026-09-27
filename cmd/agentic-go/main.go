@@ -40,6 +40,8 @@ func run(args []string) int {
 			return runVerify(args[1:], os.Stdout, os.Stderr)
 		case "context":
 			return runContext(args[1:], os.Stdout, os.Stderr)
+		case "source-view":
+			return runSourceView(args[1:], os.Stdout, os.Stderr)
 		case "doctor":
 			return runDoctor(args[1:], os.Stdout, os.Stderr, defaultDoctorDependencies())
 		case "mcp-config":
