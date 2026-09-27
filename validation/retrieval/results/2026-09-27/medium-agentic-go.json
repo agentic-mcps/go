@@ -1,0 +1,3618 @@
+{
+  "schema_version": "agentic-go.retrieval-report/v1",
+  "created_utc": "2026-09-27T05:11:36.150915Z",
+  "repository": {
+    "id": "github.com/agentic-mcps/go",
+    "commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+    "tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9"
+  },
+  "reproducibility": {
+    "study_source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+    "dirty_diff_sha256": "ca8e9f07610158fe87d20b9db667103111914fc35ec027f0e7553e178f368dd5",
+    "manifest_sha256": "01ad5aba3dc4fe712221e43c32eb9e5d6223b2d0fc2f86d362f174631344bc9d",
+    "retrieval_source_sha256": "936e91c612d19e5605a2e6fbada165a2a177b26301a621871c7f16dc9477b411"
+  },
+  "stratum": "medium",
+  "go_version": "go1.27.0",
+  "goos": "darwin",
+  "goarch": "arm64",
+  "rg_version": "ripgrep 15.2.0 (rev e89fff89ac)",
+  "snapshot_export_ms": 184.519834,
+  "retrieval_timing_note": "Cache.SearchProfiled reports parse, aggregation and rank stages; its total covers the full Go declaration candidate retrieval call. Top-5 is scored from the prefix of the same top-10 result, so top-5 and top-10 timing samples are identical and the large corpus is not parsed twice for two cutoffs. The screen measures the candidate retrieval kernel, not full go_context output or semantic resolution.",
+  "native_rg_workflow": {
+    "command_template": "rg --no-ignore --hidden --glob-case-insensitive --no-heading --with-filename --line-number --color never --fixed-strings --ignore-case --text --null [supported-source globs] -e \u003csorted unique query token\u003e... -- .",
+    "tokenizer": "retrieval Unicode letter/digit/underscore tokenizer with lower-to-upper camel-case splits; duplicate tokens removed and sorted",
+    "ranking_order": [
+      "distinct query tokens present on line descending",
+      "query-token occurrences on line descending",
+      "repository-relative path ascending",
+      "line ascending"
+    ],
+    "globs": [
+      "*.go",
+      "*.md",
+      "*.rst",
+      "*.txt",
+      "*.yaml",
+      "*.yml",
+      "*.json",
+      "*.toml",
+      "*.proto",
+      "*.mod",
+      "*.sum",
+      "*.work",
+      "Makefile",
+      "GNUmakefile",
+      "Dockerfile",
+      "Containerfile",
+      ".gitignore",
+      ".editorconfig",
+      ".gitattributes"
+    ],
+    "path_scope": "Git-archive files with supported source suffixes only; archive ignores checkout working-tree changes"
+  },
+  "go_package_inventory": {
+    "status": "complete",
+    "command": "go list -e -json ./...",
+    "package_count": 25,
+    "packages_with_errors": 0,
+    "latency_ms": 125.470375,
+    "timeout_ms": 300000,
+    "captured_output_bytes": 145109,
+    "captured_output_limit_bytes": 16777216,
+    "output_truncated": false,
+    "coverage": "go_list_e_dotdot_json_pattern_completed"
+  },
+  "coverage": {
+    "tracked_regular_files": 473,
+    "tracked_regular_bytes": 4056791,
+    "expected_supported_source_files": 420,
+    "expected_supported_source_bytes": 2982262,
+    "supported_source_files": 420,
+    "supported_source_bytes": 2982262,
+    "go_files": 270,
+    "go_bytes": 1343953,
+    "go_files_with_declarations": 270,
+    "go_parse_incomplete_files": 0,
+    "supported_text_files": 150,
+    "supported_text_bytes": 1638309,
+    "rejected_text_files": 0,
+    "rejected_text_bytes": 0,
+    "symlinks_not_indexed": 0,
+    "other_archive_entries_ignored": 0,
+    "archive_omitted_source_files": 0,
+    "archive_omitted_source_bytes": 0,
+    "archive_transformed_source_files": 0,
+    "archive_transformed_source_bytes": 0,
+    "source_archive_complete": true,
+    "text_indexed_by_retrieval": 0
+  },
+  "configuration": {
+    "repetitions": 3,
+    "command_timeout_ms": 300000,
+    "search_timeout_ms": 300000,
+    "max_source_bytes": 2147483648,
+    "max_file_bytes": 268435456,
+    "native_rg_output_limit_bytes": 67108864,
+    "native_rg_line_limit": 100000
+  },
+  "gopls": {
+    "status": "unknown_completeness",
+    "version": "v0.21.0",
+    "completeness_note": "workspace/symbol result caps and exhaustive workspace coverage are not established; per-query scores cover returned candidates",
+    "initialize_ms": 41.096167,
+    "query_latency": {
+      "samples_ms": [
+        19.7895,
+        2.784417,
+        2.968709,
+        3.28875,
+        2.754333,
+        3.132583,
+        3.261709,
+        2.790125,
+        5.309167,
+        3.174458,
+        2.8935,
+        2.648875
+      ],
+      "p50_ms": 2.968709,
+      "p95_ms": 19.7895,
+      "min_ms": 2.648875,
+      "max_ms": 19.7895
+    },
+    "candidate_granularity": "workspace_symbol_anchor"
+  },
+  "queries": [
+    {
+      "id": "medium-1",
+      "query": "After I edit and reuse a prior context pack, how does the system resolve its declaration against the new observation, and when must I select again instead of treating unresolved evidence as deletion?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 213,
+          "end_line": 239,
+          "label": "Core.Focus refresh handling"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 281,
+          "end_line": 317,
+          "label": "refresh symbol resolution"
+        },
+        {
+          "type": "test",
+          "path": "internal/intelligence/focus_test.go",
+          "start_line": 84,
+          "end_line": 140,
+          "label": "refresh and unresolved evidence tests"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/contracts.md",
+          "start_line": 1154,
+          "end_line": 1163,
+          "label": "focus refresh contract"
+        },
+        {
+          "type": "caller",
+          "path": "internal/tools/intelligence_tools.go",
+          "start_line": 178,
+          "end_line": 194,
+          "label": "MCP Runtime.context mapping"
+        }
+      ],
+      "retrieval": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 0.25
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 0.25
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 4,
+          "missed_at_10": 4,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/tools/runtime.go",
+            "line": 31,
+            "name": "ServerInstructions",
+            "kind": "go.const",
+            "container": "tools"
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "name": "Guidance",
+            "kind": "go.const",
+            "container": "adoption"
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 87,
+            "name": "RegisterContext",
+            "kind": "go.function",
+            "container": "tools"
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 136,
+            "name": "TestUnresolvedRefreshDoesNotClaimDeletion",
+            "kind": "go.function",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/tools/prompts.go",
+            "line": 88,
+            "name": "verifyChangeTemplate",
+            "kind": "go.var",
+            "container": "tools"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 193,
+            "name": "Focus",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 377,
+            "name": "focusContext",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "validation/internal/pilot/runner_test.go",
+            "line": 88,
+            "name": "TestFocusMetricsDoesNotInferRefreshOrEditFromProse",
+            "kind": "go.function",
+            "container": "pilot"
+          },
+          {
+            "path": "internal/intelligence/focus_action_test.go",
+            "line": 129,
+            "name": "TestProjectFocusActionCauseSpecificGuidance",
+            "kind": "go.function",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/tools/prompts.go",
+            "line": 91,
+            "name": "understandChangeTemplate",
+            "kind": "go.var",
+            "container": "tools"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              50.648333,
+              58.479792,
+              76.682667
+            ],
+            "p50_ms": 58.479792,
+            "p95_ms": 76.682667,
+            "min_ms": 50.648333,
+            "max_ms": 76.682667
+          },
+          "5": {
+            "samples_ms": [
+              50.648333,
+              58.479792,
+              76.682667
+            ],
+            "p50_ms": 58.479792,
+            "p95_ms": 76.682667,
+            "min_ms": 50.648333,
+            "max_ms": 76.682667
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              5.746958,
+              5.344167,
+              5.711084
+            ],
+            "p50_ms": 5.711084,
+            "p95_ms": 5.746958,
+            "min_ms": 5.344167,
+            "max_ms": 5.746958
+          },
+          "5": {
+            "samples_ms": [
+              5.746958,
+              5.344167,
+              5.711084
+            ],
+            "p50_ms": 5.711084,
+            "p95_ms": 5.746958,
+            "min_ms": 5.344167,
+            "max_ms": 5.746958
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 50.64625,
+                "parse_ms": 43.369088,
+                "aggregate_ms": 3.368121,
+                "rank_ms": 3.896417,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 58.479417,
+                "parse_ms": 51.102575,
+                "aggregate_ms": 3.319466,
+                "rank_ms": 4.037417,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 76.682458,
+                "parse_ms": 68.272073,
+                "aggregate_ms": 4.554677,
+                "rank_ms": 3.847625,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                50.64625,
+                58.479417,
+                76.682458
+              ],
+              "p50_ms": 58.479417,
+              "p95_ms": 76.682458,
+              "min_ms": 50.64625,
+              "max_ms": 76.682458
+            },
+            "parse": {
+              "samples_ms": [
+                43.369088,
+                51.102575,
+                68.272073
+              ],
+              "p50_ms": 51.102575,
+              "p95_ms": 68.272073,
+              "min_ms": 43.369088,
+              "max_ms": 68.272073
+            },
+            "aggregate": {
+              "samples_ms": [
+                3.368121,
+                3.319466,
+                4.554677
+              ],
+              "p50_ms": 3.368121,
+              "p95_ms": 4.554677,
+              "min_ms": 3.319466,
+              "max_ms": 4.554677
+            },
+            "rank": {
+              "samples_ms": [
+                3.896417,
+                4.037417,
+                3.847625
+              ],
+              "p50_ms": 3.896417,
+              "p95_ms": 4.037417,
+              "min_ms": 3.847625,
+              "max_ms": 4.037417
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 50.64625,
+                "parse_ms": 43.369088,
+                "aggregate_ms": 3.368121,
+                "rank_ms": 3.896417,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 58.479417,
+                "parse_ms": 51.102575,
+                "aggregate_ms": 3.319466,
+                "rank_ms": 4.037417,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 76.682458,
+                "parse_ms": 68.272073,
+                "aggregate_ms": 4.554677,
+                "rank_ms": 3.847625,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                50.64625,
+                58.479417,
+                76.682458
+              ],
+              "p50_ms": 58.479417,
+              "p95_ms": 76.682458,
+              "min_ms": 50.64625,
+              "max_ms": 76.682458
+            },
+            "parse": {
+              "samples_ms": [
+                43.369088,
+                51.102575,
+                68.272073
+              ],
+              "p50_ms": 51.102575,
+              "p95_ms": 68.272073,
+              "min_ms": 43.369088,
+              "max_ms": 68.272073
+            },
+            "aggregate": {
+              "samples_ms": [
+                3.368121,
+                3.319466,
+                4.554677
+              ],
+              "p50_ms": 3.368121,
+              "p95_ms": 4.554677,
+              "min_ms": 3.319466,
+              "max_ms": 4.554677
+            },
+            "rank": {
+              "samples_ms": [
+                3.896417,
+                4.037417,
+                3.847625
+              ],
+              "p50_ms": 3.896417,
+              "p95_ms": 4.037417,
+              "min_ms": 3.847625,
+              "max_ms": 4.037417
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 5.746875,
+                "parse_ms": 0,
+                "aggregate_ms": 2.197833,
+                "rank_ms": 3.543958,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 5.344,
+                "parse_ms": 0,
+                "aggregate_ms": 1.963834,
+                "rank_ms": 3.373417,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 5.71075,
+                "parse_ms": 0,
+                "aggregate_ms": 2.008917,
+                "rank_ms": 3.6965,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                5.746875,
+                5.344,
+                5.71075
+              ],
+              "p50_ms": 5.71075,
+              "p95_ms": 5.746875,
+              "min_ms": 5.344,
+              "max_ms": 5.746875
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.197833,
+                1.963834,
+                2.008917
+              ],
+              "p50_ms": 2.008917,
+              "p95_ms": 2.197833,
+              "min_ms": 1.963834,
+              "max_ms": 2.197833
+            },
+            "rank": {
+              "samples_ms": [
+                3.543958,
+                3.373417,
+                3.6965
+              ],
+              "p50_ms": 3.543958,
+              "p95_ms": 3.6965,
+              "min_ms": 3.373417,
+              "max_ms": 3.6965
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 5.746875,
+                "parse_ms": 0,
+                "aggregate_ms": 2.197833,
+                "rank_ms": 3.543958,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 5.344,
+                "parse_ms": 0,
+                "aggregate_ms": 1.963834,
+                "rank_ms": 3.373417,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 5.71075,
+                "parse_ms": 0,
+                "aggregate_ms": 2.008917,
+                "rank_ms": 3.6965,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                5.746875,
+                5.344,
+                5.71075
+              ],
+              "p50_ms": 5.71075,
+              "p95_ms": 5.746875,
+              "min_ms": 5.344,
+              "max_ms": 5.746875
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.197833,
+                1.963834,
+                2.008917
+              ],
+              "p50_ms": 2.008917,
+              "p95_ms": 2.197833,
+              "min_ms": 1.963834,
+              "max_ms": 2.197833
+            },
+            "rank": {
+              "samples_ms": [
+                3.543958,
+                3.373417,
+                3.6965
+              ],
+              "p50_ms": 3.543958,
+              "p95_ms": 3.6965,
+              "min_ms": 3.373417,
+              "max_ms": 3.6965
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "documentation": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/schema_test.go",
+            "line": 140,
+            "matched_unique_terms": 11,
+            "matched_occurrences": 21
+          },
+          {
+            "path": "internal/tools/runtime.go",
+            "line": 31,
+            "matched_unique_terms": 11,
+            "matched_occurrences": 19
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 88,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "docs/phase-4a-observability.md",
+            "line": 550,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 775,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 19
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 822,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "README.md",
+            "line": 103,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 13
+          },
+          {
+            "path": "internal/intelligence/focus_action_test.go",
+            "line": 291,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 820,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 10
+          }
+        ],
+        "candidate_count": 49719,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "after",
+          "again",
+          "against",
+          "and",
+          "as",
+          "context",
+          "declaration",
+          "deletion",
+          "does",
+          "edit",
+          "evidence",
+          "how",
+          "i",
+          "instead",
+          "its",
+          "must",
+          "new",
+          "observation",
+          "of",
+          "pack",
+          "prior",
+          "resolve",
+          "reuse",
+          "select",
+          "system",
+          "the",
+          "treating",
+          "unresolved",
+          "when"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          121.74070900000001,
+          70.978958,
+          71.27975
+        ],
+        "p50_ms": 71.27975,
+        "p95_ms": 121.74070900000001,
+        "min_ms": 70.978958,
+        "max_ms": 121.74070900000001
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          70.911417,
+          20.036167,
+          20.793875
+        ],
+        "p50_ms": 20.793875,
+        "p95_ms": 70.911417,
+        "min_ms": 20.036167,
+        "max_ms": 70.911417
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          50.829292,
+          50.942791,
+          50.485875
+        ],
+        "p50_ms": 50.829292,
+        "p95_ms": 50.942791,
+        "min_ms": 50.485875,
+        "max_ms": 50.942791
+      },
+      "gopls_query": "resolveRefreshSymbol",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 1,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 1,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 4,
+          "missed_at_10": 4,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "documentation": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 281,
+            "name": "Core.resolveRefreshSymbol",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 1,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          19.7895,
+          2.784417,
+          2.968709
+        ],
+        "p50_ms": 2.968709,
+        "p95_ms": 19.7895,
+        "min_ms": 2.784417,
+        "max_ms": 19.7895
+      }
+    },
+    {
+      "id": "medium-2",
+      "query": "If a workspace symbol query matches several declarations or the provider omits locations, what does go_context return before expanding relationships?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 86,
+          "end_line": 103,
+          "label": "FocusContext declaration"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 387,
+          "end_line": 435,
+          "label": "query selection and candidate bounds"
+        },
+        {
+          "type": "test",
+          "path": "internal/intelligence/focus_test.go",
+          "start_line": 280,
+          "end_line": 326,
+          "label": "ambiguous and omitted symbol tests"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/contracts.md",
+          "start_line": 1142,
+          "end_line": 1152,
+          "label": "selector and candidate contract"
+        },
+        {
+          "type": "caller",
+          "path": "internal/tools/intelligence_tools.go",
+          "start_line": 178,
+          "end_line": 195,
+          "label": "MCP Runtime.context mapping"
+        }
+      ],
+      "retrieval": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 0.25
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 3,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.3,
+            "mean_reciprocal_rank": 0.25
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 4,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/core.go",
+            "line": 256,
+            "name": "Symbol",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 377,
+            "name": "focusContext",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/core.go",
+            "line": 150,
+            "name": "Search",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 91,
+            "name": "FocusContext",
+            "kind": "go.type",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 554,
+            "name": "focusSymbol",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 280,
+            "name": "TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion",
+            "kind": "go.function",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 87,
+            "name": "RegisterContext",
+            "kind": "go.function",
+            "container": "tools"
+          },
+          {
+            "path": "internal/intelligence/typed_relationships.go",
+            "line": 116,
+            "name": "focusFileOrPackage",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 303,
+            "name": "TestFocusContextPreservesUncertaintyForOmittedWorkspaceSymbols",
+            "kind": "go.function",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 797,
+            "name": "boundFocusContext",
+            "kind": "go.method",
+            "container": "intelligence"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              44.748083,
+              43.432834,
+              43.518208
+            ],
+            "p50_ms": 43.518208,
+            "p95_ms": 44.748083,
+            "min_ms": 43.432834,
+            "max_ms": 44.748083
+          },
+          "5": {
+            "samples_ms": [
+              44.748083,
+              43.432834,
+              43.518208
+            ],
+            "p50_ms": 43.518208,
+            "p95_ms": 44.748083,
+            "min_ms": 43.432834,
+            "max_ms": 44.748083
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              4.920084,
+              4.557833,
+              4.397042
+            ],
+            "p50_ms": 4.557833,
+            "p95_ms": 4.920084,
+            "min_ms": 4.397042,
+            "max_ms": 4.920084
+          },
+          "5": {
+            "samples_ms": [
+              4.920084,
+              4.557833,
+              4.397042
+            ],
+            "p50_ms": 4.557833,
+            "p95_ms": 4.920084,
+            "min_ms": 4.397042,
+            "max_ms": 4.920084
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 44.74675,
+                "parse_ms": 38.858536,
+                "aggregate_ms": 3.05263,
+                "rank_ms": 2.830125,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 43.432542,
+                "parse_ms": 37.979714,
+                "aggregate_ms": 2.776995,
+                "rank_ms": 2.668084,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 43.518084,
+                "parse_ms": 37.888994,
+                "aggregate_ms": 2.953548,
+                "rank_ms": 2.669958,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                44.74675,
+                43.432542,
+                43.518084
+              ],
+              "p50_ms": 43.518084,
+              "p95_ms": 44.74675,
+              "min_ms": 43.432542,
+              "max_ms": 44.74675
+            },
+            "parse": {
+              "samples_ms": [
+                38.858536,
+                37.979714,
+                37.888994
+              ],
+              "p50_ms": 37.979714,
+              "p95_ms": 38.858536,
+              "min_ms": 37.888994,
+              "max_ms": 38.858536
+            },
+            "aggregate": {
+              "samples_ms": [
+                3.05263,
+                2.776995,
+                2.953548
+              ],
+              "p50_ms": 2.953548,
+              "p95_ms": 3.05263,
+              "min_ms": 2.776995,
+              "max_ms": 3.05263
+            },
+            "rank": {
+              "samples_ms": [
+                2.830125,
+                2.668084,
+                2.669958
+              ],
+              "p50_ms": 2.669958,
+              "p95_ms": 2.830125,
+              "min_ms": 2.668084,
+              "max_ms": 2.830125
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 44.74675,
+                "parse_ms": 38.858536,
+                "aggregate_ms": 3.05263,
+                "rank_ms": 2.830125,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 43.432542,
+                "parse_ms": 37.979714,
+                "aggregate_ms": 2.776995,
+                "rank_ms": 2.668084,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 43.518084,
+                "parse_ms": 37.888994,
+                "aggregate_ms": 2.953548,
+                "rank_ms": 2.669958,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                44.74675,
+                43.432542,
+                43.518084
+              ],
+              "p50_ms": 43.518084,
+              "p95_ms": 44.74675,
+              "min_ms": 43.432542,
+              "max_ms": 44.74675
+            },
+            "parse": {
+              "samples_ms": [
+                38.858536,
+                37.979714,
+                37.888994
+              ],
+              "p50_ms": 37.979714,
+              "p95_ms": 38.858536,
+              "min_ms": 37.888994,
+              "max_ms": 38.858536
+            },
+            "aggregate": {
+              "samples_ms": [
+                3.05263,
+                2.776995,
+                2.953548
+              ],
+              "p50_ms": 2.953548,
+              "p95_ms": 3.05263,
+              "min_ms": 2.776995,
+              "max_ms": 3.05263
+            },
+            "rank": {
+              "samples_ms": [
+                2.830125,
+                2.668084,
+                2.669958
+              ],
+              "p50_ms": 2.669958,
+              "p95_ms": 2.830125,
+              "min_ms": 2.668084,
+              "max_ms": 2.830125
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 4.92,
+                "parse_ms": 0,
+                "aggregate_ms": 2.332833,
+                "rank_ms": 2.584292,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.557792,
+                "parse_ms": 0,
+                "aggregate_ms": 2.203291,
+                "rank_ms": 2.350542,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.396958,
+                "parse_ms": 0,
+                "aggregate_ms": 1.957875,
+                "rank_ms": 2.434125,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                4.92,
+                4.557792,
+                4.396958
+              ],
+              "p50_ms": 4.557792,
+              "p95_ms": 4.92,
+              "min_ms": 4.396958,
+              "max_ms": 4.92
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.332833,
+                2.203291,
+                1.957875
+              ],
+              "p50_ms": 2.203291,
+              "p95_ms": 2.332833,
+              "min_ms": 1.957875,
+              "max_ms": 2.332833
+            },
+            "rank": {
+              "samples_ms": [
+                2.584292,
+                2.350542,
+                2.434125
+              ],
+              "p50_ms": 2.434125,
+              "p95_ms": 2.584292,
+              "min_ms": 2.350542,
+              "max_ms": 2.584292
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 4.92,
+                "parse_ms": 0,
+                "aggregate_ms": 2.332833,
+                "rank_ms": 2.584292,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.557792,
+                "parse_ms": 0,
+                "aggregate_ms": 2.203291,
+                "rank_ms": 2.350542,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.396958,
+                "parse_ms": 0,
+                "aggregate_ms": 1.957875,
+                "rank_ms": 2.434125,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                4.92,
+                4.557792,
+                4.396958
+              ],
+              "p50_ms": 4.557792,
+              "p95_ms": 4.92,
+              "min_ms": 4.396958,
+              "max_ms": 4.92
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.332833,
+                2.203291,
+                1.957875
+              ],
+              "p50_ms": 2.203291,
+              "p95_ms": 2.332833,
+              "min_ms": 1.957875,
+              "max_ms": 2.332833
+            },
+            "rank": {
+              "samples_ms": [
+                2.584292,
+                2.350542,
+                2.434125
+              ],
+              "p50_ms": 2.434125,
+              "p95_ms": 2.584292,
+              "min_ms": 2.350542,
+              "max_ms": 2.584292
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 2,
+            "documentation": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/schema_test.go",
+            "line": 140,
+            "matched_unique_terms": 12,
+            "matched_occurrences": 23
+          },
+          {
+            "path": "internal/tools/runtime.go",
+            "line": 31,
+            "matched_unique_terms": 8,
+            "matched_occurrences": 11
+          },
+          {
+            "path": "validation/v0.2.0/client-golang-changed-coverage.json",
+            "line": 1,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 78
+          },
+          {
+            "path": "validation/v0.2.0/echo-analyzer-baseline.json",
+            "line": 1,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 44
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 88,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "validation/v0.2.0/grpc-go-full-scope-incomplete.json",
+            "line": 1,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 64
+          },
+          {
+            "path": "validation/v0.2.0/grpc-go-reverse-impact.json",
+            "line": 1,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 47
+          },
+          {
+            "path": "docs/phase-4a-type-design.md",
+            "line": 578,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 316,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 7
+          }
+        ],
+        "candidate_count": 47927,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "before",
+          "context",
+          "declarations",
+          "does",
+          "expanding",
+          "go",
+          "if",
+          "locations",
+          "matches",
+          "omits",
+          "or",
+          "provider",
+          "query",
+          "relationships",
+          "return",
+          "several",
+          "symbol",
+          "the",
+          "what",
+          "workspace"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          72.375417,
+          69.62725,
+          73.407209
+        ],
+        "p50_ms": 72.375417,
+        "p95_ms": 73.407209,
+        "min_ms": 69.62725,
+        "max_ms": 73.407209
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          19.696667,
+          17.963875,
+          20.602209
+        ],
+        "p50_ms": 19.696667,
+        "p95_ms": 20.602209,
+        "min_ms": 17.963875,
+        "max_ms": 20.602209
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          52.67875,
+          51.663375,
+          52.805
+        ],
+        "p50_ms": 52.67875,
+        "p95_ms": 52.805,
+        "min_ms": 51.663375,
+        "max_ms": 52.805
+      },
+      "gopls_query": "focusContext",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 3,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.6,
+            "mean_reciprocal_rank": 1
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 8,
+            "gold_spans": 5,
+            "hit_gold_spans": 2,
+            "recall": 0.4,
+            "precision": 0.8,
+            "mean_reciprocal_rank": 1
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 3,
+          "missed_at_10": 3,
+          "missed_at_5_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "documentation": 1
+          },
+          "missed_at_10_by_type": {
+            "caller": 1,
+            "declaration": 1,
+            "documentation": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 91,
+            "name": "FocusContext",
+            "kind": "struct",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 23
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 337,
+            "name": "TestFocusContextIncludesObservedExcerptAndDirectCallSite",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 280,
+            "name": "TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 303,
+            "name": "TestFocusContextPreservesUncertaintyForOmittedWorkspaceSymbols",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 74,
+            "name": "FocusResult.Context",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 94,
+            "name": "FocusContext.Symbol",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 98,
+            "name": "FocusContext.Reasons",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 96,
+            "name": "FocusContext.Excerpts",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 97,
+            "name": "FocusContext.CallSites",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 92,
+            "name": "FocusContext.Selection",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 102,
+            "name": "FocusContext.Truncated",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 93,
+            "name": "FocusContext.Candidates",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 101,
+            "name": "FocusContext.TypedEvidence",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 99,
+            "name": "FocusContext.Uncertainties",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 100,
+            "name": "FocusContext.EvidenceStates",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 95,
+            "name": "FocusContext.TestDeclarations",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus_action.go",
+            "line": 149,
+            "name": "focusContextBudgetOmitted",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 377,
+            "name": "Core.focusContext",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          },
+          {
+            "path": "internal/intelligence/focus_action.go",
+            "line": 277,
+            "name": "unavailableFocusContext",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 797,
+            "name": "Core.boundFocusContext",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 20,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          3.28875,
+          2.754333,
+          3.132583
+        ],
+        "p50_ms": 3.132583,
+        "p95_ms": 3.28875,
+        "min_ms": 2.754333,
+        "max_ms": 3.28875
+      }
+    },
+    {
+      "id": "medium-3",
+      "query": "After selecting a function, how does focused context gather direct callers and referenced test declarations, and what should an agent infer from those links?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 387,
+          "end_line": 518,
+          "label": "focused context and incoming call evidence"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 591,
+          "end_line": 630,
+          "label": "symbol relationship gathering"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 658,
+          "end_line": 692,
+          "label": "test declaration resolution"
+        },
+        {
+          "type": "test",
+          "path": "internal/intelligence/focus_test.go",
+          "start_line": 337,
+          "end_line": 359,
+          "label": "direct call site context test"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/go-intelligence-north-star.md",
+          "start_line": 213,
+          "end_line": 240,
+          "label": "relationship evidence limits"
+        }
+      ],
+      "retrieval": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "declaration": 3,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 3,
+            "documentation": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "validation/internal/pilot/runner_test.go",
+            "line": 88,
+            "name": "TestFocusMetricsDoesNotInferRefreshOrEditFromProse",
+            "kind": "go.function",
+            "container": "pilot"
+          },
+          {
+            "path": "validation/internal/pilot/pilot_test.go",
+            "line": 163,
+            "name": "TestScoreObligationsDoesNotTrustSelfAssertion",
+            "kind": "go.function",
+            "container": "pilot"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 91,
+            "name": "FocusContext",
+            "kind": "go.type",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 87,
+            "name": "RegisterContext",
+            "kind": "go.function",
+            "container": "tools"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 377,
+            "name": "focusContext",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "name": "Guidance",
+            "kind": "go.const",
+            "container": "adoption"
+          },
+          {
+            "path": "validation/internal/pilot/pilot_test.go",
+            "line": 154,
+            "name": "TestScoreObligationsUsesRecordedEvidence",
+            "kind": "go.function",
+            "container": "pilot"
+          },
+          {
+            "path": "internal/tools/runtime.go",
+            "line": 31,
+            "name": "ServerInstructions",
+            "kind": "go.const",
+            "container": "tools"
+          },
+          {
+            "path": "internal/tools/prompts.go",
+            "line": 88,
+            "name": "verifyChangeTemplate",
+            "kind": "go.var",
+            "container": "tools"
+          },
+          {
+            "path": "internal/intelligence/types.go",
+            "line": 129,
+            "name": "ChangeContext",
+            "kind": "go.type",
+            "container": "intelligence"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              44.129,
+              43.405916,
+              42.63825
+            ],
+            "p50_ms": 43.405916,
+            "p95_ms": 44.129,
+            "min_ms": 42.63825,
+            "max_ms": 44.129
+          },
+          "5": {
+            "samples_ms": [
+              44.129,
+              43.405916,
+              42.63825
+            ],
+            "p50_ms": 43.405916,
+            "p95_ms": 44.129,
+            "min_ms": 42.63825,
+            "max_ms": 44.129
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              5.059166,
+              4.897958,
+              4.47325
+            ],
+            "p50_ms": 4.897958,
+            "p95_ms": 5.059166,
+            "min_ms": 4.47325,
+            "max_ms": 5.059166
+          },
+          "5": {
+            "samples_ms": [
+              5.059166,
+              4.897958,
+              4.47325
+            ],
+            "p50_ms": 4.897958,
+            "p95_ms": 5.059166,
+            "min_ms": 4.47325,
+            "max_ms": 5.059166
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 44.128667,
+                "parse_ms": 38.449422,
+                "aggregate_ms": 2.965328,
+                "rank_ms": 2.70675,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 43.405292,
+                "parse_ms": 37.348791,
+                "aggregate_ms": 3.220876,
+                "rank_ms": 2.829417,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 42.638042,
+                "parse_ms": 36.914204,
+                "aggregate_ms": 2.92488,
+                "rank_ms": 2.793333,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                44.128667,
+                43.405292,
+                42.638042
+              ],
+              "p50_ms": 43.405292,
+              "p95_ms": 44.128667,
+              "min_ms": 42.638042,
+              "max_ms": 44.128667
+            },
+            "parse": {
+              "samples_ms": [
+                38.449422,
+                37.348791,
+                36.914204
+              ],
+              "p50_ms": 37.348791,
+              "p95_ms": 38.449422,
+              "min_ms": 36.914204,
+              "max_ms": 38.449422
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.965328,
+                3.220876,
+                2.92488
+              ],
+              "p50_ms": 2.965328,
+              "p95_ms": 3.220876,
+              "min_ms": 2.92488,
+              "max_ms": 3.220876
+            },
+            "rank": {
+              "samples_ms": [
+                2.70675,
+                2.829417,
+                2.793333
+              ],
+              "p50_ms": 2.793333,
+              "p95_ms": 2.829417,
+              "min_ms": 2.70675,
+              "max_ms": 2.829417
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 44.128667,
+                "parse_ms": 38.449422,
+                "aggregate_ms": 2.965328,
+                "rank_ms": 2.70675,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 43.405292,
+                "parse_ms": 37.348791,
+                "aggregate_ms": 3.220876,
+                "rank_ms": 2.829417,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 42.638042,
+                "parse_ms": 36.914204,
+                "aggregate_ms": 2.92488,
+                "rank_ms": 2.793333,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                44.128667,
+                43.405292,
+                42.638042
+              ],
+              "p50_ms": 43.405292,
+              "p95_ms": 44.128667,
+              "min_ms": 42.638042,
+              "max_ms": 44.128667
+            },
+            "parse": {
+              "samples_ms": [
+                38.449422,
+                37.348791,
+                36.914204
+              ],
+              "p50_ms": 37.348791,
+              "p95_ms": 38.449422,
+              "min_ms": 36.914204,
+              "max_ms": 38.449422
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.965328,
+                3.220876,
+                2.92488
+              ],
+              "p50_ms": 2.965328,
+              "p95_ms": 3.220876,
+              "min_ms": 2.92488,
+              "max_ms": 3.220876
+            },
+            "rank": {
+              "samples_ms": [
+                2.70675,
+                2.829417,
+                2.793333
+              ],
+              "p50_ms": 2.793333,
+              "p95_ms": 2.829417,
+              "min_ms": 2.70675,
+              "max_ms": 2.829417
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 5.05875,
+                "parse_ms": 0,
+                "aggregate_ms": 2.432958,
+                "rank_ms": 2.620375,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.897875,
+                "parse_ms": 0,
+                "aggregate_ms": 2.479375,
+                "rank_ms": 2.413292,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.473166,
+                "parse_ms": 0,
+                "aggregate_ms": 2.162125,
+                "rank_ms": 2.306875,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                5.05875,
+                4.897875,
+                4.473166
+              ],
+              "p50_ms": 4.897875,
+              "p95_ms": 5.05875,
+              "min_ms": 4.473166,
+              "max_ms": 5.05875
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.432958,
+                2.479375,
+                2.162125
+              ],
+              "p50_ms": 2.432958,
+              "p95_ms": 2.479375,
+              "min_ms": 2.162125,
+              "max_ms": 2.479375
+            },
+            "rank": {
+              "samples_ms": [
+                2.620375,
+                2.413292,
+                2.306875
+              ],
+              "p50_ms": 2.413292,
+              "p95_ms": 2.620375,
+              "min_ms": 2.306875,
+              "max_ms": 2.620375
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 5.05875,
+                "parse_ms": 0,
+                "aggregate_ms": 2.432958,
+                "rank_ms": 2.620375,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.897875,
+                "parse_ms": 0,
+                "aggregate_ms": 2.479375,
+                "rank_ms": 2.413292,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.473166,
+                "parse_ms": 0,
+                "aggregate_ms": 2.162125,
+                "rank_ms": 2.306875,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                5.05875,
+                4.897875,
+                4.473166
+              ],
+              "p50_ms": 4.897875,
+              "p95_ms": 5.05875,
+              "min_ms": 4.473166,
+              "max_ms": 5.05875
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.432958,
+                2.479375,
+                2.162125
+              ],
+              "p50_ms": 2.432958,
+              "p95_ms": 2.479375,
+              "min_ms": 2.162125,
+              "max_ms": 2.479375
+            },
+            "rank": {
+              "samples_ms": [
+                2.620375,
+                2.413292,
+                2.306875
+              ],
+              "p50_ms": 2.413292,
+              "p95_ms": 2.620375,
+              "min_ms": 2.306875,
+              "max_ms": 2.620375
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "declaration": 3,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 3,
+            "documentation": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "validation/v0.2.0/client-golang-changed-coverage.json",
+            "line": 1,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 32
+          },
+          {
+            "path": "validation/internal/adoption/scenarios/client-go.json",
+            "line": 5,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 8
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 822,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 88,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "internal/intelligence/schema_test.go",
+            "line": 140,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "validation/v0.2.0/echo-analyzer-baseline.json",
+            "line": 1,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 18
+          },
+          {
+            "path": "docs/phase-4a-type-design.md",
+            "line": 578,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 14
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 775,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "internal/tools/runtime.go",
+            "line": 31,
+            "matched_unique_terms": 5,
+            "matched_occurrences": 11
+          }
+        ],
+        "candidate_count": 42500,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "after",
+          "agent",
+          "an",
+          "and",
+          "callers",
+          "context",
+          "declarations",
+          "direct",
+          "does",
+          "focused",
+          "from",
+          "function",
+          "gather",
+          "how",
+          "infer",
+          "links",
+          "referenced",
+          "selecting",
+          "should",
+          "test",
+          "those",
+          "what"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          66.015625,
+          64.950541,
+          66.025375
+        ],
+        "p50_ms": 66.015625,
+        "p95_ms": 66.025375,
+        "min_ms": 64.950541,
+        "max_ms": 66.025375
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          19.597042,
+          19.066333,
+          20.04525
+        ],
+        "p50_ms": 19.597042,
+        "p95_ms": 20.04525,
+        "min_ms": 19.066333,
+        "max_ms": 20.04525
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          46.418583,
+          45.884208,
+          45.980125
+        ],
+        "p50_ms": 45.980125,
+        "p95_ms": 46.418583,
+        "min_ms": 45.884208,
+        "max_ms": 46.418583
+      },
+      "gopls_query": "focusTestDeclarations",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 2,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.2,
+            "mean_reciprocal_rank": 0.5
+          },
+          "at_10": {
+            "retrieved_candidates": 2,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 0.5
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 4,
+          "missed_at_10": 4,
+          "missed_at_5_by_type": {
+            "declaration": 2,
+            "documentation": 1,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 2,
+            "documentation": 1,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 95,
+            "name": "FocusContext.TestDeclarations",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 658,
+            "name": "Core.focusTestDeclarations",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          }
+        ],
+        "candidate_count": 2,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          3.261709,
+          2.790125,
+          5.309167
+        ],
+        "p50_ms": 3.261709,
+        "p95_ms": 5.309167,
+        "min_ms": 2.790125,
+        "max_ms": 5.309167
+      }
+    },
+    {
+      "id": "medium-4",
+      "query": "How does a context request keep source bytes tied to one observation and reject a worktree change that occurs before it returns?",
+      "gold": [
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/snapshot.go",
+          "start_line": 122,
+          "end_line": 144,
+          "label": "captured source digest check"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/snapshot.go",
+          "start_line": 202,
+          "end_line": 228,
+          "label": "double capture observation"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/snapshot.go",
+          "start_line": 231,
+          "end_line": 246,
+          "label": "snapshot validation"
+        },
+        {
+          "type": "test",
+          "path": "internal/intelligence/snapshot_test.go",
+          "start_line": 95,
+          "end_line": 137,
+          "label": "stale reference and source digest tests"
+        },
+        {
+          "type": "declaration",
+          "path": "internal/intelligence/focus.go",
+          "start_line": 240,
+          "end_line": 256,
+          "label": "final focus validation"
+        }
+      ],
+      "retrieval": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "declaration": 4,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 4,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/tools/prompts.go",
+            "line": 91,
+            "name": "understandChangeTemplate",
+            "kind": "go.var",
+            "container": "tools"
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 280,
+            "name": "TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion",
+            "kind": "go.function",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 34,
+            "name": "SymbolContextInput",
+            "kind": "go.type",
+            "container": "tools"
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 87,
+            "name": "RegisterContext",
+            "kind": "go.function",
+            "container": "tools"
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "name": "Guidance",
+            "kind": "go.const",
+            "container": "adoption"
+          },
+          {
+            "path": "internal/gopls/manager.go",
+            "line": 46,
+            "name": "Request",
+            "kind": "go.method",
+            "container": "gopls"
+          },
+          {
+            "path": "internal/verification/report.go",
+            "line": 209,
+            "name": "Change",
+            "kind": "go.type",
+            "container": "verification"
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 193,
+            "name": "Focus",
+            "kind": "go.method",
+            "container": "intelligence"
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 48,
+            "name": "ContextInput",
+            "kind": "go.type",
+            "container": "tools"
+          },
+          {
+            "path": "internal/verification/engine_contract.go",
+            "line": 14,
+            "name": "SourceFile",
+            "kind": "go.type",
+            "container": "verification"
+          }
+        ],
+        "candidate_count": 10,
+        "candidate_count_complete": false,
+        "candidate_granularity": "go_declaration_name_anchor"
+      },
+      "retrieval_timings": {
+        "cold_by_limit": {
+          "10": {
+            "samples_ms": [
+              44.531,
+              45.230542,
+              46.316208
+            ],
+            "p50_ms": 45.230542,
+            "p95_ms": 46.316208,
+            "min_ms": 44.531,
+            "max_ms": 46.316208
+          },
+          "5": {
+            "samples_ms": [
+              44.531,
+              45.230542,
+              46.316208
+            ],
+            "p50_ms": 45.230542,
+            "p95_ms": 46.316208,
+            "min_ms": 44.531,
+            "max_ms": 46.316208
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples_ms": [
+              5.363,
+              4.666666,
+              4.72825
+            ],
+            "p50_ms": 4.72825,
+            "p95_ms": 5.363,
+            "min_ms": 4.666666,
+            "max_ms": 5.363
+          },
+          "5": {
+            "samples_ms": [
+              5.363,
+              4.666666,
+              4.72825
+            ],
+            "p50_ms": 4.72825,
+            "p95_ms": 5.363,
+            "min_ms": 4.666666,
+            "max_ms": 5.363
+          }
+        }
+      },
+      "retrieval_profiles": {
+        "cold_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 44.530625,
+                "parse_ms": 38.965124,
+                "aggregate_ms": 2.840876,
+                "rank_ms": 2.718458,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 45.230291,
+                "parse_ms": 39.060954,
+                "aggregate_ms": 3.174296,
+                "rank_ms": 2.988375,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 46.316,
+                "parse_ms": 40.534878,
+                "aggregate_ms": 2.967997,
+                "rank_ms": 2.806792,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                44.530625,
+                45.230291,
+                46.316
+              ],
+              "p50_ms": 45.230291,
+              "p95_ms": 46.316,
+              "min_ms": 44.530625,
+              "max_ms": 46.316
+            },
+            "parse": {
+              "samples_ms": [
+                38.965124,
+                39.060954,
+                40.534878
+              ],
+              "p50_ms": 39.060954,
+              "p95_ms": 40.534878,
+              "min_ms": 38.965124,
+              "max_ms": 40.534878
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.840876,
+                3.174296,
+                2.967997
+              ],
+              "p50_ms": 2.967997,
+              "p95_ms": 3.174296,
+              "min_ms": 2.840876,
+              "max_ms": 3.174296
+            },
+            "rank": {
+              "samples_ms": [
+                2.718458,
+                2.988375,
+                2.806792
+              ],
+              "p50_ms": 2.806792,
+              "p95_ms": 2.988375,
+              "min_ms": 2.718458,
+              "max_ms": 2.988375
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 44.530625,
+                "parse_ms": 38.965124,
+                "aggregate_ms": 2.840876,
+                "rank_ms": 2.718458,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 45.230291,
+                "parse_ms": 39.060954,
+                "aggregate_ms": 3.174296,
+                "rank_ms": 2.988375,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              },
+              {
+                "search_ms": 46.316,
+                "parse_ms": 40.534878,
+                "aggregate_ms": 2.967997,
+                "rank_ms": 2.806792,
+                "file_visits": 540,
+                "cache_hits": 270,
+                "files_parsed": 270
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                44.530625,
+                45.230291,
+                46.316
+              ],
+              "p50_ms": 45.230291,
+              "p95_ms": 46.316,
+              "min_ms": 44.530625,
+              "max_ms": 46.316
+            },
+            "parse": {
+              "samples_ms": [
+                38.965124,
+                39.060954,
+                40.534878
+              ],
+              "p50_ms": 39.060954,
+              "p95_ms": 40.534878,
+              "min_ms": 38.965124,
+              "max_ms": 40.534878
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.840876,
+                3.174296,
+                2.967997
+              ],
+              "p50_ms": 2.967997,
+              "p95_ms": 3.174296,
+              "min_ms": 2.840876,
+              "max_ms": 3.174296
+            },
+            "rank": {
+              "samples_ms": [
+                2.718458,
+                2.988375,
+                2.806792
+              ],
+              "p50_ms": 2.806792,
+              "p95_ms": 2.988375,
+              "min_ms": 2.718458,
+              "max_ms": 2.988375
+            }
+          }
+        },
+        "warm_by_limit": {
+          "10": {
+            "samples": [
+              {
+                "search_ms": 5.362833,
+                "parse_ms": 0,
+                "aggregate_ms": 2.239083,
+                "rank_ms": 3.119834,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.666584,
+                "parse_ms": 0,
+                "aggregate_ms": 2.146583,
+                "rank_ms": 2.515292,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.728125,
+                "parse_ms": 0,
+                "aggregate_ms": 2.167917,
+                "rank_ms": 2.553375,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                5.362833,
+                4.666584,
+                4.728125
+              ],
+              "p50_ms": 4.728125,
+              "p95_ms": 5.362833,
+              "min_ms": 4.666584,
+              "max_ms": 5.362833
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.239083,
+                2.146583,
+                2.167917
+              ],
+              "p50_ms": 2.167917,
+              "p95_ms": 2.239083,
+              "min_ms": 2.146583,
+              "max_ms": 2.239083
+            },
+            "rank": {
+              "samples_ms": [
+                3.119834,
+                2.515292,
+                2.553375
+              ],
+              "p50_ms": 2.553375,
+              "p95_ms": 3.119834,
+              "min_ms": 2.515292,
+              "max_ms": 3.119834
+            }
+          },
+          "5": {
+            "samples": [
+              {
+                "search_ms": 5.362833,
+                "parse_ms": 0,
+                "aggregate_ms": 2.239083,
+                "rank_ms": 3.119834,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.666584,
+                "parse_ms": 0,
+                "aggregate_ms": 2.146583,
+                "rank_ms": 2.515292,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              },
+              {
+                "search_ms": 4.728125,
+                "parse_ms": 0,
+                "aggregate_ms": 2.167917,
+                "rank_ms": 2.553375,
+                "file_visits": 540,
+                "cache_hits": 540,
+                "files_parsed": 0
+              }
+            ],
+            "search": {
+              "samples_ms": [
+                5.362833,
+                4.666584,
+                4.728125
+              ],
+              "p50_ms": 4.728125,
+              "p95_ms": 5.362833,
+              "min_ms": 4.666584,
+              "max_ms": 5.362833
+            },
+            "parse": {
+              "samples_ms": [
+                0,
+                0,
+                0
+              ],
+              "p50_ms": 0,
+              "p95_ms": 0,
+              "min_ms": 0,
+              "max_ms": 0
+            },
+            "aggregate": {
+              "samples_ms": [
+                2.239083,
+                2.146583,
+                2.167917
+              ],
+              "p50_ms": 2.167917,
+              "p95_ms": 2.239083,
+              "min_ms": 2.146583,
+              "max_ms": 2.239083
+            },
+            "rank": {
+              "samples_ms": [
+                3.119834,
+                2.515292,
+                2.553375
+              ],
+              "p50_ms": 2.553375,
+              "p95_ms": 3.119834,
+              "min_ms": 2.515292,
+              "max_ms": 3.119834
+            }
+          }
+        }
+      },
+      "native_rg": {
+        "status": "complete",
+        "complete": true,
+        "metrics_usable": true,
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 5,
+          "missed_at_5_by_type": {
+            "declaration": 4,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 4,
+            "test": 1
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/schema_test.go",
+            "line": 140,
+            "matched_unique_terms": 9,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "docs/phase-4a-type-design.md",
+            "line": 578,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 15
+          },
+          {
+            "path": "validation/internal/adoption/types.go",
+            "line": 35,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 628,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 9
+          },
+          {
+            "path": "internal/tools/prompts.go",
+            "line": 92,
+            "matched_unique_terms": 7,
+            "matched_occurrences": 8
+          },
+          {
+            "path": "internal/tools/intelligence_tools.go",
+            "line": 88,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 12
+          },
+          {
+            "path": "docs/phase-4a-concurrency.md",
+            "line": 515,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 11
+          },
+          {
+            "path": "internal/tools/runtime.go",
+            "line": 31,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 11
+          },
+          {
+            "path": "internal/tools/prompts.go",
+            "line": 21,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 10
+          },
+          {
+            "path": "docs/phase-4a-type-design.md",
+            "line": 1350,
+            "matched_unique_terms": 6,
+            "matched_occurrences": 9
+          }
+        ],
+        "candidate_count": 43614,
+        "candidate_count_complete": true,
+        "candidate_granularity": "matching_source_line",
+        "tokens": [
+          "a",
+          "and",
+          "before",
+          "bytes",
+          "change",
+          "context",
+          "does",
+          "how",
+          "it",
+          "keep",
+          "observation",
+          "occurs",
+          "one",
+          "reject",
+          "request",
+          "returns",
+          "source",
+          "that",
+          "tied",
+          "to",
+          "worktree"
+        ]
+      },
+      "native_rg_latency": {
+        "samples_ms": [
+          77.310501,
+          68.698041,
+          67.288375
+        ],
+        "p50_ms": 68.698041,
+        "p95_ms": 77.310501,
+        "min_ms": 67.288375,
+        "max_ms": 77.310501
+      },
+      "native_rg_candidate_gather_latency": {
+        "samples_ms": [
+          28.993459,
+          21.055458,
+          19.27625
+        ],
+        "p50_ms": 21.055458,
+        "p95_ms": 28.993459,
+        "min_ms": 19.27625,
+        "max_ms": 28.993459
+      },
+      "native_rg_ranking_latency": {
+        "samples_ms": [
+          48.317042,
+          47.642583,
+          48.012125
+        ],
+        "p50_ms": 48.012125,
+        "p95_ms": 48.317042,
+        "min_ms": 47.642583,
+        "max_ms": 48.317042
+      },
+      "gopls_query": "observe",
+      "gopls": {
+        "status": "unknown_completeness",
+        "complete": false,
+        "metrics_usable": true,
+        "incomplete_reason": "workspace/symbol provider result cap is not established; scores cover only the returned candidate list",
+        "metrics": {
+          "at_5": {
+            "retrieved_candidates": 5,
+            "relevant_candidates": 0,
+            "gold_spans": 5,
+            "hit_gold_spans": 0,
+            "recall": 0,
+            "precision": 0,
+            "mean_reciprocal_rank": 0
+          },
+          "at_10": {
+            "retrieved_candidates": 10,
+            "relevant_candidates": 1,
+            "gold_spans": 5,
+            "hit_gold_spans": 1,
+            "recall": 0.2,
+            "precision": 0.1,
+            "mean_reciprocal_rank": 0.14285714285714285
+          }
+        },
+        "misses": {
+          "gold_spans": 5,
+          "missed_at_5": 5,
+          "missed_at_10": 4,
+          "missed_at_5_by_type": {
+            "declaration": 4,
+            "test": 1
+          },
+          "missed_at_10_by_type": {
+            "declaration": 4
+          }
+        },
+        "candidates": [
+          {
+            "path": "internal/intelligence/types.go",
+            "line": 138,
+            "name": "ChangeContext.ObservedUnits",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus.go",
+            "line": 72,
+            "name": "FocusResult.ObservedPackages",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/verification/engine_contract.go",
+            "line": 52,
+            "name": "ChangeAnalysis.ObservedPackages",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/verification",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/focus_test.go",
+            "line": 337,
+            "name": "TestFocusContextIncludesObservedExcerptAndDirectCallSite",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/core_test.go",
+            "line": 228,
+            "name": "TestCoreSymbolReleasesObservationAfterPositionError",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/snapshot_test.go",
+            "line": 139,
+            "name": "TestObservationSourceVerifiesActualRetentionCapMiss",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/snapshot_test.go",
+            "line": 111,
+            "name": "TestObservationSourceVerifiesManifestOnCapturedSourceMiss",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/core_test.go",
+            "line": 169,
+            "name": "TestCoreSearchUsesOneObservationForSemanticRead",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/snapshot_test.go",
+            "line": 165,
+            "name": "TestObservationIncludesGuidanceAndRejectsChangedGuidance",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/core_test.go",
+            "line": 209,
+            "name": "TestCoreSearchReleasesObservationAfterSemanticCancellation",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/semantic_gopls_test.go",
+            "line": 294,
+            "name": "TestGoplsReaderOmitsWorkspaceSymbolsOutsideObservationManifest",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/semantic.go",
+            "line": 39,
+            "name": "observedSemanticProvider",
+            "kind": "interface",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 11
+          },
+          {
+            "path": "internal/intelligence/core.go",
+            "line": 565,
+            "name": "Core.observe",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 202,
+            "name": "Snapshotter.observe",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          },
+          {
+            "path": "internal/intelligence/inventory.go",
+            "line": 296,
+            "name": "inventoryGuidanceObserved",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/core.go",
+            "line": 904,
+            "name": "fileSemanticUncertaintiesObserved",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 147,
+            "name": "observationRecord",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/changeimpact/risk.go",
+            "line": 453,
+            "name": "observabilityReceiver",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/changeimpact",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/inventory.go",
+            "line": 161,
+            "name": "observationPackageSources",
+            "kind": "function",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 12
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 31,
+            "name": "maximumObservationSourceBytes",
+            "kind": "constant",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 14
+          },
+          {
+            "path": "internal/intelligence/semantic.go",
+            "line": 40,
+            "name": "observedSemanticProvider.ReadObservation",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 119,
+            "name": "snapshotObservation.lease",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 122,
+            "name": "snapshotObservation.source",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 115,
+            "name": "snapshotObservation.records",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 155,
+            "name": "snapshotObservation.release",
+            "kind": "method",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 6
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 116,
+            "name": "snapshotObservation.sources",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 117,
+            "name": "snapshotObservation.packages",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          },
+          {
+            "path": "internal/intelligence/snapshot.go",
+            "line": 118,
+            "name": "snapshotObservation.packagesReady",
+            "kind": "field",
+            "container": "github.com/agentic-mcps/go/internal/intelligence",
+            "provider_kind": 8
+          }
+        ],
+        "candidate_count": 28,
+        "candidate_count_complete": false,
+        "candidate_granularity": "workspace_symbol_anchor"
+      },
+      "gopls_query_latency": {
+        "samples_ms": [
+          3.174458,
+          2.8935,
+          2.648875
+        ],
+        "p50_ms": 2.8935,
+        "p95_ms": 3.174458,
+        "min_ms": 2.648875,
+        "max_ms": 3.174458
+      }
+    }
+  ],
+  "summary": {
+    "retrieval": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 4,
+        "macro_recall": 0.1,
+        "macro_precision": 0.1,
+        "macro_mean_reciprocal_rank": 0.125,
+        "micro_recall": 0.1,
+        "micro_precision": 0.1
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 4,
+        "macro_recall": 0.15000000000000002,
+        "macro_precision": 0.1,
+        "macro_mean_reciprocal_rank": 0.125,
+        "micro_recall": 0.15,
+        "micro_precision": 0.1
+      }
+    },
+    "native_rg": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 4,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 4,
+        "macro_recall": 0,
+        "macro_precision": 0,
+        "macro_mean_reciprocal_rank": 0,
+        "micro_recall": 0,
+        "micro_precision": 0
+      }
+    },
+    "gopls": {
+      "at_5": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 0,
+        "macro_recall": 0.2,
+        "macro_precision": 0.25,
+        "macro_mean_reciprocal_rank": 0.625,
+        "micro_recall": 0.2,
+        "micro_precision": 0.25
+      },
+      "at_10": {
+        "queries": 4,
+        "metrics_queries": 4,
+        "complete_queries": 0,
+        "macro_recall": 0.25,
+        "macro_precision": 0.275,
+        "macro_mean_reciprocal_rank": 0.6607142857142857,
+        "micro_recall": 0.25,
+        "micro_precision": 0.275
+      }
+    },
+    "gopls_status": "unknown_completeness",
+    "retrieval_stages": {
+      "cold_by_limit": {
+        "10": {
+          "search_p50_ms": 44.530625,
+          "search_p95_ms": 76.682458,
+          "parse_p50_ms": 38.858536,
+          "parse_p95_ms": 68.272073,
+          "aggregate_p50_ms": 2.967997,
+          "aggregate_p95_ms": 4.554677,
+          "rank_p50_ms": 2.806792,
+          "rank_p95_ms": 4.037417
+        },
+        "5": {
+          "search_p50_ms": 44.530625,
+          "search_p95_ms": 76.682458,
+          "parse_p50_ms": 38.858536,
+          "parse_p95_ms": 68.272073,
+          "aggregate_p50_ms": 2.967997,
+          "aggregate_p95_ms": 4.554677,
+          "rank_p50_ms": 2.806792,
+          "rank_p95_ms": 4.037417
+        }
+      },
+      "warm_by_limit": {
+        "10": {
+          "search_p50_ms": 4.897875,
+          "search_p95_ms": 5.746875,
+          "parse_p50_ms": 0,
+          "parse_p95_ms": 0,
+          "aggregate_p50_ms": 2.167917,
+          "aggregate_p95_ms": 2.479375,
+          "rank_p50_ms": 2.553375,
+          "rank_p95_ms": 3.6965
+        },
+        "5": {
+          "search_p50_ms": 4.897875,
+          "search_p95_ms": 5.746875,
+          "parse_p50_ms": 0,
+          "parse_p95_ms": 0,
+          "aggregate_p50_ms": 2.167917,
+          "aggregate_p95_ms": 2.479375,
+          "rank_p50_ms": 2.553375,
+          "rank_p95_ms": 3.6965
+        }
+      }
+    },
+    "retrieval_cold_p50_ms_by_limit": {
+      "10": 44.531,
+      "5": 44.531
+    },
+    "retrieval_cold_p95_ms_by_limit": {
+      "10": 76.682667,
+      "5": 76.682667
+    },
+    "retrieval_warm_p50_ms_by_limit": {
+      "10": 4.897958,
+      "5": 4.897958
+    },
+    "retrieval_warm_p95_ms_by_limit": {
+      "10": 5.746958,
+      "5": 5.746958
+    },
+    "native_rg_p50_ms": 69.62725,
+    "native_rg_p95_ms": 121.74070900000001,
+    "native_rg_candidate_gather_p50_ms": 20.036167,
+    "native_rg_candidate_gather_p95_ms": 70.911417,
+    "native_rg_ranking_p50_ms": 48.317042,
+    "native_rg_ranking_p95_ms": 52.805,
+    "gopls_query_p50_ms": 2.968709,
+    "gopls_query_p95_ms": 19.7895
+  },
+  "heap": {
+    "start_heap_alloc_bytes": 3032584,
+    "end_heap_alloc_bytes": 55787384,
+    "peak_sampled_heap_alloc_bytes": 55787384,
+    "end_heap_sys_bytes": 78643200,
+    "total_alloc_bytes": 1244555992,
+    "num_gc": 108
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-go.dev/schemas/retrieval-study-v1.json",
+  "title": "Agentic Go retrieval study manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "repository_id", "commit", "tree", "stratum", "queries"],
+  "properties": {
+    "version": {
+      "const": "agentic-go.retrieval-study/v1"
+    },
+    "repository_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 512,
+      "pattern": "^[a-z0-9][a-z0-9.:-]*/[a-z0-9_.-]+(/[a-z0-9_.-]+)*$",
+      "description": "Canonical lowercase host/owner/repository identity; for a repository without an origin use local/<exact-basename>."
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "tree": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "stratum": {
+      "enum": ["small", "medium", "large"]
+    },
+    "queries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/query"
+      }
+    }
+  },
+  "$defs": {
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "query", "gold"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "gopls_query": {
+          "type": "string",
+          "maxLength": 4096,
+          "description": "Optional concept anchor supplied to workspace/symbol; when omitted, the question text is used verbatim."
+        },
+        "gold": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/goldSpan"
+          }
+        }
+      }
+    },
+    "goldSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "path", "start_line", "end_line"],
+      "properties": {
+        "type": {
+          "enum": ["declaration", "caller", "test", "documentation", "configuration"]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
+          "description": "Slash-separated path relative to the pinned Git tree."
+        },
+        "start_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 512
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "version": "agentic-go.retrieval-study/v1",
+      "repository_id": "github.com/example/project",
+      "commit": "0000000000000000000000000000000000000000",
+      "tree": "1111111111111111111111111111111111111111",
+      "stratum": "small",
+      "queries": [
+        {
+          "id": "find-retry-policy",
+          "query": "Where is retry backoff configured?",
+          "gopls_query": "Retry Backoff",
+          "gold": [
+            {
+              "type": "declaration",
+              "path": "retry/policy.go",
+              "start_line": 10,
+              "end_line": 24,
+              "label": "Policy declaration and its setup path"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

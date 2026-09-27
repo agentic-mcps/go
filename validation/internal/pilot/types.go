@@ -29,42 +29,45 @@ type Scenario struct {
 //
 //nolint:govet // JSON record layout is kept grouped by contract field category.
 type Run struct {
-	SchemaVersion             string             `json:"schema_version"`
-	ScenarioID                string             `json:"scenario_id"`
-	TaskID                    string             `json:"task_id"`
-	Condition                 string             `json:"condition"`
-	Repetition                int                `json:"repetition"`
-	Model                     string             `json:"model"`
-	Reasoning                 string             `json:"reasoning"`
-	SourceSHA256              string             `json:"source_sha256"`
-	BinarySHA256              string             `json:"binary_sha256"`
-	WorkspaceSHA256           string             `json:"workspace_sha256"`
-	Prompt                    string             `json:"prompt"`
-	Transcript                []json.RawMessage  `json:"transcript"`
-	Patch                     string             `json:"patch"`
-	PatchSHA256               string             `json:"patch_sha256"`
-	Acceptance                string             `json:"acceptance"`
-	ProcessError              string             `json:"process_error,omitempty"`
-	Stderr                    string             `json:"stderr,omitempty"`
-	AcceptanceEvidenceSHA256  string             `json:"acceptance_evidence_sha256"`
-	ScopeViolations           []string           `json:"scope_violations"`
-	EvidenceBytes             int64              `json:"evidence_bytes"`
-	ToolCalls                 int                `json:"tool_calls"`
-	FocusToolCalls            int                `json:"focus_tool_calls"`
-	FocusFailedCalls          int                `json:"focus_failed_calls"`
-	FocusErrorCategories      map[string]int     `json:"focus_error_categories"`
-	FirstFocusCallPosition    int                `json:"first_focus_call_position"`
-	RefreshUse                bool               `json:"refresh_use"`
-	FocusEvidenceUse          bool               `json:"focus_evidence_use"`
-	FocusResultFollowedByEdit bool               `json:"focus_result_followed_by_edit"`
-	RefreshCompleted          bool               `json:"refresh_completed"`
-	FocusDelivery             string             `json:"focus_delivery"`
-	DurationMS                int64              `json:"duration_ms"`
-	OperatorIntervention      bool               `json:"operator_intervention"`
-	Uncertainty               []string           `json:"uncertainty"`
-	Qualifying                bool               `json:"qualifying"`
-	DecisionObligations       []ObligationResult `json:"decision_obligations"`
-	TranscriptSHA256          string             `json:"transcript_sha256"`
+	SchemaVersion             string               `json:"schema_version"`
+	ScenarioID                string               `json:"scenario_id"`
+	TaskID                    string               `json:"task_id"`
+	Condition                 string               `json:"condition"`
+	Repetition                int                  `json:"repetition"`
+	Model                     string               `json:"model"`
+	Reasoning                 string               `json:"reasoning"`
+	SourceSHA256              string               `json:"source_sha256"`
+	BinarySHA256              string               `json:"binary_sha256"`
+	WorkspaceSHA256           string               `json:"workspace_sha256"`
+	Prompt                    string               `json:"prompt"`
+	Transcript                []json.RawMessage    `json:"transcript"`
+	Patch                     string               `json:"patch"`
+	PatchSHA256               string               `json:"patch_sha256"`
+	Acceptance                string               `json:"acceptance"`
+	ProcessError              string               `json:"process_error,omitempty"`
+	Stderr                    string               `json:"stderr,omitempty"`
+	AcceptanceEvidenceSHA256  string               `json:"acceptance_evidence_sha256"`
+	ScopeViolations           []string             `json:"scope_violations"`
+	EvidenceBytes             int64                `json:"evidence_bytes"`
+	ToolCalls                 int                  `json:"tool_calls"`
+	FocusToolCalls            int                  `json:"focus_tool_calls"`
+	FocusFailedCalls          int                  `json:"focus_failed_calls"`
+	FocusErrorCategories      map[string]int       `json:"focus_error_categories"`
+	FocusFailureCauses        map[string]int       `json:"focus_failure_causes,omitempty"`
+	FocusFailureRecords       []FocusFailureRecord `json:"focus_failure_records,omitempty"`
+	FirstFocusCallPosition    int                  `json:"first_focus_call_position"`
+	RefreshUse                bool                 `json:"refresh_use"`
+	FocusEvidenceUse          bool                 `json:"focus_evidence_use"`
+	FocusResultFollowedByEdit bool                 `json:"focus_result_followed_by_edit"`
+	RefreshCompleted          bool                 `json:"refresh_completed"`
+	RedundantRefreshes        int                  `json:"redundant_refreshes,omitempty"`
+	FocusDelivery             string               `json:"focus_delivery"`
+	DurationMS                int64                `json:"duration_ms"`
+	OperatorIntervention      bool                 `json:"operator_intervention"`
+	Uncertainty               []string             `json:"uncertainty"`
+	Qualifying                bool                 `json:"qualifying"`
+	DecisionObligations       []ObligationResult   `json:"decision_obligations"`
+	TranscriptSHA256          string               `json:"transcript_sha256"`
 }
 
 // ObligationResult records evidence for one scenario obligation.
@@ -179,11 +182,14 @@ func LoadRun(path string) (Run, error) {
 	r.FocusToolCalls = focus.Calls
 	r.FocusFailedCalls = focus.FailedCalls
 	r.FocusErrorCategories = focus.ErrorCategories
+	r.FocusFailureCauses = focus.FailureCauses
+	r.FocusFailureRecords = focus.FailureRecords
 	r.FirstFocusCallPosition = focus.FirstPosition
 	r.RefreshUse = focus.Refresh
 	r.FocusEvidenceUse = focus.Evidence
 	r.FocusResultFollowedByEdit = focus.FocusResultFollowedByEdit
 	r.RefreshCompleted = focus.RefreshCompleted
+	r.RedundantRefreshes = focus.RedundantRefreshes
 	return r, nil
 }
 

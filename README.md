@@ -10,14 +10,20 @@
   <a href="#install"><img src="assets/brand/pills/install.svg" alt="Install agentic-go"></a>
   <a href="#connect"><img src="assets/brand/pills/mcp-setup.svg" alt="Connect MCP"></a>
   <a href="https://agentic-mcps.github.io/go/docs/"><img src="assets/brand/pills/docs.svg" alt="Read docs"></a>
-  <a href="https://github.com/agentic-mcps/go/releases/tag/v1.1.0"><img src="assets/brand/pills/release.svg" alt="v1.1.0 release"></a>
+  <a href="https://github.com/agentic-mcps/go/releases/tag/v1.2.1"><img src="assets/brand/pills/release.svg" alt="v1.2.1 release"></a>
 </p>
 
 <p align="center"><a href="https://agentic-mcps.github.io/go/">Website</a> · <a href="https://agentic-mcps.github.io/go/docs/">Docs</a> · <a href="#install">Install</a> · <a href="#connect">Connect</a> · <a href="#workflow">Workflow</a> · <a href="#capabilities">Capabilities</a> · <a href="#faq">FAQ</a></p>
 
 `agentic-go` is a local Go MCP server and CLI. It gives an external coding agent semantic context, change continuity, guarded refactoring, and executed verification without embedding an LLM or becoming an agent framework.
 
-The v1.1.0 server exposes 15 MCP tools: the frozen v1 surface of 14 tools plus the additive `go_context` tool under `agentic.focus/v1`. The seven resources, resource template, six prompts, and frozen v1 schemas remain unchanged.
+The [product north star](docs/go-intelligence-north-star.md) targets Go engineers
+using agents throughout understanding, editing, debugging, verification, and
+review. It distinguishes current capabilities from planned workflow work and
+unproven benefits across models. See the
+[continuation handoff](docs/continuation/go-intelligence.md) for current status.
+
+The v1.2.1 server exposes 15 MCP tools: the frozen v1 surface of 14 tools plus the additive `go_context` tool under `agentic.focus/v1`. This patch release makes the edit, refresh, verify, and inspect handoff explicit while preserving snapshot lineage and fail-closed evidence. The seven resources, resource template, six prompts, and frozen v1 schemas remain unchanged.
 
 ## Install
 
@@ -28,7 +34,7 @@ brew install agentic-mcps/tap/agentic-go
 agentic-go --version
 ```
 
-That installs `agentic-go`, the pinned `agentic-go-gopls` companion, and `agentic-go-vet`. The Homebrew tap is maintained separately; the signed v1.1.0 release archive and checksum installer below are the canonical versioned distribution path.
+That installs `agentic-go`, the pinned `agentic-go-gopls` companion, and `agentic-go-vet`. The Homebrew tap is maintained separately; the signed v1.2.1 release archive and checksum installer below are the canonical versioned distribution path.
 
 For an agent workflow, install the binary first, then print the client-native
 MCP entry for the current workspace:
@@ -44,8 +50,8 @@ edit your client configuration.
 <summary>Install from the release archive instead</summary>
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.1.0/scripts/install.sh \
-  | bash -s -- 1.1.0
+curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.2.1/scripts/install.sh \
+  | bash -s -- 1.2.1
 ```
 
 The installer places the binaries in `~/.local/bin` and verifies the release checksum before replacing them.
@@ -105,6 +111,28 @@ For focused context before an edit, an MCP client can call `go_context` with the
 ```sh
 agentic-go context --base origin/main --query Worker --format text
 ```
+
+### Branch source-view preview
+
+The development branch also includes an explicit source-view command for
+checking a branch in its own exact Git worktree:
+
+```sh
+agentic-go source-view --workspace "$PWD" --branch feature/example \
+  --output ../agentic-go-feature-example --format json
+agentic-go mcp-config --client codex --workspace ../agentic-go-feature-example
+```
+
+Without `--branch`, it selects local `main`, or the configured
+`origin/HEAD` when `main` is absent. Add `--include-dirty` only when the
+source checkout's `HEAD` is exactly the selected commit; it carries staged,
+unstaged, and regular untracked changes into the view. The output names the
+branch ref, commit, tree, and any checkout limitations. Configure the agent
+with the exact view root so snapshot checks can reject a branch that moved.
+The source view is a visible detached worktree. This preview does not create a
+persistent index or automatically switch a running MCP server, and it reports
+uninitialized submodules as incomplete. External `go.work` or local
+`replace` inputs are not captured.
 
 ## Capabilities
 

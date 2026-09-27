@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/agentic-mcps/go/internal/intelligence/retrieval"
 	"github.com/agentic-mcps/go/internal/verification"
 )
 
@@ -143,6 +144,11 @@ type verificationFocusMetadata struct {
 	Request  focusPolicyIdentity `json:"request"`
 }
 
+type verificationAssessment struct {
+	Report        *verification.Report
+	Applicability VerificationApplicability
+}
+
 type focusPolicyIdentity struct {
 	MinChangedCoverage *float64            `json:"min_changed_coverage,omitempty"`
 	Base               string              `json:"base"`
@@ -175,6 +181,15 @@ type storedFocusSymbol struct {
 	Qualified string `json:"qualified"`
 	Kind      string `json:"kind"`
 	File      string `json:"file"`
+}
+
+type focusRetrievalStatus struct {
+	fallback     string
+	indexedFiles int
+	skippedFiles int
+	used         bool
+	complete     bool
+	truncated    bool
 }
 
 //nolint:govet // Field order keeps persisted evidence readable.
@@ -243,7 +258,7 @@ func (c *Core) Focus(ctx context.Context, request FocusRequest) (FocusResult, er
 	if analysis.Repository.BaseCommit != observation.snapshot.BaseCommit || analysis.Repository.MergeBaseCommit != observation.snapshot.MergeBaseCommit || analysis.Repository.HeadCommit != observation.snapshot.HeadCommit {
 		return FocusResult{}, fmt.Errorf("%w while analyzing change consequences", ErrSnapshotChanged)
 	}
-	applicability, err := c.verificationApplicability(ctx, observation.snapshot, focusIdentity(request))
+	assessment, err := c.assessVerificationApplicability(ctx, observation.snapshot, focusIdentity(request))
 	if err != nil {
 		return FocusResult{}, err
 	}
@@ -256,9 +271,10 @@ func (c *Core) Focus(ctx context.Context, request FocusRequest) (FocusResult, er
 	result := FocusResult{
 		SchemaVersion: FocusSchemaVersion, Provider: c.provider(), Snapshot: observation.snapshot,
 		Change: analysis.Change, Impact: analysis.Impact, Risks: nonNilRisks(analysis.Risks),
-		Uncertainties: nonNilVerificationUncertainties(analysis.Uncertainties), Verification: applicability,
+		Uncertainties: nonNilVerificationUncertainties(analysis.Uncertainties), Verification: assessment.Applicability,
 		ObservedPackages: analysis.ObservedPackages, Complete: analysis.Complete, Context: focused, Refresh: refresh,
 	}
+	applyFocusAction(&result, assessment.Report)
 	if focused != nil {
 		selection := focused.Selection
 		if previous != nil {
@@ -394,13 +410,39 @@ func (c *Core) focusContext(ctx context.Context, observation *snapshotObservatio
 				result.Reasons = append(result.Reasons, "the requested query could not be resolved by the active semantic provider")
 				return nil
 			}
-			matches, searchErr := reader.Search(ctx, request.Query)
+			matches, retrievalStatus, searchErr := c.searchFocusCandidates(ctx, observation, reader, request.Query)
 			if searchErr != nil {
 				return searchErr
 			}
-			normalized, normalizeErr := normalizeSymbolMatches(observation.snapshot, matches.Items)
-			if normalizeErr != nil {
-				return normalizeErr
+			if retrievalStatus.fallback != "" {
+				result.Uncertainties = append(result.Uncertainties, Uncertainty{
+					Code:      "retrieval.fallback",
+					Message:   retrievalStatus.fallback,
+					Locations: []Location{},
+				})
+			}
+			if retrievalStatus.used && !retrievalStatus.complete {
+				result.Uncertainties = append(result.Uncertainties, Uncertainty{
+					Code:      "retrieval.incomplete",
+					Message:   fmt.Sprintf("hybrid discovery indexed %d Go files; %d files were unavailable to the structural index", retrievalStatus.indexedFiles, retrievalStatus.skippedFiles),
+					Locations: []Location{},
+				})
+			}
+			if retrievalStatus.used && retrievalStatus.truncated {
+				result.Uncertainties = append(result.Uncertainties, Uncertainty{
+					Code:      "semantic.query_bounded",
+					Message:   fmt.Sprintf("hybrid discovery returned more than %d candidates", maxFocusCandidates),
+					Locations: []Location{},
+				})
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "declaration_candidates", State: "gathered_but_omitted", Reason: "hybrid discovery candidate bound exceeded"})
+			}
+			normalized := matches.Items
+			if !retrievalStatus.used {
+				var normalizeErr error
+				normalized, normalizeErr = normalizeSymbolMatches(observation.snapshot, matches.Items)
+				if normalizeErr != nil {
+					return normalizeErr
+				}
 			}
 			if len(normalized) > maxFocusCandidates {
 				result.Candidates = append(result.Candidates, normalized[:maxFocusCandidates]...)
@@ -408,6 +450,12 @@ func (c *Core) focusContext(ctx context.Context, observation *snapshotObservatio
 				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "declaration_candidates", State: "gathered_but_omitted", Reason: "candidate bound exceeded"})
 			} else {
 				result.Candidates = append(result.Candidates, normalized...)
+			}
+			if matches.Omitted > 0 {
+				result.Uncertainties = append(result.Uncertainties, Uncertainty{Code: "semantic.external_locations", Message: fmt.Sprintf("%d workspace symbol locations were omitted because they were outside the active snapshot observation", matches.Omitted), Locations: []Location{}})
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "declarations", State: "gathered_but_omitted", Reason: "some workspace symbol locations were outside the active snapshot observation"})
+				result.Reasons = append(result.Reasons, "query returned incomplete workspace candidates; select a retained current candidate or use a narrower file or package selector")
+				break
 			}
 			switch len(normalized) {
 			case 0:
@@ -494,7 +542,28 @@ func (c *Core) focusContext(ctx context.Context, observation *snapshotObservatio
 		result.Excerpts = excerpts
 		result.Uncertainties = append(result.Uncertainties, uncertainties...)
 		if len(result.CallSites) == 0 {
-			result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "examined_and_absent"})
+			switch {
+			case !observation.snapshot.Capabilities.CallHierarchy:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "unavailable", Reason: "the active semantic provider does not support call hierarchy"})
+			case !isCallableSymbol(focused.Symbol.Kind):
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "unexamined", Reason: "call hierarchy expansion is limited to function and method declarations"})
+			case focused.Calls.Truncated || focused.Calls.Total > len(focused.Calls.Items) || hasIncomingCallWithoutSites(focused.Calls.Items):
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "gathered_but_omitted", Reason: "call hierarchy evidence was incomplete or lacked source call sites"})
+			default:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "direct_callers", State: "examined_and_absent"})
+			}
+		}
+		if isCallableSymbol(focused.Symbol.Kind) {
+			result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "unexamined", Reason: "type definitions are not applicable to function and method declarations"})
+		} else {
+			switch {
+			case !observation.snapshot.Capabilities.TypeDefinition:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "unavailable", Reason: "the active semantic provider does not support type definitions"})
+			case focused.TypeDefinitions.Truncated || focused.TypeDefinitions.Total > len(focused.TypeDefinitions.Items):
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "gathered_but_omitted", Reason: "type-definition evidence was bounded or omitted"})
+			case focused.TypeDefinitions.Total == 0:
+				result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "type_definition", State: "examined_and_absent"})
+			}
 		}
 		if len(tests) == 0 {
 			result.EvidenceStates = append(result.EvidenceStates, EvidenceState{Facet: "related_tests", State: "examined_and_absent"})
@@ -516,6 +585,94 @@ func (c *Core) focusContext(ctx context.Context, observation *snapshotObservatio
 		return nil, err
 	}
 	return &bounded, nil
+}
+
+func (c *Core) searchFocusCandidates(ctx context.Context, observation *snapshotObservation, reader semanticReader, query string) (semanticSymbols, focusRetrievalStatus, error) {
+	status := focusRetrievalStatus{complete: true}
+	if c.retrieval == nil {
+		status.fallback = "hybrid discovery is unavailable; using semantic workspace-symbol search"
+		matches, err := reader.Search(ctx, query)
+		return matches, status, err
+	}
+	files, err := observedRetrievalFiles(observation)
+	if err != nil {
+		return semanticSymbols{}, status, err
+	}
+	indexed, err := c.retrieval.Search(ctx, retrieval.Key{
+		Workspace: observation.snapshot.RepositoryID,
+		Scope:     observation.snapshot.Scope,
+		Build:     retrievalBuildKey(observation.snapshot),
+		Provider:  observation.snapshot.GoplsVersion,
+	}, files, query, maxFocusCandidates)
+	if err != nil {
+		return semanticSymbols{}, status, err
+	}
+	status.complete = indexed.Complete
+	status.truncated = indexed.Truncated
+	status.indexedFiles = indexed.IndexedFiles
+	status.skippedFiles = indexed.SkippedFiles
+	if len(indexed.Candidates) == 0 {
+		status.fallback = "hybrid discovery returned no resolvable candidates; using semantic workspace-symbol search"
+		matches, searchErr := reader.Search(ctx, query)
+		return matches, status, searchErr
+	}
+
+	matches := semanticSymbols{Items: []SymbolMatch{}}
+	seen := make(map[SymbolRef]struct{}, len(indexed.Candidates))
+	for _, candidate := range indexed.Candidates {
+		contents, sourceErr := observation.source(candidate.Path)
+		if sourceErr != nil {
+			return semanticSymbols{}, status, sourceErr
+		}
+		position, positionErr := sourcePositionFromContents(filepath.Base(candidate.Path), contents, SourcePosition{
+			File: candidate.Path, Line: candidate.Line, Column: candidate.Column,
+		})
+		if positionErr != nil {
+			continue
+		}
+		match, symbolErr := reader.SymbolAt(ctx, candidate.Path, position)
+		if symbolErr != nil {
+			return semanticSymbols{}, status, symbolErr
+		}
+		normalized, normalizeErr := normalizeSymbolMatch(observation.snapshot, match)
+		if normalizeErr != nil {
+			continue
+		}
+		if _, exists := seen[normalized.Ref]; exists {
+			continue
+		}
+		seen[normalized.Ref] = struct{}{}
+		matches.Items = append(matches.Items, normalized)
+		if len(matches.Items) == maxFocusCandidates {
+			break
+		}
+	}
+	if len(matches.Items) == 0 {
+		status.fallback = "hybrid discovery candidates did not resolve semantically; using semantic workspace-symbol search"
+		fallback, searchErr := reader.Search(ctx, query)
+		return fallback, status, searchErr
+	}
+	status.used = true
+	return matches, status, nil
+}
+
+func observedRetrievalFiles(observation *snapshotObservation) ([]retrieval.File, error) {
+	files := make([]retrieval.File, 0)
+	for _, record := range observation.records {
+		if record.Kind == "deleted" || !strings.HasSuffix(record.Path, ".go") {
+			continue
+		}
+		contents, err := observation.source(record.Path)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, retrieval.File{Path: record.Path, Digest: record.Digest, Contents: contents})
+	}
+	return files, nil
+}
+
+func retrievalBuildKey(snapshot SnapshotRef) string {
+	return fmt.Sprintf("%s\x00%s\x00%t\x00%s\x00%s\x00%s\x00%v", snapshot.Build.GOOS, snapshot.Build.GOARCH, snapshot.Build.CGOEnabled, snapshot.Build.GOFLAGS, snapshot.Build.Workspace, snapshot.GoVersion, snapshot.Build.Tags)
 }
 
 func (c *Core) focusSymbol(ctx context.Context, reader semanticReader, observation *snapshotObservation, file string, position Position, maximum int) (*SymbolContext, []SymbolMatch, []SourceExcerpt, []Uncertainty, error) {
@@ -547,7 +704,7 @@ func (c *Core) focusSymbol(ctx context.Context, reader semanticReader, observati
 		result.Definitions = locationSet(locations)
 		omitted["definitions"] = locations.Omitted
 	}
-	if observation.snapshot.Capabilities.TypeDefinition {
+	if observation.snapshot.Capabilities.TypeDefinition && !isCallableSymbol(result.Symbol.Kind) {
 		locations, readErr := reader.TypeDefinition(ctx, file, position)
 		if readErr != nil {
 			return nil, nil, nil, nil, readErr
@@ -588,7 +745,7 @@ func (c *Core) focusSymbol(ctx context.Context, reader semanticReader, observati
 		}
 		result.DiagnosticsTotal = len(result.Diagnostics)
 	}
-	if observation.snapshot.Capabilities.CallHierarchy {
+	if observation.snapshot.Capabilities.CallHierarchy && isCallableSymbol(result.Symbol.Kind) {
 		calls, readErr := reader.Calls(ctx, file, position)
 		if readErr != nil {
 			return nil, nil, nil, nil, readErr
@@ -662,6 +819,19 @@ func (c *Core) focusTestDeclarations(ctx context.Context, reader semanticReader,
 func isGoTestEntry(name string) bool {
 	for _, prefix := range []string{"Test", "Benchmark", "Fuzz", "Example"} {
 		if strings.HasPrefix(name, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func isCallableSymbol(kind string) bool {
+	return kind == "go.function" || kind == "go.method"
+}
+
+func hasIncomingCallWithoutSites(calls []CallEdge) bool {
+	for _, call := range calls {
+		if call.Direction == "incoming" && len(call.CallSites) == 0 {
 			return true
 		}
 	}
@@ -864,12 +1034,20 @@ func focusIdentity(request FocusRequest) focusPolicyIdentity {
 }
 
 func (c *Core) verificationApplicability(ctx context.Context, snapshot SnapshotRef, requested focusPolicyIdentity) (VerificationApplicability, error) {
-	report, metadata, err := c.verifications.currentFocus(ctx, snapshot.RepositoryID)
-	if errors.Is(err, ErrVerificationNotFound) {
-		return VerificationApplicability{Reasons: []string{"no stored verification report exists for this repository"}, NextAction: "request verification for the current snapshot and policy"}, nil
-	}
+	assessment, err := c.assessVerificationApplicability(ctx, snapshot, requested)
 	if err != nil {
 		return VerificationApplicability{}, err
+	}
+	return assessment.Applicability, nil
+}
+
+func (c *Core) assessVerificationApplicability(ctx context.Context, snapshot SnapshotRef, requested focusPolicyIdentity) (verificationAssessment, error) {
+	report, metadata, err := c.verifications.currentFocus(ctx, snapshot.RepositoryID)
+	if errors.Is(err, ErrVerificationNotFound) {
+		return verificationAssessment{Applicability: VerificationApplicability{Reasons: []string{"no stored verification report exists for this repository"}, NextAction: "request verification for the current snapshot and policy"}}, nil
+	}
+	if err != nil {
+		return verificationAssessment{}, err
 	}
 	reasons := make([]string, 0)
 	if metadata == nil {
@@ -880,6 +1058,9 @@ func (c *Core) verificationApplicability(ctx context.Context, snapshot SnapshotR
 		}
 		if report.Snapshot.CurrentID != snapshot.ID {
 			reasons = append(reasons, "workspace snapshot differs")
+		}
+		if !reflect.DeepEqual(metadata.Snapshot, snapshot) || metadata.Snapshot.ID != report.Snapshot.CurrentID {
+			reasons = append(reasons, "stored applicability snapshot differs")
 		}
 		if metadata.Request.Scope != requested.Scope {
 			reasons = append(reasons, "package scope differs")
@@ -899,7 +1080,10 @@ func (c *Core) verificationApplicability(ctx context.Context, snapshot SnapshotR
 	if !applicable {
 		next = "request verification for the current snapshot and policy"
 	}
-	return VerificationApplicability{ReportID: report.ID, Outcome: report.Result.Status, Reasons: reasons, NextAction: next, Present: true, Applicable: applicable}, nil
+	return verificationAssessment{
+		Applicability: VerificationApplicability{ReportID: report.ID, Outcome: report.Result.Status, Reasons: reasons, NextAction: next, Present: true, Applicable: applicable},
+		Report:        &report,
+	}, nil
 }
 
 func nonNilRisks(items []verification.RiskArea) []verification.RiskArea {

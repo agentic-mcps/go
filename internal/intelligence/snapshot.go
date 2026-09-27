@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/sourceview"
 	"github.com/agentic-mcps/go/internal/workspace"
 )
 
@@ -421,6 +422,20 @@ func (s *Snapshotter) readState(ctx context.Context, request SnapshotRequest) (s
 	if err != nil {
 		return snapshotState{}, fmt.Errorf("resolving HEAD: %w", err)
 	}
+	if filepath.Clean(repositoryRoot) == filepath.Clean(s.workspace.Root()) {
+		gitEntry, statErr := os.Lstat(filepath.Join(repositoryRoot, ".git"))
+		if statErr != nil && !errors.Is(statErr, os.ErrNotExist) {
+			return snapshotState{}, fmt.Errorf("inspecting worktree Git marker: %w", statErr)
+		}
+		if statErr == nil && !gitEntry.IsDir() {
+			if viewErr := sourceview.Validate(ctx, s.runner, head); viewErr != nil {
+				if errors.Is(viewErr, sourceview.ErrStale) {
+					return snapshotState{}, fmt.Errorf("%w: %v", ErrSnapshotChanged, viewErr)
+				}
+				return snapshotState{}, fmt.Errorf("validating branch source view: %w", viewErr)
+			}
+		}
+	}
 	base, mergeBase := "", ""
 	if request.Base != "" {
 		if strings.HasPrefix(request.Base, "-") || strings.ContainsRune(request.Base, 0) {
@@ -508,13 +523,13 @@ func (s *Snapshotter) snapshotPaths(ctx context.Context, index []byte, scope str
 	if err != nil {
 		return nil, fmt.Errorf("reading untracked content: %w", err)
 	}
-	addNULPaths(paths, untracked)
+	addNULFilePaths(paths, untracked)
 	ignoredInputs, err := s.gitBytes(ctx, "ls-files", "--others", "--ignored", "--exclude-standard", "-z", "--",
 		"go.mod", "go.sum", "go.work", "go.work.sum", ":(glob)**/*.go", ":(glob)**/go.mod", ":(glob)**/go.sum", ":(glob)**/go.work", ":(glob)**/go.work.sum")
 	if err != nil {
 		return nil, fmt.Errorf("reading ignored Go inputs: %w", err)
 	}
-	addNULPaths(paths, ignoredInputs)
+	addNULFilePaths(paths, ignoredInputs)
 	for _, entry := range bytes.Split(index, []byte{0}) {
 		if len(entry) > 2 && entry[0] >= 'a' && entry[0] <= 'z' && entry[1] == ' ' {
 			paths[string(entry[2:])] = struct{}{}
@@ -773,6 +788,15 @@ func addNULPaths(destination map[string]struct{}, data []byte) {
 		if len(value) > 0 {
 			destination[filepath.ToSlash(string(value))] = struct{}{}
 		}
+	}
+}
+
+func addNULFilePaths(destination map[string]struct{}, data []byte) {
+	for _, value := range bytes.Split(data, []byte{0}) {
+		if len(value) == 0 || bytes.HasSuffix(value, []byte{'/'}) {
+			continue
+		}
+		destination[filepath.ToSlash(string(value))] = struct{}{}
 	}
 }
 

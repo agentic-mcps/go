@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/agentic-mcps/go/internal/execution"
+	"github.com/agentic-mcps/go/internal/sourceview"
 	"github.com/agentic-mcps/go/internal/workspace"
 )
 
@@ -105,6 +106,57 @@ func TestSnapshotValidationRejectsStaleReference(t *testing.T) {
 	_, err = snapshotter.Validate(context.Background(), expected)
 	if !errors.Is(err, ErrSnapshotChanged) {
 		t.Fatalf("Validate() error = %v, want ErrSnapshotChanged", err)
+	}
+}
+
+func TestSnapshotRejectsMovedManagedBranchViewRef(t *testing.T) {
+	root := snapshotRepository(t)
+	snapshotGit(t, root, "checkout", "-b", "feature")
+	writeSnapshotFile(t, root, "main.go", "package fixture\n\nvar Value = 2\n")
+	snapshotGit(t, root, "add", "main.go")
+	snapshotGit(t, root, "-c", "commit.gpgsign=false", "commit", "-m", "feature value")
+	featureCommit := snapshotGit(t, root, "rev-parse", "HEAD")
+	snapshotGit(t, root, "checkout", "main")
+
+	sourceWorkspace, err := workspace.Open(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sourceRunner, err := execution.New(sourceWorkspace, execution.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	viewPath := filepath.Join(filepath.Dir(root), filepath.Base(root)+"-feature-view")
+	view, err := sourceview.Create(context.Background(), sourceRunner, sourceWorkspace, sourceview.Request{
+		Branch: "feature", OutputPath: viewPath,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if view.Commit != featureCommit {
+		t.Fatalf("source view commit = %s, want %s", view.Commit, featureCommit)
+	}
+
+	viewWorkspace, err := workspace.Open(context.Background(), viewPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	viewRunner, err := sourceRunner.ForWorkspace(viewWorkspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshotter, err := NewSnapshotter(viewWorkspace, viewRunner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := SnapshotRequest{Semantic: SemanticIdentity{Version: "test"}}
+	if _, err := snapshotter.Capture(context.Background(), request); err != nil {
+		t.Fatalf("Capture() for current branch ref = %v", err)
+	}
+	mainCommit := snapshotGit(t, root, "rev-parse", "refs/heads/main")
+	snapshotGit(t, root, "update-ref", "refs/heads/feature", mainCommit)
+	if _, err := snapshotter.Capture(context.Background(), request); !errors.Is(err, ErrSnapshotChanged) {
+		t.Fatalf("Capture() after branch ref movement = %v, want ErrSnapshotChanged", err)
 	}
 }
 
@@ -346,6 +398,17 @@ func TestSnapshotIncludesIgnoredActiveInputsButNotInactiveFiles(t *testing.T) {
 	}
 	if embedded.ID == generated.ID {
 		t.Fatal("ignored embedded asset did not change semantic snapshot")
+	}
+}
+
+func TestSnapshotIgnoresGitDirectoryMarkers(t *testing.T) {
+	root := snapshotRepository(t)
+	writeSnapshotFile(t, root, ".gitignore", "ignored/\n")
+	writeSnapshotFile(t, root, "ignored/checkout/go.mod", "module example.test/ignored\n\ngo 1.25.0\n")
+
+	snapshotter := newTestSnapshotter(t, root)
+	if _, err := snapshotter.Capture(context.Background(), SnapshotRequest{Semantic: SemanticIdentity{Version: "test"}}); err != nil {
+		t.Fatalf("Capture() with ignored nested checkout = %v", err)
 	}
 }
 

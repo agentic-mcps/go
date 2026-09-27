@@ -1,0 +1,54 @@
+{
+  "version": "agentic-go.retrieval-study/v1",
+  "repository_id": "github.com/kubernetes/kubernetes",
+  "commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+  "tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+  "stratum": "large",
+  "queries": [
+    {
+      "id": "large-1",
+      "query": "How does a Deployment define rollout progress, report a timed out rollout, and schedule a later progress check?",
+      "gopls_query": "syncRolloutStatus",
+      "gold": [
+        {"type": "declaration", "path": "staging/src/k8s.io/api/apps/v1/types.go", "start_line": 419, "end_line": 464, "label": "DeploymentSpec and progress deadline field"},
+        {"type": "declaration", "path": "pkg/controller/deployment/progress.go", "start_line": 36, "end_line": 95, "label": "rollout status and timeout handling"},
+        {"type": "declaration", "path": "pkg/controller/deployment/util/deployment_util.go", "start_line": 770, "end_line": 809, "label": "DeploymentTimedOut"},
+        {"type": "declaration", "path": "pkg/controller/deployment/progress.go", "start_line": 160, "end_line": 199, "label": "stuck deployment requeue"},
+        {"type": "test", "path": "pkg/controller/deployment/progress_test.go", "start_line": 196, "end_line": 363, "label": "rollout status tests"}
+      ]
+    },
+    {
+      "id": "large-2",
+      "query": "After a Pod fails scheduling, how can a cluster event move it to the active queue, backoff queue, or leave it unschedulable?",
+      "gopls_query": "QueueingHint",
+      "gold": [
+        {"type": "declaration", "path": "staging/src/k8s.io/kube-scheduler/framework/types.go", "start_line": 197, "end_line": 249, "label": "queueing hint API"},
+        {"type": "declaration", "path": "pkg/scheduler/backend/queue/scheduling_queue.go", "start_line": 583, "end_line": 679, "label": "event hint requeue decision"},
+        {"type": "declaration", "path": "pkg/scheduler/backend/queue/scheduling_queue.go", "start_line": 1811, "end_line": 1852, "label": "move to active or backoff queue"},
+        {"type": "test", "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go", "start_line": 2480, "end_line": 2658, "label": "queueing hint outcomes"}
+      ]
+    },
+    {
+      "id": "large-3",
+      "query": "When context is canceled while a client go controller is watching, which loops stop and is the underlying watch closed?",
+      "gopls_query": "RunWithContext",
+      "gold": [
+        {"type": "declaration", "path": "staging/src/k8s.io/client-go/tools/cache/controller.go", "start_line": 126, "end_line": 142, "label": "Controller cancellation contract"},
+        {"type": "caller", "path": "staging/src/k8s.io/client-go/tools/cache/controller.go", "start_line": 172, "end_line": 209, "label": "controller context propagation"},
+        {"type": "declaration", "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go", "start_line": 423, "end_line": 434, "label": "Reflector.RunWithContext"},
+        {"type": "declaration", "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go", "start_line": 561, "end_line": 620, "label": "watch cancellation and stop"},
+        {"type": "test", "path": "staging/src/k8s.io/client-go/tools/cache/reflector_test.go", "start_line": 88, "end_line": 202, "label": "watch cancellation tests"}
+      ]
+    },
+    {
+      "id": "large-4",
+      "query": "When a concurrent resource update conflicts, what must the retry callback do on each attempt, and which errors cause another attempt?",
+      "gopls_query": "RetryOnConflict",
+      "gold": [
+        {"type": "declaration", "path": "staging/src/k8s.io/client-go/util/retry/util.go", "start_line": 48, "end_line": 105, "label": "retry policy and RetryOnConflict"},
+        {"type": "test", "path": "staging/src/k8s.io/client-go/util/retry/util_test.go", "start_line": 30, "end_line": 73, "label": "retry error classification tests"},
+        {"type": "caller", "path": "staging/src/k8s.io/client-go/examples/create-update-delete-deployment/main.go", "start_line": 46, "end_line": 142, "label": "fetch and update callback in example main"}
+      ]
+    }
+  ]
+}

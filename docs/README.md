@@ -8,27 +8,55 @@ compatibility baseline. Shared interfaces and invariants live in
 [`contracts.md`](contracts.md). The completed v1 implementation stages and
 their evidence live in
 [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md). The architectural rationale is
-recorded in [`decision-memo.md`](decision-memo.md); [`plan.md`](plan.md) is the
-concise product plan and routing summary.
+recorded in the historical [`decision-memo.md`](decision-memo.md);
+[`plan.md`](plan.md) is the current product summary and routing guide.
 
 ## Next-generation Go intelligence
 
-After the contributor instructions, a new agent should start with the
-[Astra analysis handoff](continuation/astra-understanding.md): product judgment,
-source evidence, confirmed observation defects, deferred work, and the next
-decision. Its quick start routes the next task without repeating the broader
-investigation. The [continuation handoff](continuation/go-intelligence.md) owns
-implementation status and the next action; the
-[Go intelligence north star](go-intelligence-north-star.md) owns the approved
-architectural direction and acceptance criteria.
-The additive post-v1 `agentic.focus/v1` evidence layer is implemented and
-locally qualified. The initial private 20-run Luna feasibility pilot found no
-treatment use because `go_context` was unused in all 10 focus runs. The later
-27-run adoption follow-up found 0/6 use with description-only discoverability,
-6/6 with generic prompt guidance, and 6/6 with the shipped skill; it still
-establishes no causal engineering benefit. See the
-[adoption results](../validation/v1.0.0/adoption-results.md). Delta refresh is
-deferred. These documents do not override frozen v1 contracts.
+After the contributor instructions, read the
+[Go engineering north star](go-intelligence-north-star.md) for product direction,
+model/skill requirements, the next delivery cycle, and acceptance criteria.
+Then read the [continuation handoff](continuation/go-intelligence.md) for
+implemented behavior, current evidence, and the exact unfinished step.
+The [Astra source review](continuation/astra-understanding.md) is dated
+historical background, not current implementation sequencing.
+
+The first customer is a Go engineer using coding agents on real repositories.
+The intended workflow covers understanding, implementation, debugging,
+refresh, verification, and review/resume. The next product cycle makes one
+cross-package API/interface change dependable from start to handoff, using the
+existing deterministic evidence compiler and concise shared skills.
+
+The user-directed aspiration for install-time, branch-aware repository
+indexing and repeatable retrieval is recorded separately in the
+[codebase indexing research note](research/codebase-indexing-retrieval.md).
+The current development branch adds an exact branch source-view preview and
+records the first retrieval screen. It does not yet provide persistent
+indexing or demonstrate comparative product value.
+
+`v1.2.1` (tag `67f54b7`) remains the released baseline. The current
+`codex/agentic-go-retrieval-2026-09-27` topic branch contains unreleased work.
+The frozen v1 registry
+remains 14 tools, seven resources, one template, and six prompts; the existing
+additive `go_context` brings the server to 15 tools. The revised plan does not
+change that inventory, schemas, or strict freshness behavior.
+
+| Read for | Authority |
+| --- | --- |
+| Customer, model independence, skills, and workflow outcomes | [North star](go-intelligence-north-star.md) |
+| Current implementation, remediation, and next action | [Continuation handoff](continuation/go-intelligence.md) |
+| Branch source-view preview, retrieval findings, and next gates | [Codebase indexing research](research/codebase-indexing-retrieval.md) |
+| Current campaign's implementation/check status | [Selector remediation record](../validation/v1.0.0/adoption-remediation-2026-09-24.md) |
+| Older adoption experiments | [Historical results](../validation/v1.0.0/adoption-results.md) |
+| Compatibility and execution invariants | [v1 freeze](v0.9.0-release-scope.md) and [contracts](contracts.md) |
+
+Keep the current canonical Luna matrix separate from older integrated
+diagnostics. Workflow use and task acceptance have been observed; comparative
+engineer value and broad model/host compatibility remain unproven. The plan
+requires comparison against equipped native Go/gopls workflows, plus actual
+review/rework effort. It does not promise equal competence across models or an
+unreproducible capability advantage. Full-replacement refresh remains current;
+delta delivery stays deferred.
 
 ## Verification report contracts
 

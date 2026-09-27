@@ -181,11 +181,35 @@ func FocusToolCalls(events Events) int {
 // consumers and are derived without trusting agent prose.
 type FocusMetric struct {
 	ErrorCategories                   map[string]int
+	FailureCauses                     map[string]int
+	FailureRecords                    []FocusFailureRecord
 	Calls, FailedCalls, FirstPosition int
 	Refresh, Evidence                 bool
 	FocusResultFollowedByEdit         bool
 	RefreshCompleted                  bool
+	RedundantRefreshes                int
 }
+
+// FocusFailureRecord is a bounded, sanitized attribution for one failed
+// go_context call. It deliberately excludes selector values, paths, prompts,
+// transcripts, and provider error text.
+type FocusFailureRecord struct {
+	Cause     string `json:"cause"`
+	Selector  string `json:"selector"`
+	Reason    string `json:"reason"`
+	Recovered bool   `json:"recovered"`
+	Repeated  bool   `json:"repeated"`
+}
+
+// FocusFailureSelectorMisuse and related constants classify failed go_context calls.
+const (
+	FocusFailureSelectorMisuse = "selector_misuse"
+	FocusFailureProvider       = "provider_failure"
+	FocusFailureStaleSnapshot  = "stale_snapshot"
+	FocusFailureTimeout        = "timeout"
+	FocusFailureTransport      = "transport"
+	FocusFailureUnknown        = "unknown"
+)
 
 // SkillDiscoveryEvidence reports whether the transcript contains a concrete
 // read or load of the named skill's SKILL.md. Generic prose or a tool call is
@@ -219,7 +243,11 @@ func SkillDiscoveryEvidence(events Events, skillName string) bool {
 // counts only completed MCP events and recognizes edits through the explicit
 // file_change event, not through message wording.
 func FocusMetrics(events Events) FocusMetric {
-	m := FocusMetric{ErrorCategories: map[string]int{}}
+	m := FocusMetric{
+		ErrorCategories: map[string]int{},
+		FailureCauses:   map[string]int{},
+		FailureRecords:  []FocusFailureRecord{},
+	}
 	calls := make([]focusCall, 0)
 	editPositions := make([]int, 0)
 	for i, raw := range events.Raw {
@@ -252,6 +280,11 @@ func FocusMetrics(events Events) FocusMetric {
 			m.RefreshCompleted = true
 		}
 	}
+	m.FailureRecords = focusFailureRecords(calls)
+	m.RedundantRefreshes = redundantRefreshCount(calls, editPositions)
+	for _, record := range m.FailureRecords {
+		m.FailureCauses[record.Cause]++
+	}
 	m.Evidence = m.FocusResultFollowedByEdit || m.RefreshCompleted
 	return m
 }
@@ -260,6 +293,13 @@ type focusCall struct {
 	PreviousPackID string
 	PackID         string
 	ErrorCategory  string
+	FailureCause   string
+	FailureReason  string
+	SelectorKind   string
+	SelectorDigest string
+	SnapshotID     string
+	ScopeDigest    string
+	EvidenceDigest string
 	Position       int
 	Refresh        bool
 	Success        bool
@@ -276,15 +316,20 @@ func parseCompletedFocusCall(raw json.RawMessage, position int) (focusCall, bool
 	}
 	arguments, _ := item["arguments"].(map[string]any)
 	previousPackID := stringValue(arguments["previous_pack_id"])
+	selectorKind, selectorDigest := focusSelector(arguments)
 	result, hasResult := item["result"]
 	status := stringValue(item["status"])
 	success := status != "failed" && hasResult && result != nil
-	call := focusCall{Position: position, PreviousPackID: previousPackID, Refresh: previousPackID != "", Success: success}
+	call := focusCall{Position: position, PreviousPackID: previousPackID, Refresh: previousPackID != "", SelectorKind: selectorKind, SelectorDigest: selectorDigest, Success: success}
 	if !success {
-		call.ErrorCategory = focusErrorCategory(focusErrorText(item))
+		errorText := focusErrorText(item)
+		call.ErrorCategory = focusErrorCategory(errorText)
+		call.FailureCause, call.FailureReason = focusFailureClassification(errorText, call.ErrorCategory, selectorKind)
 		return call, true
 	}
 	call.PackID = focusPackID(result)
+	call.SnapshotID, call.ScopeDigest = focusSnapshot(result)
+	call.EvidenceDigest = focusEvidenceDigest(arguments)
 	return call, true
 }
 
@@ -324,6 +369,42 @@ func refreshFollowsEdit(calls []focusCall, refresh focusCall, editPositions []in
 	return false
 }
 
+// redundantRefreshCount flags a successful refresh repeated against the same
+// observation, scope, and evidence requirements without an intervening edit
+// or stale rejection. It is diagnostic only and never suppresses a provider
+// call or relaxes freshness validation.
+func redundantRefreshCount(calls []focusCall, editPositions []int) int {
+	var previous *focusCall
+	count := 0
+	for i := range calls {
+		call := &calls[i]
+		if !call.Success {
+			if call.FailureCause == FocusFailureStaleSnapshot {
+				previous = nil
+			}
+			continue
+		}
+		if !call.Refresh {
+			previous = nil
+			continue
+		}
+		if previous != nil && previous.SnapshotID != "" && previous.ScopeDigest != "" && previous.EvidenceDigest != "" && call.SnapshotID == previous.SnapshotID && call.ScopeDigest == previous.ScopeDigest && call.EvidenceDigest == previous.EvidenceDigest && !hasEditBetween(editPositions, previous.Position, call.Position) {
+			count++
+		}
+		previous = call
+	}
+	return count
+}
+
+func hasEditBetween(positions []int, start, end int) bool {
+	for _, position := range positions {
+		if position > start && position < end {
+			return true
+		}
+	}
+	return false
+}
+
 func stringValue(value any) string {
 	text, _ := value.(string)
 	return text
@@ -344,6 +425,71 @@ func focusPackID(result any) string {
 		}
 	}
 	return ""
+}
+
+func focusSnapshot(result any) (string, string) {
+	resultMap, ok := result.(map[string]any)
+	if !ok {
+		return "", ""
+	}
+	structured, ok := resultMap["structured_content"].(map[string]any)
+	if !ok {
+		structured, ok = resultMap["structuredContent"].(map[string]any)
+	}
+	if !ok {
+		return "", ""
+	}
+	snapshot, ok := structured["snapshot"].(map[string]any)
+	if !ok {
+		return "", ""
+	}
+	snapshotID := stringValue(snapshot["id"])
+	scopeData := map[string]any{}
+	for _, key := range []string{"scope", "workspace", "base_commit"} {
+		if value, exists := snapshot[key]; exists {
+			scopeData[key] = value
+		}
+	}
+	data, _ := json.Marshal(scopeData)
+	return snapshotID, DigestString(string(data))
+}
+
+func focusEvidenceDigest(arguments map[string]any) string {
+	selected := map[string]any{}
+	for _, key := range []string{"max_bytes", "max_packages", "fail_on", "race", "min_changed_coverage"} {
+		if value, exists := arguments[key]; exists {
+			selected[key] = value
+		}
+	}
+	data, _ := json.Marshal(selected)
+	return DigestString(string(data))
+}
+
+func focusSelector(arguments map[string]any) (string, string) {
+	if arguments == nil {
+		return "none", focusSelectorDigest("none", nil)
+	}
+	if previousPackID := stringValue(arguments["previous_pack_id"]); previousPackID != "" {
+		return "refresh", focusSelectorDigest("refresh", map[string]any{"previous_pack_id": previousPackID})
+	}
+	for _, key := range []string{"symbol_ref", "query", "file", "focus_file", "focus_package"} {
+		if _, ok := arguments[key]; !ok {
+			continue
+		}
+		return key, focusSelectorDigest(key, arguments)
+	}
+	return "none", focusSelectorDigest("none", nil)
+}
+
+func focusSelectorDigest(kind string, arguments map[string]any) string {
+	selected := map[string]any{"selector": kind}
+	for _, key := range []string{"symbol_ref", "query", "file", "line", "column", "focus_file", "focus_package", "previous_pack_id"} {
+		if value, ok := arguments[key]; ok {
+			selected[key] = value
+		}
+	}
+	data, _ := json.Marshal(selected)
+	return DigestString(string(data))
 }
 
 func focusErrorText(item map[string]any) string {
@@ -406,4 +552,74 @@ func focusErrorCategory(text string) string {
 	default:
 		return focusErrorUnknown
 	}
+}
+
+func focusFailureClassification(text, category, selectorKind string) (string, string) {
+	lower := strings.ToLower(text)
+	// Keep the historical invalid_input category for compatibility, but treat
+	// an emitted refresh pack rejected by the current observation as stale
+	// lineage rather than selector misuse.
+	if strings.Contains(lower, "previous pack id is invalid") || (strings.Contains(lower, "previous pack") && strings.Contains(lower, "invalid")) {
+		return FocusFailureStaleSnapshot, "stale_snapshot"
+	}
+	switch category {
+	case focusErrorStale:
+		return FocusFailureStaleSnapshot, "stale_snapshot"
+	case focusErrorTimeout:
+		return FocusFailureTimeout, "timeout"
+	case focusErrorTransport:
+		return FocusFailureTransport, "transport"
+	}
+	if focusSelectorFailure(lower, category) {
+		return FocusFailureSelectorMisuse, focusSelectorFailureReason(lower, selectorKind)
+	}
+	if category == focusErrorProvider {
+		return FocusFailureProvider, "provider_error"
+	}
+	return FocusFailureUnknown, "unknown"
+}
+
+func focusSelectorFailure(text, category string) bool {
+	if category == focusErrorInvalidInput {
+		return true
+	}
+	for _, marker := range []string{
+		"symbol ref", "symbol_ref", "no identifier", "not a function",
+		"invalid declaration", "invalid position", "line and column",
+	} {
+		if strings.Contains(text, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func focusSelectorFailureReason(text, selectorKind string) string {
+	if selectorKind == "symbol_ref" || strings.Contains(text, "symbol ref") || strings.Contains(text, "symbol_ref") {
+		return "invalid_symbol_ref"
+	}
+	if strings.Contains(text, "no identifier") || strings.Contains(text, "not a function") || strings.Contains(text, "declaration") || strings.Contains(text, "position") || strings.Contains(text, "line and column") {
+		return "invalid_declaration_coordinate"
+	}
+	return "invalid_selector"
+}
+
+func focusFailureRecords(calls []focusCall) []FocusFailureRecord {
+	records := make([]FocusFailureRecord, 0)
+	for i, call := range calls {
+		if call.Success || call.FailureCause == "" {
+			continue
+		}
+		record := FocusFailureRecord{Cause: call.FailureCause, Selector: call.SelectorKind, Reason: call.FailureReason}
+		for _, next := range calls[i+1:] {
+			if !next.Success && next.SelectorDigest == call.SelectorDigest {
+				record.Repeated = true
+			}
+			if next.Success && (call.FailureCause != FocusFailureSelectorMisuse || next.SelectorDigest != call.SelectorDigest) {
+				record.Recovered = true
+			}
+		}
+		records = append(records, record)
+	}
+	return records
 }

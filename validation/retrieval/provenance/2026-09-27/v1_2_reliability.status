@@ -1,0 +1,25 @@
+1 .M N... 100644 100644 100644 675b63a3ea026a9530247f527bcfc4bd88f3264d 675b63a3ea026a9530247f527bcfc4bd88f3264d .agents/skills/agentic-go-context/SKILL.md
+1 .M N... 100644 100644 100644 3a4c8cfd9ca9fc535807d49a8c8a52f52a641cdf 3a4c8cfd9ca9fc535807d49a8c8a52f52a641cdf README.md
+1 .M N... 100644 100644 100644 e6d495a1527e53cf4bb93c5f23dd0d079dbc4fe6 e6d495a1527e53cf4bb93c5f23dd0d079dbc4fe6 docs/README.md
+1 .M N... 100644 100644 100644 66ef9b40ddcbe31f11d5a67a86e7b49dc0bbda16 66ef9b40ddcbe31f11d5a67a86e7b49dc0bbda16 docs/continuation/astra-understanding.md
+1 .M N... 100644 100644 100644 d12d50cfc3ae1eba142deb03f249e50f1482e5de d12d50cfc3ae1eba142deb03f249e50f1482e5de docs/continuation/go-intelligence.md
+1 .M N... 100644 100644 100644 b7ac0256f53df0f8840d2481e9435b22aa8b816a b7ac0256f53df0f8840d2481e9435b22aa8b816a docs/go-intelligence-north-star.md
+1 .M N... 100644 100644 100644 cedad4a163d4b5e96dc54ab6efd7dd265baa67fc cedad4a163d4b5e96dc54ab6efd7dd265baa67fc docs/plan.md
+1 .M N... 100644 100644 100644 e9135660feae19677d29865ddfc12046b43015a9 e9135660feae19677d29865ddfc12046b43015a9 docs/v1.0.0-roadmap.md
+1 .M N... 100644 100644 100644 c8042f1273eb760b6780c5c6a928cdfde4f539c6 c8042f1273eb760b6780c5c6a928cdfde4f539c6 internal/intelligence/core.go
+1 .M N... 100644 100644 100644 0156ae670821d1434510cc3f2d8722691915133f 0156ae670821d1434510cc3f2d8722691915133f internal/intelligence/focus.go
+1 .M N... 100644 100644 100644 33dd43bfbb303eec2a2e8a7676c2524feb19045e 33dd43bfbb303eec2a2e8a7676c2524feb19045e internal/intelligence/focus_test.go
+1 .M N... 100644 100644 100644 332a6d2a4e3e11cd9dc7e7f4df88f3df06ab8f10 332a6d2a4e3e11cd9dc7e7f4df88f3df06ab8f10 internal/tools/intelligence_tools.go
+1 .M N... 100644 100644 100644 aa5bdca00581d9b79ce20ab891dc5ad8d93ba69a aa5bdca00581d9b79ce20ab891dc5ad8d93ba69a internal/tools/mcp_surface_golden_test.go
+1 .M N... 100644 100644 100644 da7b976e5e8d47910b5882d1758469c3cf759437 da7b976e5e8d47910b5882d1758469c3cf759437 internal/tools/runtime.go
+1 .M N... 100644 100644 100644 62712f63eccb9257acaf01bc014085c89294f9fc 62712f63eccb9257acaf01bc014085c89294f9fc validation/cmd/eval/main.go
+1 .M N... 100644 100644 100644 e4641aab1a376266fb8b8d663d26faecabd26977 e4641aab1a376266fb8b8d663d26faecabd26977 validation/internal/adoption/types.go
+1 .M N... 100644 100644 100644 17c0603261a84f478824405a3fa8fa0cc01a5b9a 17c0603261a84f478824405a3fa8fa0cc01a5b9a validation/internal/adoption/types_test.go
+1 .M N... 100644 100644 100644 0e50be83b3765c83b4a7689c17cd13f2c27d4ea1 0e50be83b3765c83b4a7689c17cd13f2c27d4ea1 validation/internal/pilot/runner.go
+1 .M N... 100644 100644 100644 06e997f6ba9820dff5e20ff63cbd864ba30ecd41 06e997f6ba9820dff5e20ff63cbd864ba30ecd41 validation/internal/pilot/runner_test.go
+1 .M N... 100644 100644 100644 9c985f4f4c852bbed7b3bbb9de5573ef789e0cf4 9c985f4f4c852bbed7b3bbb9de5573ef789e0cf4 validation/internal/pilot/types.go
+? docs/research/codebase-indexing-retrieval.md
+? internal/intelligence/retrieval/index.go
+? internal/intelligence/retrieval/index_test.go
+? validation/v1.0.0/adoption-remediation-2026-09-24.md
+? validation/v1.0.0/command-activity-audit-2026-09-25.md

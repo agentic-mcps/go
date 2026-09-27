@@ -44,16 +44,20 @@ func (p *fakeSemanticProvider) ReadObservation(_ context.Context, observation *s
 }
 
 type fakeSemanticReader struct {
-	hover           string
-	diagnostics     []Diagnostic
-	search          semanticSymbols
-	definitions     semanticLocations
-	typeDefinitions semanticLocations
-	references      semanticLocations
-	implementations semanticSymbols
-	calls           semanticCalls
-	symbol          SymbolMatch
-	position        Position
+	callsErr            error
+	typeDefinitionErr   error
+	hover               string
+	diagnostics         []Diagnostic
+	implementations     semanticSymbols
+	references          semanticLocations
+	typeDefinitions     semanticLocations
+	calls               semanticCalls
+	definitions         semanticLocations
+	search              semanticSymbols
+	symbol              SymbolMatch
+	position            Position
+	typeDefinitionCalls int
+	callsCalls          int
 }
 
 func (r *fakeSemanticReader) Search(context.Context, string) (semanticSymbols, error) {
@@ -74,6 +78,10 @@ func (r *fakeSemanticReader) Definition(context.Context, string, Position) (sema
 }
 
 func (r *fakeSemanticReader) TypeDefinition(context.Context, string, Position) (semanticLocations, error) {
+	r.typeDefinitionCalls++
+	if r.typeDefinitionErr != nil {
+		return semanticLocations{}, r.typeDefinitionErr
+	}
 	return r.typeDefinitions, nil
 }
 
@@ -90,6 +98,10 @@ func (r *fakeSemanticReader) Diagnostics(context.Context, string) ([]Diagnostic,
 }
 
 func (r *fakeSemanticReader) Calls(context.Context, string, Position) (semanticCalls, error) {
+	r.callsCalls++
+	if r.callsErr != nil {
+		return semanticCalls{}, r.callsErr
+	}
 	return r.calls, nil
 }
 

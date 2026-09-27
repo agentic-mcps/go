@@ -1,169 +1,153 @@
 # agentic-go product plan
 
-## Product thesis
+Revised 2026-09-24. This is the routing summary for the
+[Go engineering north star](go-intelligence-north-star.md).
+The [continuation handoff](continuation/go-intelligence.md) records what is
+implemented, the current evidence, and the next unfinished step.
 
-Agentic-go is source-grounded Go change intelligence for coding agents. Its
-currently shipped workflow is language-native change verification:
+## Customer and product thesis
 
-> Given a local base and the final worktree, explain what changed, what may be
-> affected, what evidence was executed, which findings appear introduced, and
-> what remains uncertain.
+Build for Go engineers using coding agents on real repositories. Help the
+agent understand, implement, debug, refresh, and verify a change, then leave
+an inspectable handoff. Reduce the engineer's investigation, avoidable rework,
+and effort to determine whether the evidence still applies.
 
-Go is the reference implementation. The durable product boundary is the
-versioned verification report, not MCP and not a count of tools. The CLI,
-GitHub Action, and MCP server are adapters over one engine. Agentic-go remains
-deterministic developer tooling; it embeds no LLM and performs no agent
-orchestration.
+The technical foundation is a local, deterministic evidence compiler for Go.
+It combines semantic facts, change impact, bounded context, guarded operations,
+and executed verification. Skills explain when and how to use those operations.
+The external agent authors feature code; the engineer retains judgment about
+requirements and completion.
 
-The personal v1 module path is `github.com/ashwingopalsamy/agentic-go`. A later
-`github.com/agentic-mcps/go` repository is an independent module identity with
-an explicit migration, not a transfer or alias.
+The product should reduce dependence on model memory and guesswork. It cannot
+guarantee that every model reasons equally well or that another capable harness
+cannot reproduce its mechanisms. Reliable integration and recurring saved work
+are sufficient sources of value, if demonstrated.
 
-## Release authorities
+## Existing foundation
 
-- [`v0.2.0-release-scope.md`](v0.2.0-release-scope.md) is the executable v0.2
-  specification.
-- [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md) is the compatibility
-  baseline.
-- [`contracts.md`](contracts.md) owns shared protocol and execution
-  invariants.
-- [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md) owns the staged v0.3 through v1
-  direction without retroactively changing the v0.2 contract.
-- [`../CONTEXT.md`](../CONTEXT.md) defines the domain language.
-- [`adr/0001-verification-report-boundary.md`](adr/0001-verification-report-boundary.md)
-  records why the report is the durable boundary.
+- `internal/intelligence` owns observations, focused context, typed
+  relationships, refresh, verification applicability, continuity, and guarded
+  refactoring.
+- `internal/changeimpact` discovers changed declarations and conservative
+  affected packages from Go, Git, module, workspace, and embedded-file inputs.
+- `internal/verification` owns check policy, execution planning, and portable
+  evidence reports.
+- The CLI, advisory GitHub Action, and MCP adapters expose the same domain
+  behavior. MCP/LSP transport types stay outside intelligence domain contracts.
+- Current focus supports query/ref/position/file/package selection,
+  source-supported Go relationships, full-replacement refresh, and report
+  applicability. Current verification distinguishes requested checks passing
+  from findings or incomplete execution.
 
-Broader phase documents are design material only. They do not add release
-scope merely because a possible tool or rule is described there.
+These mechanisms exist. Their usefulness across the complete workflow and
+different model/client combinations remains to be established. The durable
+verification boundary is `agentic.verify/v1`; focused context uses the separate
+`agentic.focus/v1` contract. Neither contract proves business correctness.
 
-## Architecture
+## First complete workflow
 
-```text
-Change Request
-  -> Change Snapshot
-  -> Affected Package Closure
-  -> Verification Plan
-  -> Executed Evidence
-  -> Verification Report
-```
+Start with a cross-package API or interface change: find relevant declarations,
+implementations and consumers, inspect existing examples/tests, edit and debug,
+refresh, verify affected packages, and hand the evidence back to the engineer.
 
-- `internal/verification` owns portable types, policy, orchestration, and
-  report assembly.
-- `internal/changeimpact` owns Go, Git, module, package, declaration, and diff
-  discovery behind the verification interface.
-- workspace, execution, parser, audit, and analysis packages are infrastructure
-  adapters.
-- `cmd/agentic-go`, the root Action, and MCP tools adapt the same report. MCP
-  types, workflow concepts, and adapter names do not enter the engine.
+An interface migration or cancellation-support change should expose Go-specific
+facts such as pointer/value method sets, embedding, typed usages, test imports,
+and build assumptions where supported. Their limits remain visible. A compiler
+already catches many signature errors; measure whether this workflow reduces
+discovery/repair cycles, consequential omissions, or review effort.
 
-The report began at `agentic.verify/v1alpha1` for v0.2 and is frozen as
-`agentic.verify/v1`. Go-specific entities use
-namespaced kinds such as `go.package`; top-level concepts remain portable so a
-future TypeScript implementation can produce the same semantics. Extraction
-into an organization-level specification waits until a second implementation
-exists and proves the common boundary.
+The next cycle is ordered in the [north star](go-intelligence-north-star.md#next-delivery-cycle):
 
-In v0.7 the CLI and MCP adapters invoke the same unified report path. The
-report adds semantic and compiler diagnostics, exact snapshot lineage,
-bounded context and refactor provenance, provider capabilities, and optional
-Change Contract compliance. These additions preserve the existing result and
-exit-status semantics.
+1. Finish the existing selector-remediation reliability work and its recorded
+   checks/reruns. Preserve cause classification and strict rejection.
+2. Design current declaration candidates derived from the observed diff so an
+   agent can enter focused context without guessing coordinates. Reuse existing
+   fields only after resolving compatibility and budget behavior.
+3. Complete the edit/debug/verify/review handoff using existing reports,
+   applicability assessments, and renderers. A historical pass must remain
+   distinguishable from evidence applicable to the current change.
+4. Exercise shared instructions, text/structured delivery, exact refs, and
+   recovery in named real clients with different model families.
+5. Use a finite comparison and real engineer use to decide which capability
+   deserves further investment.
 
-## v0.1 trust seed
+Items 2-5 are planned product work. Updating this plan does not implement them,
+authorize paid runs, or qualify a release.
 
-The compatibility baseline provides seven stdio MCP tools, four resources,
-four prompts, and `agentic-go-vet`. Its active concurrency and error rules were
-calibrated against a pinned ten-repository corpus. That evidence is
-corpus-specific, not a universal precision guarantee.
+## Model and skill contract
 
-Those analyzers remain the only v0.2 policy-finding domains. A new or changed
-predicate requires a positive fixture, a meaningful near miss, a documented
-limitation, production-path coverage, reviewed external findings, and an
-acceptable false-positive rate.
+Keep engine semantics independent of model identity. Maintain concise shared
+workflow instructions, with thin host-specific installation and placement.
+Support claims must name the combinations actually exercised, including a
+usable smaller open model and a stronger model before making broader claims.
 
-## v0.2 usage seed
+Selectors and opaque references must be usable without guessing. Recover from
+errors with current candidates or fresh queries/files; do not correct refs
+silently or accept stale evidence. Refresh after an edit batch with `base`
+and `previous_pack_id` only. Repeated mistakes count against interface quality,
+even when rejection is correct.
 
-The primary workflow is:
+Context helps plan scope and checks; it neither authorizes broader edits nor
+executes verification. Skills must expose uncertainty and passing-check limits.
+Permit trivial/familiar edits to skip unnecessary context work. A client must
+deliver useful evidence to the model, not merely complete an MCP handshake.
 
-```sh
-agentic-go verify --base origin/main
-```
+## Evidence and product decisions
 
-It provides:
+Compare against native Go tools and upstream gopls with useful workflow
+guidance. Keep the existing canonical adoption matrix and older diagnostic
+campaigns separate. They record bounded use and task acceptance, not broad
+compatibility or comparative engineering value.
 
-- a final-worktree snapshot covering committed, staged, unstaged, renamed,
-  deleted, and untracked changes;
-- changed Go declarations and module/workspace/embed metadata;
-- directly changed packages plus transitive reverse importers within scope;
-- one whole-package test and changed-statement coverage run, with optional race
-  detection;
-- base/current comparison for calibrated analyzer findings;
-- source-grounded risk facts and targeted review guidance;
-- explicit uncertainty for generated code, build constraints, cgo, external
-  consumers, generated inputs, and unmodelled non-Go behavior; and
-- a deterministic report with `pass`, `findings`, or `incomplete` automation
-  status. `pass` is never a safety verdict.
+Measure independently accepted changes, consequential omissions, engineer
+review/rework effort, setup and interaction cost, and per-task/model time.
+Tool use and event ordering are diagnostics. Equal final correctness can still
+leave meaningful differences in effort; a passing baseline is not a kill rule.
 
-Delivery order is CLI first, a thin advisory GitHub Action second, and one
-approval-aware MCP operation for coding agents third. The existing seven MCP
-tools remain compatible, but clients should use `go_verify_change` when they
-want the complete workflow.
+The north star specifies a small initial screen, followed only by a focused
+redesign and confirmation on fresh tasks/another host when warranted. Keep
+hidden acceptance oracles out of treatment instructions. Record unsupported
+clients and missing cost data honestly. Continue capabilities with recurring
+benefit; simplify or stop expanding those that repeatedly add work without
+improving decisions or reviewability.
 
-Selective tests, call-graph reachability claims, SSA/VTA, `test_regex`, SARIF,
-HTTP, `doctor`, automatic toolchain installation, and Windows support claims do
-not ship in v0.2.
+The separate [codebase indexing research note](research/codebase-indexing-retrieval.md)
+records the user-directed aspiration for reusable, branch-aware repository
+retrieval. Its next product action is to evaluate the current local retrieval
+path before proposing a persistent index. This research does not change the
+current release scope or product contracts.
 
-## Evidence before publication
+Reliability maintenance and comparative product claims have separate gates.
+A maintenance release can satisfy its engineering contracts without claiming
+that it makes models better. Evidence for a narrow task/model must remain a
+narrow claim.
 
-The v0.2 release record must contain:
+## Authority and compatibility
 
-- golden contract reports;
-- local CLI and ephemeral stdio MCP dogfood against agentic-go;
-- three reviewed historical changes from already-cloned projects showing
-  reverse impact, changed coverage, and analyzer baselining;
-- commands, pinned commits, timings, limitations, and observed usefulness;
-- the Go 1.25/1.26/1.27 release matrix, race/vet/build/static analysis,
-  four-target cross-builds, release configuration checks, signatures, history,
-  and a clean worktree.
+- [North star](go-intelligence-north-star.md): current product requirements,
+  model/skill contract, delivery cycle, and value evaluation.
+- [Continuation handoff](continuation/go-intelligence.md): current state,
+  evidence identities, and sequencing.
+- [v0.9 freeze](v0.9.0-release-scope.md) and [contracts](contracts.md):
+  frozen interfaces and shared invariants.
+- [v0.2 scope](v0.2.0-release-scope.md) and
+  [v0.1 scope](v0.1.0-release-scope.md): compatibility baselines.
+- [v1 roadmap](v1.0.0-roadmap.md): completed stages and historical evidence.
+- [v0.8 evaluation scope](v0.8.0-evaluation-scope.md): historical corpus,
+  scorer, replay, and paid-pilot boundaries.
+- [Verification ADR](adr/0001-verification-report-boundary.md) and
+  [Context Pack ADR](adr/0002-context-pack-boundary.md): architectural rationale.
 
-This is self-serve implementation evidence, not an adoption or product-market
-fit claim.
+The frozen v1 registry remains 14 tools, seven fixed resources, one template,
+and six prompts. The existing additive `go_context` brings the server to 15
+tools. This plan preserves those surfaces and current schemas.
 
-## Expansion rule
+Require a stable worktree during verification. Source snapshots and endpoint
+validation are not transactional execution isolation. Preserve contained access,
+cancellation, bounds, guarded edit preimages, and explicit uncertainty.
 
-Security, observability, API design, naming/maintainability, and performance
-remain relevant review lenses. In v0.2 they report only change-grounded facts
-and guidance. They become analyzers only after repeated repository evidence
-shows that an actionable defect class can be detected precisely enough to pass
-the same calibration gate as the existing rules.
-
-Navigation, profiling, build analysis, fuzz orchestration, and other ideas are
-also proposals, not a promised catalog. Expansion follows demonstrated user
-pain and retained workflow value; it does not aim at a predetermined MCP tool
-count.
-
-## Multi-language direction
-
-Future repositories may use paths such as `github.com/agentic-mcps/go` and an
-equivalent TypeScript package, but each language implementation owns its native
-change discovery and evidence execution. They share only semantics proven
-portable in practice: snapshots, impacted units, checks, evidence, findings,
-risks, uncertainty, and policy status.
-
-The personal Go module remains `github.com/ashwingopalsamy/agentic-go` for its
-v1 release. A later `github.com/agentic-mcps/go` implementation starts from the
-same source lineage but remains a separate repository and module identity. The
-two paths are not interchangeable and no automatic mirroring is implied.
-
-## v1 direction
-
-The v0.2 compatibility authority remains
-[`v0.2.0-release-scope.md`](v0.2.0-release-scope.md). The implemented product
-direction is [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md):
-source-grounded Go change intelligence combining semantic navigation, compact
-context, persistent change continuity, guarded deterministic refactoring, and
-verification with explicit provenance and uncertainty.
-
-The roadmap was staged to prove useful workflows and reliable contracts before
-v1. The implemented surface and evidence do not establish a universal
-model-reliability or token-saving claim.
+The module is `github.com/agentic-mcps/go`; the former personal module is a
+separate identity with an explicit [migration](module-migration.md).
+The current cycle is Go-only. Delta refresh, broad graphs/caches, additional
+analyzer domains, speculative test selection, autonomous repair, distributed
+agent orchestration, hosted analysis, and other languages remain outside it.

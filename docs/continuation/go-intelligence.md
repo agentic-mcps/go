@@ -6,13 +6,13 @@ This document preserves the current product understanding for a future agent
 working in another account or session. It is independent of conversation
 history, account identity, private memory, and previous tool output.
 
-The user’s end goal is a flagship Go MCP and language-server/code-navigator
-experience usable through any coding agent. It should materially remove the
-repeated investigation normally required to understand and change unfamiliar
-Go code: the agent should receive compact, source-grounded context for the
-next change, understand implementation obligations and existing examples,
-retain orientation after edits, and see what changed. “1000x” and quality
-rankings express ambition, not measured or promised results.
+The first customer is a Go engineer using coding agents on real repositories.
+The product should support understanding, implementation, debugging, refresh,
+verification, and an inspectable handoff across supported models and hosts.
+Its deterministic, snapshot-bound evidence compiler should reduce reliance on
+model memory and repeated engineer investigation. Comparative benefit remains
+unproven. Model-independent contracts do not guarantee equal model competence
+or prevent an agent from ignoring evidence.
 
 The full approved architectural direction is in the canonical
 [Go intelligence north-star plan](../go-intelligence-north-star.md). Approval
@@ -33,22 +33,46 @@ is implemented. This handoff points to the plan instead of duplicating it.
 Do not repeat broad documentation exploration unless a source fact below has
 become stale.
 
+The [Astra source review](astra-understanding.md) is historical background from
+2026-09-05, not current sequencing authority. Read it only for a relevant
+source rationale; its old next-slice instructions must not restart completed
+observation work.
+
 ## Current status
 
-As of 2026-09-06 at reviewed HEAD `284df97`, **stage 2, coherent
-observation**, and the additive focus slice are **implemented in the current
-uncommitted change**.
-The observation-correctness follow-up closed the source-confirmed gaps recorded
-by the Astra review.
-The change preserves the existing exact content-based Snapshot Ref and v1
-interfaces while threading a private request-scoped observation through the
-intelligence paths. The implemented additive slice includes `go_context`,
-`agentic-go context --format text|json`, and `agentic.focus/v1`; these remain
-post-v1 capabilities and are not frozen v1 interfaces. The broader roadmap
-stages remain partially implemented or pending and must not be inferred as
-complete from this slice.
+`v1.2.1` (tag `67f54b7`) is the latest released baseline. The integration
+topic branch `codex/agentic-go-retrieval-2026-09-27` contains unreleased work
+based at `7b5111c`, including preserved dirty-worktree changes, branch
+source-view support, retrieval evaluation infrastructure, and updated evidence
+records. Do not describe it as a release candidate or assign a release label
+before the applicable release gates pass.
 
-Implemented in the current uncommitted change:
+The 2026-09-24 north-star revision selects a complete cross-package API or
+interface change as the first product workflow: understand obligations, edit
+and debug, refresh, verify, and hand back current evidence. Offering focused
+declaration candidates from the observed diff and completing the review
+handoff are proposed next increments. They are not implemented by this
+documentation change. The existing system does not decide task completion.
+
+At the earlier `7b5111c` inspection, separate uncommitted selector-remediation
+work was already present. Its
+[campaign record](../../validation/v1.0.0/adoption-remediation-2026-09-24.md)
+reported focused checks complete, with full post-change gates and evaluation
+reruns then pending. The current selector-screen result and rerun boundary are
+recorded under Current next action. Do not overwrite existing work or infer
+that a documented plan has been executed.
+
+The frozen v1 registry remains 14 tools, seven resources, one template, and six
+prompts. The existing additive `go_context` brings the server to 15 tools;
+`agentic.focus/v1` and the frozen v1 schemas remain unchanged. Slice 1A
+adds `next_action` to existing MCP text using the existing structured
+`Verification.NextAction`. Slice 1B refines the private projection with
+cause-specific guidance for stale or unavailable evidence, truncation, budget
+omission, advisory findings, and passing checks with limits. Slice 1A changes
+existing MCP text rendering; Slice 1B changes private projection guidance.
+Neither changes inventory, structured fields, or schemas.
+
+Implemented in v1.1.0:
 
 - `Snapshotter.observe` performs the existing two-pass capture, rejects drift,
   retains the exact manifest, and returns captured source bytes for the
@@ -82,19 +106,34 @@ Focused correctness tests cover captured-source precedence, same-size and
 A→B→A rewrites on a source-cap miss, guidance identity and mismatch rejection,
 Brief observation forwarding, Symbol position-error lease release, active
 manifest protection, fail-closed admission, and replacement byte accounting.
-The focused Slice 1 test command and `git diff --check` passed. Broader repository
-verification is recorded separately at handoff; no benchmark, evaluation,
-publication, commit, tag, or push was performed.
+Those checks qualify the historical v1.1.0 work; they do not qualify later
+changes. The v0.8 task, adoption, and pilot records below are historical. Two
+private local Luna studies provide bounded instruction-use and workflow
+adoption observations; comparative product value remains unproven.
 
-Stage 2 does not introduce a public interface or a general derived cache.
-Derived parsing/semantic caching, useful-context selection, richer
-relationships, refresh, and verification lineage remain later-stage work.
+In the v1.1.0 implementation, Stage 2 added no public interface or general
+derived cache. The post-v1 focus and refresh capabilities described below were
+added later; the frozen v1 contracts remain unchanged.
 
-## Findings recorded from the documentation and targeted source inspection
+## Current reliability work
+
+The post-v1.2.1 branch work improves how agents interpret existing evidence.
+The four private projection outcomes are `verification_needed`,
+`finding_inspection_needed`, `evidence_unavailable`, and
+`requested_checks_passed_with_limits`. Stale, mismatched, legacy, missing, or
+policy-incompatible reports do not yield current repair targets. Findings are
+actionable for inspection only when their source locations remain valid.
+Incomplete, cancelled, truncated, provider-failed, and unknown evidence stays
+unavailable. A passing requested check is not a declaration that the task is
+complete. The follow-up guidance is bounded, provenance-linked, and
+non-mutating.
+
+## Historical source inspection
 
 Use symbol names to relocate sections if line numbers change. These are
-recorded static inspection findings from the earlier review, not a runtime
-audit or source inspection repeated during the documentation revision.
+findings from the earlier architecture review. Several proposed improvements
+in this table are now implemented in focus or observation, as recorded below.
+Do not use the table as a list of unfinished work or as a current runtime audit.
 
 | Source and entry point | Observed behavior | Consequence for the plan |
 | --- | --- | --- |
@@ -132,49 +171,49 @@ replay from model outcomes. The reviewed [v1 release evidence](../../validation/
 does not establish a paid model pilot or comparative agent advantage. These are
 historical document statements, not checks rerun in this session.
 
-The initial review recommended a comparative pilot. The user then explicitly
-redirected the strategy toward material product behavior, not eval/benchmark
-milestones. The resulting plan follows that correction: context selection,
-coherent reads, Go-specific relationships, and explicit refresh. The user chose
-additive interface evolution and focused correctness checks when asked.
+The original reliability work did not require comparative product claims.
+Its implemented foundations remain useful regardless of later evaluation.
+The revised north star separately requires evidence of engineer value before
+widening usefulness or model-support claims. Reliability release gates and
+comparative product decisions must not be conflated.
 
 These are repository observations and design opportunities, not claims that
 the current runtime is fast, relevant, or superior to other tools. Those
 properties have not been verified in this documentation task.
 
-## Important limits and exact next action
+## Important limits
 
-The approved plan is architectural direction, not an already-frozen wire
-specification. Implementation must resolve and record these local facts in the
-stage that needs them:
+The following boundaries apply to the implemented foundations and the next
+product cycle. Resolve additional design decisions within the slice that
+needs them; do not silently expand a frozen contract.
 
-| Stage | Facts to inspect and decisions to record |
+| Area | Current boundary and remaining decision |
 | --- | --- |
-| 2. Coherent observation | Implemented: request-scoped ownership, atomic retain-and-pin, release-once leases, captured-or-manifest-verified reads, guidance identity, strict admission, and existing provider ordering. The provider still observes the live disk workspace through gopls; this is attributable evidence with final validation, not transactional filesystem isolation. |
-| 3. Useful context | Exact input/output fields, existing budget ceiling, combined MCP rendering costs, required-envelope failure behavior, and interoperable current Symbol Refs. |
-| 4. Implementation support | Provider capabilities and typed predicates for method sets, embedding, aliases, generic instantiations, enclosing tests, lifecycle sites, and partial-source results. |
-| 5. Refresh | Private delivered-manifest storage and retention, logical identity versus content revision and locator, current-reference issuance, and evidence that can confirm deletion. |
-| 6. Integration | Explicit additive inventory expectations and verification references tied to the observed snapshot. |
+| Observation and execution | Request-scoped observations, retained manifests, and final validation are implemented. gopls and verification commands still observe the live workspace. Require stability during checks; endpoint equality does not establish isolation from transient concurrent edits. |
+| Context entry | Query/ref/position/file/package selectors are implemented. At `7b5111c`, `focusContext` returns no focused context without an explicit selector, even though `Core.Focus` separately computes the diff. Current declaration candidates from that diff are proposed. |
+| Implementation support | Typed predicates, enclosing tests/examples, and partial-source evidence exist. They expose supported source facts, not behavioral equivalence, complete dispatch, or intended business requirements. |
+| Refresh | Full replacement and private delivered-pack metadata are implemented. Old refs stay stale; failed resolution does not confirm deletion. Delta delivery and semantic before/after obligation differences remain deferred. |
+| Review handoff | Reports and applicability assessments exist. `CurrentVerification` retrieves the latest stored report; `assessVerificationApplicability` decides whether it applies. The proposed handoff must carry both result and applicability. |
+| Model/host support | The recorded adoption campaigns use Luna/max. Shared instructions and real delivery/recovery checks across other clients/models remain product work, not demonstrated compatibility. |
+| Branch source view | The development preview creates a visible detached Git worktree at an exact branch commit. It supports explicit local/remote refs, defaults to `main` then configured `origin/HEAD`, binds optional dirty overlays only to the exact source HEAD, and rejects moved refs during snapshot capture. Configure the agent at the exact returned view root. It does not persist retrieval state or capture external `go.work`/local `replace` inputs; submodules are reported as partial. |
 
 The behavioral decisions are already fixed by the north star: selection occurs
 before expensive expansion; required identity and uncertainty survive budgets;
 incomplete source does not license stale semantics; and response omission is
 distinct from confirmed source removal. Cache limits must cover bytes and
-entries, and active observations must survive ordinary eviction. Applying a
-delta to the previous delivered pack must reconstruct the current selected
-pack, including locators, omissions, and uncertainty. Historical snapshot-bound
-artifact cursors remain stale even when retained pack metadata is used for
-refresh.
+entries, and active observations must survive ordinary eviction. A refresh
+returns complete current selected evidence; no delta reconstruction is required
+for this cycle. Historical snapshot-bound artifact cursors remain stale even
+when retained pack metadata is used for refresh.
 
 Do not advertise inferred ownership, complete dispatch reachability, semantic
 goal enforcement, or a measured speedup. Disk snapshots do not cover unsaved
 editor buffers. Upstream gopls MCP already exposes workspace, package,
 navigation, and diagnostic tools and has its own internal snapshot model.
-Differentiate through cross-operation evidence lineage, impact, selection, and
-verification applicability rather than duplicate navigation wrappers. The
-reviewed upstream source disables its broad `go_context` tool because of
-context-size/redundancy concerns; this supports bounded explicit context, not
-a claim of unique navigation.
+Compare against upstream gopls with its actual workflow instructions.
+Cross-operation lineage, impact, selection, and reviewable verification
+applicability are candidate sources of value, not established differentiation.
+Another harness can reproduce these mechanisms; measure engineering outcomes.
 
 The minimal read-only change-consequence and verification-applicability slice
 is now implemented. The additive `go_context` MCP tool and `agentic-go context`
@@ -198,6 +237,25 @@ before relationship expansion. Selection reasons and uncertainty distinguish
 absent, unavailable, unexamined, and budget-omitted evidence. The 8 KiB default
 is bounded before optional expansion, and CLI/MCP summaries share one renderer.
 
+The current working tree adds a private, process-local Go retrieval cache for
+query selection. It parses observed `.go` files into declaration fragments and
+combines deterministic lexical scoring with symbol, receiver, package, and
+declaration-kind signals before resolving candidates through the current
+gopls observation. It is advisory discovery only: `Core.Search`, the MCP/CLI
+surface, schemas, exact snapshot validation, and semantic evidence contracts
+are unchanged. Focused retrieval and focus tests are present; repository-wide
+validation has been requested. The model-free screen and private text-candidate
+ablation are now recorded in the research note; they show weak relevance and
+do not qualify this slice for product-value claims or persistent indexing.
+
+The longer-term branch-aware indexing aspiration, historical GPT-6 Sol
+findings, current GPT-6 Luna Max verdicts, and retrieval-specific evaluation
+plan are recorded in the
+[codebase indexing research note](../research/codebase-indexing-retrieval.md).
+The current cache is not a durable or branch-aware repository index. The next
+source-view preview selects an exact branch commit, but branch selection is not
+part of the live MCP retrieval contract.
+
 Full-replacement refresh is now implemented. Delivered focus evidence carries
 an opaque pack ID backed by private content-addressed metadata containing the
 original selection, logical declaration identity, and digests for the evidence
@@ -207,7 +265,7 @@ replacement with current locations and Symbol Refs. Expiry requires a fresh
 request; changed selectors are rejected; ambiguous moves or renames require a
 current candidate selection. Failed resolution and budget omission are marked
 unavailable and never reported as confirmed deletion. Delta refresh remains
-deferred. The next separately authorized extension is delta refresh.
+deferred.
 
 The four planned Go relationship families are now implemented sequentially in
 the focused evidence layer. Declaration, file, and package selection can return
@@ -244,19 +302,166 @@ implementation request is sufficient to begin the next pending stage without
 asking again for the same authorization. The private adoption harness links
 the existing client-go and grpc-go tasks, validates sanitized records, hashes
 transcripts, and produces deterministic condition summaries without changing
-the frozen v0.8 corpus. The 27-run adoption follow-up is complete: description
-alone produced 0/6 focus use, generic prompt guidance produced 6/6, the shipped
-skill produced 6/6, initial integrated safety was 5/6, and the scope-wording
-rerun was 3/3 acceptance-pass, qualifying, and scope-safe. Provider failures
-remain the next reliability issue. See the [tracked adoption
-results](../../validation/v1.0.0/adoption-results.md) for exact gates, metrics,
-identities, and limitations. Retain focus and full replacement; defer delta
-refresh. The next slice is release hardening, instruction-surface
-discoverability, and provider-failure investigation. Raw artifacts remain
-private and ignored.
-This handoff predates the separately authorized publication workflow. Public
-publication must preserve existing tags and history, and does not create a new
-release or claim that the paid comparison ran.
+the frozen v0.8 corpus. The historical 27-run adoption follow-up is complete:
+description alone produced 0/6 focus use, generic prompt guidance produced
+6/6, the shipped skill produced 6/6, initial integrated safety was 5/6, and the
+scope-wording rerun was 3/3 acceptance-pass, qualifying, and scope-safe. See
+the [tracked adoption results](../../validation/v1.0.0/adoption-results.md)
+for exact gates, metrics,
+identities, and limitations. These historical results do not establish
+comparative engineering benefit. Retain focus and full replacement; defer delta
+refresh. Raw artifacts remain private and ignored.
+
+## Current next action
+
+The six-cell selector screen is complete. Its safety gate passed and its
+efficiency promotion gate failed. This is selector-guidance reliability
+evidence, separate from retrieval evaluation. Do not run or direct the stale
+18-cell rerun. Keep that result separate from the historical 18-run adoption
+campaign and from retrieval evidence.
+
+The model-free retrieval screen is complete; results and limits are recorded in
+the [research note](../research/codebase-indexing-retrieval.md). The corrected
+medium screen is weak (Recall@10 0.35, Precision@10 0.20) and indexes none of
+the 150 supported text files. The small screen has no usable retrieval score.
+The Kubernetes capture is incomplete. Its single-run warm p95 was 10.52 s,
+above the 5 s screening target; sampled Go heap was about 703 MB, while process
+RSS was not measured, so the 512 MiB process target is unresolved. The fresh
+four-question text-candidate ablation found complete candidate-pool Recall of
+1.00 but weak top-10 macro Recall 0.1625, Precision 0.075, and MRR 0.28125.
+The fixed `rg` scorer is not a competent native-agent baseline, and gopls
+completeness is unknown. These results do not support a product-value or
+arbitrary-scale claim.
+
+The exact branch source-view preview is implemented as
+`agentic-go source-view`. It creates a visible detached worktree, selects
+local `main` by default (then configured `origin/HEAD` if absent), binds a
+dirty overlay only to an exact matching source commit, and rejects stale branch
+refs at snapshot capture. It preserves `go_context.base` as change context.
+It is a source-view setup command; persistent indexing, automated MCP branch
+selection, and full external Go workspace capture are not implemented.
+
+The one bounded retrieval redesign allowance has been used for an evaluation-
+only text-candidate ablation. It established that text evidence can enter a
+complete candidate pool, while the unchanged scorer still ranks too little of
+it in the top 10. Do not add persistent indexing or claim retrieval value from
+this result. A future retrieval proposal needs a new bounded scope and fresh
+held-out cases. Repair and freeze the native `rg`/Go-tools/gopls workflow before
+any comparison. The small and large source-coverage gaps and unknown gopls
+completeness remain open evaluation limits.
+
+Persistence still requires useful retrieval and a measured parsing or ranking
+bottleneck; its gates remain at least 2x warm-query improvement with no
+freshness or relevance loss, against the 5 s warm p95 and 512 MiB process
+screening targets. The separate 32-run Luna Max engineering screen remains
+gated because useful retrieval has not been demonstrated.
+
+Only after useful retrieval is demonstrated should the separate engineering
+screen run: eight held-out tasks across three repositories, randomized paired
+order, and two fresh repetitions per arm (32 GPT-6 Luna Max runs). Freeze the
+source, binary, task, prompt, and evaluator hashes first; use GPT-6 Luna Max
+only and keep the study separate from the model-free results and historical
+GPT-6 Sol/high work. Require zero accepted stale or wrong-branch evidence, no
+accepted-patch quality loss, and a practical gain such as 15% lower median time
+to an accepted patch. Track review effort and actual token usage, and report
+the same-model reviewer limitation. The screen is directional, not a
+statistically powered or general claim.
+
+The proposed R1-R4 workflow work remains a separate product cycle. Follow
+[R1 and R2](../go-intelligence-north-star.md#next-delivery-cycle) when that
+reliability milestone is resolved: current declaration entry from the diff,
+then the complete API-change and review handoff. Use existing typed evidence,
+renderers, and schemas. The [north star](../go-intelligence-north-star.md)
+owns their acceptance cases and model/skill contract.
+
+## Historical canonical adoption campaign
+
+The maintainer-supplied 2026-09-24 canonical summary records 18 Luna/max runs:
+two pinned scenarios, three conditions, and three repetitions per cell. All
+18 qualified and passed acceptance. These reported results are not rescored
+by the documentation revision.
+
+| Condition | Runs | Context evidence-use signal | Refresh | Median duration (ms) | Median tool calls |
+| --- | --- | --- | --- | ---: | ---: |
+| Baseline | 6 | 0/6 | 0/6 | 206,861 | 17 |
+| MCP-only discoverability | 6 | 0/6 | 0/6 | 249,512 | 22 |
+| Guidance | 6 | 6/6 | 6/6 | 308,899 | 26 |
+
+Guidance recorded zero scope violations and zero accepted stale evidence.
+There were five failed focus calls: one low-level `invalid_input` and four
+low-level `provider` labels. The private transcript audit classified all five
+as selector misuse: an altered Symbol Ref and invalid declaration coordinates.
+No provider defect was established. The current remediation preserves those
+raw outcome categories and adds bounded private cause/recovery classifications.
+See its [record](../../validation/v1.0.0/adoption-remediation-2026-09-24.md)
+for implementation details; the later selector-screen result and current
+18-cell rerun boundary are recorded above.
+
+The pooled guidance/baseline duration difference is about 49%, but per-scenario
+medians differ by about 17.5% for client-go and 4.8% for grpc-go. These are
+descriptive, unpaired small-sample summaries; none identifies causal tool cost.
+The evidence-use signal is temporal ordering, not a scored better decision.
+The older campaigns below must not be pooled with this matrix.
+
+## Historical integrated diagnostics
+
+The post-guidance regression used six integrated Luna runs, with three
+repetitions on each of two scenarios. All six qualified, passed acceptance,
+stayed within scope, and required no operator intervention. All six used
+`go_context`, refreshed after edits, and recorded evidence use. Five focus
+calls failed: client-go had three `invalid_input` failures reporting invalid
+symbol references; grpc-go run 1 had two `stale_snapshot` failures reporting
+an observed semantic location absent from the snapshot manifest. grpc-go runs
+2 and 3 had no failed focus calls. This shows continued workflow adoption
+while exposing failure categories. It does not establish improved quality,
+correctness, productivity, speed, or product value. External and multi-model
+evaluation remain pending.
+
+The failure audit classified the three client-go invalid-input calls as agent
+misuse or ref reconstruction: each failed ref had an invalid version field or
+inconsistent identity, while valid query-issued refs succeeded. The two gRPC
+stale-snapshot calls were repeated without an intervening edit; workspace-symbol
+search returned a location inside the workspace but outside the active snapshot
+manifest. The provider now omits such unbound workspace locations as bounded
+uncertainty while continuing to propagate stale errors for manifest entries that
+changed or disappeared. Strict stale rejection and the frozen public contracts
+remain unchanged.
+
+Focused tests cover malformed refs, current observation membership, and omitted
+workspace-symbol uncertainty. The private audit remains at
+`/Users/ashwin/agentic-go-eval-audits/20260924-failure-verdicts.md`.
+
+The six-run integrated Luna rerun completed with 6/6 qualification, 6/6
+acceptance, zero scope violations, zero operator interventions, zero failed
+focus calls, and complete refresh and evidence-use signals. Skill discovery was
+6/6. Median duration was 411,537 ms, median tool calls were 31, and median
+transcript evidence was 450,293 bytes. These are diagnostic regression values,
+not evidence of improved speed, correctness, productivity, or product value.
+External and multi-model evaluation remain pending.
+
+## Historical integrated trace review
+
+The six integrated traces have been reviewed. No transcript proves that
+`go_context` improved the necessary code edit. In gRPC run 3, refreshed context
+showed broader affected scope and the agent explicitly said this prompted
+`./...` verification. That attempt was incomplete due to the output cap;
+focused verification later passed after a stale-snapshot rejection. Client-go
+runs made 3-4 context calls each, including ambiguous or unhelpful initial
+selections. gRPC runs made 4-5 calls each; runs 1 and 3 repeated verification
+after incomplete or stale results, and run 2 had a failing root test run and a
+failing narrowed observability rerun.
+
+The bounded guidance improvement is recorded in the
+[`agentic-go-context` skill](../../.agents/skills/agentic-go-context/SKILL.md):
+narrow an ambiguous result using returned current candidates instead of
+repeating the broad query; finish each batch of edits and formatting before
+refreshing; and refresh again after further edits or stale-snapshot rejection
+while avoiding redundant refreshes when the snapshot is unchanged. This evidence does not
+establish causal edit-quality or product value. The combined skill and MCP
+workflow observations do not establish MCP-alone causality. Keep the studies
+as regression evidence, not fresh proof of product superiority. External and
+multi-model evaluation remain pending. Defer any new release label until a
+reliability milestone passes.
 
 ## Standing continuation instruction
 
@@ -266,18 +471,27 @@ approved direction, and unverified proposals visibly distinct. Replace stale
 status rather than appending a conversation transcript. Record relevant source
 paths, decisions, evidence actually gathered, limitations, and the exact next
 step. Do not add benchmark or evaluation claims unless a future request
-explicitly includes them.
+explicitly includes them. Context gathering does not execute checks or prove
+correctness.
 
 ## Copy-paste continuation prompt
 
 Use this prompt only when the user separately authorizes further work:
 
 ```text
-Read docs/continuation/astra-understanding.md and this handoff first. Observation,
-verification applicability, declaration selection, and full-replacement refresh
-and focus-v1 stabilization are complete. Inspect the current diff and choose a
-new explicitly authorized objective. Delta refresh, general derived caches,
-expanded refactoring, speculative test selection, and release creation remain
-outside the completed scope. Publication is separately authorized only when a
-maintainer explicitly requests it; preserve existing tags and public history.
+Read AGENTS.md, docs/go-intelligence-north-star.md, and this handoff. The first
+customer is a Go engineer using agents; the first complete workflow is a
+cross-package API/interface change through an inspectable handoff. Observation,
+typed context, full-replacement refresh, and verification applicability exist.
+The six-cell selector screen completed with safety passed and efficiency
+promotion failed. Do not run or direct the stale 18-cell rerun. The model-free
+retrieval screen and one private text-candidate ablation are complete; their
+weak ranking does not qualify persistence or an agent-value study. Repair the
+native baseline before future comparative claims. After useful retrieval is
+demonstrated, use a separate matched native-versus-Agentic-Go screen with
+GPT-6 Luna Max only. Preserve both dirty source worktrees. Do not repeat
+completed work or treat plans as shipped
+capabilities. Continue only the user's requested scope; preserve frozen v1 and
+agentic.focus/v1. Delta refresh, general caches, expanded refactoring, and
+speculative test selection remain deferred. Preserve tags and public history.
 ```

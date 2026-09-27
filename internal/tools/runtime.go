@@ -28,7 +28,7 @@ type Runtime struct {
 
 // ServerInstructions is the concise decision rule surfaced during MCP
 // initialize so clients can discover the focused context workflow.
-const ServerInstructions = "For unfamiliar or cross-package Go changes, call go_context before editing with base and one selector (query, symbol_ref, file+line+column, or focus_file/focus_package). After editing, refresh with base and previous_pack_id only; stale selectors or refs mean select current evidence. Use it for impact and verification applicability, but treat reverse-dependency evidence as planning guidance: edit only the smallest task owner within supplied path/package scope; skip trivial edits."
+const ServerInstructions = "For unfamiliar/cross-package Go, before editing call go_context with base+one selector (query/symbol_ref/file+line/column/focus). opaque Symbol Refs: copy exact; never decode/edit/shorten/reconstruct/re-encode. Coordinates hit declaration identifiers, not whitespace/line-start/comments/locals. Ambiguity: current candidate or fresh query/file. selector failure: no evidence; no retry; recover fresh. After edit refresh with base+previous_pack_id only; stale selectors need current evidence."
 
 // NewProductionServer creates the configured MCP server used by the binary.
 func NewProductionServer(implementation *mcp.Implementation) *mcp.Server {
