@@ -1,10 +1,15 @@
-# Astra analysis handoff
+# Historical Astra source review
 
-Status: authoritative continuation note, reviewed 2026-09-05 at HEAD
-`284df97`. This records source inspection and product reasoning. It is not a
-test report, benchmark, implementation approval, or proof of runtime behavior.
+Status: historical review from 2026-09-05 at HEAD `284df97`. Current product
+direction is in the [north star](../go-intelligence-north-star.md); current
+implementation status and sequencing are in the
+[continuation handoff](go-intelligence.md). This review is optional background.
+Its scores, defect statuses, and next-slice instructions describe that dated
+inspection, not current work. Do not restart completed observation work from
+the prompts below. This is not a test report, benchmark, implementation
+approval, or proof of runtime behavior.
 
-## Fast path
+## Historical fast path
 
 **Verdict: NARROW. Confidence: 88/100.** Build a small, dependable Go
 evidence compiler for coding agents: bind observations to an explicit
@@ -41,10 +46,9 @@ semantic_gopls,snapshot,snapshot_test}.go`; continuation and north-star docs
 were untracked at inspection. Inspect current status and only the relevant
 diff because this dated state can drift.
 
-After `AGENTS.md`, fresh agents should read this file and
-`docs/continuation/go-intelligence.md` first, then the
-north-star and only the frozen scope/schema or source files relevant to the
-slice. Do not repeat the full historical review unless touching that area.
+For current work, follow `AGENTS.md`, the north star, and
+`docs/continuation/go-intelligence.md`. Consult this historical review only
+when a relevant source rationale is needed. Its old sequencing is superseded.
 
 ## Product judgment and comparison
 
@@ -189,7 +193,7 @@ through the observation; how to expose applicability of “latest” verificatio
 contract coordination; provider/editor overlay semantics; and whether agents
 use the evidence often enough to justify its cost.
 
-## Prompts for a fresh agent
+## Historical prompts
 
 Analysis only:
 
