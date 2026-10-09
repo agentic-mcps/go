@@ -145,3 +145,10 @@ therefore B3) now ignore lint issues that the same lint command also reports on 
 unmodified commit `c`, compared by file, linter and message rather than line number. B1 and B2
 keep raw lint as registered. This makes the strengthened baselines stronger. The pilot runs
 are kept separately and are not part of the results.
+
+## Amendment 4 (before the main run)
+
+While validating Amendment 3, `golangci-lint` returned different results for the same commit
+and command in two worktrees because its shared analysis cache served a stale result under
+`--new-from-rev`. Every lint invocation in the evaluation now runs with a fresh lint cache, so
+lint results are deterministic. No arm's definition changes.
