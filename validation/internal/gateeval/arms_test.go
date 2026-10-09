@@ -1,9 +1,11 @@
 package gateeval
 
 import (
+	"context"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func failures(tests []string, packages []string) testFailures {
@@ -123,14 +125,87 @@ func TestParseTestFailures(t *testing.T) {
 }
 
 func TestParseVetPackages(t *testing.T) {
-	output := "# example.com/a\na.go:3:2: unreachable code\n# example.com/b [example.com/b.test]\nb_test.go:5: bad\nvet: other\n# [example.com/c]\nc.go:1: bad\n"
-	got := parseVetPackages([]byte(output))
-	want := map[string]bool{"example.com/a": true, "example.com/b": true, "example.com/c": true}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("parseVetPackages() = %v, want %v", got, want)
+	root := "/work/proj"
+	tests := []struct {
+		want   map[string]bool
+		name   string
+		output string
+	}{
+		{
+			name:   "headers (Go 1.25 and older)",
+			output: "# example.com/a\na.go:3:2: unreachable code\n# example.com/b [example.com/b.test]\nb_test.go:5: bad\nvet: other\n# [example.com/c]\nc.go:1: bad\n",
+			want:   map[string]bool{"example.com/a": true, "example.com/b": true, "example.com/c": true},
+		},
+		{
+			name:   "no headers (Go 1.26): file paths map to package directories",
+			output: "p/p.go:5:24: fmt.Printf format %d has arg \"x\" of wrong type string\np/q_test.go:3:1: bad\n./a.go:1:1: bad\nvet: sub/deep/s.go:2:3: undefined: x\n",
+			want:   map[string]bool{"./p": true, ".": true, "./sub/deep": true},
+		},
+		{
+			name:   "absolute paths are made relative to the module root",
+			output: "/work/proj/abs/x.go:1:1: bad\n",
+			want:   map[string]bool{"./abs": true},
+		},
+		{
+			name:   "continuation lines and prose are not diagnostics",
+			output: "    see other.go:1: note\nexit status 1\n",
+			want:   map[string]bool{},
+		},
+		{name: "empty", output: "", want: map[string]bool{}},
 	}
-	if got := parseVetPackages([]byte("")); len(got) != 0 {
-		t.Fatalf("empty output gave %v", got)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseVetPackages([]byte(tt.output), root); !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("parseVetPackages() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestVetFailureKeysSentinelMatchesOnlyIdenticalOutput(t *testing.T) {
+	root := "/work/proj"
+	unattributable := stepResult{stderr: []byte("vet: something went wrong in a way we cannot attribute\n"), exit: 1}
+	other := stepResult{stderr: []byte("vet: a different unattributable failure\n"), exit: 1}
+	a, again, b := vetFailureKeys(unattributable, root), vetFailureKeys(unattributable, root), vetFailureKeys(other, root)
+	if len(a) != 1 || !reflect.DeepEqual(a, again) {
+		t.Fatalf("identical output gave different keys: %v vs %v", a, again)
+	}
+	if reflect.DeepEqual(a, b) {
+		t.Fatalf("different unattributable output shares a key: %v", a)
+	}
+	// An unattributable current failure is not masked by a different one at base.
+	if blocked, _ := decideB2Star(false, true, false, withVet(failures(nil, nil), keysOf(b)...), withVet(failures(nil, nil), keysOf(a)...)); !blocked {
+		t.Error("a new unattributable vet failure was masked by a different one at base")
+	}
+	if blocked, _ := decideB2Star(false, true, false, withVet(failures(nil, nil), keysOf(a)...), withVet(failures(nil, nil), keysOf(a)...)); blocked {
+		t.Error("an identical unattributable vet failure at base should be ignored")
+	}
+	attributed := stepResult{stderr: []byte("p/p.go:1:1: bad\n"), exit: 1}
+	if got := vetFailureKeys(attributed, root); !reflect.DeepEqual(got, map[string]bool{"./p": true}) {
+		t.Fatalf("attributable output gave %v", got)
+	}
+}
+
+func keysOf(set map[string]bool) []string { return newKeys(set, nil) }
+
+func TestCommandEnvDropsCI(t *testing.T) {
+	t.Setenv("CI", "true")
+	t.Setenv("CIRCLE", "keep")
+	var sawCircle bool
+	for _, entry := range commandEnv() {
+		if strings.HasPrefix(entry, "CI=") {
+			t.Fatalf("commandEnv() kept %q", entry)
+		}
+		if entry == "CIRCLE=keep" {
+			sawCircle = true
+		}
+	}
+	if !sawCircle {
+		t.Error("commandEnv() dropped unrelated variables")
+	}
+	result := runCommand(context.Background(), t.TempDir(), time.Minute, "sh", "-c", "echo ci=${CI-unset}")
+	if got := strings.TrimSpace(string(result.stdout)); got != "ci=unset" {
+		t.Fatalf("a command saw %q, want the CI variable removed", got)
 	}
 }
 

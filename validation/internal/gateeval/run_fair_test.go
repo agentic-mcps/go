@@ -284,14 +284,16 @@ func TestRunArmsB2StarIgnoresVetFailuresAlsoAtBase(t *testing.T) {
 		t.Errorf("B2s on good = %+v, want the base vet failure ignored", run)
 	}
 	newvet := findRun(t, runs, "newvet", ArmB2Star, 1)
-	if !newvet.Blocked || !strings.HasPrefix(newvet.Reason, "go vet failed: example.com/proj/sub") {
+	// Go 1.25 names packages by import path, Go 1.26 by directory.
+	if !newvet.Blocked || !strings.HasPrefix(newvet.Reason, "go vet failed: ") ||
+		(!strings.Contains(newvet.Reason, "example.com/proj/sub") && !strings.Contains(newvet.Reason, "./sub")) {
 		t.Errorf("B2s on newvet = %+v, want blocked by the new package's vet failure", newvet)
 	}
 	cached, err := os.ReadFile(filepath.Join(f.workDir, "basefail", "proj-"+f.base+".json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(cached), `"vet_packages":["example.com/proj"]`) {
+	if !strings.Contains(string(cached), `"vet_packages":["example.com/proj"]`) && !strings.Contains(string(cached), `"vet_packages":["."]`) {
 		t.Errorf("base failure cache = %s, want the vet package", cached)
 	}
 }
@@ -342,5 +344,19 @@ func TestRunArmsRecordsGateTextBytes(t *testing.T) {
 	}
 	if b0 := findRun(t, runs, "flagged", ArmB0, 1); b0.TextBytes != 0 {
 		t.Errorf("B0 text bytes = %d, want 0", b0.TextBytes)
+	}
+}
+
+func TestRunArmsHideCIFromArmCommands(t *testing.T) {
+	t.Setenv("CI", "true")
+	f := newFixture(t, false)
+	guard := "package proj\n\nimport (\n\t\"os\"\n\t\"testing\"\n)\n\nfunc TestNoCI(t *testing.T) {\n\tif os.Getenv(\"CI\") != \"\" {\n\t\tt.Fatal(\"CI leaked into the arm command\")\n\t}\n}\n"
+	f.addVariant(t, "guard", ClassTrue, map[string]string{"ci_test.go": guard})
+	options := baseOptions(f, ArmB0)
+	if err := RunArms(context.Background(), options); err != nil {
+		t.Fatalf("RunArms() error = %v", err)
+	}
+	if run := findRun(t, readRuns(t, options.Out), "guard", ArmB0, 1); run.Blocked || run.Unknown {
+		t.Fatalf("B0 = %+v, want pass: the test saw CI", run)
 	}
 }

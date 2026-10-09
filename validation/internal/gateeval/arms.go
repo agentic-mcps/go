@@ -3,11 +3,16 @@ package gateeval
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -84,20 +89,63 @@ func parseTestFailures(stream []byte) testFailures {
 	return failures
 }
 
-// parseVetPackages returns the packages go vet reported on. go vet prints a
-// "# importpath" header before each failing package's diagnostics.
-func parseVetPackages(output []byte) map[string]bool {
+// vetDiagnostic matches a go vet diagnostic line: a file path, a line, an
+// optional column, then the message. Go 1.26 prints only these lines; older
+// versions print a "# package" header before them.
+var vetDiagnostic = regexp.MustCompile(`^(?:vet: )?(\S+?\.go):\d+(?::\d+)?: `)
+
+// parseVetPackages returns the packages go vet reported on. With "# package"
+// headers (Go 1.25 and older) they are import paths. Without headers (Go 1.26)
+// each diagnostic's file maps to its package directory, as "./dir" relative to
+// root ("." for the root package).
+func parseVetPackages(output []byte, root string) map[string]bool {
 	packages := map[string]bool{}
+	var files []string
 	for _, line := range strings.Split(string(output), "\n") {
-		header, ok := strings.CutPrefix(line, "# ")
-		if !ok {
+		if header, ok := strings.CutPrefix(line, "# "); ok {
+			if name := vetHeaderPackage(header); name != "" {
+				packages[name] = true
+			}
 			continue
 		}
-		if path := vetHeaderPackage(header); path != "" {
-			packages[path] = true
+		if match := vetDiagnostic.FindStringSubmatch(line); match != nil {
+			files = append(files, match[1])
 		}
 	}
+	if len(packages) > 0 {
+		return packages
+	}
+	for _, file := range files {
+		packages[vetFileDir(file, root)] = true
+	}
 	return packages
+}
+
+// vetFileDir maps a diagnostic's file to "./dir" relative to root.
+func vetFileDir(file, root string) string {
+	file = filepath.ToSlash(file)
+	if filepath.IsAbs(file) {
+		if rel, err := filepath.Rel(filepath.ToSlash(root), file); err == nil {
+			file = filepath.ToSlash(rel)
+		}
+	}
+	dir := strings.TrimPrefix(path.Dir(file), "./")
+	if dir == "." || dir == "" {
+		return "."
+	}
+	return "./" + dir
+}
+
+// vetFailureKeys names the failures in a go vet run that exited non-zero. When
+// no package can be attributed, the key is a sentinel bound to a hash of the
+// output, so it matches base only when the vet output is identical.
+func vetFailureKeys(result stepResult, root string) map[string]bool {
+	output := append(append([]byte{}, result.stderr...), result.stdout...)
+	if keys := parseVetPackages(output, root); len(keys) > 0 {
+		return keys
+	}
+	sum := sha256.Sum256(bytes.TrimSpace(output))
+	return map[string]bool{noVetFailure + " " + hex.EncodeToString(sum[:6]): true}
 }
 
 // vetHeaderPackage extracts the import path from a go vet header, which reads
@@ -242,9 +290,17 @@ func failedExit(result stepResult) bool {
 	return result.err == nil && result.exit != 0
 }
 
-// commandEnv is the environment of every evaluated command.
+// commandEnv is the environment of every evaluated command. CI is removed so
+// variants that branch on it behave the same locally and in CI.
 func commandEnv() []string {
-	return append(os.Environ(), "GOFLAGS=-mod=mod", "GOTOOLCHAIN=local")
+	environ := os.Environ()
+	env := make([]string, 0, len(environ)+2)
+	for _, entry := range environ {
+		if !strings.HasPrefix(entry, "CI=") {
+			env = append(env, entry)
+		}
+	}
+	return append(env, "GOFLAGS=-mod=mod", "GOTOOLCHAIN=local")
 }
 
 // runCommand runs one command in dir under its own timeout.
@@ -585,10 +641,7 @@ func (ac *armContext) runConventional(ctx context.Context, t *tally) conventiona
 		conv.errs = append(conv.errs, conv.lint.fatal)
 	}
 	if failedExit(conv.vet) {
-		conv.failed.Vet = parseVetPackages(append(append([]byte{}, conv.vet.stderr...), conv.vet.stdout...))
-		if len(conv.failed.Vet) == 0 {
-			conv.failed.Vet[noVetFailure] = true
-		}
+		conv.failed.Vet = vetFailureKeys(conv.vet, ac.dir)
 	}
 	if conv.tests.err == nil || conv.tests.timedOut {
 		parsed := parseTestFailures(conv.tests.stdout)

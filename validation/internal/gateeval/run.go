@@ -490,10 +490,7 @@ func (r *runner) computeBaseFailures(ctx context.Context, project, base string) 
 		failures.Packages[noEventsFailure] = true
 	}
 	if vet.exit != 0 {
-		failures.Vet = parseVetPackages(append(append([]byte{}, vet.stderr...), vet.stdout...))
-		if len(failures.Vet) == 0 {
-			failures.Vet[noVetFailure] = true
-		}
+		failures.Vet = vetFailureKeys(vet, dir)
 	}
 	return failures, nil
 }
