@@ -30,6 +30,8 @@ func TestParseHookInput(t *testing.T) {
 		{name: "empty input", input: "", wantErr: true},
 		{name: "not json", input: "Stop", wantErr: true},
 		{name: "json array", input: `[1]`, wantErr: true},
+		{name: "json null", input: `null`, wantErr: true},
+		{name: "json string", input: ` "Stop" `, wantErr: true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

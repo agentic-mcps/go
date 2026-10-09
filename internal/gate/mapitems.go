@@ -52,14 +52,20 @@ func mapCollection(report verification.Report, files []verification.SourceFile, 
 	for _, evidence := range report.Evidence {
 		mapEvidence(&out, evidence, files, requireCoverage)
 	}
+	unknown := 0
 	for _, uncertainty := range report.Uncertainties {
-		if uncertainty.Code != "coverage_incomplete" {
-			continue
+		switch uncertainty.Code {
+		case "baseline_unknown":
+			unknown++
+		case "coverage_incomplete":
+			out.notes = append(out.notes, uncertainty.Message)
+			if requireCoverage {
+				out.complete = false
+			}
 		}
-		out.notes = append(out.notes, uncertainty.Message)
-		if requireCoverage {
-			out.complete = false
-		}
+	}
+	if unknown > 0 {
+		out.notes = append(out.notes, fmt.Sprintf("%d analyzer %s could not be compared with base", unknown, mapNoun(unknown, "finding", "findings")))
 	}
 	return out
 }
@@ -278,10 +284,14 @@ func mapCoverage(out *mapped, evidence verification.Evidence, files []verificati
 }
 
 func mapVerb(count int) string {
+	return mapNoun(count, "is", "are")
+}
+
+func mapNoun(count int, one, many string) string {
 	if count == 1 {
-		return "is"
+		return one
 	}
-	return "are"
+	return many
 }
 
 type uncoveredFile struct {
@@ -348,4 +358,112 @@ func mapDetail(output string) string {
 		}
 	}
 	return strings.Join(kept, "\n")
+}
+
+// mapListFix is the fix for a package that go list cannot load.
+const mapListFix = "Fix the import or package clause so the package loads."
+
+var (
+	// mapListPosition matches "path:line: msg" and "path:line:col: msg".
+	mapListPosition = regexp.MustCompile(`^([^\s:]+):([0-9]+)(?::[0-9]+)?: (.+)$`)
+	// mapListRootSuffix drops a trailing absolute path such as GOROOT.
+	mapListRootSuffix = regexp.MustCompile(`\s+\(/[^)]*\)$`)
+	// mapListMarkers are go list errors that only a code change causes.
+	mapListMarkers = []string{
+		"found packages", "import cycle not allowed", "no required module provides package",
+		"cannot find module providing package", "is not in std",
+	}
+	// mapListNetwork marks environment failures that must never block.
+	mapListNetwork = []string{"dial tcp", "i/o timeout", "no such host", "connection refused", "connection reset", "TLS handshake"}
+)
+
+// mapListErrors turns a change-discovery failure caused by go list rejecting
+// the code (bad imports, import cycles, mixed package clauses) into blocking
+// build items. Errors of any other shape, including network failures, return
+// nothing so the caller reports an unknown verdict.
+func mapListErrors(root, text string) []Item {
+	dir, stderr := mapListOutput(root, text)
+	if stderr == "" || mapContainsAny(stderr, mapListNetwork) {
+		return nil
+	}
+	lines := strings.Split(strings.TrimSpace(stderr), "\n")
+	detail := strings.Join(lines[:min(len(lines), mapDetailLines)], "\n")
+	items := make([]Item, 0)
+	seen := make(map[string]bool)
+	for _, line := range lines {
+		match := mapListPosition.FindStringSubmatch(strings.TrimSpace(line))
+		if match == nil {
+			continue
+		}
+		row, err := strconv.Atoi(match[2])
+		if err != nil {
+			continue
+		}
+		file := mapListFile(root, dir, match[1])
+		key := file + ":" + match[2]
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		items = append(items, Item{
+			Severity: SeverityBlock, Code: CodeBuild, File: file, Line: row,
+			Message: "package does not load: " + mapListRootSuffix.ReplaceAllString(match[3], ""),
+			Fix:     mapListFix, Detail: detail,
+		})
+	}
+	if len(items) > 0 {
+		return items
+	}
+	for _, line := range lines {
+		if mapContainsAny(line, mapListMarkers) {
+			return []Item{{
+				Severity: SeverityBlock, Code: CodeBuild,
+				Message: "package does not load: " + strings.TrimSpace(mapListRootSuffix.ReplaceAllString(line, "")),
+				Fix:     mapListFix, Detail: detail,
+			}}
+		}
+	}
+	return nil
+}
+
+// mapListOutput splits the analyzer's wrapped error into the directory go
+// list ran in and its stderr.
+func mapListOutput(root, text string) (string, string) {
+	const exited = "go list exited "
+	index := strings.Index(text, exited)
+	if index < 0 {
+		return root, ""
+	}
+	_, stderr, found := strings.Cut(text[index+len(exited):], ": ")
+	if !found {
+		return root, ""
+	}
+	dir := root
+	if _, after, ok := strings.Cut(text[:index], "listing packages in "); ok {
+		dir = strings.TrimSuffix(strings.TrimSpace(after), ":")
+	}
+	return dir, stderr
+}
+
+// mapListFile makes a go list path workspace-relative, or empty when it is
+// outside the workspace.
+func mapListFile(root, dir, name string) string {
+	local := filepath.FromSlash(name)
+	if !filepath.IsAbs(local) {
+		local = filepath.Join(dir, local)
+	}
+	rel, err := filepath.Rel(root, local)
+	if err != nil || !filepath.IsLocal(rel) {
+		return ""
+	}
+	return filepath.ToSlash(rel)
+}
+
+func mapContainsAny(text string, needles []string) bool {
+	for _, needle := range needles {
+		if strings.Contains(text, needle) {
+			return true
+		}
+	}
+	return false
 }

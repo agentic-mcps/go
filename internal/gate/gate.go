@@ -1,12 +1,16 @@
 package gate
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -20,6 +24,9 @@ import (
 )
 
 const (
+	// gateCollectShare is the percentage of the remaining budget the test run
+	// may use; the rest is reserved for failure attribution.
+	gateCollectShare = 75
 	// gateAnalyzeLimit is the largest closure change discovery accepts.
 	gateAnalyzeLimit = 500
 	// gateRaceRisk is the change-impact risk that turns on race detection in CI.
@@ -148,7 +155,7 @@ func (g *Gate) run(ctx context.Context, run *gateRun) (Result, error) {
 	if fingerprint, fpErr := Fingerprint(ctx, g.git, g.ws.Root(), base.Commit, g.salt(run.options)); fpErr == nil {
 		run.fingerprint = fingerprint
 	}
-	if !gateTouchesGo(changed) {
+	if gateDocsOnly(changed) {
 		run.add(CheckIntegrity(gatePathFiles(changed), nil)...)
 		return g.finish(run), nil
 	}
@@ -178,7 +185,8 @@ func (g *Gate) run(ctx context.Context, run *gateRun) (Result, error) {
 }
 
 // lock serializes gate runs on the store. A nil unlock without error means
-// the time budget ran out while waiting, which is already recorded.
+// the run cannot continue, which is already recorded. A lock that cannot be
+// taken for another reason is noted and the run continues unserialized.
 func (g *Gate) lock(ctx context.Context, run *gateRun) (func(), error) {
 	lockCtx, cancel := context.WithDeadline(ctx, run.start.Add(run.options.Budget))
 	defer cancel()
@@ -189,10 +197,14 @@ func (g *Gate) lock(ctx context.Context, run *gateRun) (func(), error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
-	run.note("another agentic-go check run held the lock until the time budget ran out")
-	run.complete = false
-	run.cacheable = false
-	return nil, nil
+	if errors.Is(err, context.DeadlineExceeded) {
+		run.note("another agentic-go check run held the lock until the time budget ran out")
+		run.complete = false
+		run.cacheable = false
+		return nil, nil
+	}
+	run.note("ran without the gate lock: " + attributeOneLine(err.Error()))
+	return func() {}, nil
 }
 
 // verify analyzes the change, checks integrity, runs the affected tests and
@@ -203,10 +215,22 @@ func (g *Gate) verify(ctx context.Context, run *gateRun, changed []string) (Resu
 		if ctx.Err() != nil {
 			return Result{}, ctx.Err()
 		}
+		run.add(CheckIntegrity(gatePathFiles(changed), nil)...)
+		if items := mapListErrors(g.ws.Root(), err.Error()); len(items) > 0 {
+			run.add(items...)
+			run.note("tests skipped until the packages load")
+			return g.finish(run), nil
+		}
 		run.note("could not analyze the change: " + attributeOneLine(err.Error()))
 		run.complete = false
-		run.add(CheckIntegrity(gatePathFiles(changed), nil)...)
 		return g.finish(run), nil
+	}
+	if assetErr := g.addAssetPackages(ctx, &analysis, changed); assetErr != nil {
+		if ctx.Err() != nil {
+			return Result{}, ctx.Err()
+		}
+		run.note("could not map changed non-Go files to packages: " + attributeOneLine(assetErr.Error()))
+		run.complete = false
 	}
 	run.result.Stats.PackagesAffected = len(analysis.Packages)
 	if !analysis.Complete {
@@ -221,15 +245,20 @@ func (g *Gate) verify(ctx context.Context, run *gateRun, changed []string) (Resu
 	}
 	run.add(CheckIntegrity(analysis.Files, gateDeletedDeclarations(analysis.Change.Declarations))...)
 
-	budgetCtx, cancel := context.WithDeadline(ctx, run.start.Add(run.options.Budget))
+	deadline := run.start.Add(run.options.Budget)
+	budgetCtx, cancel := context.WithDeadline(ctx, deadline)
 	defer cancel()
+	// Tests get three quarters of the remaining budget so attribution, which
+	// only runs when something failed, still has time to compare with base.
+	collectCtx, cancelCollect := context.WithDeadline(budgetCtx, time.Now().Add(time.Until(deadline)*gateCollectShare/100))
+	defer cancelCollect()
 	request := g.request(run, analysis)
-	collection, err := g.engine.CollectAnalysis(budgetCtx, request, analysis)
+	collection, err := g.engine.CollectAnalysis(collectCtx, request, analysis)
 	if err != nil {
 		if ctx.Err() != nil {
 			return Result{}, ctx.Err()
 		}
-		run.note(g.collectNote(budgetCtx, run, err))
+		run.note(g.collectNote(collectCtx, run, err))
 		run.complete = false
 		return g.finish(run), nil
 	}
@@ -262,6 +291,9 @@ func (g *Gate) attribute(ctx context.Context, run *gateRun, request verification
 		materialize: g.analyzer.MaterializeBase, runner: g.runner, targets: targets,
 		root: g.ws.Root(), baseShort: formatShortCommit(run.result.Base.Commit),
 		repository: analysis.Repository, flags: testFlags(request),
+	}
+	if g.store != nil {
+		attr.baseDir = filepath.Join(g.store.dir, "base")
 	}
 	defer attr.close()
 	outcome := attr.attribute(ctx, failures)
@@ -320,12 +352,20 @@ func (g *Gate) finish(run *gateRun) Result {
 	return result
 }
 
+// gateSaltEnv lists the environment variables that change what go builds.
+var gateSaltEnv = []string{"GOFLAGS", "GOOS", "GOARCH", "CGO_ENABLED", "GOEXPERIMENT", "GOTOOLCHAIN"}
+
 // salt is the stable string of everything besides the tree that changes a
-// result: gate version, toolchain, profile and every option.
+// result: gate version, toolchain, build environment, profile and every option.
 func (g *Gate) salt(options Options) string {
-	return fmt.Sprintf("v=%q go=%q profile=%q base=%q session=%q budget=%d race=%t cover=%t skip=%q max=%d",
+	var b strings.Builder
+	fmt.Fprintf(&b, "v=%q go=%q profile=%q base=%q session=%q budget=%d race=%t cover=%t skip=%q max=%d",
 		g.version, g.ws.Toolchain().Version, options.Profile, options.Base, options.SessionBase,
 		options.Budget, options.Race, options.RequireCoverage, options.Skip, options.MaxPackages)
+	for _, name := range gateSaltEnv {
+		fmt.Fprintf(&b, " %s=%q", name, g.getenv(name))
+	}
+	return b.String()
 }
 
 func (run *gateRun) add(items ...Item) {
@@ -375,18 +415,29 @@ func gateGoFiles(paths []string) []string {
 	return files
 }
 
-// gateTouchesGo reports whether a change can affect Go build or test results.
-func gateTouchesGo(paths []string) bool {
+// gateDocsOnly reports whether every changed path is documentation, the
+// only kind of change that cannot affect a build or test: .md, .markdown,
+// .txt and .rst files, anything under a docs directory, and LICENSE or
+// NOTICE files.
+func gateDocsOnly(paths []string) bool {
 	for _, name := range paths {
-		switch path.Base(name) {
-		case "go.mod", "go.sum", "go.work", "go.work.sum":
-			return true
-		}
-		if strings.HasSuffix(name, ".go") {
-			return true
+		if !gateIsDoc(name) {
+			return false
 		}
 	}
-	return false
+	return true
+}
+
+func gateIsDoc(name string) bool {
+	switch strings.ToLower(path.Ext(name)) {
+	case ".md", ".markdown", ".txt", ".rst":
+		return true
+	}
+	base := path.Base(name)
+	if strings.HasPrefix(base, "LICENSE") || strings.HasPrefix(base, "NOTICE") {
+		return true
+	}
+	return slices.Contains(strings.Split(path.Dir(name), "/"), "docs")
 }
 
 // gatePathFiles describes changed paths without content, enough for the
@@ -419,4 +470,109 @@ func gateCacheUnsafe(root string) bool {
 		}
 	}
 	return false
+}
+
+// gateAssetReason is the impact reason for a package owning a changed
+// non-Go file such as testdata.
+const gateAssetReason = "changed_asset"
+
+// addAssetPackages adds, as directly changed packages, the package owning
+// each changed non-Go file that change discovery did not map (testdata,
+// assembly, SQL, YAML and similar files read by tests). The owner is the
+// nearest enclosing directory with Go files.
+func (g *Gate) addAssetPackages(ctx context.Context, analysis *verification.ChangeAnalysis, changed []string) error {
+	known := make(map[string]bool, len(analysis.Packages))
+	for _, target := range analysis.Packages {
+		known[filepath.Clean(target.Dir)] = true
+	}
+	patterns := make([]string, 0)
+	seen := make(map[string]bool)
+	for _, name := range changed {
+		if strings.HasSuffix(name, ".go") || gateIsDoc(name) || gateIsModuleFile(name) {
+			continue
+		}
+		dir, ok := gateOwnerDir(g.ws.Root(), path.Dir(name))
+		if !ok || seen[dir] || known[filepath.Join(g.ws.Root(), filepath.FromSlash(dir))] {
+			continue
+		}
+		seen[dir] = true
+		patterns = append(patterns, attributePattern(dir))
+	}
+	if len(patterns) == 0 {
+		return nil
+	}
+	targets, err := g.listTargets(ctx, patterns)
+	if err != nil {
+		return err
+	}
+	for _, target := range targets {
+		if !known[filepath.Clean(target.Dir)] {
+			known[filepath.Clean(target.Dir)] = true
+			analysis.Packages = append(analysis.Packages, target)
+		}
+	}
+	return nil
+}
+
+func gateIsModuleFile(name string) bool {
+	switch path.Base(name) {
+	case "go.mod", "go.sum", "go.work", "go.work.sum":
+		return true
+	}
+	return false
+}
+
+// gateOwnerDir walks up from dir to the nearest directory holding Go files.
+func gateOwnerDir(root, dir string) (string, bool) {
+	for {
+		matches, err := filepath.Glob(filepath.Join(root, filepath.FromSlash(dir), "*.go"))
+		if err == nil && len(matches) > 0 {
+			return dir, true
+		}
+		if dir == "." || dir == "/" || dir == "" {
+			return "", false
+		}
+		dir = path.Dir(dir)
+	}
+}
+
+// gateListPackage is the part of go list -json the gate needs.
+type gateListPackage struct {
+	Module *struct {
+		Path string
+		Dir  string
+	}
+	ImportPath string
+	Dir        string
+}
+
+// listTargets resolves package patterns to execution targets with go list.
+func (g *Gate) listTargets(ctx context.Context, patterns []string) ([]verification.ExecutionTarget, error) {
+	var stdout, stderr bytes.Buffer
+	args := append([]string{"list", "-e", "-json=ImportPath,Dir,Module", "-mod=readonly"}, patterns...)
+	result, err := g.runner.Run(ctx, execution.Command{
+		Name: "go", Args: args, Env: map[string]string{"GOWORK": "auto", "GOTOOLCHAIN": "local"},
+	}, execution.Streams{Stdout: &stdout, Stderr: &stderr})
+	if err != nil {
+		return nil, fmt.Errorf("listing packages: %w", err)
+	}
+	if result.ExitCode != 0 {
+		return nil, fmt.Errorf("listing packages: go list exited %d: %s", result.ExitCode, attributeOneLine(stderr.String()))
+	}
+	targets := make([]verification.ExecutionTarget, 0, len(patterns))
+	decoder := json.NewDecoder(&stdout)
+	for {
+		var pkg gateListPackage
+		if err := decoder.Decode(&pkg); errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("decoding package list: %w", err)
+		}
+		target := verification.ExecutionTarget{ID: pkg.ImportPath, Dir: pkg.Dir, Reasons: []string{gateAssetReason}}
+		if pkg.Module != nil {
+			target.ModulePath, target.ModuleDir = pkg.Module.Path, pkg.Module.Dir
+		}
+		targets = append(targets, target)
+	}
+	return targets, nil
 }

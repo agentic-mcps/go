@@ -54,8 +54,12 @@ func ParseHookInput(r io.Reader) (HookEvent, error) {
 	if err != nil {
 		return HookEvent{}, fmt.Errorf("reading hook input: %w", err)
 	}
-	if strings.TrimSpace(string(data)) == "" {
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" {
 		return HookEvent{}, errors.New("reading hook input: input is empty")
+	}
+	if !strings.HasPrefix(trimmed, "{") {
+		return HookEvent{}, errors.New("decoding hook input: input is not a JSON object")
 	}
 	var payload hookPayload
 	if err := json.Unmarshal(data, &payload); err != nil {

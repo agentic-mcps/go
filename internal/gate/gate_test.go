@@ -2,6 +2,8 @@ package gate
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -281,15 +283,118 @@ func TestAdd(t *testing.T) {
 			},
 		},
 		{
-			name: "failing test in a package missing at base blocks with a note", parallel: true,
+			name: "failing test in a package missing at base blocks", parallel: true,
 			change: map[string]string{
 				"extra/extra.go":      "package extra\n\n// Two returns two.\nfunc Two() int { return 3 }\n",
 				"extra/extra_test.go": "package extra\n\nimport \"testing\"\n\nfunc TestTwo(t *testing.T) {\n\tif Two() != 2 {\n\t\tt.Fatal(\"Two() != 2\")\n\t}\n}\n",
 			},
 			check: func(t *testing.T, result Result) {
-				gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
-				if !strings.Contains(strings.Join(result.Notes, "\n"), "could not compare TestTwo with base: package directory extra does not exist") {
-					t.Fatalf("notes = %q", result.Notes)
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				if item.Message != "TestTwo fails after this change" {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "typo in a standard library import blocks", parallel: true,
+			change: map[string]string{"lib/lib.go": strings.Replace(gateFixtureFiles["lib/lib.go"], "package lib\n", "package lib\n\nimport \"fmtt\"\n\nvar _ = fmtt.Sprint\n", 1)},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeBuild, SeverityBlock)
+				if item.File != "lib/lib.go" || item.Line != 3 || !strings.Contains(item.Message, "package fmtt is not in std") || strings.Contains(item.Message, "(/") {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "import of a missing local package blocks", parallel: true,
+			change: map[string]string{"lib/lib.go": strings.Replace(gateFixtureFiles["lib/lib.go"], "package lib\n", "package lib\n\nimport \"example.com/fixture/nope\"\n\nvar _ = nope.X\n", 1)},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeBuild, SeverityBlock)
+				if item.File != "lib/lib.go" || item.Line != 3 || !strings.Contains(item.Message, "example.com/fixture/nope") {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "import cycle blocks", parallel: true,
+			change: map[string]string{"lib/cycle.go": "package lib\n\nimport \"example.com/fixture/app\"\n\nvar _ = app.Total\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeBuild, SeverityBlock)
+				if !strings.Contains(item.Message, "import cycle not allowed") {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "library code exiting under a test blocks as a crash", parallel: true,
+			change: map[string]string{"lib/lib.go": strings.Replace(strings.Replace(gateFixtureFiles["lib/lib.go"], "return -1", "os.Exit(1)\n\t\treturn -1", 1), "package lib\n", "package lib\n\nimport \"os\"\n", 1)},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				want := "tests in example.com/fixture/lib crash outside a named test after this change; last test started: TestSign"
+				if item.Message != want || item.File != "lib/lib_test.go" || item.Line != 11 {
+					t.Fatalf("item = %+v, want message %q at lib/lib_test.go:11", item, want)
+				}
+			},
+		},
+		{
+			name: "base that does not build is not compared and never blocks", parallel: true,
+			base: map[string]string{
+				".gitignore":      "*.marker\ngen.go\n",
+				"lib/gen.go":      "package lib\n\n// Generated is produced by a generator and not committed.\nconst Generated = 1\n",
+				"lib/gen_test.go": "package lib\n\nimport \"testing\"\n\nfunc TestGenerated(t *testing.T) {\n\tif Generated != 1 || Sign(-1) != -1 {\n\t\tt.Fatal(\"wrong\")\n\t}\n}\n",
+			},
+			change: map[string]string{"lib/lib.go": strings.Replace(gateFixtureFiles["lib/lib.go"], "return -1", "return 1", 1)},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictUnknown, CodeTestFailed, SeverityWarn)
+				if !strings.Contains(item.Message, "not compared with base: package does not build") {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "testdata change that breaks a test blocks", parallel: true,
+			base: map[string]string{
+				"lib/testdata/greeting.data": "hello\n",
+				"lib/greet_test.go":          "package lib\n\nimport (\n\t\"os\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestGreetingFile(t *testing.T) {\n\tdata, err := os.ReadFile(\"testdata/greeting.data\")\n\tif err != nil || strings.TrimSpace(string(data)) != Greeting() {\n\t\tt.Fatalf(\"greeting file = %q\", data)\n\t}\n}\n",
+			},
+			change: map[string]string{"lib/testdata/greeting.data": "bye\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				if item.Message != "TestGreetingFile fails after this change" {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "compile error in a test file blocks with compiler text", parallel: true,
+			change: map[string]string{"lib/lib_test.go": gateFixtureFiles["lib/lib_test.go"] + "\nvar _ = undefinedHelper\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeBuild, SeverityBlock)
+				if item.File != "lib/lib_test.go" || !strings.Contains(item.Detail, "undefined: undefinedHelper") {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "subtest failure is attributed to its top-level test", parallel: true,
+			base: map[string]string{
+				"lib/abs.go":      "package lib\n\n// Abs returns the absolute value of v.\nfunc Abs(v int) int {\n\tif v < 0 {\n\t\treturn -v\n\t}\n\treturn v\n}\n",
+				"lib/abs_test.go": "package lib\n\nimport \"testing\"\n\nfunc TestAbs(t *testing.T) {\n\tt.Run(\"neg\", func(t *testing.T) {\n\t\tif Abs(-2) != 2 {\n\t\t\tt.Fatal(\"Abs(-2) != 2\")\n\t\t}\n\t})\n\tt.Run(\"pos\", func(t *testing.T) {\n\t\tif Abs(3) != 3 {\n\t\t\tt.Fatal(\"Abs(3) != 3\")\n\t\t}\n\t})\n}\n",
+			},
+			change: map[string]string{"lib/abs.go": "package lib\n\n// Abs returns the absolute value of v.\nfunc Abs(v int) int {\n\treturn v\n}\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				if item.Message != "TestAbs fails after this change" || !strings.HasPrefix(item.Detail, "failing subtests: TestAbs/neg\n") {
+					t.Fatalf("item = %+v", item)
+				}
+				count := 0
+				for _, other := range result.Items {
+					if other.Severity == SeverityBlock && strings.HasPrefix(other.Code, "test.") {
+						count++
+					}
+				}
+				if count != 1 {
+					t.Fatalf("got %d test items, want 1: %+v", count, result.Items)
 				}
 			},
 		},
@@ -518,22 +623,115 @@ func TestGateCacheUnsafe(t *testing.T) {
 	}
 }
 
-func TestGateTouchesGo(t *testing.T) {
+func TestGateDocsOnly(t *testing.T) {
 	cases := []struct {
 		paths []string
 		want  bool
 	}{
-		{paths: []string{"README.md", "docs/a.txt"}},
-		{paths: []string{"lib/testdata/x.golden"}},
-		{paths: []string{"lib/a.go"}, want: true},
-		{paths: []string{"sub/go.mod"}, want: true},
-		{paths: []string{"go.sum"}, want: true},
-		{paths: []string{"go.work"}, want: true},
-		{paths: []string{"notgo.mod.txt"}},
+		{paths: []string{"README.md", "docs/a.png", "sub/docs/guide/x.yaml", "LICENSE", "NOTICE.txt", "notes.rst", "a.markdown", "CHANGES.TXT"}, want: true},
+		{paths: []string{"README.md", "lib/testdata/x.golden"}},
+		{paths: []string{"lib/a.go"}},
+		{paths: []string{"go.mod"}},
+		{paths: []string{"lib/asm_amd64.s"}},
+		{paths: []string{"db/schema.sql"}},
+		{paths: []string{"config.yaml"}},
+		{paths: []string{"documentation/x.yaml"}},
 	}
 	for _, tc := range cases {
-		if got := gateTouchesGo(tc.paths); got != tc.want {
-			t.Errorf("gateTouchesGo(%v) = %v, want %v", tc.paths, got, tc.want)
+		if got := gateDocsOnly(tc.paths); got != tc.want {
+			t.Errorf("gateDocsOnly(%v) = %v, want %v", tc.paths, got, tc.want)
 		}
+	}
+}
+
+func TestGateSaltIncludesBuildEnvironment(t *testing.T) {
+	g := &Gate{ws: &workspace.Workspace{}, version: "v"}
+	env := map[string]string{}
+	g.getenv = func(name string) string { return env[name] }
+	base := g.salt(Options{})
+	for _, name := range gateSaltEnv {
+		env = map[string]string{name: "x"}
+		if g.salt(Options{}) == base {
+			t.Errorf("salt ignores %s", name)
+		}
+	}
+	env = map[string]string{"HOME": "/elsewhere"}
+	if g.salt(Options{}) != base {
+		t.Error("salt depends on an unrelated variable")
+	}
+}
+
+func TestGateRunReusesCachedBaseTree(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test runs git and go")
+	}
+	f := gateRepo(t, map[string]string{"lib/broken_test.go": "package lib\n\nimport \"testing\"\n\nfunc TestBroken(t *testing.T) { t.Fatal(\"broken\") }\n"}, gateTruePatch)
+	storeDir := t.TempDir()
+	store, err := NewStore(storeDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := gateNew(t, f.root, store)
+	trees := func() []string {
+		entries, readErr := os.ReadDir(filepath.Join(storeDir, "base"))
+		if readErr != nil {
+			t.Fatalf("reading base cache: %v", readErr)
+		}
+		names := make([]string, 0, len(entries))
+		for _, entry := range entries {
+			names = append(names, entry.Name())
+		}
+		return names
+	}
+	first, err := g.Run(context.Background(), Options{NoCache: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gateWant(t, first, VerdictPass, CodeTestPreexisting, SeverityWarn)
+	names := trees()
+	if len(names) != 1 {
+		t.Fatalf("base cache = %v, want one tree", names)
+	}
+	sentinel := filepath.Join(storeDir, "base", names[0], "sentinel")
+	if err = os.WriteFile(sentinel, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	second, err := g.Run(context.Background(), Options{NoCache: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gateWant(t, second, VerdictPass, CodeTestPreexisting, SeverityWarn)
+	if _, err := os.Stat(sentinel); err != nil {
+		t.Fatalf("second run rebuilt the base tree: %v", err)
+	}
+	if got := trees(); len(got) != 1 {
+		t.Fatalf("base cache = %v, want one tree", got)
+	}
+}
+
+func TestGateRunWithoutLockNotesTheError(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test runs git and go")
+	}
+	f := gateRepo(t, nil, gateTruePatch)
+	dir := t.TempDir()
+	store, err := NewStore(filepath.Join(dir, "store"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Replace the store directory with a file so the lock cannot be opened.
+	if err = os.RemoveAll(filepath.Join(dir, "store")); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(dir, "store"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	result, err := gateNew(t, f.root, store).Run(context.Background(), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gateWant(t, result, VerdictPass, "", "")
+	if !strings.Contains(strings.Join(result.Notes, "\n"), "ran without the gate lock: opening gate lock") {
+		t.Fatalf("notes = %q", result.Notes)
 	}
 }

@@ -194,11 +194,16 @@ func TestMapCoverage(t *testing.T) {
 			wantItems: []Item{}, wantNotes: []string{"coverage unavailable: changed coverage could not be calculated"},
 		},
 		{
-			name:         "partial coverage adds a note",
-			evidence:     verification.Evidence{Kind: verification.CheckCoverage, Status: verification.EvidencePassed, Coverage: &verification.CoverageSummary{}},
-			uncertainty:  []verification.Uncertainty{{Code: "coverage_incomplete", Message: "tests in m/x failed before writing coverage"}, {Code: "baseline_unknown", Message: "ignored"}},
+			name:     "partial coverage adds a note",
+			evidence: verification.Evidence{Kind: verification.CheckCoverage, Status: verification.EvidencePassed, Coverage: &verification.CoverageSummary{}},
+			uncertainty: []verification.Uncertainty{
+				{Code: "coverage_incomplete", Message: "tests in m/x failed before writing coverage"},
+				{Code: "baseline_unknown", Message: "a"},
+				{Code: "baseline_unknown", Message: "b"},
+				{Code: "cgo", Message: "ignored"},
+			},
 			wantItems:    []Item{},
-			wantNotes:    []string{"tests in m/x failed before writing coverage"},
+			wantNotes:    []string{"tests in m/x failed before writing coverage", "2 analyzer findings could not be compared with base"},
 			wantComplete: true,
 		},
 		{

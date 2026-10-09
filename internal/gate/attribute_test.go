@@ -19,11 +19,13 @@ func TestProbeClassify(t *testing.T) {
 	event := func(action, test string) testjson.TestEvent {
 		return testjson.TestEvent{Action: action, Package: "m/p", Test: test}
 	}
+	//nolint:govet // Keep each case readable in input, then expectation order.
 	cases := []struct {
 		name     string
 		test     string
 		stderr   string
 		events   []testjson.TestEvent
+		wantLast string
 		exitCode int
 		want     probeOutcome
 	}{
@@ -45,17 +47,35 @@ func TestProbeClassify(t *testing.T) {
 		{name: "package failure around the test fails", test: "TestX", exitCode: 1, events: []testjson.TestEvent{event("pass", "TestX"), event("fail", "")}, want: probeFail},
 		{name: "go command error is broken", test: "TestX", exitCode: 1, stderr: "go: updates to go.mod needed\n", want: probeBroken},
 		{name: "package probe passes", events: []testjson.TestEvent{event("pass", "")}, want: probePass},
-		{name: "package probe fails", exitCode: 1, events: []testjson.TestEvent{event("fail", "")}, want: probeFail},
+		{name: "package probe crash without named failures fails", exitCode: 1, events: []testjson.TestEvent{event("run", "TestA"), event("pass", "TestA"), event("fail", "")}, want: probeFail},
+		{
+			name: "package probe with an unfinished test fails", exitCode: 1, wantLast: "TestB",
+			events: []testjson.TestEvent{event("run", "TestA"), event("fail", "TestA"), event("run", "TestB"), event("run", "TestB/sub"), event("fail", "")},
+			want:   probeFail,
+		},
+		{
+			name: "near miss: package probe with only named failures did not crash", exitCode: 1,
+			events: []testjson.TestEvent{event("run", "TestA"), event("fail", "TestA"), event("fail", "")},
+			want:   probePass,
+		},
+		{
+			name: "package probe build failure is broken", exitCode: 1,
+			events: []testjson.TestEvent{{Action: "build-fail", ImportPath: "m/p"}, {Action: "fail", Package: "m/p", FailedBuild: "m/p"}},
+			want:   probeBroken,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			facts := probeFacts{}
+			facts := newProbeFacts()
 			for _, e := range tc.events {
 				facts.observe(e, tc.test)
 			}
 			got := facts.classify(tc.test, tc.exitCode, tc.stderr)
 			if got.outcome != tc.want {
 				t.Fatalf("outcome = %d (%s), want %d", got.outcome, got.reason, tc.want)
+			}
+			if got.lastStarted != tc.wantLast {
+				t.Fatalf("lastStarted = %q, want %q", got.lastStarted, tc.wantLast)
 			}
 			if got.outcome == probeBroken && got.reason == "" {
 				t.Fatal("broken outcome has no reason")
@@ -182,7 +202,7 @@ func TestAttributeStopsAtBudgetAndLimit(t *testing.T) {
 		if item.Severity != SeverityWarn || item.Code != CodeTestFailed {
 			t.Fatalf("item %d = %+v, want a test.failed warning", i, item)
 		}
-		want := "was not compared with base (time budget)"
+		want := "not compared with base: time budget ran out"
 		if i == attributeLimit {
 			want = "was not attributed: limit of 10 failing tests reached"
 		}
