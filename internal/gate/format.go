@@ -12,12 +12,13 @@ import (
 const (
 	// formatDefaultLimit is the byte budget used when a caller passes no limit.
 	formatDefaultLimit = 2048
-	// formatDetailItems is how many blocking items show detail lines in WriteText.
-	formatDetailItems = 2
-	// formatDetailMaxLines caps the detail lines shown for one item.
-	formatDetailMaxLines = 6
+	// formatTextMaxBytes caps one message, fix or note so one verbose item cannot
+	// crowd out the rest of the report.
+	formatTextMaxBytes = 240
+	// formatDetailMaxLines caps the detail lines WriteText shows for one item.
+	formatDetailMaxLines = 4
 	// formatDetailLineBytes caps the length of one detail line.
-	formatDetailLineBytes = 160
+	formatDetailLineBytes = 120
 	// formatReasonDetailBytes caps the detail block inside Reason.
 	formatReasonDetailBytes = 800
 	// formatShortLen is how many commit characters identify the base in headers.
@@ -27,42 +28,72 @@ const (
 )
 
 // WriteText writes the compact human/agent report, never exceeding limit bytes (<=0 means 2048).
+//
+// Priority under the limit: the header, then every entry line and fix line
+// (blocking items first), then detail for the first shown blocking item that has
+// one, then notes. For UNKNOWN, the first note is reserved up front so the reason
+// for the verdict is never dropped.
 func WriteText(w io.Writer, r Result, limit int) error {
 	if limit <= 0 {
 		limit = formatDefaultLimit
 	}
 	header := formatHeader(r)
-	blocks := formatBlocks(r.Items)
-	total := len(header)
-	for _, block := range blocks {
-		total += len(block)
+	notes := r.Notes
+	reserved := ""
+	if r.Verdict == VerdictUnknown && len(notes) > 0 {
+		reserved = formatNoteLine(notes[0])
+		notes = notes[1:]
 	}
-	// Reserve room for the "+N more" trailer only when some item will be hidden.
-	reserve := 0
-	if total > limit && len(blocks) > 0 {
-		reserve = len(formatMore(len(blocks)))
+
+	entries := make([]string, len(r.Items))
+	total := 0
+	for i, it := range r.Items {
+		entries[i] = formatEntry(it, true)
+		total += len(entries[i])
 	}
-	if len(header)+reserve > limit {
+	fixed := len(header) + len(reserved)
+	// The trailer is reserved only when some entry will be hidden. Its reserved
+	// length bounds the real trailer, whose counts are never larger.
+	trailerReserve := 0
+	if fixed+total > limit {
+		trailerReserve = len(formatMore(len(r.Items), formatCountBlocking(r.Items)))
+	}
+	if fixed+trailerReserve > limit {
 		return fmt.Errorf("check report limit %d is too small for its header", limit)
 	}
 
+	shown, used := formatChooseEntries(r.Items, entries, limit-fixed-trailerReserve)
+	hidden, hiddenBlocking := formatCountHidden(r.Items, shown)
+	trailer := ""
+	if hidden > 0 {
+		trailer = formatMore(hidden, hiddenBlocking)
+	}
+	room := limit - fixed - used - len(trailer)
+	detailAt := formatFirstShownDetail(r.Items, shown)
+	detail := ""
+	if detailAt >= 0 {
+		detail = formatDetailRows(r.Items[detailAt].Detail, formatDetailMaxLines, room)
+	}
+	room -= len(detail)
+
 	var b strings.Builder
 	b.WriteString(header)
-	shown := 0
-	for _, block := range blocks {
-		if b.Len()+len(block)+reserve > limit {
-			break
+	for i := range r.Items {
+		if !shown[i] {
+			continue
 		}
-		b.WriteString(block)
-		shown++
+		b.WriteString(entries[i])
+		if i == detailAt {
+			b.WriteString(detail)
+		}
 	}
-	if hidden := len(blocks) - shown; hidden > 0 {
-		b.WriteString(formatMore(hidden))
-	}
-	for _, note := range r.Notes {
-		line := "note: " + formatOneLine(note) + "\n"
-		if b.Len()+len(line) <= limit {
+	b.WriteString(trailer)
+	b.WriteString(reserved)
+	for _, note := range notes {
+		line := formatNoteLine(note)
+		if len(line) <= room {
 			b.WriteString(line)
+			room -= len(line)
 		}
 	}
 	if _, err := io.WriteString(w, b.String()); err != nil {
@@ -89,6 +120,11 @@ func WriteJSON(w io.Writer, r Result) error {
 
 // Reason renders the stop-hook block reason: blocking items only, bounded by limit (<=0 means 2048).
 // It returns an empty string when no item blocks.
+//
+// The header and closing sentence are fixed. Entries are placed next, then the
+// detail of the first shown item that has one, directly under that item.
+// Items are dropped from the end to make room; no space is reserved for detail
+// of an item that is not shown.
 func Reason(r Result, limit int) string {
 	if limit <= 0 {
 		limit = formatDefaultLimit
@@ -100,52 +136,51 @@ func Reason(r Result, limit int) string {
 	header := fmt.Sprintf("agentic-go check blocked this stop: %d %s introduced by your change.\n",
 		len(blocking), formatPlural(len(blocking), "problem", "problems"))
 
-	// The header, closing sentence and trailer are fixed; the first blocking item's
-	// detail is reserved next, and items are dropped from the end to make room.
-	fixed := len(header) + len(formatReasonClosing) + len(formatMore(len(blocking)))
-	detailAt := formatFirstDetail(blocking)
-	detail := ""
-	if detailAt >= 0 {
-		detail = formatDetailLines(blocking[detailAt].Detail, min(formatReasonDetailBytes, limit-fixed))
-	}
-
 	entries := make([]string, len(blocking))
-	total := len(header) + len(detail) + len(formatReasonClosing)
+	total := 0
 	for i, it := range blocking {
-		entries[i] = formatItemLine(it, false) + formatFixLine(it)
+		entries[i] = formatEntry(it, false)
 		total += len(entries[i])
 	}
-	// The trailer is reserved only when items will be hidden.
-	reserve := 0
-	if total > limit {
-		reserve = len(formatMore(len(blocking)))
+	fixed := len(header) + len(formatReasonClosing)
+	trailerReserve := 0
+	if fixed+total > limit {
+		trailerReserve = len(formatMore(len(blocking), 0))
+	}
+
+	shown, used := formatChooseEntries(blocking, entries, limit-fixed-trailerReserve)
+	hidden, _ := formatCountHidden(blocking, shown)
+	trailer := ""
+	if hidden > 0 {
+		trailer = formatMore(hidden, 0)
+	}
+	room := limit - fixed - used - len(trailer)
+	detailAt := formatFirstShownDetail(blocking, shown)
+	detail := ""
+	if detailAt >= 0 {
+		detail = formatDetailRows(blocking[detailAt].Detail, math.MaxInt, min(formatReasonDetailBytes, room))
 	}
 
 	var b strings.Builder
 	b.WriteString(header)
-	shown := 0
-	for _, entry := range entries {
-		if b.Len()+len(entry)+reserve+len(detail)+len(formatReasonClosing) > limit {
-			break
+	for i := range blocking {
+		if !shown[i] {
+			continue
 		}
-		b.WriteString(entry)
-		shown++
+		b.WriteString(entries[i])
+		if i == detailAt {
+			b.WriteString(detail)
+		}
 	}
-	if hidden := len(blocking) - shown; hidden > 0 {
-		b.WriteString(formatMore(hidden))
-	}
-	// The detail is written only when its item is shown, so it never appears
-	// without the item it describes.
-	if detailAt >= 0 && detailAt < shown {
-		b.WriteString(detail)
-	}
+	b.WriteString(trailer)
 	b.WriteString(formatReasonClosing)
 	return formatTruncate(b.String(), limit)
 }
 
 // formatHeader renders the one-line report header, ending in a newline.
 func formatHeader(r Result) string {
-	base := fmt.Sprintf("base %s @ %s", r.Base.Ref, formatShortCommit(r.Base.Commit))
+	ref := formatOneLine(r.Base.Ref)
+	base := fmt.Sprintf("base %s @ %s", ref, formatShortCommit(formatOneLine(r.Base.Commit)))
 	if r.Verdict == VerdictPass && len(r.Items) == 0 {
 		return fmt.Sprintf("agentic-go check: PASS (%s, %d packages tested, %s)\n",
 			base, r.Stats.PackagesTested, formatDuration(r.Stats.DurationMS))
@@ -173,20 +208,9 @@ func formatHeader(r Result) string {
 	return fmt.Sprintf("agentic-go check: %s — %s (%s)\n", verdict, strings.Join(parts, ", "), base)
 }
 
-// formatBlocks renders one block per item: entry, fix and, for the first
-// formatDetailItems blocking items with detail, the detail lines.
-func formatBlocks(items []Item) []string {
-	blocks := make([]string, 0, len(items))
-	detailLeft := formatDetailItems
-	for _, it := range items {
-		detail := ""
-		if detailLeft > 0 && it.Severity == SeverityBlock && strings.TrimSpace(it.Detail) != "" {
-			detail = formatDetailLines(it.Detail, math.MaxInt)
-			detailLeft--
-		}
-		blocks = append(blocks, formatItemLine(it, true)+formatFixLine(it)+detail)
-	}
-	return blocks
+// formatEntry renders an item's entry line followed by its fix line, if any.
+func formatEntry(it Item, tag bool) string {
+	return formatItemLine(it, tag) + formatFixLine(it)
 }
 
 // formatItemLine renders the "- " entry line. tag adds the "[severity]" prefix
@@ -200,34 +224,104 @@ func formatItemLine(it Item, tag bool) string {
 	if loc := formatLocation(it); loc != "" {
 		b.WriteString(loc + " — ")
 	}
-	b.WriteString(formatOneLine(it.Message) + "\n")
+	b.WriteString(formatCut(formatOneLine(it.Message), formatTextMaxBytes) + "\n")
 	return b.String()
 }
 
 // formatFixLine renders the indented fix line, or nothing when the item has no fix.
 func formatFixLine(it Item) string {
-	fix := formatOneLine(it.Fix)
+	fix := formatCut(formatOneLine(it.Fix), formatTextMaxBytes)
 	if fix == "" {
 		return ""
 	}
 	return "  fix: " + fix + "\n"
 }
 
-// formatDetailLines renders up to formatDetailMaxLines non-blank detail lines
-// with a "  | " prefix, cutting each line to formatDetailLineBytes. Lines stop
-// before the output would exceed budget bytes.
-func formatDetailLines(detail string, budget int) string {
+// formatNoteLine renders one note as a single "note:" line.
+func formatNoteLine(note string) string {
+	return "note: " + formatCut(formatOneLine(note), formatTextMaxBytes) + "\n"
+}
+
+// formatChooseEntries picks the entries that fit in budget bytes. Blocking items
+// are considered before the rest, each group in input order, and the first entry
+// that does not fit stops the selection. It returns the shown flags and the bytes
+// they use.
+func formatChooseEntries(items []Item, entries []string, budget int) ([]bool, int) {
+	order := make([]int, 0, len(items))
+	for i, it := range items {
+		if it.Severity == SeverityBlock {
+			order = append(order, i)
+		}
+	}
+	for i, it := range items {
+		if it.Severity != SeverityBlock {
+			order = append(order, i)
+		}
+	}
+	shown := make([]bool, len(items))
+	used := 0
+	for _, i := range order {
+		if used+len(entries[i]) > budget {
+			break
+		}
+		used += len(entries[i])
+		shown[i] = true
+	}
+	return shown, used
+}
+
+// formatCountHidden counts the items that are not shown, and how many of them block.
+func formatCountHidden(items []Item, shown []bool) (int, int) {
+	hidden, blocking := 0, 0
+	for i, it := range items {
+		if shown[i] {
+			continue
+		}
+		hidden++
+		if it.Severity == SeverityBlock {
+			blocking++
+		}
+	}
+	return hidden, blocking
+}
+
+// formatCountBlocking counts the items whose severity blocks.
+func formatCountBlocking(items []Item) int {
+	n := 0
+	for _, it := range items {
+		if it.Severity == SeverityBlock {
+			n++
+		}
+	}
+	return n
+}
+
+// formatFirstShownDetail returns the index of the first shown blocking item with
+// detail, or -1.
+func formatFirstShownDetail(items []Item, shown []bool) int {
+	for i, it := range items {
+		if shown[i] && it.Severity == SeverityBlock && strings.TrimSpace(it.Detail) != "" {
+			return i
+		}
+	}
+	return -1
+}
+
+// formatDetailRows renders up to maxLines non-blank detail lines with a "  | "
+// prefix, each cut to formatDetailLineBytes. Whole lines are added only while the
+// block stays within budget bytes, so a line is never partial.
+func formatDetailRows(detail string, maxLines, budget int) string {
 	var b strings.Builder
 	lines := 0
 	for _, raw := range strings.Split(detail, "\n") {
+		if lines == maxLines {
+			break
+		}
 		line := strings.TrimRight(raw, " \t\r")
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		if lines == formatDetailMaxLines {
-			break
-		}
-		row := "  | " + formatTruncate(line, formatDetailLineBytes) + "\n"
+		row := "  | " + formatCut(line, formatDetailLineBytes) + "\n"
 		if b.Len()+len(row) > budget {
 			break
 		}
@@ -248,19 +342,13 @@ func formatBlockingItems(items []Item) []Item {
 	return blocking
 }
 
-// formatFirstDetail returns the index of the first item with detail, or -1.
-func formatFirstDetail(items []Item) int {
-	for i, it := range items {
-		if strings.TrimSpace(it.Detail) != "" {
-			return i
-		}
+// formatMore renders the trailer for hidden items. The blocking count is named
+// only when some hidden item blocks.
+func formatMore(hidden, blocking int) string {
+	if blocking > 0 {
+		return fmt.Sprintf("+%d more (%d blocking) (run with --format json for all)\n", hidden, blocking)
 	}
-	return -1
-}
-
-// formatMore renders the trailer that reports how many items were not shown.
-func formatMore(n int) string {
-	return fmt.Sprintf("+%d more (run with --format json for all)\n", n)
+	return fmt.Sprintf("+%d more (run with --format json for all)\n", hidden)
 }
 
 // formatLocation renders "file:line", "file" when the line is zero, or "" when there is no file.
@@ -296,9 +384,22 @@ func formatPlural(n int, one, many string) string {
 	return many
 }
 
-// formatOneLine collapses whitespace so a message can never break the line layout.
+// formatOneLine collapses whitespace so text can never break the line layout.
 func formatOneLine(s string) string {
 	return strings.Join(strings.Fields(s), " ")
+}
+
+// formatCut shortens s to at most limit bytes. When it cuts, the result ends with
+// "…" and still fits in limit; it never splits a UTF-8 rune.
+func formatCut(s string, limit int) string {
+	const ellipsis = "…"
+	if len(s) <= limit {
+		return s
+	}
+	if limit < len(ellipsis) {
+		return formatTruncate(s, limit)
+	}
+	return formatTruncate(s, limit-len(ellipsis)) + ellipsis
 }
 
 // formatTruncate cuts s to at most limit bytes without splitting a UTF-8 rune.
