@@ -39,6 +39,9 @@ if ! command -v agentic-go >/dev/null 2>&1; then
   echo "agentic-go not found on PATH; skipping check" >&2
   exit 0
 fi
+if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+  echo "agentic-go: checking the working tree, which has uncommitted changes" >&2
+fi
 if git rev-parse '@{upstream}' >/dev/null 2>&1; then
   agentic-go check --profile local --base '@{upstream}'
 else

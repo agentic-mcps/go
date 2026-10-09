@@ -378,6 +378,47 @@ func TestInitPrePush(t *testing.T) {
 			})
 		}
 	})
+	t.Run("script notes uncommitted changes", func(t *testing.T) {
+		sh, err := exec.LookPath("sh")
+		if err != nil {
+			t.Skip("sh not available")
+		}
+		stubs := t.TempDir()
+		if err := os.WriteFile(filepath.Join(stubs, "agentic-go"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		script := filepath.Join(t.TempDir(), "pre-push")
+		if err := os.WriteFile(script, []byte(initPrePushScript), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		repository := t.TempDir()
+		cliGit(t, repository, "init", "-b", "main")
+		cliGit(t, repository, "config", "user.email", "test@example.test")
+		cliGit(t, repository, "config", "user.name", "Test")
+		cliWrite(t, repository, "a.txt", "one\n")
+		cliGit(t, repository, "add", ".")
+		cliGit(t, repository, "commit", "-m", "base")
+		const note = "agentic-go: checking the working tree, which has uncommitted changes"
+		run := func() string {
+			t.Helper()
+			command := exec.Command(sh, script)
+			command.Dir = repository
+			command.Env = []string{"PATH=" + stubs + ":" + os.Getenv("PATH"), "HOME=" + t.TempDir()}
+			var stderr bytes.Buffer
+			command.Stderr = &stderr
+			if err := command.Run(); err != nil {
+				t.Fatalf("pre-push: %v\n%s", err, stderr.String())
+			}
+			return stderr.String()
+		}
+		if stderr := run(); strings.Contains(stderr, note) {
+			t.Fatalf("clean tree printed the note: %q", stderr)
+		}
+		cliWrite(t, repository, "a.txt", "two\n")
+		if stderr := run(); !strings.Contains(stderr, note) {
+			t.Fatalf("stderr = %q, want %q", stderr, note)
+		}
+	})
 	t.Run("write installs once", func(t *testing.T) {
 		hooks := filepath.Join(t.TempDir(), "hooks")
 		deps := initTestDeps("", hooks)
