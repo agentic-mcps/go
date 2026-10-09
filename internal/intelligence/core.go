@@ -15,6 +15,7 @@ import (
 
 	"github.com/agentic-mcps/go/internal/execution"
 	"github.com/agentic-mcps/go/internal/gopls"
+	"github.com/agentic-mcps/go/internal/intelligence/retrieval"
 	"github.com/agentic-mcps/go/internal/verification"
 	"github.com/agentic-mcps/go/internal/workspace"
 )
@@ -50,6 +51,7 @@ type Core struct {
 	contracts     *ContractStore
 	workspace     *workspace.Workspace
 	refactors     *RefactorStore
+	retrieval     *retrieval.Cache
 	refactorWrite func(string, []byte, os.FileMode) error
 	stateGate     chan struct{}
 	provenance    []verification.ProvenanceReference
@@ -133,7 +135,8 @@ func newCore(
 	return &Core{
 		workspace: ws, runner: runner, snapshots: snapshots, semantic: semantic,
 		mutator: mutator, artifacts: artifacts, contracts: contracts, refactors: refactors, verifications: verifications,
-		changes: changes, verifier: verify, refactorWrite: atomicReplace, stateGate: make(chan struct{}, 1),
+		retrieval: retrieval.NewCache(), changes: changes, verifier: verify,
+		refactorWrite: atomicReplace, stateGate: make(chan struct{}, 1),
 	}, nil
 }
 

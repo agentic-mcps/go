@@ -32,7 +32,7 @@ const (
 )
 
 // Guidance is the generic treatment instruction.
-const Guidance = "For an unfamiliar Go change, call go_context with base and one selector: query, symbol_ref, or file with line and column. After editing, refresh with base and previous_pack_id only; never reuse a Symbol Ref from before an edit. Stale selectors and refs are expected to be rejected, so select current evidence."
+const Guidance = "For an unfamiliar Go change, call go_context with base and exactly one selector: query, symbol_ref, file with line and column, or focus_file/focus_package. Symbol Refs are opaque byte strings: copy them exactly; never decode, edit, shorten, reconstruct, or re-encode them. File coordinates must point to the declaration identifier itself, never whitespace, line starts, comments, or local variables. After ambiguity, copy one current candidate or issue a fresh query/file selector. A selector failure produces no evidence; do not retry the same selector; recover with fresh evidence. After edits, refresh with base and previous_pack_id only; stale selectors and refs require current evidence."
 
 // Scenario describes an adoption task.
 type Scenario struct {
@@ -47,49 +47,52 @@ type Scenario struct {
 //
 //nolint:govet // JSON contract groups related evidence fields.
 type Run struct {
-	SchemaVersion               string            `json:"schema_version"`
-	ScenarioID                  string            `json:"scenario_id"`
-	TaskID                      string            `json:"task_id"`
-	Arm                         string            `json:"arm"`
-	Repetition                  int               `json:"repetition"`
-	Model                       string            `json:"model"`
-	Reasoning                   string            `json:"reasoning"`
-	Prompt                      string            `json:"prompt"`
-	PromptSHA256                string            `json:"prompt_sha256"`
-	MCPDescriptionSHA256        string            `json:"mcp_description_sha256"`
-	SkillSHA256                 string            `json:"skill_sha256,omitempty"`
-	EffectiveInstructionSurface string            `json:"effective_instruction_surface,omitempty"`
-	SourceSHA256                string            `json:"source_sha256"`
-	BinarySHA256                string            `json:"binary_sha256"`
-	InitialWorkspaceSHA256      string            `json:"initial_workspace_sha256"`
-	PostWorkspaceSHA256         string            `json:"post_workspace_sha256"`
-	Transcript                  []json.RawMessage `json:"transcript"`
-	TranscriptSHA256            string            `json:"transcript_sha256"`
-	Patch                       string            `json:"patch"`
-	PatchSHA256                 string            `json:"patch_sha256"`
-	Stderr                      string            `json:"stderr,omitempty"`
-	ProcessError                string            `json:"process_error,omitempty"`
-	FocusDelivery               string            `json:"focus_delivery"`
-	WorkspaceSHA256             string            `json:"workspace_sha256"`
-	DecisionObligations         []string          `json:"decision_obligations"`
-	AcceptanceEvidenceSHA256    string            `json:"acceptance_evidence_sha256"`
-	Acceptance                  string            `json:"acceptance"`
-	ScopeViolations             []string          `json:"scope_violations"`
-	EvidenceBytes               int64             `json:"evidence_bytes"`
-	ToolCalls                   int               `json:"tool_calls"`
-	FocusToolCalls              int               `json:"focus_tool_calls"`
-	FocusFailedCalls            int               `json:"focus_failed_calls"`
-	FocusErrorCategories        map[string]int    `json:"focus_error_categories"`
-	FirstFocusCallPosition      int               `json:"first_focus_call_position"`
-	RefreshUse                  bool              `json:"refresh_use"`
-	FocusEvidenceUse            bool              `json:"focus_evidence_use"`
-	FocusResultFollowedByEdit   bool              `json:"focus_result_followed_by_edit"`
-	RefreshCompleted            bool              `json:"refresh_completed"`
-	SkillDiscovered             bool              `json:"skill_discovered"`
-	DurationMS                  int64             `json:"duration_ms"`
-	OperatorIntervention        bool              `json:"operator_intervention"`
-	Uncertainty                 []string          `json:"uncertainty"`
-	Qualifying                  bool              `json:"qualifying"`
+	SchemaVersion               string                     `json:"schema_version"`
+	ScenarioID                  string                     `json:"scenario_id"`
+	TaskID                      string                     `json:"task_id"`
+	Arm                         string                     `json:"arm"`
+	Repetition                  int                        `json:"repetition"`
+	Model                       string                     `json:"model"`
+	Reasoning                   string                     `json:"reasoning"`
+	Prompt                      string                     `json:"prompt"`
+	PromptSHA256                string                     `json:"prompt_sha256"`
+	MCPDescriptionSHA256        string                     `json:"mcp_description_sha256"`
+	SkillSHA256                 string                     `json:"skill_sha256,omitempty"`
+	EffectiveInstructionSurface string                     `json:"effective_instruction_surface,omitempty"`
+	SourceSHA256                string                     `json:"source_sha256"`
+	BinarySHA256                string                     `json:"binary_sha256"`
+	InitialWorkspaceSHA256      string                     `json:"initial_workspace_sha256"`
+	PostWorkspaceSHA256         string                     `json:"post_workspace_sha256"`
+	Transcript                  []json.RawMessage          `json:"transcript"`
+	TranscriptSHA256            string                     `json:"transcript_sha256"`
+	Patch                       string                     `json:"patch"`
+	PatchSHA256                 string                     `json:"patch_sha256"`
+	Stderr                      string                     `json:"stderr,omitempty"`
+	ProcessError                string                     `json:"process_error,omitempty"`
+	FocusDelivery               string                     `json:"focus_delivery"`
+	WorkspaceSHA256             string                     `json:"workspace_sha256"`
+	DecisionObligations         []string                   `json:"decision_obligations"`
+	AcceptanceEvidenceSHA256    string                     `json:"acceptance_evidence_sha256"`
+	Acceptance                  string                     `json:"acceptance"`
+	ScopeViolations             []string                   `json:"scope_violations"`
+	EvidenceBytes               int64                      `json:"evidence_bytes"`
+	ToolCalls                   int                        `json:"tool_calls"`
+	FocusToolCalls              int                        `json:"focus_tool_calls"`
+	FocusFailedCalls            int                        `json:"focus_failed_calls"`
+	FocusErrorCategories        map[string]int             `json:"focus_error_categories"`
+	FocusFailureCauses          map[string]int             `json:"focus_failure_causes,omitempty"`
+	FocusFailureRecords         []pilot.FocusFailureRecord `json:"focus_failure_records,omitempty"`
+	FirstFocusCallPosition      int                        `json:"first_focus_call_position"`
+	RefreshUse                  bool                       `json:"refresh_use"`
+	FocusEvidenceUse            bool                       `json:"focus_evidence_use"`
+	FocusResultFollowedByEdit   bool                       `json:"focus_result_followed_by_edit"`
+	RefreshCompleted            bool                       `json:"refresh_completed"`
+	RedundantRefreshes          int                        `json:"redundant_refreshes,omitempty"`
+	SkillDiscovered             bool                       `json:"skill_discovered"`
+	DurationMS                  int64                      `json:"duration_ms"`
+	OperatorIntervention        bool                       `json:"operator_intervention"`
+	Uncertainty                 []string                   `json:"uncertainty"`
+	Qualifying                  bool                       `json:"qualifying"`
 }
 
 // LoadRun loads and canonicalizes one adoption run.
@@ -127,11 +130,14 @@ func LoadRun(path string) (Run, error) {
 	r.FocusToolCalls = focus.Calls
 	r.FocusFailedCalls = focus.FailedCalls
 	r.FocusErrorCategories = focus.ErrorCategories
+	r.FocusFailureCauses = focus.FailureCauses
+	r.FocusFailureRecords = focus.FailureRecords
 	r.FirstFocusCallPosition = focus.FirstPosition
 	r.RefreshUse = focus.Refresh
 	r.FocusEvidenceUse = focus.Evidence
 	r.FocusResultFollowedByEdit = focus.FocusResultFollowedByEdit
 	r.RefreshCompleted = focus.RefreshCompleted
+	r.RedundantRefreshes = focus.RedundantRefreshes
 	r.SkillDiscovered = pilot.SkillDiscoveryEvidence(pilot.Events{Raw: r.Transcript}, SkillName)
 	if r.PatchSHA256 != "" && r.PatchSHA256 != DigestString(r.Patch) {
 		return r, fmt.Errorf("patch hash mismatch")
@@ -180,11 +186,14 @@ func LoadRuns(path string) ([]Run, error) {
 		r[i].FocusToolCalls = focus.Calls
 		r[i].FocusFailedCalls = focus.FailedCalls
 		r[i].FocusErrorCategories = focus.ErrorCategories
+		r[i].FocusFailureCauses = focus.FailureCauses
+		r[i].FocusFailureRecords = focus.FailureRecords
 		r[i].FirstFocusCallPosition = focus.FirstPosition
 		r[i].RefreshUse = focus.Refresh
 		r[i].FocusEvidenceUse = focus.Evidence
 		r[i].FocusResultFollowedByEdit = focus.FocusResultFollowedByEdit
 		r[i].RefreshCompleted = focus.RefreshCompleted
+		r[i].RedundantRefreshes = focus.RedundantRefreshes
 		r[i].SkillDiscovered = pilot.SkillDiscoveryEvidence(pilot.Events{Raw: r[i].Transcript}, SkillName)
 	}
 	return r, nil
@@ -195,9 +204,11 @@ func Aggregate(rs []Run) map[string]any {
 	out := map[string]any{"schema_version": Schema, "runs": len(rs), "arms": map[string]any{}}
 	arms := out["arms"].(map[string]any)
 	for _, a := range []string{ArmBaseline, ArmDiscoverability, ArmGuidance, ArmIntegrated} {
-		var n, q, c, failed, followedByEdit, refreshCompleted int
+		var n, q, c, failed, followedByEdit, refreshCompleted, redundantRefreshes int
 		var bytes, calls, durations []int64
 		categories := map[string]int{}
+		failureCauses := map[string]int{}
+		var recovered, repeated int
 		for _, r := range rs {
 			if r.Arm != a {
 				continue
@@ -214,14 +225,26 @@ func Aggregate(rs []Run) map[string]any {
 			if r.RefreshCompleted {
 				refreshCompleted++
 			}
+			redundantRefreshes += r.RedundantRefreshes
 			for category, count := range r.FocusErrorCategories {
 				categories[category] += count
+			}
+			for cause, count := range r.FocusFailureCauses {
+				failureCauses[cause] += count
+			}
+			for _, record := range r.FocusFailureRecords {
+				if record.Recovered {
+					recovered++
+				}
+				if record.Repeated && record.Cause == pilot.FocusFailureSelectorMisuse {
+					repeated++
+				}
 			}
 			bytes = append(bytes, r.EvidenceBytes)
 			calls = append(calls, int64(r.ToolCalls))
 			durations = append(durations, r.DurationMS)
 		}
-		arms[a] = map[string]any{"runs": n, "qualifying": q, "focus_evidence_use": c, "focus_failed_calls": failed, "focus_result_followed_by_edit": followedByEdit, "refresh_completed": refreshCompleted, "focus_error_categories": categories, "evidence_bytes_median": median(bytes), "tool_calls_median": median(calls), "duration_ms_median": median(durations)}
+		arms[a] = map[string]any{"runs": n, "qualifying": q, "focus_evidence_use": c, "focus_failed_calls": failed, "focus_result_followed_by_edit": followedByEdit, "refresh_completed": refreshCompleted, "redundant_refreshes": redundantRefreshes, "focus_error_categories": categories, "focus_failure_causes": failureCauses, "focus_recovered_failures": recovered, "focus_repeated_rejected_selectors": repeated, "evidence_bytes_median": median(bytes), "tool_calls_median": median(calls), "duration_ms_median": median(durations)}
 	}
 	return out
 }

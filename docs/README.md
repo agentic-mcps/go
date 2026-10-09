@@ -8,77 +8,52 @@ compatibility baseline. Shared interfaces and invariants live in
 [`contracts.md`](contracts.md). The completed v1 implementation stages and
 their evidence live in
 [`v1.0.0-roadmap.md`](v1.0.0-roadmap.md). The architectural rationale is
-recorded in [`decision-memo.md`](decision-memo.md); [`plan.md`](plan.md) is the
-concise product plan and routing summary.
+recorded in the historical [`decision-memo.md`](decision-memo.md);
+[`plan.md`](plan.md) is the current product summary and routing guide.
 
 ## Next-generation Go intelligence
 
-After the contributor instructions, a new agent should start with the
-[Astra analysis handoff](continuation/astra-understanding.md): product judgment,
-source evidence, confirmed observation defects, deferred work, and the next
-decision. Its quick start routes the next task without repeating the broader
-investigation. The [continuation handoff](continuation/go-intelligence.md) owns
-implementation status and the next action; the
-[Go intelligence north star](go-intelligence-north-star.md) owns the approved
-architectural direction and acceptance criteria.
-`v1.2.1` (tag `67f54b7`) is the latest released baseline. The current
-`codex/v1.2-reliability` branch contains unreleased post-v1.2.1 work. Its
-product direction is a deterministic, snapshot-bound evidence compiler that
-supports the edit, refresh, verify, inspect loop. Slice 1A adds next-action
-guidance to existing MCP text, and Slice 1B refines private evidence projection
-guidance. Both preserve the frozen public MCP inventory and
-`agentic.focus/v1` schema.
+After the contributor instructions, read the
+[Go engineering north star](go-intelligence-north-star.md) for product direction,
+model/skill requirements, the next delivery cycle, and acceptance criteria.
+Then read the [continuation handoff](continuation/go-intelligence.md) for
+implemented behavior, current evidence, and the exact unfinished step.
+The [Astra source review](continuation/astra-understanding.md) is dated
+historical background, not current implementation sequencing.
 
-Private local Luna evaluations now include a 20-run discoverability pilot and
-a 12-run integrated adoption follow-up. In the focus arm, capability delivery
-was healthy in 10/10 runs, but no run called `go_context`. All six integrated
-runs discovered the shipped skill, called `go_context`, refreshed after
-editing, and used the evidence. Integrated median duration was 431,641 ms
-versus 223,758 ms for baseline, about 93% higher; median tool calls were 24
-versus 26. Astra judged workflow adoption locally demonstrated for the
-combined skill and MCP surface, with comparative
-product value still unproven. They do not establish MCP-alone causality,
-improved correctness, productivity, token efficiency, or speed, statistical
-significance, generalization, or production readiness. Both studies used two
-scenarios and `gpt-5.6-luna` at max reasoning. The integrated follow-up used
-three repetitions per scenario per arm. Reports remain private and are not
-tracked. See the
-[historical adoption results](../validation/v1.0.0/adoption-results.md) for
-older v0.8/v1.0 evidence. The two current studies are regression evidence, not
-fresh proof of product superiority. Review of the six integrated traces is
-complete: no transcript establishes that context improved the necessary code
-edit. In gRPC run 3, refreshed context prompted broader `./...` verification,
-which hit the output cap; focused verification later passed after a stale
-snapshot rejection. Client-go runs made 3-4 context calls each, and gRPC runs
-made 4-5, including ambiguous or unhelpful selections. The bounded guidance
-improvement is to narrow ambiguity using returned candidates, finish each batch
-of edits and formatting before refreshing, and refresh again after further
-edits or stale-snapshot rejection while avoiding redundant refreshes when the
-snapshot is unchanged. This observation does not establish causal edit-quality or product
-value. External and multi-model evaluation remain pending. Delta refresh
-remains deferred. These documents do not override frozen v1 contracts.
+The first customer is a Go engineer using coding agents on real repositories.
+The intended workflow covers understanding, implementation, debugging,
+refresh, verification, and review/resume. The next product cycle makes one
+cross-package API/interface change dependable from start to handoff, using the
+existing deterministic evidence compiler and concise shared skills.
 
-A post-guidance regression used six integrated Luna runs, with three
-repetitions on each of two scenarios. All six qualified, passed acceptance,
-stayed within scope, and required no operator intervention. All six called
-`go_context`, refreshed after edits, and recorded evidence use. Five focus
-calls failed: three client-go calls returned `invalid_input` for invalid
-symbol references, and two calls in grpc-go run 1 returned `stale_snapshot`
-because an observed semantic location was absent from the snapshot manifest.
-grpc-go runs 2 and 3 had no failed focus calls. This shows workflow adoption
-continued while exposing failure categories; it does not establish improved
-quality, correctness, productivity, speed, or product value. Before changing
-provider behavior, the audit classified the client-go failures as malformed or
-reconstructed refs and the gRPC failures as unbound workspace locations. The
-provider now omits unbound locations with bounded uncertainty while preserving
-strict stale rejection. External and multi-model evaluation remain pending.
+The longer-term, user-directed aspiration for install-time, branch-aware
+repository indexing and repeatable retrieval is recorded separately in the
+[codebase indexing research note](research/codebase-indexing-retrieval.md).
+It does not change the current release scope or frozen interfaces.
 
-After the failure remediation, six integrated Luna reruns completed with 6/6
-qualification, 6/6 acceptance, zero scope violations, zero operator
-interventions, zero failed focus calls, and complete refresh and evidence-use
-signals. The median duration was 411,537 ms and the median tool-call count was
-31. This is diagnostic regression evidence only and does not establish product
-value or comparative engineering benefit.
+`v1.2.1` (tag `67f54b7`) remains the released baseline. The current
+`codex/v1.2-reliability` branch contains unreleased work. The frozen v1 registry
+remains 14 tools, seven resources, one template, and six prompts; the existing
+additive `go_context` brings the server to 15 tools. The revised plan does not
+change that inventory, schemas, or strict freshness behavior.
+
+| Read for | Authority |
+| --- | --- |
+| Customer, model independence, skills, and workflow outcomes | [North star](go-intelligence-north-star.md) |
+| Current implementation, remediation, and next action | [Continuation handoff](continuation/go-intelligence.md) |
+| Branch-aware indexing aspiration, council findings, and retrieval evaluation plan | [Codebase indexing research](research/codebase-indexing-retrieval.md) |
+| Current campaign's implementation/check status | [Selector remediation record](../validation/v1.0.0/adoption-remediation-2026-09-24.md) |
+| Older adoption experiments | [Historical results](../validation/v1.0.0/adoption-results.md) |
+| Compatibility and execution invariants | [v1 freeze](v0.9.0-release-scope.md) and [contracts](contracts.md) |
+
+Keep the current canonical Luna matrix separate from older integrated
+diagnostics. Workflow use and task acceptance have been observed; comparative
+engineer value and broad model/host compatibility remain unproven. The plan
+requires comparison against equipped native Go/gopls workflows, plus actual
+review/rework effort. It does not promise equal competence across models or an
+unreproducible capability advantage. Full-replacement refresh remains current;
+delta delivery stays deferred.
 
 ## Verification report contracts
 
