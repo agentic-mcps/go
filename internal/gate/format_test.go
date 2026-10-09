@@ -114,6 +114,17 @@ func TestWriteTextExact(t *testing.T) {
 			},
 		},
 		{
+			name: "pass with one package tested is singular",
+			want: "agentic-go check: PASS (base main @ abcdef1, 1 package tested, 0.5s)\n",
+			result: Result{
+				Verdict: VerdictPass,
+				Base:    formatBase(),
+				Items:   []Item{},
+				Notes:   []string{},
+				Stats:   Stats{PackagesTested: 1, DurationMS: 500},
+			},
+		},
+		{
 			name: "block with fix and detail, then an item without fix",
 			want: "agentic-go check: BLOCK — 2 blocking (base main @ abcdef1)\n" +
 				"- [block] internal/x/y.go:42 — TestFoo was deleted\n" +

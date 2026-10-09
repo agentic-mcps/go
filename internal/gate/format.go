@@ -182,8 +182,8 @@ func formatHeader(r Result) string {
 	ref := formatOneLine(r.Base.Ref)
 	base := fmt.Sprintf("base %s @ %s", ref, formatShortCommit(formatOneLine(r.Base.Commit)))
 	if r.Verdict == VerdictPass && len(r.Items) == 0 {
-		return fmt.Sprintf("agentic-go check: PASS (%s, %d packages tested, %s)\n",
-			base, r.Stats.PackagesTested, formatDuration(r.Stats.DurationMS))
+		return fmt.Sprintf("agentic-go check: PASS (%s, %d %s tested, %s)\n",
+			base, r.Stats.PackagesTested, formatPlural(r.Stats.PackagesTested, "package", "packages"), formatDuration(r.Stats.DurationMS))
 	}
 	blocking, warnings := 0, 0
 	for _, it := range r.Items {
