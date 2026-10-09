@@ -31,13 +31,13 @@ func fakeLint(t *testing.T, body string) {
 // runs body (which should exec the real go, available as $REAL_GO).
 func goWrapper(t *testing.T, body string) string {
 	t.Helper()
-	real, err := exec.LookPath("go")
+	goBin, err := exec.LookPath("go")
 	if err != nil {
 		t.Skip("go not available")
 	}
 	log := filepath.Join(t.TempDir(), "go-calls")
 	bin := t.TempDir()
-	writeScript(t, filepath.Join(bin, "go"), "REAL_GO='"+real+"'\necho \"$1\" >> '"+log+"'\n"+body)
+	writeScript(t, filepath.Join(bin, "go"), "REAL_GO='"+goBin+"'\necho \"$1\" >> '"+log+"'\n"+body)
 	prependPath(t, bin)
 	return log
 }
