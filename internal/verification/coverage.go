@@ -57,28 +57,32 @@ func hasChangedStatements(file SourceFile) bool {
 }
 
 // coverageEvidence turns the coverage profile into changed-statement evidence.
-// A package whose own test binary aborted before writing coverage (panic,
-// build failure, timeout) has no trustworthy blocks: since Go 1.22 other test
-// binaries still emit zero-count blocks for every -coverpkg package. Changed
-// files owned by such a package are excluded; when nothing measurable remains,
-// coverage is unavailable, never a 0% pass.
+// A test binary that aborts before writing coverage (panic, build failure,
+// timeout) loses everything it executed, and since Go 1.22 the binaries that
+// did write still emit zero-count blocks for every -coverpkg package. So:
+//   - changed files owned by a lost package are excluded from measurement;
+//   - any lost package may have exercised changed code, so a measured result
+//     carries a coverage_incomplete uncertainty per lost package;
+//   - when nothing measured is covered and some package lost coverage, the
+//     result is unavailable, never a 0% pass.
 func (e *Engine) coverageEvidence(analysis ChangeAnalysis, run affectedRun) (Evidence, []Uncertainty) {
-	excluded, lost := e.lostCoverageFiles(analysis, run.facts.coverageLost)
+	lost := sortedPackages(run.facts.coverageLost)
+	excluded := e.lostCoverageFiles(analysis, run.facts.coverageLost)
 	coverage, uncertainties, coverageErr := e.changedCoverage(analysis, run.profile, excluded)
-	if run.coverageErr != nil {
-		coverageErr = run.coverageErr
-	}
 	evidence := Evidence{CheckID: "coverage", Kind: CheckCoverage, DurationMS: run.result.Duration.Milliseconds()}
-	if len(lost) > 0 && (coverageErr != nil || coverage.TotalStatements == 0) {
-		evidence.Status = EvidenceError
-		evidence.Summary = fmt.Sprintf("coverage unavailable: tests in %s failed", strings.Join(lost, ", "))
-		evidence.Error = "tests failed before writing coverage for the changed statements"
-		return evidence, uncertainties
+	if run.coverageErr != nil && (!run.coverageEmpty || len(lost) == 0) {
+		coverageErr = run.coverageErr
 	}
 	if coverageErr != nil {
 		evidence.Status = EvidenceError
 		evidence.Summary = "changed coverage could not be calculated"
 		evidence.Error = portableCheckError(coverageErr, e.workspace.Root())
+		return evidence, uncertainties
+	}
+	if len(lost) > 0 && (run.coverageEmpty || coverage.CoveredStatements == 0) {
+		evidence.Status = EvidenceError
+		evidence.Summary = "coverage unavailable: tests in " + packageList(lost) + " failed"
+		evidence.Error = "tests failed before writing coverage for the changed statements"
 		return evidence, uncertainties
 	}
 	evidence.Status = EvidencePassed
@@ -87,34 +91,44 @@ func (e *Engine) coverageEvidence(analysis ChangeAnalysis, run affectedRun) (Evi
 	for _, pkg := range lost {
 		uncertainties = append(uncertainties, Uncertainty{
 			Code: "coverage_incomplete", CheckID: "coverage", Locations: make([]Location, 0),
-			Message: fmt.Sprintf("tests in %s failed before writing coverage; its changed statements are excluded from changed coverage", pkg),
+			Message: fmt.Sprintf("tests in %s failed before writing coverage; changed coverage may be understated", pkg),
 		})
 	}
 	return evidence, uncertainties
 }
 
 // lostCoverageFiles returns the changed files whose owning package's test
-// binary wrote no coverage, and those packages in sorted order.
-func (e *Engine) lostCoverageFiles(analysis ChangeAnalysis, lost map[string]struct{}) (map[string]struct{}, []string) {
+// binary wrote no coverage.
+func (e *Engine) lostCoverageFiles(analysis ChangeAnalysis, lost map[string]struct{}) map[string]struct{} {
 	files := make(map[string]struct{})
-	packages := make(map[string]struct{})
 	for _, file := range analysis.Files {
 		if !hasChangedStatements(file) {
 			continue
 		}
 		owner := e.owningPackage(analysis.Packages, file.Change.Path)
-		if _, failed := lost[owner]; owner == "" || !failed {
-			continue
+		if _, failed := lost[owner]; owner != "" && failed {
+			files[file.Change.Path] = struct{}{}
 		}
-		files[file.Change.Path] = struct{}{}
-		packages[owner] = struct{}{}
 	}
-	ordered := make([]string, 0, len(packages))
-	for pkg := range packages {
+	return files
+}
+
+func sortedPackages(set map[string]struct{}) []string {
+	ordered := make([]string, 0, len(set))
+	for pkg := range set {
 		ordered = append(ordered, pkg)
 	}
 	sort.Strings(ordered)
-	return files, ordered
+	return ordered
+}
+
+// packageList names up to three packages so a summary stays one short line.
+func packageList(packages []string) string {
+	const visible = 3
+	if len(packages) <= visible {
+		return strings.Join(packages, ", ")
+	}
+	return fmt.Sprintf("%s and %d more", strings.Join(packages[:visible], ", "), len(packages)-visible)
 }
 
 func (e *Engine) owningPackage(targets []ExecutionTarget, path string) string {

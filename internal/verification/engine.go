@@ -39,9 +39,12 @@ type Request struct {
 	// DirectAnalyzersOnly limits analyzer comparison, on both the current and
 	// merge-base sides, to packages containing changed source (distance 0).
 	DirectAnalyzersOnly bool
-	// SoftAnalyzerFailures reports an analyzer infrastructure failure as error
-	// evidence and an uncertainty instead of a returned error. Cancellation and
-	// deadline errors are still returned.
+	// SoftAnalyzerFailures guards future analyzer error paths. Analyzer
+	// load, type-check, and merge-base materialization failures already
+	// degrade to error evidence plus an uncertainty by default; when set, any
+	// other non-context error from the analyzer comparison does the same
+	// instead of being returned. Cancellation and deadline errors are always
+	// returned.
 	SoftAnalyzerFailures bool
 }
 

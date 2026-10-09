@@ -102,37 +102,31 @@ func TestEngineDirectAnalyzersOnly(t *testing.T) {
 	}
 }
 
-func TestEngineSoftAnalyzerFailuresBecomeEvidence(t *testing.T) {
-	tests := []struct {
-		name string
-		soft bool
-	}{
-		{name: "baseline failure is evidence by default", soft: false},
-		{name: "baseline failure is evidence when soft", soft: true},
+// TestEngineAnalyzerFailuresDegradeToEvidenceByDefault pins the default
+// behavior SoftAnalyzerFailures relies on: a merge-base materialization
+// failure is reported as error evidence plus an uncertainty, not returned.
+// It does not exercise the flag, which only guards non-context error paths
+// that runAnalyzerChecks does not currently produce.
+func TestEngineAnalyzerFailuresDegradeToEvidenceByDefault(t *testing.T) {
+	engine, analysis := stubbedEngine(t, errors.New("analyze is not called"))
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	collection, err := engine.CollectAnalysis(ctx, verification.Request{Base: "base"}, analysis)
+	if err != nil {
+		t.Fatalf("CollectAnalysis() error = %v, want analyzer failure as evidence", err)
 	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			engine, analysis := stubbedEngine(t, errors.New("analyze is not called"))
-			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-			defer cancel()
-			collection, err := engine.CollectAnalysis(ctx, verification.Request{Base: "base", SoftAnalyzerFailures: test.soft}, analysis)
-			if err != nil {
-				t.Fatalf("CollectAnalysis() error = %v, want analyzer failure as evidence", err)
-			}
-			for _, kind := range []verification.CheckKind{verification.CheckConcurrency, verification.CheckErrors} {
-				evidence := evidenceByKind(t, collection.Report, kind)
-				if evidence.Status != verification.EvidenceError || evidence.Error == "" {
-					t.Fatalf("%s evidence = %#v, want error evidence", kind, evidence)
-				}
-			}
-			found := false
-			for _, item := range collection.Report.Uncertainties {
-				found = found || item.Code == "baseline_unavailable"
-			}
-			if !found {
-				t.Fatalf("uncertainties = %#v, want baseline_unavailable", collection.Report.Uncertainties)
-			}
-		})
+	for _, kind := range []verification.CheckKind{verification.CheckConcurrency, verification.CheckErrors} {
+		evidence := evidenceByKind(t, collection.Report, kind)
+		if evidence.Status != verification.EvidenceError || evidence.Error == "" {
+			t.Fatalf("%s evidence = %#v, want error evidence", kind, evidence)
+		}
+	}
+	found := false
+	for _, item := range collection.Report.Uncertainties {
+		found = found || item.Code == "baseline_unavailable"
+	}
+	if !found {
+		t.Fatalf("uncertainties = %#v, want baseline_unavailable", collection.Report.Uncertainties)
 	}
 }
 

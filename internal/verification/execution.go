@@ -34,6 +34,9 @@ type affectedRun struct {
 	race        parser.RaceReportOutput
 	tests       TestSummary
 	result      execution.Result
+	// coverageEmpty reports that go test wrote a profile with no blocks, which
+	// happens when every test binary exited before writing coverage.
+	coverageEmpty bool
 }
 
 func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis, request Request, direct []string) (executionOutcome, error) {
@@ -138,6 +141,7 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 	for index := range facts.builds {
 		facts.builds[index].output = portableReportText(facts.builds[index].output, portableRoots...)
 	}
+	coverageEmpty := errors.Is(profileErr, parser.ErrNoCoverageBlocks)
 	if profileErr != nil {
 		profileErr = errors.New(portableCheckError(profileErr, portableRoots...))
 	}
@@ -151,7 +155,7 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 		raceText = append(raceText, packageText[pkg])
 	}
 	return affectedRun{
-		result: result, tests: tests, facts: facts, profile: profile, coverageErr: profileErr,
+		result: result, tests: tests, facts: facts, profile: profile, coverageErr: profileErr, coverageEmpty: coverageEmpty,
 		race: parser.Parse(strings.Join(raceText, "\n")),
 	}, nil
 }
@@ -242,7 +246,7 @@ func (e *Engine) testFailureFindings(summary TestSummary, facts testRunFacts, ex
 		findings = append(findings, e.buildFailureFinding(build))
 	}
 	for _, pkg := range summary.Packages {
-		if _, built := facts.buildFailed[pkg.Package]; built || pkg.Status != "FAIL" || pkg.Failed > 0 {
+		if _, built := facts.buildFailed[pkg.Package]; built || pkg.Status != "FAIL" || (pkg.Failed > 0 && !abortedOutsideTests(pkg.Output)) {
 			continue
 		}
 		message := fmt.Sprintf("tests in %s failed outside a named test", pkg.Package)
@@ -258,6 +262,18 @@ func (e *Engine) testFailureFindings(summary TestSummary, facts testRunFacts, ex
 		})
 	}
 	return findings
+}
+
+// abortedOutsideTests reports whether package-level output (output not
+// attributed to a named test) shows the test binary crashing, as when TestMain
+// panics after m.Run. A panic inside a named test is attributed to that test.
+func abortedOutsideTests(output string) bool {
+	for _, line := range strings.Split(output, "\n") {
+		if strings.HasPrefix(line, "panic: ") || strings.HasPrefix(line, "fatal error: ") {
+			return true
+		}
+	}
+	return false
 }
 
 func sanitizeTestSummary(summary *TestSummary, roots ...string) {

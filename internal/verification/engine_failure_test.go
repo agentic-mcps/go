@@ -92,6 +92,25 @@ func TestSign(t *testing.T) {
 			changes:      map[string]string{"calc/calc.go": failureFixtureChangedCalc},
 			wantTestFail: 1, wantMessage: "tests in example.test/verify/calc failed outside a named test",
 		},
+		{
+			name: "TestMain panics after a named failure",
+			files: map[string]string{
+				"go.mod": failureFixtureModule, "calc/calc.go": failureFixtureCalc, "calc/calc_test.go": failureFixtureCalcTest,
+				"calc/fail_test.go": "package calc\n\nimport \"testing\"\n\nfunc TestBroken(t *testing.T) { t.Fatal(\"pre-existing failure\") }\n",
+				"calc/main_test.go": "package calc\n\nimport \"testing\"\n\nfunc TestMain(m *testing.M) {\n\tm.Run()\n\tpanic(\"teardown failed\")\n}\n",
+			},
+			changes:      map[string]string{"calc/calc.go": failureFixtureChangedCalc},
+			wantTestFail: 2, wantMessage: "panic: teardown failed",
+		},
+		{
+			name: "named test panic is not a package-level failure",
+			files: map[string]string{
+				"go.mod": failureFixtureModule, "calc/calc.go": failureFixtureCalc, "calc/calc_test.go": failureFixtureCalcTest,
+				"calc/panic_test.go": "package calc\n\nimport \"testing\"\n\nfunc TestPanics(t *testing.T) { panic(\"boom\") }\n",
+			},
+			changes:      map[string]string{"calc/calc.go": failureFixtureChangedCalc},
+			wantTestFail: 1, wantMessage: "TestPanics failed in example.test/verify/calc",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -114,8 +133,12 @@ func TestSign(t *testing.T) {
 				t.Fatalf("test.failure findings = %d (%#v), want %d", len(failures), report.Findings, test.wantTestFail)
 			}
 			if test.wantBuild == 0 {
-				if !strings.Contains(failures[0].Message, test.wantMessage) {
-					t.Fatalf("test failure message = %q, want %q", failures[0].Message, test.wantMessage)
+				found := false
+				for _, failure := range failures {
+					found = found || strings.Contains(failure.Message, test.wantMessage)
+				}
+				if !found {
+					t.Fatalf("test failures = %#v, want a message containing %q", failures, test.wantMessage)
 				}
 				return
 			}
@@ -219,6 +242,17 @@ func TestUnrelatedPanic(t *testing.T) { panic("pre-existing bug") }
 				"api/panic_test.go": strings.Replace(panicking, "package calc", "package api", 1),
 			},
 			wantStatus: verification.EvidencePassed, wantSummary: "100.0% of changed statements covered",
+			wantUncertainty: "coverage_incomplete",
+		},
+		{
+			name: "panicking importer held the only coverage of an untested package",
+			files: map[string]string{
+				"go.mod": failureFixtureModule, "calc/calc.go": failureFixtureCalc,
+				"api/api.go":        "package api\n\nimport \"example.test/verify/calc\"\n\nfunc Sign(value int) int { return calc.Sign(value) }\n",
+				"api/api_test.go":   "package api\n\nimport \"testing\"\n\nfunc TestSign(t *testing.T) {\n\tif Sign(-1) != -1 || Sign(1) != 1 {\n\t\tt.Fatal(\"sign\")\n\t}\n}\n",
+				"api/panic_test.go": strings.Replace(panicking, "package calc", "package api", 1),
+			},
+			wantStatus: verification.EvidenceError, wantSummary: "coverage unavailable: tests in example.test/verify/api failed",
 		},
 	}
 	for _, test := range tests {
