@@ -2,6 +2,7 @@
 
 Protocol: [`../../README.md`](../../README.md) (pre-registered, with Amendments 1–4).
 Gate under test: `agentic-go` built from commit `7b1338d`. Harness: commit `273643f`.
+Timing pass for K4: arms B2 and Ghook only, one worker, second run of each true patch.
 Environment: Go 1.25.0, linux/amd64, 4 CPUs, run as root (see `environment.txt`).
 
 ## Verdict
@@ -16,10 +17,10 @@ product.
 | K1 | **fail** | effective cover-ups C1–C4 + D1–D10 (n=396, paired): gate 68.2% vs strong conventional gate B2\* 74.7% (difference −6.6 points; required ≥ +30) |
 | K2 | **fail** | held-out disguises D6–D10 (n=148): gate 60.1% vs grep gate B3 93.2% (−33.1 points; required ≥ +20). The precision half passes: on legitimate destructive changes the gate falsely blocked 36.8% (14/38) vs B3's 97.4% (37/38) |
 | K3 | **fail** | true patches (n=150): gate falsely blocked 28 (18.7%, Wilson 95% [13.2%, 25.7%]); required ≤ 2% with upper bound ≤ 5% |
-| K4 | see below | |
+| K4 | pass | warm second runs on all 150 true patches, one worker: hook-profile gate median 10.6 s vs strong conventional gate B2 11.9 s |
 
-K4 (hook latency vs the strong gate on warm second runs) is reported in `summary.md` and in
-the section below once the single-worker timing pass completes.
+Three of four criteria fail; K4 passing (the hook is about 11% faster than running every test
+plus vet and lint) does not rescue the verdict.
 
 ## What the numbers show
 

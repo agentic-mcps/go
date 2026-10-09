@@ -1,0 +1,5 @@
+go version go1.25.0 linux/amd64
+Linux 6.18.44-fc-v80 x86_64
+root
+4
+gate binary commit: 7b1338d365e4955aa35fad329820e16abba8ccc2
