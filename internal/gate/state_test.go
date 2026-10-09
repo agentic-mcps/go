@@ -84,7 +84,7 @@ func TestFingerprint(t *testing.T) {
 		},
 		{
 			name: "base commit changes",
-			mutate: func(f *baseFixture) (string, string) {
+			mutate: func(_ *baseFixture) (string, string) {
 				return strings.Repeat("0", 40), "v1"
 			},
 		},
