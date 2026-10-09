@@ -17,6 +17,13 @@ func failures(tests []string, packages []string) testFailures {
 	return f
 }
 
+func withVet(f testFailures, packages ...string) testFailures {
+	for _, pkg := range packages {
+		f.Vet[pkg] = true
+	}
+	return f
+}
+
 func TestDecideB2Star(t *testing.T) {
 	tests := []struct {
 		current     testFailures
@@ -61,6 +68,25 @@ func TestDecideB2Star(t *testing.T) {
 			base: failures(nil, []string{"p"}), wantBlocked: true, wantReason: "go build failed",
 		},
 		{name: "vet failure blocks", vet: true, current: failures(nil, nil), base: failures(nil, nil), wantBlocked: true, wantReason: "go vet failed"},
+		{
+			name: "vet failure in a package that also fails vet at base is ignored", vet: true,
+			current: withVet(failures(nil, nil), "p"), base: withVet(failures(nil, nil), "p"),
+		},
+		{
+			name: "vet failure in a new package blocks", vet: true,
+			current: withVet(failures(nil, nil), "p", "q"), base: withVet(failures(nil, nil), "p"),
+			wantBlocked: true, wantReason: "go vet failed: q",
+		},
+		{
+			name: "vet failure without attribution blocks even when base vet fails", vet: true,
+			current: failures(nil, nil), base: withVet(failures(nil, nil), "p"),
+			wantBlocked: true, wantReason: "go vet failed",
+		},
+		{
+			name: "vet at base does not excuse a new test failure", vet: true,
+			current: withVet(failures([]string{"p.TestA"}, []string{"p"}), "p"), base: withVet(failures(nil, nil), "p"),
+			wantBlocked: true, wantReason: "new test failure: p.TestA",
+		},
 		{name: "lint blocks", lint: true, current: failures(nil, nil), base: failures(nil, nil), wantBlocked: true, wantReason: "lint reported issues"},
 	}
 	for _, tt := range tests {
@@ -93,6 +119,18 @@ func TestParseTestFailures(t *testing.T) {
 	}
 	if clean := parseTestFailures([]byte(`{"Action":"pass","Package":"p"}`)); len(clean.Tests)+len(clean.Packages) != 0 {
 		t.Fatalf("clean stream reported failures: %#v", clean)
+	}
+}
+
+func TestParseVetPackages(t *testing.T) {
+	output := "# example.com/a\na.go:3:2: unreachable code\n# example.com/b [example.com/b.test]\nb_test.go:5: bad\nvet: other\n# [example.com/c]\nc.go:1: bad\n"
+	got := parseVetPackages([]byte(output))
+	want := map[string]bool{"example.com/a": true, "example.com/b": true, "example.com/c": true}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parseVetPackages() = %v, want %v", got, want)
+	}
+	if got := parseVetPackages([]byte("")); len(got) != 0 {
+		t.Fatalf("empty output gave %v", got)
 	}
 }
 

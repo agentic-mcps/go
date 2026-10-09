@@ -40,7 +40,8 @@ func TestWriteSummary(t *testing.T) {
 		t.Fatalf("kill criteria table must come first:\n%s", text)
 	}
 	for _, want := range []string{
-		"| K1 |", "| K4 | not_established |", "pooled cover-ups", "D2: disguised: early return",
+		"| K1 |", "| K4 | not_established |", "pooled cover-ups (C1–C4, D1–D10)", "pooled seen disguises (D1–D5)", "D2: seen disguise: early return",
+		"raw output bytes (B: go test -json + tools; G: --format json)", "--no-cache", "go test timeouts counted as blocks",
 		"T: true patches", "| Gci | 2 | 1 | 0.500 |", "| flake filter | 1 |", "95% CI",
 	} {
 		if !strings.Contains(text, want) {

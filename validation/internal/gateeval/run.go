@@ -72,9 +72,13 @@ func RunArms(ctx context.Context, options RunOptions) error {
 	r := &runner{options: options, locks: map[string]*sync.Mutex{}}
 	jobs := make(chan Variant)
 	var wg sync.WaitGroup
-	var firstErr error
-	var errOnce sync.Once
-	fail := func(err error) { errOnce.Do(func() { firstErr = err }) }
+	var failures []error
+	var failuresMu sync.Mutex
+	fail := func(err error) {
+		failuresMu.Lock()
+		defer failuresMu.Unlock()
+		failures = append(failures, err)
+	}
 	for n := range options.Workers {
 		wg.Add(1)
 		go func() {
@@ -84,8 +88,8 @@ func RunArms(ctx context.Context, options RunOptions) error {
 				if ctx.Err() != nil {
 					continue
 				}
-				if err := w.runVariant(ctx, variant, r.pending(variant, done)); err != nil {
-					fail(err)
+				if err := w.runVariant(ctx, variant, r.pending(variant, done)); err != nil && ctx.Err() == nil {
+					fail(fmt.Errorf("variant %s: %w", variant.ID, err))
 				}
 			}
 		}()
@@ -95,13 +99,10 @@ func RunArms(ctx context.Context, options RunOptions) error {
 	}
 	close(jobs)
 	wg.Wait()
-	if firstErr != nil {
-		return firstErr
-	}
 	if err := ctx.Err(); err != nil {
-		return fmt.Errorf("running arms: %w", err)
+		failures = append(failures, fmt.Errorf("running arms: %w", err))
 	}
-	return nil
+	return errors.Join(failures...)
 }
 
 // normalizeOptions applies defaults and resolves paths to absolute form,
@@ -110,9 +111,17 @@ func normalizeOptions(options RunOptions) (RunOptions, error) {
 	if options.WorkDir == "" || options.Out == "" {
 		return options, errors.New("work directory and output path are required")
 	}
-	if options.Workers <= 0 {
+	switch {
+	case options.Timing && options.Workers > 1:
+		return options, fmt.Errorf("timing runs need exactly one worker (got %d): concurrent workers distort wall times", options.Workers)
+	case options.Timing && options.Workers < 0:
+		return options, fmt.Errorf("invalid worker count %d", options.Workers)
+	case options.Timing:
+		options.Workers = 1
+	case options.Workers <= 0:
 		options.Workers = defaultWorkers
 	}
+	options.Variants = dedupeVariants(options.Variants)
 	if options.CommandTimeout <= 0 {
 		options.CommandTimeout = defaultCommandTimeout
 	}
@@ -142,6 +151,21 @@ func normalizeOptions(options RunOptions) (RunOptions, error) {
 		}
 	}
 	return options, nil
+}
+
+// dedupeVariants drops later variants that repeat an earlier ID, so one
+// variant is never run (and recorded) twice.
+func dedupeVariants(variants []Variant) []Variant {
+	seen := make(map[string]bool, len(variants))
+	kept := make([]Variant, 0, len(variants))
+	for _, variant := range variants {
+		if seen[variant.ID] {
+			continue
+		}
+		seen[variant.ID] = true
+		kept = append(kept, variant)
+	}
+	return kept
 }
 
 // completedRuns reads the runs already recorded in path, if any.
@@ -205,20 +229,22 @@ type worker struct {
 	index  int
 }
 
-// runVariant checks the variant out and runs its pending arms. Commands that
-// are identical across arms are run once per tree, except when the variant is
-// timed, where every arm runs its own commands so durations are not borrowed.
+// runVariant runs the pending arms of a variant, resetting its tree before
+// every arm. Commands that are identical across arms are run once per variant,
+// except when the variant is timed, where every arm runs its own commands so
+// durations are not borrowed. A harness failure stops the variant without
+// recording the failed run, so a later call retries it.
 func (w *worker) runVariant(ctx context.Context, variant Variant, pending []runKey) error {
 	if len(pending) == 0 {
 		return nil
 	}
 	dir, err := w.prepare(ctx, variant)
 	if err != nil {
-		return w.recordAll(ctx, pending, fmt.Sprintf("preparing worktree: %v", err))
+		return fmt.Errorf("preparing worktree: %w", err)
 	}
 	direct, err := directPackages(ctx, dir, variant.Base)
 	if err != nil {
-		return w.recordAll(ctx, pending, fmt.Sprintf("finding direct packages: %v", err))
+		return fmt.Errorf("finding direct packages: %w", err)
 	}
 	ac := &armContext{
 		variant:  variant,
@@ -230,15 +256,20 @@ func (w *worker) runVariant(ctx context.Context, variant Variant, pending []runK
 		baseFailures: func(ctx context.Context) (testFailures, error) {
 			return w.runner.baseFailures(ctx, variant.Project, variant.Base)
 		},
+		reset: func(ctx context.Context) error { return checkout(ctx, dir, variant.Branch) },
+		status: func(ctx context.Context) (string, error) {
+			out, err := git(ctx, dir, "status", "--porcelain")
+			return string(out), err
+		},
 	}
 	timed := w.runner.options.Timing && variant.Class == ClassTrue
 	if !timed {
 		ac.memo = map[string]stepResult{}
 	}
 	for _, key := range pending {
-		run := ac.evaluate(ctx, key.arm, key.attempt)
-		if ctx.Err() != nil {
-			return nil
+		run, err := ac.evaluate(ctx, key.arm, key.attempt)
+		if err != nil {
+			return err
 		}
 		if err := w.runner.record(run); err != nil {
 			return err
@@ -247,23 +278,8 @@ func (w *worker) runVariant(ctx context.Context, variant Variant, pending []runK
 	return nil
 }
 
-// recordAll records every pending run as unknown with the given error, so an
-// unusable variant is visible in the results instead of silently missing.
-func (w *worker) recordAll(ctx context.Context, pending []runKey, message string) error {
-	if ctx.Err() != nil {
-		return nil
-	}
-	for _, key := range pending {
-		run := Run{VariantID: key.variant, Arm: key.arm, Attempt: key.attempt, Unknown: true, Error: message}
-		if err := w.runner.record(run); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// prepare returns this worker's worktree for the variant's project with the
-// variant's branch checked out and untracked files removed.
+// prepare returns this worker's worktree for the variant's project, creating
+// it on first use, with the variant's branch checked out.
 func (w *worker) prepare(ctx context.Context, variant Variant) (string, error) {
 	dir, ok := w.trees[variant.Project]
 	if !ok {
@@ -280,12 +296,13 @@ func (w *worker) prepare(ctx context.Context, variant Variant) (string, error) {
 	return dir, nil
 }
 
-// checkout detaches the worktree at ref and removes everything untracked.
+// checkout detaches the worktree at ref, discarding local changes, and removes
+// everything untracked or ignored (including nested repositories).
 func checkout(ctx context.Context, dir, ref string) error {
 	if _, err := git(ctx, dir, "checkout", "--detach", "--force", ref); err != nil {
 		return err
 	}
-	_, err := git(ctx, dir, "clean", "-fdxq")
+	_, err := git(ctx, dir, "clean", "-ffdxq")
 	return err
 }
 
@@ -388,15 +405,21 @@ func buildableDir(root, pkg string) bool {
 	return false
 }
 
+// baseCacheVersion changes when the cached form of base failures changes, so
+// an older cache is recomputed instead of read.
+const baseCacheVersion = 2
+
 // baseFailureFile is the cached form of testFailures.
 type baseFailureFile struct {
 	Tests    []string `json:"tests"`
 	Packages []string `json:"packages"`
+	Vet      []string `json:"vet_packages"`
+	Version  int      `json:"version"`
 }
 
-// baseFailures returns the test failures at base, computing them once per
-// (project, base) by running go test -count=1 -json ./... in a dedicated
-// worktree and caching the result under WorkDir/basefail.
+// baseFailures returns the test and vet failures at base, computing them once
+// per (project, base) by running go test -count=1 -json ./... and go vet ./...
+// in a dedicated worktree and caching the result under WorkDir/basefail.
 func (r *runner) baseFailures(ctx context.Context, project, base string) (testFailures, error) {
 	key := project + "-" + base
 	mutex := r.lock("basefail:" + key)
@@ -405,21 +428,23 @@ func (r *runner) baseFailures(ctx context.Context, project, base string) (testFa
 	path := filepath.Join(r.options.WorkDir, "basefail", key+".json")
 	if data, err := os.ReadFile(path); err == nil {
 		var cached baseFailureFile
-		if err := json.Unmarshal(data, &cached); err != nil {
-			return testFailures{}, fmt.Errorf("reading %s: %w", path, err)
+		if err := json.Unmarshal(data, &cached); err == nil && cached.Version == baseCacheVersion {
+			return cached.failures(), nil
 		}
-		return cached.failures(), nil
 	}
 	failures, err := r.computeBaseFailures(ctx, project, base)
 	if err != nil {
 		return testFailures{}, err
 	}
-	data, err := json.Marshal(baseFailureFile{Tests: newKeys(failures.Tests, nil), Packages: newKeys(failures.Packages, nil)})
+	data, err := json.Marshal(baseFailureFile{
+		Tests: newKeys(failures.Tests, nil), Packages: newKeys(failures.Packages, nil),
+		Vet: newKeys(failures.Vet, nil), Version: baseCacheVersion,
+	})
 	if err != nil {
 		return testFailures{}, fmt.Errorf("encoding base failures: %w", err)
 	}
 	if err := writeFileAtomic(path, data); err != nil {
-		return testFailures{}, err
+		return testFailures{}, &infraError{err}
 	}
 	return failures, nil
 }
@@ -432,29 +457,43 @@ func (f baseFailureFile) failures() testFailures {
 	for _, pkg := range f.Packages {
 		failures.Packages[pkg] = true
 	}
+	for _, pkg := range f.Vet {
+		failures.Vet[pkg] = true
+	}
 	return failures
 }
 
 // computeBaseFailures checks base out in the project's base worktree and runs
-// the full test suite there.
+// the full test suite and go vet there. Git and worktree problems are harness
+// errors; a command that cannot finish (such as a timeout) is a plain error.
 func (r *runner) computeBaseFailures(ctx context.Context, project, base string) (testFailures, error) {
 	dir, err := r.ensureWorktree(ctx, project, project+"-base")
 	if err != nil {
-		return testFailures{}, err
+		return testFailures{}, &infraError{err}
 	}
 	treeLock := r.lock("basetree:" + project)
 	treeLock.Lock()
 	defer treeLock.Unlock()
 	if err := checkout(ctx, dir, base); err != nil {
-		return testFailures{}, err
+		return testFailures{}, &infraError{err}
 	}
-	result := runCommand(ctx, dir, r.options.CommandTimeout, "go", "test", "-count=1", "-json", "./...")
-	if result.err != nil {
-		return testFailures{}, result.err
+	tests := runCommand(ctx, dir, r.options.CommandTimeout, "go", "test", "-count=1", "-json", "./...")
+	if tests.err != nil {
+		return testFailures{}, tests.err
 	}
-	failures := parseTestFailures(result.stdout)
-	if result.exit != 0 && len(failures.Tests) == 0 && len(failures.Packages) == 0 {
+	vet := runCommand(ctx, dir, r.options.CommandTimeout, "go", "vet", "./...")
+	if vet.err != nil {
+		return testFailures{}, vet.err
+	}
+	failures := parseTestFailures(tests.stdout)
+	if tests.exit != 0 && len(failures.Tests) == 0 && len(failures.Packages) == 0 {
 		failures.Packages[noEventsFailure] = true
+	}
+	if vet.exit != 0 {
+		failures.Vet = parseVetPackages(append(append([]byte{}, vet.stderr...), vet.stdout...))
+		if len(failures.Vet) == 0 {
+			failures.Vet[noVetFailure] = true
+		}
 	}
 	return failures, nil
 }

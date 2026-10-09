@@ -125,6 +125,7 @@ type Run struct {
 	ExitCode    int    `json:"exit_code"`
 	DurationMS  int64  `json:"duration_ms"`
 	OutputBytes int    `json:"output_bytes"`
+	TextBytes   int    `json:"text_bytes,omitempty"`
 	Reason      string `json:"reason,omitempty"`
 	Error       string `json:"error,omitempty"`
 }

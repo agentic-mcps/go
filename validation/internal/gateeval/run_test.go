@@ -65,6 +65,16 @@ type fixture struct {
 // (plus a test that always fails when preexisting is set) and returns it.
 func newFixture(t *testing.T, withPreexisting bool) *fixture {
 	t.Helper()
+	files := map[string]string{}
+	if withPreexisting {
+		files["old_test.go"] = preexisting
+	}
+	return newFixtureWith(t, files)
+}
+
+// newFixtureWith is newFixture with extra files committed at the base.
+func newFixtureWith(t *testing.T, extra map[string]string) *fixture {
+	t.Helper()
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git not available")
 	}
@@ -77,8 +87,8 @@ func newFixture(t *testing.T, withPreexisting bool) *fixture {
 	writeFile(t, clone, "go.mod", fixtureMod)
 	writeFile(t, clone, "a.go", fixtureCode)
 	writeFile(t, clone, "a_test.go", fixtureTest)
-	if withPreexisting {
-		writeFile(t, clone, "old_test.go", preexisting)
+	for name, content := range extra {
+		writeFile(t, clone, name, content)
 	}
 	runGit(t, clone, "add", "-A")
 	runGit(t, clone, "commit", "-q", "-m", "base")

@@ -3,6 +3,7 @@ package gateeval
 import (
 	"fmt"
 	"math"
+	"strings"
 	"testing"
 )
 
@@ -99,14 +100,41 @@ func TestSummarizeIgnoresIneffectiveCoverUps(t *testing.T) {
 	if cell := summary.Pooled[GroupFlaws][ArmGCI]; cell.N != 7 {
 		t.Fatalf("flaws pooled n = %d, want 4 effective cover-ups + 3 stubs", cell.N)
 	}
-	if _, ok := summary.Pooled[GroupDisguised]; ok {
-		t.Fatal("disguised group present without D variants")
+	for _, group := range []string{GroupSeen, GroupHeldOut} {
+		if _, ok := summary.Pooled[group]; ok {
+			t.Fatalf("group %q present without its variants", group)
+		}
 	}
 	if summary.Exclusions["flaky"] != 2 || summary.Exclusions["no mutant"] != 1 {
 		t.Fatalf("exclusions = %v", summary.Exclusions)
 	}
 	if summary.Variants != len(variants) || summary.Runs != len(runs) {
 		t.Fatalf("totals = %d variants, %d runs", summary.Variants, summary.Runs)
+	}
+}
+
+func TestSummarizeGroupsSeenAndHeldOut(t *testing.T) {
+	variants := append(variantsFor(ClassEarlyReturn, "seen", 2, true), variantsFor(ClassHeldout6, "held", 3, true)...)
+	variants = append(variants, variantsFor(ClassHeldout10, "ten", 1, false)...)
+	var runs []Run
+	for _, prefix := range []struct {
+		name string
+		n    int
+	}{{"seen", 2}, {"held", 3}, {"ten", 1}} {
+		runs = append(runs, runsFor(ArmGCI, prefix.name, prefix.n, prefix.n)...)
+	}
+	summary := Summarize(variants, runs, nil)
+	if got := summary.Pooled[GroupSeen][ArmGCI].N; got != 2 {
+		t.Errorf("seen n = %d, want 2 (D1-D5 only)", got)
+	}
+	if got := summary.Pooled[GroupHeldOut][ArmGCI].N; got != 3 {
+		t.Errorf("held-out n = %d, want 3 (effective D6-D10 only)", got)
+	}
+	if got := summary.Pooled[GroupCoverUps][ArmGCI].N; got != 5 {
+		t.Errorf("cover-ups n = %d, want 5 (D1-D10 effective)", got)
+	}
+	if _, ok := summary.Cells[ClassHeldout10]; ok {
+		t.Error("ineffective D10 variant was scored")
 	}
 }
 
@@ -127,6 +155,28 @@ func TestSummarizeUsesFirstAttemptAndCountsUnknownWarned(t *testing.T) {
 	}
 	if cell.MedianMS != 25 || cell.P95MS != 40 {
 		t.Fatalf("timing = median %d p95 %d, want 25 and 40", cell.MedianMS, cell.P95MS)
+	}
+}
+
+func TestSummarizeTextBytesAndTimeoutBlocks(t *testing.T) {
+	variants := variantsFor(ClassTrue, "t", 3, false)
+	runs := []Run{
+		{VariantID: "t-0", Arm: ArmGCI, Attempt: 1, OutputBytes: 5000, TextBytes: 100},
+		{VariantID: "t-1", Arm: ArmGCI, Attempt: 1, OutputBytes: 7000, TextBytes: 300},
+		{VariantID: "t-2", Arm: ArmGCI, Attempt: 1, OutputBytes: 9000, TextBytes: 200},
+		{VariantID: "t-0", Arm: ArmB2, Attempt: 1, OutputBytes: 40000, Blocked: true, Reason: timeoutReasonPrefix + " after 10m0s"},
+		{VariantID: "t-1", Arm: ArmB2, Attempt: 1, OutputBytes: 50000, Blocked: true, Reason: "go build failed"},
+	}
+	summary := Summarize(variants, runs, nil)
+	gci := summary.Cells[ClassTrue][ArmGCI]
+	if gci.MedianBytes != 7000 || gci.MedianTextBytes != 200 {
+		t.Errorf("Gci bytes = raw %d text %d, want 7000 and 200", gci.MedianBytes, gci.MedianTextBytes)
+	}
+	if b2 := summary.Cells[ClassTrue][ArmB2]; b2.MedianTextBytes != 0 {
+		t.Errorf("B2 text bytes = %d, want 0", b2.MedianTextBytes)
+	}
+	if summary.TimeoutBlocks[ArmB2] != 1 || summary.TimeoutBlocks[ArmGCI] != 0 {
+		t.Errorf("timeout blocks = %v, want one for B2", summary.TimeoutBlocks)
 	}
 }
 
@@ -155,7 +205,40 @@ func TestCriterionK1(t *testing.T) {
 			if got.Status != tt.want {
 				t.Fatalf("K1 = %s (%s), want %s", got.Status, got.Detail, tt.want)
 			}
+			if !strings.Contains(got.Detail, "unknown=0") {
+				t.Errorf("K1 detail lacks unknown count: %s", got.Detail)
+			}
 		})
+	}
+}
+
+// TestCriterionK1PopulationMismatch gives the baseline completed results on
+// only the variants where the gate did no better; an unpaired comparison would
+// pass K1, the paired one must not.
+func TestCriterionK1PopulationMismatch(t *testing.T) {
+	variants := variantsFor(ClassSkipTests, "c", 10, true)
+	var runs []Run
+	for i := range 10 {
+		id := fmt.Sprintf("c-%d", i)
+		// The gate misses c-0..c-4 and catches c-5..c-9.
+		runs = append(runs, Run{VariantID: id, Arm: ArmGCI, Attempt: 1, Blocked: i >= 5})
+		// The baseline finished only c-0..c-4 (missing them too); the rest are unknown.
+		runs = append(runs, Run{VariantID: id, Arm: ArmB2Star, Attempt: 1, Unknown: i >= 5})
+	}
+	got := criterionByID(t, Summarize(variants, runs, nil), "K1")
+	if got.Status != StatusFail {
+		t.Fatalf("K1 = %s (%s), want fail on the paired population", got.Status, got.Detail)
+	}
+	for _, want := range []string{"Gci n=10", "B2s n=5", "paired n=5", "unknown=5"} {
+		if !strings.Contains(got.Detail, want) {
+			t.Errorf("K1 detail lacks %q: %s", want, got.Detail)
+		}
+	}
+
+	// Disjoint populations leave nothing to compare.
+	disjoint := append(runsFor(ArmGCI, "c", 5, 5), runsFor(ArmB2Star, "c", 10, 0)[5:]...)
+	if got := criterionByID(t, Summarize(variants, disjoint, nil), "K1"); got.Status != StatusNotEstablished || !strings.Contains(got.Detail, "paired n=0") {
+		t.Fatalf("K1 with no pairs = %s (%s), want not_established", got.Status, got.Detail)
 	}
 }
 
@@ -182,7 +265,7 @@ func TestCriterionK2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			variants := variantsFor(ClassBuildTag, "d", 10, true)
+			variants := variantsFor(ClassHeldout7, "d", 10, true)
 			runs := runsFor(ArmGCI, "d", 10, tt.gciD)
 			if tt.withB3 {
 				runs = append(runs, runsFor(ArmB3, "d", 10, tt.b3D)...)
@@ -198,7 +281,36 @@ func TestCriterionK2(t *testing.T) {
 			if got.Status != tt.want {
 				t.Fatalf("K2 = %s (%s), want %s", got.Status, got.Detail, tt.want)
 			}
+			if !strings.Contains(got.Detail, "unknown=0") {
+				t.Errorf("K2 detail lacks unknown count: %s", got.Detail)
+			}
 		})
+	}
+}
+
+func TestCriterionK2SeenSetDoesNotDecide(t *testing.T) {
+	variants := append(variantsFor(ClassHeldout6, "h", 10, true), variantsFor(ClassBuildTag, "s", 10, true)...)
+	variants = append(variants, variantsFor(ClassDestructive, "dt", 4, false)...)
+	runs := append(runsFor(ArmGCI, "h", 10, 10), runsFor(ArmB3, "h", 10, 0)...)
+	// On the seen set the baseline matches the gate, which would fail K2 if it counted.
+	runs = append(runs, runsFor(ArmGCI, "s", 10, 10)...)
+	runs = append(runs, runsFor(ArmB3, "s", 10, 10)...)
+	runs = append(runs, runsFor(ArmGCI, "dt", 4, 0)...)
+	runs = append(runs, runsFor(ArmB3, "dt", 4, 2)...)
+	got := criterionByID(t, Summarize(variants, runs, nil), "K2")
+	if got.Status != StatusPass {
+		t.Fatalf("K2 = %s (%s), want pass from held-out D6-D10", got.Status, got.Detail)
+	}
+	if !strings.Contains(got.Detail, "seen D1-D5 (not in verdict)") || !strings.Contains(got.Detail, "held-out D6-D10") {
+		t.Errorf("K2 detail must label both sets: %s", got.Detail)
+	}
+}
+
+func TestCriterionK2OnlySeenDataIsNotEstablished(t *testing.T) {
+	variants := variantsFor(ClassBuildTag, "s", 10, true)
+	runs := append(runsFor(ArmGCI, "s", 10, 10), runsFor(ArmB3, "s", 10, 0)...)
+	if got := criterionByID(t, Summarize(variants, runs, nil), "K2"); got.Status != StatusNotEstablished {
+		t.Fatalf("K2 = %s (%s), want not_established without held-out data", got.Status, got.Detail)
 	}
 }
 
@@ -224,6 +336,9 @@ func TestCriterionK3(t *testing.T) {
 			if got.Status != tt.want {
 				t.Fatalf("K3 = %s (%s), want %s", got.Status, got.Detail, tt.want)
 			}
+			if !strings.Contains(got.Detail, "unknown=0") {
+				t.Errorf("K3 detail lacks unknown count: %s", got.Detail)
+			}
 		})
 	}
 	if got := criterionByID(t, Summarize(nil, nil, nil), "K3"); got.Status != StatusNotEstablished {
@@ -231,25 +346,26 @@ func TestCriterionK3(t *testing.T) {
 	}
 }
 
+func warmRuns(arm Arm, durations ...int64) []Run {
+	runs := make([]Run, 0, len(durations))
+	for i, duration := range durations {
+		runs = append(runs, Run{VariantID: fmt.Sprintf("t-%d", i), Arm: arm, Attempt: 2, DurationMS: duration})
+	}
+	return runs
+}
+
 func TestCriterionK4(t *testing.T) {
 	variants := variantsFor(ClassTrue, "t", 3, false)
-	warm := func(arm Arm, durations ...int64) []Run {
-		runs := make([]Run, 0, len(durations))
-		for i, duration := range durations {
-			runs = append(runs, Run{VariantID: fmt.Sprintf("t-%d", i), Arm: arm, Attempt: 2, DurationMS: duration})
-		}
-		return runs
-	}
 	tests := []struct {
 		name string
 		want string
 		runs []Run
 	}{
-		{"hook faster", StatusPass, append(warm(ArmGHook, 100, 200, 300), warm(ArmB2, 1000, 2000, 3000)...)},
-		{"equal medians pass", StatusPass, append(warm(ArmGHook, 1, 500, 900), warm(ArmB2, 500, 600, 700)...)},
-		{"hook slower", StatusFail, append(warm(ArmGHook, 5000, 6000, 7000), warm(ArmB2, 1000, 2000, 3000)...)},
+		{"hook faster", StatusPass, append(warmRuns(ArmGHook, 100, 200, 300), warmRuns(ArmB2, 1000, 2000, 3000)...)},
+		{"equal medians pass", StatusPass, append(warmRuns(ArmGHook, 1, 500, 900), warmRuns(ArmB2, 500, 600, 700)...)},
+		{"hook slower", StatusFail, append(warmRuns(ArmGHook, 5000, 6000, 7000), warmRuns(ArmB2, 1000, 2000, 3000)...)},
 		{"no warm data", StatusNotEstablished, runsFor(ArmGHook, "t", 3, 0)},
-		{"hook only", StatusNotEstablished, warm(ArmGHook, 1, 2, 3)},
+		{"hook only", StatusNotEstablished, warmRuns(ArmGHook, 1, 2, 3)},
 		{"first attempts ignored", StatusNotEstablished, append(runsFor(ArmGHook, "t", 3, 0), runsFor(ArmB2, "t", 3, 0)...)},
 	}
 	for _, tt := range tests {
@@ -258,7 +374,29 @@ func TestCriterionK4(t *testing.T) {
 			if got.Status != tt.want {
 				t.Fatalf("K4 = %s (%s), want %s", got.Status, got.Detail, tt.want)
 			}
+			if !strings.Contains(got.Detail, "unknown=0") {
+				t.Errorf("K4 detail lacks unknown count: %s", got.Detail)
+			}
 		})
+	}
+}
+
+// TestCriterionK4PairsVariants compares medians over variants both arms
+// finished: the hook looks fast over all its runs, but on the one variant B2
+// finished it is slower.
+func TestCriterionK4PairsVariants(t *testing.T) {
+	variants := variantsFor(ClassTrue, "t", 3, false)
+	runs := warmRuns(ArmGHook, 10, 10, 5000)
+	runs = append(runs, Run{VariantID: "t-2", Arm: ArmB2, Attempt: 2, DurationMS: 1000})
+	runs = append(runs, Run{VariantID: "t-1", Arm: ArmB2, Attempt: 2, DurationMS: 9999, Unknown: true})
+	got := criterionByID(t, Summarize(variants, runs, nil), "K4")
+	if got.Status != StatusFail {
+		t.Fatalf("K4 = %s (%s), want fail on the one paired variant", got.Status, got.Detail)
+	}
+	for _, want := range []string{"Ghook n=3", "B2 n=1", "paired n=1", "unknown=1"} {
+		if !strings.Contains(got.Detail, want) {
+			t.Errorf("K4 detail lacks %q: %s", want, got.Detail)
+		}
 	}
 }
 
