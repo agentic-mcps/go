@@ -29,6 +29,7 @@ type executionOutcome struct {
 
 type affectedRun struct {
 	coverageErr error
+	facts       testRunFacts
 	profile     []parser.CoverageBlock
 	race        parser.RaceReportOutput
 	tests       TestSummary
@@ -63,7 +64,7 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 		Summary: fmt.Sprintf("%d passed, %d failed, %d skipped", run.tests.Passed, run.tests.Failed, run.tests.Skipped),
 		Tests:   &run.tests,
 	})
-	outcome.Findings = append(outcome.Findings, testFailureFindings(run.tests, run.result.ExitCode)...)
+	outcome.Findings = append(outcome.Findings, e.testFailureFindings(run.tests, run.facts, run.result.ExitCode)...)
 
 	if !coverageApplicable {
 		outcome.Evidence = append(outcome.Evidence, Evidence{
@@ -72,20 +73,7 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 			Summary:    "no added or modified executable Go statements",
 		})
 	} else {
-		coverage, coverageUncertainty, coverageErr := e.changedCoverage(analysis, run.profile)
-		if run.coverageErr != nil {
-			coverageErr = run.coverageErr
-		}
-		coverageEvidence := Evidence{
-			CheckID: "coverage", Kind: CheckCoverage, DurationMS: run.result.Duration.Milliseconds(),
-			Status: EvidencePassed, Summary: fmt.Sprintf("%.1f%% of changed statements covered", coverage.Percent), Coverage: &coverage,
-		}
-		if coverageErr != nil {
-			coverageEvidence.Status = EvidenceError
-			coverageEvidence.Summary = "changed coverage could not be calculated"
-			coverageEvidence.Error = portableCheckError(coverageErr, e.workspace.Root())
-			coverageEvidence.Coverage = nil
-		}
+		coverageEvidence, coverageUncertainty := e.coverageEvidence(analysis, run)
 		outcome.Evidence = append(outcome.Evidence, coverageEvidence)
 		outcome.Uncertainties = append(outcome.Uncertainties, coverageUncertainty...)
 	}
@@ -153,12 +141,15 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 	if coverage {
 		profile, profileErr = readCoverageProfile(profilePath)
 	}
-	tests, packageText := collector.result()
+	tests, packageText, facts := collector.result()
 	portableRoots := []string{runDir, e.workspace.Root()}
 	if cache, cacheErr := os.UserCacheDir(); cacheErr == nil {
 		portableRoots = append(portableRoots, cache)
 	}
 	sanitizeTestSummary(&tests, portableRoots...)
+	for index := range facts.builds {
+		facts.builds[index].output = portableReportText(facts.builds[index].output, portableRoots...)
+	}
 	if profileErr != nil {
 		profileErr = errors.New(portableCheckError(profileErr, portableRoots...))
 	}
@@ -172,7 +163,7 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 		raceText = append(raceText, packageText[pkg])
 	}
 	return affectedRun{
-		result: result, tests: tests, profile: profile, coverageErr: profileErr,
+		result: result, tests: tests, facts: facts, profile: profile, coverageErr: profileErr,
 		race: parser.Parse(strings.Join(raceText, "\n")),
 	}, nil
 }
@@ -216,14 +207,30 @@ func createVerificationRunDir(prefix string) (string, error) {
 	return directory, nil
 }
 
-func testFailureFindings(summary TestSummary, exitCode int) []Finding {
-	findings := make([]Finding, 0, summary.Failed)
+// testFailureFindings reports each failed named test, each failed build once,
+// and each package that failed outside any named test (TestMain, init panic,
+// timeout), falling back to the process status only when nothing is attributed.
+func (e *Engine) testFailureFindings(summary TestSummary, facts testRunFacts, exitCode int) []Finding {
+	findings := make([]Finding, 0, summary.Failed+len(facts.builds))
 	for _, test := range summary.Nonpassing {
 		if test.Status != "fail" {
 			continue
 		}
 		message := fmt.Sprintf("%s failed in %s", test.Name, test.Package)
 		if output := strings.TrimSpace(test.Output); output != "" {
+			message += ": " + boundedText(output, 512)
+		}
+		findings = append(findings, Finding{Kind: "test.failure", Severity: SeverityError, Message: message, CheckID: "tests"})
+	}
+	for _, build := range facts.builds {
+		findings = append(findings, e.buildFailureFinding(build))
+	}
+	for _, pkg := range summary.Packages {
+		if _, built := facts.buildFailed[pkg.Package]; built || pkg.Status != "FAIL" || pkg.Failed > 0 {
+			continue
+		}
+		message := fmt.Sprintf("tests in %s failed outside a named test", pkg.Package)
+		if output := strings.TrimSpace(pkg.Output); output != "" {
 			message += ": " + boundedText(output, 512)
 		}
 		findings = append(findings, Finding{Kind: "test.failure", Severity: SeverityError, Message: message, CheckID: "tests"})

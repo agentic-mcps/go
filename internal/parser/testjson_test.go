@@ -76,3 +76,69 @@ func TestDecodeTestJSONPropagatesCallbackError(t *testing.T) {
 		t.Fatalf("stats = %#v, want one valid event", stats)
 	}
 }
+
+func TestDecodeTestJSONBuildEvents(t *testing.T) {
+	tests := []struct {
+		name      string
+		line      string
+		want      TestEvent
+		wantValid bool
+	}{
+		{
+			name:      "build output",
+			line:      `{"ImportPath":"example.test/a [example.test/a.test]","Action":"build-output","Output":"a/a_test.go:5:32: undefined: missing\n"}`,
+			wantValid: true,
+			want:      TestEvent{Action: "build-output", ImportPath: "example.test/a [example.test/a.test]", Output: "a/a_test.go:5:32: undefined: missing\n"},
+		},
+		{
+			name:      "build fail",
+			line:      `{"ImportPath":"example.test/a","Action":"build-fail"}`,
+			wantValid: true,
+			want:      TestEvent{Action: "build-fail", ImportPath: "example.test/a"},
+		},
+		{
+			name:      "package fail names failed build",
+			line:      `{"Action":"fail","Package":"example.test/b","Elapsed":0,"FailedBuild":"example.test/a"}`,
+			wantValid: true,
+			want:      TestEvent{Action: "fail", Package: "example.test/b", FailedBuild: "example.test/a"},
+		},
+		{
+			name: "build output without import path",
+			line: `{"Action":"build-output","Output":"a.go:1:1: bad\n"}`,
+		},
+		{
+			name: "build action keyed by package only",
+			line: `{"Action":"build-fail","Package":"example.test/a"}`,
+		},
+		{
+			name: "test action keyed by import path only",
+			line: `{"Action":"fail","ImportPath":"example.test/a"}`,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// A trailing valid event keeps the no-valid-events error out of the near misses.
+			input := test.line + "\n" + `{"Action":"pass","Package":"./pkg"}` + "\n"
+			var got []TestEvent
+			stats, err := DecodeTestJSON(strings.NewReader(input), func(event TestEvent) error {
+				got = append(got, event)
+				return nil
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !test.wantValid {
+				if stats != (Stats{Valid: 1, Malformed: 1}) || len(got) != 1 {
+					t.Fatalf("stats=%#v events=%#v, want the line rejected as malformed", stats, got)
+				}
+				return
+			}
+			if stats != (Stats{Valid: 2}) || len(got) != 2 {
+				t.Fatalf("stats=%#v events=%#v, want the line accepted", stats, got)
+			}
+			if got[0] != test.want {
+				t.Fatalf("event = %#v, want %#v", got[0], test.want)
+			}
+		})
+	}
+}

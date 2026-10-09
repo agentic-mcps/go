@@ -12,16 +12,21 @@ import (
 
 const maxTestJSONEvent = 8 << 20
 
-// TestEvent is one event emitted by go test -json.
+// TestEvent is one event emitted by go test -json. Build events
+// ("build-output" and "build-fail", Go 1.24+) carry ImportPath instead of
+// Package; a package "fail" event caused by a build failure names the failed
+// build's ImportPath in FailedBuild.
 //
 //nolint:govet // JSON field order mirrors the upstream go test event shape.
 type TestEvent struct {
-	Time    time.Time `json:"Time"`
-	Action  string    `json:"Action"`
-	Package string    `json:"Package"`
-	Test    string    `json:"Test,omitempty"`
-	Elapsed float64   `json:"Elapsed,omitempty"`
-	Output  string    `json:"Output,omitempty"`
+	Time        time.Time `json:"Time"`
+	Action      string    `json:"Action"`
+	Package     string    `json:"Package"`
+	ImportPath  string    `json:"ImportPath,omitempty"`
+	Test        string    `json:"Test,omitempty"`
+	Elapsed     float64   `json:"Elapsed,omitempty"`
+	Output      string    `json:"Output,omitempty"`
+	FailedBuild string    `json:"FailedBuild,omitempty"`
 }
 
 // Stats describes decoding outcomes. Malformed is the number of complete input
@@ -52,7 +57,7 @@ func DecodeTestJSON(r io.Reader, callback func(TestEvent) error) (Stats, error) 
 			stats.Malformed++
 			continue
 		}
-		if event.Package == "" || !validTestAction(event.Action) {
+		if !validTestEvent(event) {
 			stats.Malformed++
 			continue
 		}
@@ -68,6 +73,17 @@ func DecodeTestJSON(r io.Reader, callback func(TestEvent) error) (Stats, error) 
 		return stats, errors.New("testjson: no valid events")
 	}
 	return stats, nil
+}
+
+func validTestEvent(event TestEvent) bool {
+	if validBuildAction(event.Action) {
+		return event.ImportPath != ""
+	}
+	return event.Package != "" && validTestAction(event.Action)
+}
+
+func validBuildAction(action string) bool {
+	return action == "build-output" || action == "build-fail"
 }
 
 func validTestAction(action string) bool {
