@@ -352,6 +352,33 @@ func TestAdd(t *testing.T) {
 			},
 		},
 		{
+			name: "Go change in a package under a docs directory is tested", parallel: true,
+			base: map[string]string{
+				"internal/docs/d.go":      "package docs\n\n// F returns one.\nfunc F() int { return 1 }\n",
+				"internal/docs/d_test.go": "package docs\n\nimport \"testing\"\n\nfunc TestF(t *testing.T) {\n\tif F() != 1 {\n\t\tt.Fatal(\"F() != 1\")\n\t}\n}\n",
+			},
+			change: map[string]string{"internal/docs/d.go": "package docs\n\n// F returns one.\nfunc F() int { return 2 }\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				if item.Message != "TestF fails after this change" || result.Stats.PackagesTested == 0 {
+					t.Fatalf("item = %+v, stats = %+v", item, result.Stats)
+				}
+			},
+		},
+		{
+			name: "near miss: README under a docs package directory skips tests", parallel: true,
+			base: map[string]string{
+				"internal/docs/d.go": "package docs\n\n// F returns one.\nfunc F() int { return 1 }\n",
+			},
+			change: map[string]string{"internal/docs/README.md": "about docs\n"},
+			check: func(t *testing.T, result Result) {
+				gateWant(t, result, VerdictPass, "", "")
+				if result.Stats.PackagesTested != 0 {
+					t.Fatalf("stats = %+v, want no packages tested", result.Stats)
+				}
+			},
+		},
+		{
 			name: "testdata change that breaks a test blocks", parallel: true,
 			base: map[string]string{
 				"lib/testdata/greeting.data": "hello\n",
@@ -628,7 +655,11 @@ func TestGateDocsOnly(t *testing.T) {
 		paths []string
 		want  bool
 	}{
-		{paths: []string{"README.md", "docs/a.png", "sub/docs/guide/x.yaml", "LICENSE", "NOTICE.txt", "notes.rst", "a.markdown", "CHANGES.TXT"}, want: true},
+		{paths: []string{"README.md", "docs/a.png", "docs/guide/x.yaml", "LICENSE", "NOTICE.txt", "notes.rst", "a.markdown", "CHANGES.TXT", "internal/docs/README.md"}, want: true},
+		{paths: []string{"internal/docs/d.go"}},
+		{paths: []string{"docs/example/main.go"}},
+		{paths: []string{"docs/go.mod"}},
+		{paths: []string{"sub/docs/guide/x.yaml"}},
 		{paths: []string{"README.md", "lib/testdata/x.golden"}},
 		{paths: []string{"lib/a.go"}},
 		{paths: []string{"go.mod"}},

@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -417,8 +416,8 @@ func gateGoFiles(paths []string) []string {
 
 // gateDocsOnly reports whether every changed path is documentation, the
 // only kind of change that cannot affect a build or test: .md, .markdown,
-// .txt and .rst files, anything under a docs directory, and LICENSE or
-// NOTICE files.
+// .txt and .rst files, non-Go files under the workspace's top-level docs
+// directory, and LICENSE or NOTICE files.
 func gateDocsOnly(paths []string) bool {
 	for _, name := range paths {
 		if !gateIsDoc(name) {
@@ -428,7 +427,13 @@ func gateDocsOnly(paths []string) bool {
 	return true
 }
 
+// gateIsDoc reports a documentation path. Go sources and module files are
+// never documentation, even inside a docs directory, because a Go package
+// may live there.
 func gateIsDoc(name string) bool {
+	if strings.HasSuffix(name, ".go") || gateIsModuleFile(name) {
+		return false
+	}
 	switch strings.ToLower(path.Ext(name)) {
 	case ".md", ".markdown", ".txt", ".rst":
 		return true
@@ -437,7 +442,7 @@ func gateIsDoc(name string) bool {
 	if strings.HasPrefix(base, "LICENSE") || strings.HasPrefix(base, "NOTICE") {
 		return true
 	}
-	return slices.Contains(strings.Split(path.Dir(name), "/"), "docs")
+	return strings.HasPrefix(name, "docs/")
 }
 
 // gatePathFiles describes changed paths without content, enough for the
