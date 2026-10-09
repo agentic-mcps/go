@@ -154,7 +154,7 @@ func (g *Gate) run(ctx context.Context, run *gateRun) (Result, error) {
 	if fingerprint, fpErr := Fingerprint(ctx, g.git, g.ws.Root(), base.Commit, g.salt(run.options)); fpErr == nil {
 		run.fingerprint = fingerprint
 	}
-	if gateDocsOnly(changed) {
+	if gateDocsOnly(g.ws.Root(), changed) {
 		run.add(CheckIntegrity(gatePathFiles(changed), nil)...)
 		return g.finish(run), nil
 	}
@@ -209,12 +209,20 @@ func (g *Gate) lock(ctx context.Context, run *gateRun) (func(), error) {
 // verify analyzes the change, checks integrity, runs the affected tests and
 // attributes failures.
 func (g *Gate) verify(ctx context.Context, run *gateRun, changed []string) (Result, error) {
-	analysis, err := g.analyzer.Analyze(ctx, verification.ChangeOptions{Base: run.result.Base.Commit, Package: "./...", MaxPackages: gateAnalyzeLimit})
+	deadline := run.start.Add(run.options.Budget)
+	budgetCtx, cancel := context.WithDeadline(ctx, deadline)
+	defer cancel()
+	analysis, err := g.analyzer.Analyze(budgetCtx, verification.ChangeOptions{Base: run.result.Base.Commit, Package: "./...", MaxPackages: gateAnalyzeLimit})
 	if err != nil {
 		if ctx.Err() != nil {
 			return Result{}, ctx.Err()
 		}
 		run.add(CheckIntegrity(gatePathFiles(changed), nil)...)
+		if budgetCtx.Err() != nil {
+			run.note(fmt.Sprintf("time budget %s ran out before the change was analyzed", run.options.Budget))
+			run.complete = false
+			return g.finish(run), nil
+		}
 		if items := mapListErrors(g.ws.Root(), err.Error()); len(items) > 0 {
 			run.add(items...)
 			run.note("tests skipped until the packages load")
@@ -224,7 +232,7 @@ func (g *Gate) verify(ctx context.Context, run *gateRun, changed []string) (Resu
 		run.complete = false
 		return g.finish(run), nil
 	}
-	if assetErr := g.addAssetPackages(ctx, &analysis, changed); assetErr != nil {
+	if assetErr := g.addAssetPackages(budgetCtx, &analysis, changed); assetErr != nil {
 		if ctx.Err() != nil {
 			return Result{}, ctx.Err()
 		}
@@ -244,9 +252,6 @@ func (g *Gate) verify(ctx context.Context, run *gateRun, changed []string) (Resu
 	}
 	run.add(CheckIntegrity(analysis.Files, gateDeletedDeclarations(analysis.Change.Declarations))...)
 
-	deadline := run.start.Add(run.options.Budget)
-	budgetCtx, cancel := context.WithDeadline(ctx, deadline)
-	defer cancel()
 	// Tests get three quarters of the remaining budget so attribution, which
 	// only runs when something failed, still has time to compare with base.
 	collectCtx, cancelCollect := context.WithDeadline(budgetCtx, time.Now().Add(time.Until(deadline)*gateCollectShare/100))
@@ -415,23 +420,26 @@ func gateGoFiles(paths []string) []string {
 }
 
 // gateDocsOnly reports whether every changed path is documentation, the
-// only kind of change that cannot affect a build or test: .md, .markdown,
-// .txt and .rst files, non-Go files under the workspace's top-level docs
-// directory, and LICENSE or NOTICE files.
-func gateDocsOnly(paths []string) bool {
+// only kind of change that cannot affect a build or test.
+func gateDocsOnly(root string, paths []string) bool {
 	for _, name := range paths {
-		if !gateIsDoc(name) {
+		if !gateIsDoc(root, name) {
 			return false
 		}
 	}
 	return true
 }
 
-// gateIsDoc reports a documentation path. Go sources and module files are
-// never documentation, even inside a docs directory, because a Go package
-// may live there.
-func gateIsDoc(name string) bool {
-	if strings.HasSuffix(name, ".go") || gateIsModuleFile(name) {
+// gateIsDoc reports a documentation path: a .md, .markdown, .txt or .rst
+// file, a file under the workspace's top-level docs directory, or a LICENSE
+// or NOTICE file. Go sources, module files, anything under testdata, and any
+// file whose directory holds Go files are never documentation, because tests
+// may read them and //go:embed may compile them in.
+func gateIsDoc(root, name string) bool {
+	if strings.HasSuffix(name, ".go") || gateIsModuleFile(name) || integrityHasSegment(name, "testdata") {
+		return false
+	}
+	if gateDirHasGo(root, path.Dir(name)) {
 		return false
 	}
 	switch strings.ToLower(path.Ext(name)) {
@@ -443,6 +451,12 @@ func gateIsDoc(name string) bool {
 		return true
 	}
 	return strings.HasPrefix(name, "docs/")
+}
+
+// gateDirHasGo reports whether the workspace directory dir holds Go files.
+func gateDirHasGo(root, dir string) bool {
+	matches, err := filepath.Glob(filepath.Join(root, filepath.FromSlash(dir), "*.go"))
+	return err == nil && len(matches) > 0
 }
 
 // gatePathFiles describes changed paths without content, enough for the
@@ -493,7 +507,7 @@ func (g *Gate) addAssetPackages(ctx context.Context, analysis *verification.Chan
 	patterns := make([]string, 0)
 	seen := make(map[string]bool)
 	for _, name := range changed {
-		if strings.HasSuffix(name, ".go") || gateIsDoc(name) || gateIsModuleFile(name) {
+		if strings.HasSuffix(name, ".go") || gateIsDoc(g.ws.Root(), name) || gateIsModuleFile(name) {
 			continue
 		}
 		dir, ok := gateOwnerDir(g.ws.Root(), path.Dir(name))
@@ -530,8 +544,7 @@ func gateIsModuleFile(name string) bool {
 // gateOwnerDir walks up from dir to the nearest directory holding Go files.
 func gateOwnerDir(root, dir string) (string, bool) {
 	for {
-		matches, err := filepath.Glob(filepath.Join(root, filepath.FromSlash(dir), "*.go"))
-		if err == nil && len(matches) > 0 {
+		if gateDirHasGo(root, dir) {
 			return dir, true
 		}
 		if dir == "." || dir == "/" || dir == "" {

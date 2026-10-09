@@ -366,15 +366,44 @@ func TestAdd(t *testing.T) {
 			},
 		},
 		{
-			name: "near miss: README under a docs package directory skips tests", parallel: true,
+			name: "README inside a Go package directory is tested", parallel: true,
 			base: map[string]string{
 				"internal/docs/d.go": "package docs\n\n// F returns one.\nfunc F() int { return 1 }\n",
 			},
 			change: map[string]string{"internal/docs/README.md": "about docs\n"},
 			check: func(t *testing.T, result Result) {
 				gateWant(t, result, VerdictPass, "", "")
-				if result.Stats.PackagesTested != 0 {
-					t.Fatalf("stats = %+v, want no packages tested", result.Stats)
+				if result.Stats.PackagesTested == 0 {
+					t.Fatalf("stats = %+v, want the owning package tested", result.Stats)
+				}
+			},
+		},
+		{
+			name: "testdata .txt change that breaks a golden test blocks", parallel: true,
+			base: map[string]string{
+				"lib/testdata/want.txt": "hello\n",
+				"lib/golden_test.go":    "package lib\n\nimport (\n\t\"os\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestGolden(t *testing.T) {\n\tdata, err := os.ReadFile(\"testdata/want.txt\")\n\tif err != nil || strings.TrimSpace(string(data)) != Greeting() {\n\t\tt.Fatalf(\"want.txt = %q\", data)\n\t}\n}\n",
+			},
+			change: map[string]string{"lib/testdata/want.txt": "bye\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				if item.Message != "TestGolden fails after this change" {
+					t.Fatalf("item = %+v", item)
+				}
+			},
+		},
+		{
+			name: "embedded markdown next to Go code that breaks a test blocks", parallel: true,
+			base: map[string]string{
+				"lib/msg.md":      "hello\n",
+				"lib/msg.go":      "package lib\n\nimport _ \"embed\"\n\n//go:embed msg.md\nvar msg string\n\n// Msg returns the embedded message.\nfunc Msg() string { return msg }\n",
+				"lib/msg_test.go": "package lib\n\nimport \"testing\"\n\nfunc TestMsg(t *testing.T) {\n\tif Msg() != \"hello\\n\" {\n\t\tt.Fatalf(\"Msg() = %q\", Msg())\n\t}\n}\n",
+			},
+			change: map[string]string{"lib/msg.md": "bye\n"},
+			check: func(t *testing.T, result Result) {
+				item := gateWant(t, result, VerdictBlock, CodeTestFailed, SeverityBlock)
+				if item.Message != "TestMsg fails after this change" {
+					t.Fatalf("item = %+v", item)
 				}
 			},
 		},
@@ -500,7 +529,7 @@ func TestFlaky(t *testing.T) {
 			options: Options{Budget: time.Millisecond}, parallel: true,
 			check: func(t *testing.T, result Result) {
 				gateWant(t, result, VerdictUnknown, CodeGoldenModified, SeverityWarn)
-				if !strings.Contains(strings.Join(result.Notes, "\n"), "time budget 1ms ran out before tests finished") {
+				if !strings.Contains(strings.Join(result.Notes, "\n"), "time budget 1ms ran out") {
 					t.Fatalf("notes = %q", result.Notes)
 				}
 			},
@@ -651,11 +680,25 @@ func TestGateCacheUnsafe(t *testing.T) {
 }
 
 func TestGateDocsOnly(t *testing.T) {
+	root := t.TempDir()
+	for _, name := range []string{"lib/lib.go", "internal/docs/d.go", "docs/example/main.go"} {
+		if err := os.MkdirAll(filepath.Join(root, filepath.Dir(name)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, name), []byte("package x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 	cases := []struct {
 		paths []string
 		want  bool
 	}{
-		{paths: []string{"README.md", "docs/a.png", "docs/guide/x.yaml", "LICENSE", "NOTICE.txt", "notes.rst", "a.markdown", "CHANGES.TXT", "internal/docs/README.md"}, want: true},
+		{paths: []string{"README.md", "docs/a.png", "docs/guide/x.yaml", "LICENSE", "NOTICE.txt", "notes.rst", "a.markdown", "CHANGES.TXT", "sub/notes/README.md"}, want: true},
+		{paths: []string{"internal/docs/README.md"}},
+		{paths: []string{"lib/msg.md"}},
+		{paths: []string{"lib/testdata/want.txt"}},
+		{paths: []string{"docs/testdata/want.txt"}},
+		{paths: []string{"docs/example/README.md"}},
 		{paths: []string{"internal/docs/d.go"}},
 		{paths: []string{"docs/example/main.go"}},
 		{paths: []string{"docs/go.mod"}},
@@ -669,7 +712,7 @@ func TestGateDocsOnly(t *testing.T) {
 		{paths: []string{"documentation/x.yaml"}},
 	}
 	for _, tc := range cases {
-		if got := gateDocsOnly(tc.paths); got != tc.want {
+		if got := gateDocsOnly(root, tc.paths); got != tc.want {
 			t.Errorf("gateDocsOnly(%v) = %v, want %v", tc.paths, got, tc.want)
 		}
 	}
