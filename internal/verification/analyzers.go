@@ -29,7 +29,45 @@ var analyzerSpecs = []analyzerSpec{
 	{checkID: "errors", kind: CheckErrors, label: "error", analyzer: erroranalysis.Analyzer},
 }
 
-func (e *Engine) runAnalyzerChecks(ctx context.Context, change ChangeAnalysis) (executionOutcome, error) {
+// analyzerTargets returns the packages analyzers compare: the full affected
+// closure, or only packages containing changed source when directOnly is set.
+func analyzerTargets(targets []ExecutionTarget, directOnly bool) []ExecutionTarget {
+	if !directOnly {
+		return targets
+	}
+	direct := make([]ExecutionTarget, 0, len(targets))
+	for _, target := range targets {
+		if target.Distance == 0 {
+			direct = append(direct, target)
+		}
+	}
+	return direct
+}
+
+// failedAnalyzerOutcome represents an analyzer run that could not produce
+// evidence as error evidence plus an uncertainty for every analyzer check.
+func failedAnalyzerOutcome(err error, roots ...string) executionOutcome {
+	outcome := executionOutcome{
+		Evidence: make([]Evidence, 0, len(analyzerSpecs)), Findings: []Finding{},
+		Uncertainties: make([]Uncertainty, 0, len(analyzerSpecs)),
+	}
+	for _, spec := range analyzerSpecs {
+		outcome.Evidence = append(outcome.Evidence, Evidence{
+			CheckID: spec.checkID, Kind: spec.kind, Status: EvidenceError,
+			Summary: spec.label + " analyzer could not run",
+			Error:   portableCheckError(err, roots...),
+		})
+		outcome.Uncertainties = append(outcome.Uncertainties, Uncertainty{
+			Code: "analysis_unavailable", CheckID: spec.checkID,
+			Message:   spec.label + " analyzer could not run; its diagnostics are unknown",
+			Locations: make([]Location, 0),
+		})
+	}
+	return outcome
+}
+
+func (e *Engine) runAnalyzerChecks(ctx context.Context, change ChangeAnalysis, directOnly bool) (executionOutcome, error) {
+	change.Packages = analyzerTargets(change.Packages, directOnly)
 	if len(change.Packages) == 0 {
 		evidence := make([]Evidence, 0, len(analyzerSpecs))
 		for _, spec := range analyzerSpecs {

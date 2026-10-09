@@ -19,7 +19,8 @@ const (
 )
 
 // Request configures one complete verification run independently of its CLI
-// or MCP adapter.
+// or MCP adapter. Zero values of the execution knobs keep the established
+// verify behavior.
 type Request struct {
 	MinChangedCoverage *float64
 	Base               string
@@ -27,8 +28,21 @@ type Request struct {
 	FailOn             FailOn
 	ContractID         string
 	ExpectedSnapshotID string
-	MaxPackages        int
-	Race               bool
+	// Skip, when non-empty, is passed to go test as -skip=<Skip>.
+	Skip        string
+	MaxPackages int
+	Race        bool
+	// TestCache omits -count=1 so go test may reuse cached results.
+	TestCache bool
+	// Short passes -short to go test.
+	Short bool
+	// DirectAnalyzersOnly limits analyzer comparison, on both the current and
+	// merge-base sides, to packages containing changed source (distance 0).
+	DirectAnalyzersOnly bool
+	// SoftAnalyzerFailures reports an analyzer infrastructure failure as error
+	// evidence and an uncertainty instead of a returned error. Cancellation and
+	// deadline errors are still returned.
+	SoftAnalyzerFailures bool
 }
 
 // Collection retains the unfinalized report and its private analysis handoff
@@ -96,6 +110,20 @@ func (e *Engine) Collect(ctx context.Context, request Request) (Collection, erro
 	if err != nil {
 		return Collection{}, err
 	}
+	return e.CollectAnalysis(callCtx, request, analysis)
+}
+
+// CollectAnalysis runs everything Collect does after change discovery, using
+// the supplied analysis. It normalizes the request itself, so callers that
+// discovered the change on their own need not call Collect. The report is not
+// finalized.
+func (e *Engine) CollectAnalysis(ctx context.Context, request Request, analysis ChangeAnalysis) (Collection, error) {
+	if err := normalizeRequest(&request); err != nil {
+		return Collection{}, err
+	}
+	callCtx, cancel := e.runner.Deadline(ctx)
+	defer cancel()
+
 	report := NewReport(e.providerVersion, analysis.Repository)
 	report.Change = analysis.Change
 	report.Impact = analysis.Impact
@@ -103,7 +131,7 @@ func (e *Engine) Collect(ctx context.Context, request Request) (Collection, erro
 	report.Uncertainties = append(report.Uncertainties, analysis.Uncertainties...)
 	targets := executionTargetIDs(analysis.Packages)
 	direct := directTargetIDs(analysis.Packages)
-	report.Plan = verificationPlan(targets, request.Race)
+	report.Plan = verificationPlan(targets, executionTargetIDs(analyzerTargets(analysis.Packages, request.DirectAnalyzersOnly)), request.Race)
 
 	if analysis.Complete {
 		outcome, runErr := e.runAffectedChecks(callCtx, analysis, request, direct)
@@ -111,22 +139,21 @@ func (e *Engine) Collect(ctx context.Context, request Request) (Collection, erro
 			if errors.Is(runErr, context.Canceled) || errors.Is(runErr, context.DeadlineExceeded) {
 				return Collection{}, runErr
 			}
-			roots := []string{e.workspace.Root()}
-			if cache, cacheErr := os.UserCacheDir(); cacheErr == nil {
-				roots = append(roots, cache)
-			}
-			report.Evidence = append(report.Evidence, failedExecutionEvidence(executionChecks(targets, request.Race), runErr, roots...)...)
+			report.Evidence = append(report.Evidence, failedExecutionEvidence(executionChecks(targets, request.Race), runErr, e.portableRoots()...)...)
 		} else {
 			report.Evidence = append(report.Evidence, outcome.Evidence...)
 			report.Findings = append(report.Findings, outcome.Findings...)
 			report.Uncertainties = append(report.Uncertainties, outcome.Uncertainties...)
 		}
-		analyzerOutcome, analyzerErr := e.runAnalyzerChecks(callCtx, analysis)
+		analyzerOutcome, analyzerErr := e.runAnalyzerChecks(callCtx, analysis, request.DirectAnalyzersOnly)
 		if analyzerErr != nil {
 			if errors.Is(analyzerErr, context.Canceled) || errors.Is(analyzerErr, context.DeadlineExceeded) {
 				return Collection{}, analyzerErr
 			}
-			return Collection{}, fmt.Errorf("running analyzer comparison: %w", analyzerErr)
+			if !request.SoftAnalyzerFailures {
+				return Collection{}, fmt.Errorf("running analyzer comparison: %w", analyzerErr)
+			}
+			analyzerOutcome = failedAnalyzerOutcome(analyzerErr, e.portableRoots()...)
 		}
 		report.Evidence = append(report.Evidence, analyzerOutcome.Evidence...)
 		report.Findings = append(report.Findings, analyzerOutcome.Findings...)
@@ -161,11 +188,20 @@ func normalizeRequest(request *Request) error {
 	return policy.normalize()
 }
 
-func verificationPlan(targets []string, race bool) []Check {
+// portableRoots lists the absolute prefixes removed from report text.
+func (e *Engine) portableRoots() []string {
+	roots := []string{e.workspace.Root()}
+	if cache, err := os.UserCacheDir(); err == nil {
+		roots = append(roots, cache)
+	}
+	return roots
+}
+
+func verificationPlan(targets, analyzed []string, race bool) []Check {
 	checks := executionChecks(targets, race)
 	checks = append(checks,
-		Check{ID: "concurrency", Kind: CheckConcurrency, Required: true, Targets: append([]string(nil), targets...), Reason: "compare calibrated concurrency findings with the merge-base"},
-		Check{ID: "errors", Kind: CheckErrors, Required: true, Targets: append([]string(nil), targets...), Reason: "compare calibrated error-handling findings with the merge-base"},
+		Check{ID: "concurrency", Kind: CheckConcurrency, Required: true, Targets: append([]string(nil), analyzed...), Reason: "compare calibrated concurrency findings with the merge-base"},
+		Check{ID: "errors", Kind: CheckErrors, Required: true, Targets: append([]string(nil), analyzed...), Reason: "compare calibrated error-handling findings with the merge-base"},
 	)
 	return checks
 }

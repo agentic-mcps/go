@@ -48,7 +48,7 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 		return executionOutcome{Evidence: evidence, Findings: []Finding{}, Uncertainties: []Uncertainty{}}, nil
 	}
 	coverageApplicable := e.hasChangedExecutableStatements(analysis)
-	run, err := e.executeGoTest(ctx, analysis.Packages, direct, request.Race, coverageApplicable)
+	run, err := e.executeGoTest(ctx, analysis.Packages, direct, request, coverageApplicable)
 	if err != nil {
 		return executionOutcome{}, err
 	}
@@ -93,26 +93,14 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 	return outcome, nil
 }
 
-func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, direct []string, race, coverage bool) (affectedRun, error) {
+func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, direct []string, request Request, coverage bool) (affectedRun, error) {
 	runDir, err := createVerificationRunDir("verify")
 	if err != nil {
 		return affectedRun{}, err
 	}
 	defer func() { _ = os.RemoveAll(runDir) }()
 	profilePath := filepath.Join(runDir, "coverage.out")
-	args := []string{"test", "-json", "-count=1", fmt.Sprintf("-timeout=%ds", int(verificationTestTimeout.Seconds()))}
-	if coverage {
-		args = append(args, "-covermode=atomic", "-coverprofile="+profilePath)
-		if len(direct) > 0 {
-			args = append(args, "-coverpkg="+strings.Join(direct, ","))
-		}
-	}
-	if race {
-		args = append(args, "-race")
-	}
-	for _, target := range targets {
-		args = append(args, target.ID)
-	}
+	args := goTestArgs(request, targets, direct, profilePath, coverage)
 
 	collector := newVerificationTestCollector()
 	reader, writer := io.Pipe()
@@ -166,6 +154,34 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 		result: result, tests: tests, facts: facts, profile: profile, coverageErr: profileErr,
 		race: parser.Parse(strings.Join(raceText, "\n")),
 	}, nil
+}
+
+// goTestArgs builds the go test argv for one affected-package run.
+func goTestArgs(request Request, targets []ExecutionTarget, direct []string, profilePath string, coverage bool) []string {
+	args := []string{"test", "-json"}
+	if !request.TestCache {
+		args = append(args, "-count=1")
+	}
+	args = append(args, fmt.Sprintf("-timeout=%ds", int(verificationTestTimeout.Seconds())))
+	if request.Short {
+		args = append(args, "-short")
+	}
+	if request.Skip != "" {
+		args = append(args, "-skip="+request.Skip)
+	}
+	if coverage {
+		args = append(args, "-covermode=atomic", "-coverprofile="+profilePath)
+		if len(direct) > 0 {
+			args = append(args, "-coverpkg="+strings.Join(direct, ","))
+		}
+	}
+	if request.Race {
+		args = append(args, "-race")
+	}
+	for _, target := range targets {
+		args = append(args, target.ID)
+	}
+	return args
 }
 
 func readCoverageProfile(path string) ([]parser.CoverageBlock, error) {
