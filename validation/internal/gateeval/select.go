@@ -5,11 +5,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -53,7 +56,10 @@ type commitInfo struct {
 
 // Select mines commits from the corpus history per the protocol and writes
 // one Selection per commit to options.Out and every exclusion to
-// options.ExclusionsOut. Both files are replaced.
+// options.ExclusionsOut. It is resumable per project: a project is complete
+// once its "complete: <project>" exclusion line is written, and a rerun skips
+// complete projects, keeps their lines, and redoes the others from scratch
+// (discarding the partial lines of an interrupted project).
 func Select(ctx context.Context, options SelectOptions) error {
 	options = withSelectDefaults(options)
 	if options.CorpusCSV == "" || options.Out == "" || options.ExclusionsOut == "" {
@@ -68,17 +74,78 @@ func Select(ctx context.Context, options SelectOptions) error {
 	if err != nil {
 		return err
 	}
-	for _, name := range []string{options.Out, options.ExclusionsOut} {
-		if err := os.WriteFile(name, nil, 0o600); err != nil {
-			return fmt.Errorf("creating %s: %w", name, err)
-		}
+	done, err := resumeSelect(options)
+	if err != nil {
+		return err
 	}
 	for _, project := range projects {
+		if done[project.Name] {
+			continue
+		}
 		if err := selectProject(ctx, options, project); err != nil {
 			return fmt.Errorf("selecting %s: %w", project.Name, err)
 		}
 	}
 	return nil
+}
+
+// completeReason is the Reason of the exclusion line that marks a project done.
+func completeReason(project string) string { return "complete: " + project }
+
+// resumeSelect creates the output files when missing, finds the projects that
+// are complete, and removes the lines of every other project so that it can
+// be selected again without duplicates.
+func resumeSelect(options SelectOptions) (map[string]bool, error) {
+	for _, name := range []string{options.Out, options.ExclusionsOut} {
+		if err := os.MkdirAll(filepath.Dir(name), 0o750); err != nil {
+			return nil, fmt.Errorf("creating %s: %w", filepath.Dir(name), err)
+		}
+		file, err := os.OpenFile(name, os.O_CREATE|os.O_RDONLY, 0o600) //nolint:gosec // Output path chosen by the operator.
+		if err != nil {
+			return nil, fmt.Errorf("creating %s: %w", name, err)
+		}
+		_ = file.Close()
+	}
+	selections, err := ReadJSONL[Selection](options.Out)
+	if err != nil {
+		return nil, err
+	}
+	exclusions, err := ReadJSONL[Exclusion](options.ExclusionsOut)
+	if err != nil {
+		return nil, err
+	}
+	done := map[string]bool{}
+	for _, exclusion := range exclusions {
+		if exclusion.Commit == "" && exclusion.Reason == completeReason(exclusion.Project) {
+			done[exclusion.Project] = true
+		}
+	}
+	keptSelections := slices.DeleteFunc(slices.Clone(selections), func(s Selection) bool { return !done[s.Project] })
+	keptExclusions := slices.DeleteFunc(slices.Clone(exclusions), func(e Exclusion) bool { return !done[e.Project] })
+	if len(keptSelections) != len(selections) {
+		if err := rewriteJSONL(options.Out, keptSelections); err != nil {
+			return nil, err
+		}
+	}
+	if len(keptExclusions) != len(exclusions) {
+		if err := rewriteJSONL(options.ExclusionsOut, keptExclusions); err != nil {
+			return nil, err
+		}
+	}
+	return done, nil
+}
+
+// rewriteJSONL replaces path with the values, one JSON line each.
+func rewriteJSONL[T any](path string, values []T) error {
+	var buffer bytes.Buffer
+	encoder := json.NewEncoder(&buffer)
+	encoder.SetEscapeHTML(false)
+	for _, value := range values {
+		if err := encoder.Encode(value); err != nil {
+			return fmt.Errorf("encoding %s: %w", path, err)
+		}
+	}
+	return writeFileAtomic(path, buffer.Bytes())
 }
 
 func withSelectDefaults(options SelectOptions) SelectOptions {
@@ -133,8 +200,8 @@ func selectProject(ctx context.Context, options SelectOptions, project Project) 
 		return err
 	}
 	exclusions := []Exclusion{
-		{Project: project.Name, Reason: fmt.Sprintf("static: %d scanned, %d kept", scanned, len(mainList))},
-		{Project: project.Name, Class: ClassDestructive, Reason: fmt.Sprintf("static: %d scanned, %d kept", scanned, len(destList))},
+		{Project: project.Name, Reason: fmt.Sprintf("static main: %d scanned, %d kept", scanned, len(mainList))},
+		{Project: project.Name, Class: ClassDestructive, Reason: fmt.Sprintf("static destructive: %d scanned, %d kept", scanned, len(destList))},
 	}
 	inMain := map[string]bool{}
 	for _, info := range mainList {
@@ -160,6 +227,7 @@ func selectProject(ctx context.Context, options SelectOptions, project Project) 
 			return err
 		}
 	}
+	exclusions = append(exclusions, Exclusion{Project: project.Name, Reason: completeReason(project.Name)})
 	for _, exclusion := range exclusions {
 		if err := AppendJSONL(options.ExclusionsOut, exclusion); err != nil {
 			return err
@@ -598,6 +666,22 @@ func (s *selector) excludedOrder(lists ...[]commitInfo) []string {
 	return shas
 }
 
+// buildTimeout bounds go mod download and go build in the expensive filter;
+// tests keep SelectOptions.TestTimeout.
+const buildTimeout = 5 * time.Minute
+
+// stepFailure turns a failed command into the exclusion reason, or "" when the
+// command succeeded. A timeout is reported as "timed out at <where>".
+func stepFailure(result stepResult, where, reason string) string {
+	switch {
+	case errors.Is(result.err, errStepTimeout):
+		return "timed out at " + where
+	case result.err != nil || result.exit != 0:
+		return reason
+	}
+	return ""
+}
+
 // expensive builds and tests the commit and its base. It returns the reason
 // the commit fails, or "" when it passes. Only cancellation is an error.
 func (s *selector) expensive(ctx context.Context, info commitInfo) (verdict, error) {
@@ -613,16 +697,32 @@ func (s *selector) expensive(ctx context.Context, info commitInfo) (verdict, err
 	if len(direct) == 0 {
 		return verdict{reason: "no buildable direct package"}, nil
 	}
+	run := func(timeout time.Duration, args ...string) (stepResult, error) {
+		result := runStep(ctx, s.tree, timeout, "go", args...)
+		if err := ctx.Err(); err != nil {
+			return result, fmt.Errorf("filtering %s: %w", info.SHA, err)
+		}
+		return result, nil
+	}
+	download, err := run(buildTimeout, "mod", "download")
+	if err != nil {
+		return verdict{}, err
+	}
+	if download.err != nil || download.exit != 0 {
+		return verdict{reason: "module download failed"}, nil
+	}
 	test := append([]string{"test", "-count=1"}, patternsOf(direct)...)
 	steps := []struct {
-		rev, reason string
-		args        []string
-		repeat      int
+		rev, where string
+		fail       string
+		args       []string
+		timeout    time.Duration
 	}{
-		{info.Base, "build fails at base", []string{"build", "./..."}, 1},
-		{info.Base, "tests fail at base", test, 1},
-		{info.SHA, "build fails at commit", []string{"build", "./..."}, 1},
-		{info.SHA, "tests fail or are flaky at commit", test, 2},
+		{info.Base, "base", "build fails at base", []string{"build", "./..."}, buildTimeout},
+		{info.Base, "base", "tests fail at base", test, s.options.TestTimeout},
+		{info.SHA, "commit", "build fails at commit", []string{"build", "./..."}, buildTimeout},
+		{info.SHA, "commit", "tests fail at commit", test, s.options.TestTimeout},
+		{info.SHA, "commit", "flaky at commit", test, s.options.TestTimeout},
 	}
 	current := info.SHA
 	for _, step := range steps {
@@ -632,14 +732,12 @@ func (s *selector) expensive(ctx context.Context, info commitInfo) (verdict, err
 			}
 			current = step.rev
 		}
-		for range step.repeat {
-			result := runCommand(ctx, s.tree, s.options.TestTimeout, "go", step.args...)
-			if err := ctx.Err(); err != nil {
-				return verdict{}, fmt.Errorf("filtering %s: %w", info.SHA, err)
-			}
-			if result.err != nil || result.exit != 0 {
-				return verdict{reason: step.reason}, nil
-			}
+		result, err := run(step.timeout, step.args...)
+		if err != nil {
+			return verdict{}, err
+		}
+		if reason := stepFailure(result, step.where, step.fail); reason != "" {
+			return verdict{reason: reason}, nil
 		}
 	}
 	return verdict{direct: direct}, nil

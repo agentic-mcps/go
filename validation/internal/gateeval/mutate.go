@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -236,7 +237,7 @@ func loadTyped(ctx context.Context, tree string, dirs []string) map[string]typed
 	pkgs, err := packages.Load(&packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports |
 			packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax,
-		Context: ctx, Dir: tree, Env: commandEnv(), Fset: fset,
+		Context: ctx, Dir: tree, Env: evalEnv(), Fset: fset,
 	}, patterns...)
 	if err != nil {
 		return typed
@@ -417,17 +418,21 @@ type testID struct{ Package, Name string }
 
 // streamResult is what a go test -json run says about the tests.
 type streamResult struct {
-	Failed   []testID
-	BuildErr bool
-	TimedOut bool
+	Failed []testID
+	// FailedPackages lists packages with a package-level failure or a build
+	// failure, whether or not a test in them failed.
+	FailedPackages []string
+	BuildErr       bool
+	TimedOut       bool
 }
 
 // streamEvent is the subset of a go test -json event used here.
 type streamEvent struct {
-	Action  string `json:"Action"`
-	Package string `json:"Package"`
-	Test    string `json:"Test"`
-	Output  string `json:"Output"`
+	Action     string `json:"Action"`
+	Package    string `json:"Package"`
+	Test       string `json:"Test"`
+	Output     string `json:"Output"`
+	ImportPath string `json:"ImportPath"`
 }
 
 // scanTestStream extracts failing top-level tests, build failures and test
@@ -452,8 +457,12 @@ func scanTestStream(stream []byte) streamResult {
 				seen[id] = true
 				result.Failed = append(result.Failed, id)
 			}
+		case event.Action == "fail":
+			result.FailedPackages = append(result.FailedPackages, event.Package)
 		case event.Action == "build-fail":
 			result.BuildErr = true
+			path, _, _ := strings.Cut(event.ImportPath, " ")
+			result.FailedPackages = append(result.FailedPackages, path)
 		case event.Action == "output" && strings.Contains(event.Output, "panic: test timed out"):
 			result.TimedOut = true
 		}
@@ -487,6 +496,7 @@ type mutantSearch struct {
 	sources    map[string][]byte
 	results    map[int]mutantResult
 	directPkgs map[string]bool
+	baseline   *consumerBaseline
 	tree       string
 	modPath    string
 	direct     []string
@@ -497,6 +507,9 @@ type mutantSearch struct {
 
 // newMutantSearch prepares the search for the commit checked out in tree.
 func newMutantSearch(ctx context.Context, tree, base, rev, modPath string, direct []string, timeout time.Duration, maxTries int) (*mutantSearch, error) {
+	if len(direct) == 0 {
+		return nil, errNoDirect
+	}
 	sources, err := changedSources(ctx, tree, base, rev)
 	if err != nil {
 		return nil, err
@@ -568,10 +581,15 @@ func writeKeepingMode(full string, data []byte) error {
 	return nil
 }
 
-// goTestJSON runs go test -json with the evaluation environment.
-func goTestJSON(ctx context.Context, tree string, timeout time.Duration, factor int, patterns ...string) stepResult {
-	args := append([]string{"test", "-count=1", "-json", "-timeout", timeout.String()}, patterns...)
-	return runCommand(ctx, tree, time.Duration(factor)*timeout+30*time.Second, "go", args...)
+// errNoDirect reports a commit without any buildable direct package: running
+// go test with no package argument would test the root package by accident.
+var errNoDirect = errors.New("no buildable direct package")
+
+// goTestJSON runs go test -json with the evaluation environment. testArgs are
+// the flags and package patterns after the fixed ones.
+func goTestJSON(ctx context.Context, tree string, timeout time.Duration, factor int, testArgs ...string) stepResult {
+	args := append([]string{"test", "-count=1", "-json", "-timeout", timeout.String()}, testArgs...)
+	return runStep(ctx, tree, time.Duration(factor)*timeout+30*time.Second, "go", args...)
 }
 
 // try runs candidate i against the direct packages. Results are memoized.
@@ -581,6 +599,9 @@ func (m *mutantSearch) try(ctx context.Context, i int) (mutantResult, error) {
 	}
 	if _, err := m.apply(i); err != nil {
 		return mutantResult{}, err
+	}
+	if len(m.direct) == 0 {
+		return mutantResult{}, errNoDirect
 	}
 	run := goTestJSON(ctx, m.tree, m.timeout, 1, m.direct...)
 	if err := m.restore(i); err != nil {
@@ -615,11 +636,83 @@ func (m *mutantSearch) findKilling(ctx context.Context) (int, []TestRef, error) 
 		if result.outcome != mutantKilled {
 			continue
 		}
-		if oracle := oracleOf(m.tree, m.modPath, result.failed); len(oracle) > 0 {
+		oracle := oracleOf(m.tree, m.modPath, result.failed)
+		if len(oracle) == 0 {
+			continue
+		}
+		confirmed, err := m.confirm(ctx, i, oracle)
+		if err != nil {
+			return 0, nil, err
+		}
+		if confirmed {
 			return i, oracle, nil
 		}
+		m.results[i] = mutantResult{outcome: mutantUnusable} // flaky: it did not fail twice
 	}
 	return -1, nil, nil
+}
+
+// confirm reruns the oracle tests of candidate i once and reports whether every
+// one of them fails again.
+func (m *mutantSearch) confirm(ctx context.Context, i int, oracle []TestRef) (bool, error) {
+	names := map[string]bool{}
+	dirs := map[string]bool{}
+	for _, ref := range oracle {
+		dir, ok := dirOf(m.modPath, ref.Package)
+		if !ok {
+			return false, nil
+		}
+		names[regexp.QuoteMeta(ref.Name)] = true
+		dirs[dir] = true
+	}
+	pattern := "^(" + strings.Join(sortedKeys(names), "|") + ")$"
+	patterns := patternsOf(sortedKeys(dirs))
+	if _, err := m.apply(i); err != nil {
+		return false, err
+	}
+	run := goTestJSON(ctx, m.tree, m.timeout, 1, append([]string{"-run", pattern}, patterns...)...)
+	if err := m.restore(i); err != nil {
+		return false, err
+	}
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	if run.err != nil {
+		return false, nil
+	}
+	failed := map[testID]bool{}
+	for _, id := range scanTestStream(run.stdout).Failed {
+		failed[id] = true
+	}
+	for _, ref := range oracle {
+		if !failed[testID{Package: ref.Package, Name: ref.Name}] {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// sortedKeys returns the keys of a set in order.
+func sortedKeys(set map[string]bool) []string {
+	keys := make([]string, 0, len(set))
+	for key := range set {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// opCounts summarizes how many candidates each operator produced.
+func (m *mutantSearch) opCounts() string {
+	counts := make([]int, opCount+1)
+	for _, c := range m.cands {
+		counts[c.Op]++
+	}
+	parts := make([]string, 0, opCount)
+	for op := 1; op <= opCount; op++ {
+		parts = append(parts, fmt.Sprintf("op%d=%d", op, counts[op]))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // findConsumerBreak returns the first of at most three compiling candidates
@@ -650,9 +743,53 @@ func (m *mutantSearch) findConsumerBreak(ctx context.Context) (int, []TestRef, e
 	return -1, nil, nil
 }
 
+// errBaselineUnavailable reports that go test ./... did not complete on the
+// unmutated commit, so a consumer break cannot be told from a failure that was
+// already there.
+var errBaselineUnavailable = errors.New("consumer baseline unavailable")
+
+// consumerBaseline is what fails in go test ./... on the unmutated commit.
+type consumerBaseline struct {
+	tests  map[testID]bool
+	broken map[string]bool // packages that failed with no failing test of their own
+}
+
+// loadBaseline runs go test ./... once on the unmutated commit.
+func (m *mutantSearch) loadBaseline(ctx context.Context) error {
+	if m.baseline != nil {
+		return nil
+	}
+	run := goTestJSON(ctx, m.tree, m.timeout, consumerTimeoutFactor, "./...")
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if run.err != nil {
+		return fmt.Errorf("%w: %w", errBaselineUnavailable, run.err)
+	}
+	scan := scanTestStream(run.stdout)
+	baseline := &consumerBaseline{tests: map[testID]bool{}, broken: map[string]bool{}}
+	attributed := map[string]bool{}
+	for _, id := range scan.Failed {
+		baseline.tests[id] = true
+		attributed[id.Package] = true
+	}
+	for _, pkg := range scan.FailedPackages {
+		if !attributed[pkg] {
+			baseline.broken[pkg] = true
+		}
+	}
+	m.baseline = baseline
+	return nil
+}
+
 // consumerFailures runs go test ./... with candidate i applied and returns the
-// failing tests outside the direct packages.
+// failing tests outside the direct packages that do not also fail on the
+// unmutated commit (neither the same test nor a package that already fails
+// without a failing test of its own).
 func (m *mutantSearch) consumerFailures(ctx context.Context, i int) ([]testID, error) {
+	if err := m.loadBaseline(ctx); err != nil {
+		return nil, err
+	}
 	if _, err := m.apply(i); err != nil {
 		return nil, err
 	}
@@ -665,7 +802,7 @@ func (m *mutantSearch) consumerFailures(ctx context.Context, i int) ([]testID, e
 	}
 	var outside []testID
 	for _, id := range scanTestStream(run.stdout).Failed {
-		if !m.directPkgs[id.Package] {
+		if !m.directPkgs[id.Package] && !m.baseline.tests[id] && !m.baseline.broken[id.Package] {
 			outside = append(outside, id)
 		}
 	}
@@ -674,7 +811,7 @@ func (m *mutantSearch) consumerFailures(ctx context.Context, i int) ([]testID, e
 
 // modulePath returns the module path of the module rooted at tree.
 func modulePath(ctx context.Context, tree string) (string, error) {
-	result := runCommand(ctx, tree, time.Minute, "go", "list", "-m")
+	result := runStep(ctx, tree, time.Minute, "go", "list", "-m")
 	if result.err != nil {
 		return "", result.err
 	}

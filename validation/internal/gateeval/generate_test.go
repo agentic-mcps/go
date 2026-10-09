@@ -119,6 +119,8 @@ func newGenFixture(t *testing.T) genFixture {
 	writeFile(t, dir, "util_test.go", genUtilTestV1)
 	writeFile(t, dir, "consumer/consumer.go", genConsumer)
 	writeFile(t, dir, "consumer/consumer_test.go", genConsumerT)
+	writeFile(t, dir, "other/other.go", "package other\n\n// Always is one.\nfunc Always() int { return 1 }\n")
+	writeFile(t, dir, "other/other_test.go", "package other\n\nimport \"testing\"\n\nfunc TestPreexistingFailure(t *testing.T) { t.Fatal(\"fails at every commit\") }\n")
 	commits := map[string]string{"c0": commitAll(t, dir, "c0")}
 	writeFile(t, dir, "calc.go", genCalcV2)
 	writeFile(t, dir, "calc_test.go", genTestV2)
@@ -172,6 +174,8 @@ func variantsByID(t *testing.T, path string) map[string]Variant {
 }
 
 func TestGenerateBuildsEveryVariantAndResumes(t *testing.T) {
+	// CI=true must not leak into the code under test: D1 skips only when CI is unset.
+	t.Setenv("CI", "true")
 	f := newGenFixture(t)
 	work := t.TempDir()
 	cloneDir := filepath.Join(work, "w", "clones", "proj")
@@ -258,12 +262,16 @@ func TestGenerateBuildsEveryVariantAndResumes(t *testing.T) {
 		}
 		got[e.Class] = e.Reason
 	}
+	if reason := got[ClassMutant]; reason != "no killing mutant (op1=0, op2=0, op3=1, op4=0, op5=1)" {
+		t.Errorf("M reason = %q, want the per-operator candidate counts", reason)
+	}
+	got[ClassMutant] = "no killing mutant"
 	want := map[Class]string{ClassMutant: "no killing mutant", ClassConsumerBreak: "no consumer break", ClassDroppedErr: "no compiling candidate"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("exclusions = %v, want %v", got, want)
 	}
 
-	assertResumes(t, options, c1)
+	assertResumes(t, options, cloneDir, c1)
 }
 
 func checkMutant(t *testing.T, m Variant) {
@@ -322,7 +330,7 @@ func checkBranches(t *testing.T, clone string, byID map[string]Variant, f genFix
 }
 
 // assertResumes reruns Generate unchanged, then after dropping variant lines.
-func assertResumes(t *testing.T, options GenerateOptions, commit string) {
+func assertResumes(t *testing.T, options GenerateOptions, clone, commit string) {
 	t.Helper()
 	read := func(path string) string {
 		data, err := os.ReadFile(path)
@@ -332,6 +340,11 @@ func assertResumes(t *testing.T, options GenerateOptions, commit string) {
 		return string(data)
 	}
 	before, beforeExcl := read(options.Out), read(options.ExclusionsOut)
+	shaOf := func(key string) string { return runGit(t, clone, "rev-parse", "gateeval/"+key) }
+	wasSHA := map[string]string{}
+	for _, class := range []string{"C1", "D6", "S1"} {
+		wasSHA[class] = shaOf("proj-" + commit[:7] + "-" + class)
+	}
 	if err := Generate(context.Background(), options); err != nil {
 		t.Fatal(err)
 	}
@@ -371,6 +384,11 @@ func assertResumes(t *testing.T, options GenerateOptions, commit string) {
 	}
 	if read(options.ExclusionsOut) != beforeExcl {
 		t.Error("resuming must not duplicate exclusions")
+	}
+	for class, was := range wasSHA {
+		if now := shaOf("proj-" + commit[:7] + "-" + class); now != was {
+			t.Errorf("%s regenerated as %s, want the identical commit %s", class, now, was)
+		}
 	}
 }
 

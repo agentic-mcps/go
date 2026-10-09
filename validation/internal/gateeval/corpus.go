@@ -1,13 +1,16 @@
 package gateeval
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Identity of every commit the evaluation creates.
@@ -15,6 +18,60 @@ const (
 	evalIdentity = "gateeval"
 	evalEmail    = "gateeval@example.invalid"
 )
+
+// commitDate is the fixed author and committer date of every evaluation commit,
+// so regenerating a variant yields the same commit hash.
+const commitDate = "2026-01-01T00:00:00Z"
+
+// errStepTimeout marks a command that ran out of time.
+var errStepTimeout = errors.New("timed out")
+
+// evalEnv is the environment of every command the generator and selector run:
+// the process environment without CI (a CI variable changes what the code
+// under test does, for example a skip guarded by CI), plus the evaluation's Go
+// settings.
+func evalEnv() []string {
+	env := make([]string, 0, len(os.Environ())+2)
+	for _, entry := range os.Environ() {
+		if entry == "CI" || strings.HasPrefix(entry, "CI=") {
+			continue
+		}
+		env = append(env, entry)
+	}
+	return append(env, "GOFLAGS=-mod=mod", "GOTOOLCHAIN=local")
+}
+
+// runStep runs one command in dir under its own timeout with evalEnv.
+func runStep(ctx context.Context, dir string, timeout time.Duration, name string, args ...string) stepResult {
+	cmdCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	cmd := exec.CommandContext(cmdCtx, name, args...)
+	cmd.Dir = dir
+	cmd.Env = evalEnv()
+	cmd.WaitDelay = 10 * time.Second
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	start := time.Now()
+	err := cmd.Run()
+	result := stepResult{stdout: stdout.Bytes(), stderr: stderr.Bytes(), duration: time.Since(start)}
+	if err == nil {
+		return result
+	}
+	label := name + " " + strings.Join(args, " ")
+	var exitErr *exec.ExitError
+	switch {
+	case ctx.Err() != nil:
+		result.err = fmt.Errorf("%s: canceled: %w", label, ctx.Err())
+	case cmdCtx.Err() != nil:
+		result.err = fmt.Errorf("%s: %w after %s", label, errStepTimeout, timeout)
+	case errors.As(err, &exitErr) && exitErr.ExitCode() >= 0:
+		result.exit = exitErr.ExitCode()
+	default:
+		result.err = fmt.Errorf("%s: %w", label, err)
+	}
+	return result
+}
 
 // LoadCorpus reads the corpus CSV (header project,url,pinned) in file order.
 func LoadCorpus(path string) ([]Project, error) {
@@ -131,10 +188,13 @@ func commitPaths(ctx context.Context, dir string, paths []string, message string
 	if strings.TrimSpace(string(staged)) == "" {
 		return "", errors.New("edit changed nothing")
 	}
-	if _, err = git(ctx, dir,
+	commit := exec.CommandContext(ctx, "git",
 		"-c", "user.name="+evalIdentity, "-c", "user.email="+evalEmail,
-		"-c", "commit.gpgsign=false", "commit", "--quiet", "--no-verify", "-m", message); err != nil {
-		return "", err
+		"-c", "commit.gpgsign=false", "commit", "--quiet", "--no-verify", "-m", message)
+	commit.Dir = dir
+	commit.Env = append(os.Environ(), "GIT_AUTHOR_DATE="+commitDate, "GIT_COMMITTER_DATE="+commitDate)
+	if out, commitErr := commit.CombinedOutput(); commitErr != nil {
+		return "", fmt.Errorf("git commit: %w: %s", commitErr, strings.TrimSpace(string(out)))
 	}
 	head, err := git(ctx, dir, "rev-parse", "HEAD")
 	if err != nil {

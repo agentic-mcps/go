@@ -5,8 +5,11 @@ Command-line driver for the gate evaluation defined in
 the flawed variants, runs the arms, and scores the runs. The protocol is
 normative; this file only lists the commands.
 
-Every step is resumable: rerun the same command after an interruption and it
-continues from the files already written.
+Every step can be rerun after an interruption. `select` resumes per project: a
+project is finished once its `complete: <project>` line is in the exclusions file,
+a rerun skips finished projects and keeps their lines, and an interrupted project
+is redone from scratch (its partial lines are dropped). `generate` and `run`
+resume per variant and per run. No step deletes results of finished work.
 
 ## Environment
 
@@ -66,8 +69,11 @@ Exit status: 0 on success, 1 on a runtime failure, 2 on a usage error.
 ## Files
 
 - `selections.jsonl`: one line per mined commit and the strata it belongs to.
-- `select-exclusions.jsonl`: commits that failed the build or test filters, plus
-  one `static: N scanned, M kept` line per project and stratum.
+- `select-exclusions.jsonl`: commits that failed the build or test filters (with a
+  reason such as `build fails at base`, `tests fail at commit`, `flaky at commit`,
+  `timed out at base`, `module download failed`), one `static main: N scanned, M kept`
+  and one `static destructive: ...` line per project, and one `complete: <project>`
+  line per finished project.
 - `variants.jsonl`: one line per variant; the tree is the branch named in the line.
 - `generate-exclusions.jsonl`: variants that could not be built, with the reason.
 - `runs.jsonl`: one line per arm execution.

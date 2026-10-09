@@ -1,6 +1,7 @@
 package gateeval
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 
 	"golang.org/x/tools/imports"
 )
@@ -45,11 +47,85 @@ func coverUpSource(class Class, filename string, src []byte, tests []string) ([]
 	if err != nil {
 		return nil, err
 	}
-	fixed, err := imports.Process(filename, out, nil)
+	return finishEdit(filename, src, out)
+}
+
+// errFormattingNoise reports an edit whose cleanup would have rewritten parts
+// of the file the edit did not touch.
+var errFormattingNoise = errors.New("formatting noise")
+
+// finishEdit fixes the imports of an edited file. When the original is already
+// gofmt-clean the whole-file result of imports.Process is used. Otherwise
+// formatting the whole file would add noise to the diff, so only the edit and
+// the import block change: the edited text is kept as is, and its import block
+// is replaced by the one imports.Process computed.
+func finishEdit(filename string, original, edited []byte) ([]byte, error) {
+	formatted, err := imports.Process(filename, edited, nil)
 	if err != nil {
 		return nil, fmt.Errorf("formatting %s: %w", filename, err)
 	}
-	return fixed, nil
+	cleanOriginal, err := imports.Process(filename, original, nil)
+	if err != nil {
+		return nil, fmt.Errorf("formatting %s: %w", filename, err)
+	}
+	if bytes.Equal(cleanOriginal, original) {
+		return formatted, nil
+	}
+	return swapImportBlock(edited, formatted)
+}
+
+// importSpan returns the byte range of the import declarations of src.
+func importSpan(src []byte) (start, end int, imports string, ok bool, err error) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "", src, parser.ImportsOnly|parser.ParseComments)
+	if err != nil {
+		return 0, 0, "", false, err
+	}
+	var specs []string
+	for _, spec := range file.Imports {
+		name := ""
+		if spec.Name != nil {
+			name = spec.Name.Name
+		}
+		specs = append(specs, name+" "+spec.Path.Value)
+	}
+	sort.Strings(specs)
+	imports = strings.Join(specs, "\n")
+	first, last := token.NoPos, token.NoPos
+	for _, decl := range file.Decls {
+		if gen, isGen := decl.(*ast.GenDecl); isGen && gen.Tok == token.IMPORT {
+			if first == token.NoPos {
+				first = gen.Pos()
+			}
+			last = gen.End()
+		}
+	}
+	if first == token.NoPos {
+		return 0, 0, imports, false, nil
+	}
+	return fset.Position(first).Offset, fset.Position(last).Offset, imports, true, nil
+}
+
+// swapImportBlock replaces the import declarations of raw by those of formatted
+// when their import sets differ, and leaves every other byte of raw alone.
+func swapImportBlock(raw, formatted []byte) ([]byte, error) {
+	rawStart, rawEnd, rawSet, rawOK, err := importSpan(raw)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", errFormattingNoise, err)
+	}
+	fmtStart, fmtEnd, fmtSet, fmtOK, err := importSpan(formatted)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", errFormattingNoise, err)
+	}
+	if rawSet == fmtSet {
+		return raw, nil
+	}
+	if !rawOK || !fmtOK {
+		return nil, fmt.Errorf("%w: cannot adjust imports without an import block", errFormattingNoise)
+	}
+	out := append([]byte(nil), raw[:rawStart]...)
+	out = append(out, formatted[fmtStart:fmtEnd]...)
+	return append(out, raw[rawEnd:]...), nil
 }
 
 // topLevelFunc finds a function (not a method) by name.

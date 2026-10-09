@@ -419,10 +419,10 @@ func TestSelectFiltersMinesAndExcludes(t *testing.T) {
 	}
 	sort.Strings(static)
 	// 10 commits including the root; good, breaks, fixes, weakens pass the static filter.
-	if want := []string{"static: 10 scanned, 1 kept", "static: 10 scanned, 4 kept"}; !reflect.DeepEqual(static, want) {
+	if want := []string{"complete: proj", "static destructive: 10 scanned, 1 kept", "static main: 10 scanned, 4 kept"}; !reflect.DeepEqual(static, want) {
 		t.Errorf("static summaries = %v, want %v", static, want)
 	}
-	if got := reasons[f.commits["breaks"]]; got != "tests fail or are flaky at commit" {
+	if got := reasons[f.commits["breaks"]]; got != "tests fail at commit" {
 		t.Errorf("breaks reason = %q", got)
 	}
 	if got := reasons[f.commits["fixes"]]; got != "tests fail at base" {

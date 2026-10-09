@@ -158,6 +158,14 @@ func (g *generator) selection(ctx context.Context, selection Selection) error {
 	if err := cs.prepare(ctx); err != nil {
 		return err
 	}
+	if len(cs.direct) == 0 {
+		for _, class := range []Class{ClassStub, ClassDroppedErr, ClassMutant, ClassConsumerBreak} {
+			if err := cs.exclude(class, errNoDirect.Error()); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	for _, class := range []Class{ClassStub, ClassDroppedErr} {
 		if err := cs.standalone(ctx, class); err != nil {
 			return err
@@ -299,8 +307,11 @@ func (cs *commitState) standalone(ctx context.Context, class Class) error {
 
 // directPasses reports whether go test of the direct packages passes in the tree.
 func (cs *commitState) directPasses(ctx context.Context) (bool, error) {
-	args := append([]string{"test", "-count=1"}, cs.direct...)
-	result := runCommand(ctx, cs.tree, cs.options.TestTimeout, "go", args...)
+	if len(cs.direct) == 0 {
+		return false, errNoDirect
+	}
+	args := append([]string{"test", "-count=1", "-timeout", cs.options.TestTimeout.String()}, cs.direct...)
+	result := runStep(ctx, cs.tree, cs.options.TestTimeout, "go", args...)
 	if err := ctx.Err(); err != nil {
 		return false, err
 	}
@@ -356,18 +367,24 @@ func (cs *commitState) searchMutants(ctx context.Context, needM, needS2 bool) er
 			return err
 		}
 	}
+	consumerNone := "no consumer break"
 	if needS2 {
-		if consumerIndex, consumerOracle, err = search.findConsumerBreak(ctx); err != nil {
+		consumerIndex, consumerOracle, err = search.findConsumerBreak(ctx)
+		if errors.Is(err, errBaselineUnavailable) {
+			consumerIndex, consumerNone, err = -1, errBaselineUnavailable.Error(), nil
+		}
+		if err != nil {
 			return err
 		}
 	}
 	if needM {
-		if err := cs.publishMutant(ctx, search, ClassMutant, killIndex, killOracle, "no killing mutant"); err != nil {
+		none := "no killing mutant (" + search.opCounts() + ")"
+		if err := cs.publishMutant(ctx, search, ClassMutant, killIndex, killOracle, none); err != nil {
 			return err
 		}
 	}
 	if needS2 {
-		return cs.publishMutant(ctx, search, ClassConsumerBreak, consumerIndex, consumerOracle, "no consumer break")
+		return cs.publishMutant(ctx, search, ClassConsumerBreak, consumerIndex, consumerOracle, consumerNone)
 	}
 	return nil
 }
@@ -400,6 +417,9 @@ func (cs *commitState) derive(ctx context.Context, mutant Variant, class Class) 
 	if err != nil {
 		if ctx.Err() != nil {
 			return ctx.Err()
+		}
+		if errors.Is(err, errFormattingNoise) {
+			return cs.exclude(class, errFormattingNoise.Error())
 		}
 		return cs.exclude(class, "not applicable: "+err.Error())
 	}

@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
-
-	"golang.org/x/tools/imports"
 )
 
 // stubBody is the body S1 gives a function.
@@ -163,11 +161,14 @@ type flawSearch struct {
 // package builds. The accepted edit stays in the tree; a rejected one is
 // undone. It returns the accepted candidate's index, or -1 when none builds.
 func (f *flawSearch) firstCompiling(ctx context.Context, cands []flawCandidate) (int, error) {
+	if len(f.direct) == 0 {
+		return -1, errNoDirect
+	}
 	for i, c := range cands {
 		full := filepath.Join(f.tree, filepath.FromSlash(c.File))
 		out, err := applyTextEdits(f.sources[c.File], c.Edits)
 		if err == nil {
-			out, err = imports.Process(full, out, nil)
+			out, err = finishEdit(full, f.sources[c.File], out)
 		}
 		if err != nil {
 			continue
@@ -175,7 +176,7 @@ func (f *flawSearch) firstCompiling(ctx context.Context, cands []flawCandidate) 
 		if err := writeKeepingMode(full, out); err != nil {
 			return -1, err
 		}
-		result := runCommand(ctx, f.tree, f.timeout, "go", append([]string{"build"}, f.direct...)...)
+		result := runStep(ctx, f.tree, f.timeout, "go", append([]string{"build"}, f.direct...)...)
 		if err := ctx.Err(); err != nil {
 			return -1, err
 		}
