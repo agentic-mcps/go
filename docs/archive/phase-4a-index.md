@@ -2,7 +2,7 @@
 
 > **Release status:** v0.1.0 implements only the concurrency and errors
 > domains. The remaining five domains and `go_audit_all` are roadmap scope;
-> see [v0.1.0-release-scope.md](v0.1.0-release-scope.md).
+> see [v0.1.0-release-scope.md](../v0.1.0-release-scope.md).
 
 Read `contracts.md` first — it defines `Finding`, `AuditResult`,
 `Severity`, `Location`, the canonical `go/analysis` pass skeleton, the

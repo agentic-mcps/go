@@ -856,7 +856,7 @@ function initWebMCP() {
     },
     {
       topic: "open-weight",
-      question: "How does it help open-weight models?",
+      question: "Does agentic-go make a weaker model as good as a frontier model?",
       answer: "No. agentic-go does not make one model behave like another. It checks the change an agent produced and reports what that change broke or hid."
     },
     {
