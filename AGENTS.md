@@ -19,9 +19,9 @@ changing frozen schemas, MCP interfaces, cached-state upgrades, or v1 release
 evidence.
 
 For a rule change, also read the matching domain specification:
-[`docs/phase-4a-concurrency.md`](docs/phase-4a-concurrency.md) or
-[`docs/phase-4a-errors.md`](docs/phase-4a-errors.md). For release work, read
-[`docs/phase-6-release-polish.md`](docs/phase-6-release-polish.md).
+[`docs/archive/phase-4a-concurrency.md`](docs/archive/phase-4a-concurrency.md) or
+[`docs/archive/phase-4a-errors.md`](docs/archive/phase-4a-errors.md). For release work, read
+[`docs/archive/phase-6-release-polish.md`](docs/archive/phase-6-release-polish.md).
 
 ## Invariants
 

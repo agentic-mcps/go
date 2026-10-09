@@ -857,7 +857,7 @@ function initWebMCP() {
     {
       topic: "open-weight",
       question: "How does it help open-weight models?",
-      answer: "Open models (DeepSeek, Llama, Qwen, Mistral) excel at code generation, but often lack closed-lab tool harnesses. agentic-go gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification - producing results on par with proprietary frontier setups."
+      answer: "No. agentic-go does not make one model behave like another. It checks the change an agent produced and reports what that change broke or hid."
     },
     {
       topic: "git",
