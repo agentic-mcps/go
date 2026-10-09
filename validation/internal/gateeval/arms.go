@@ -311,6 +311,16 @@ func runCommand(ctx context.Context, dir string, timeout time.Duration, name str
 	cmd := exec.CommandContext(cmdCtx, name, args...)
 	cmd.Dir = dir
 	cmd.Env = commandEnv()
+	if filepath.Base(name) == "golangci-lint" {
+		// The shared lint cache returns stale results across worktrees with
+		// --new-from-rev, so every invocation gets a fresh one.
+		cacheDir, err := os.MkdirTemp("", "golangci-lint-cache-")
+		if err != nil {
+			return stepResult{err: fmt.Errorf("creating lint cache directory: %w", err)}
+		}
+		defer func() { _ = os.RemoveAll(cacheDir) }()
+		cmd.Env = append(cmd.Env, "GOLANGCI_LINT_CACHE="+cacheDir)
+	}
 	cmd.WaitDelay = 10 * time.Second
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

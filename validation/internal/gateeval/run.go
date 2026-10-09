@@ -523,8 +523,9 @@ func writeFileAtomic(path string, data []byte) error {
 	return nil
 }
 
-// lintRefVersion changes when the cached form of reference lint changes.
-const lintRefVersion = 1
+// lintRefVersion changes when the cached form of reference lint changes or
+// its contents are no longer trusted (version 2: lint runs with its own cache).
+const lintRefVersion = 2
 
 // lintRefFile is the cached form of a reference lint run.
 type lintRefFile struct {

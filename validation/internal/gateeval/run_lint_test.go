@@ -151,7 +151,7 @@ func TestRunArmsB2StarIgnoresLintIssuesOfTheUnmodifiedCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reference cache: %v", err)
 	}
-	if !strings.Contains(string(cached), `"version":1`) || !strings.Contains(string(cached), `"linter":"fakelint"`) || strings.Contains(string(cached), `"line"`) {
+	if !strings.Contains(string(cached), `"version":2`) || !strings.Contains(string(cached), `"linter":"fakelint"`) || strings.Contains(string(cached), `"line"`) {
 		t.Errorf("reference cache = %s, want versioned issues without line numbers", cached)
 	}
 
