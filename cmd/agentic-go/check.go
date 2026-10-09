@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"strings"
@@ -31,6 +32,8 @@ const (
 	checkMaxBlocks = 3
 	// checkMaxPackagesLimit is the largest accepted --max-packages value.
 	checkMaxPackagesLimit = 500
+	// checkSessionStartTimeout bounds the command SessionStart runs.
+	checkSessionStartTimeout = 10 * time.Second
 
 	checkHookClaude = "claude"
 	checkHookCodex  = "codex"
@@ -41,8 +44,10 @@ const (
 	checkPlanMode          = "plan"
 )
 
-// checkProfileBudgets mirrors the gate's profile time budgets so the runner
-// timeout can be sized before the gate exists.
+// checkProfileBudgets duplicates the profile budgets in internal/gate/gate.go
+// (the profiles table) so the runner timeout can be sized before the gate
+// exists. Keep them equal; TestCheckRunnerTimeoutCoversTheBudget pins the
+// values this command assumes.
 var checkProfileBudgets = map[gate.Profile]time.Duration{
 	gate.ProfileHook:  120 * time.Second,
 	gate.ProfileLocal: 10 * time.Minute,
@@ -55,25 +60,53 @@ type checkRunner interface {
 }
 
 // checkEnvironment is everything one check run needs. store is nil when the
-// state directory is unavailable; head returns the current commit or an empty
-// string when the repository has none.
+// state directory is unavailable.
 type checkEnvironment struct {
 	gate  checkRunner
 	store *gate.Store
-	head  func(context.Context) string
 	close func()
 }
 
 // checkDependencies are the seams of runCheck: tests replace them to avoid the
 // real workspace, Go toolchain, and state directory.
 type checkDependencies struct {
-	open   func(ctx context.Context, root string, timeout time.Duration, stderr io.Writer) (checkEnvironment, error)
-	getenv func(string) string
-	stdin  io.Reader
+	open      func(ctx context.Context, root string, timeout time.Duration, stderr io.Writer) (checkEnvironment, error)
+	openStore func(root string) (*gate.Store, error)
+	startHead func(ctx context.Context, root string) string
+	getenv    func(string) string
+	stdin     io.Reader
 }
 
 func defaultCheckDependencies() checkDependencies {
-	return checkDependencies{open: openCheckEnvironment, getenv: os.Getenv, stdin: os.Stdin}
+	return checkDependencies{
+		open: openCheckEnvironment, openStore: openSessionStore, startHead: gitStartHead,
+		getenv: os.Getenv, stdin: os.Stdin,
+	}
+}
+
+// openSessionStore opens the state store the gate itself would use for root.
+// The gate keys its store by the symlink-resolved workspace root, so the
+// session recorded at SessionStart must be keyed the same way.
+func openSessionStore(root string) (*gate.Store, error) {
+	resolved, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return nil, fmt.Errorf("resolving workspace path: %w", err)
+	}
+	return gate.OpenStore(resolved)
+}
+
+// gitStartHead returns the current commit of the repository at root, or an
+// empty string when there is none (an empty repository, or no git).
+func gitStartHead(ctx context.Context, root string) string {
+	ctx, cancel := context.WithTimeout(ctx, checkSessionStartTimeout)
+	defer cancel()
+	command := exec.CommandContext(ctx, "git", "rev-parse", "HEAD")
+	command.Dir = root
+	output, err := command.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(output))
 }
 
 // openCheckEnvironment builds the real workspace, runner, store, and gate. A
@@ -96,15 +129,7 @@ func openCheckEnvironment(ctx context.Context, root string, timeout time.Duratio
 	if err != nil {
 		return checkEnvironment{}, fmt.Errorf("gate setup failed: %w", err)
 	}
-	git := gate.NewGit(runner, ws.Root())
-	head := func(ctx context.Context) string {
-		out, err := git(ctx, "rev-parse", "HEAD")
-		if err != nil {
-			return ""
-		}
-		return strings.TrimSpace(string(out))
-	}
-	return checkEnvironment{gate: g, store: store, head: head, close: func() {}}, nil
+	return checkEnvironment{gate: g, store: store, close: func() {}}, nil
 }
 
 // checkConfig is the parsed command line of agentic-go check.
@@ -129,13 +154,9 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 }
 
 func runCheckWithDependencies(args []string, stdout, stderr io.Writer, deps checkDependencies) int {
-	config, ok := parseCheckFlags(args, stderr)
+	config, exit, ok := parseCheckFlags(args, stderr)
 	if !ok {
-		// A misconfigured hook must not block an agent: exit 2 would.
-		if checkWantsHook(args) {
-			return 0
-		}
-		return 2
+		return exit
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -157,10 +178,12 @@ func checkWantsHook(args []string) bool {
 	return false
 }
 
-func parseCheckFlags(args []string, stderr io.Writer) (checkConfig, bool) {
+// parseCheckFlags parses the command line. When ok is false the caller returns
+// exit: 0 for --help, 2 for usage errors, and 0 for a hook invocation, because
+// a misconfigured hook must not block an agent (exit 2 would).
+func parseCheckFlags(args []string, stderr io.Writer) (config checkConfig, exit int, ok bool) {
 	flags := flag.NewFlagSet("agentic-go check", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	var config checkConfig
 	flags.StringVar(&config.workspace, "workspace", ".", "Go workspace root")
 	flags.StringVar(&config.base, "base", "", "base ref to compare against; empty detects it")
 	flags.StringVar(&config.profile, "profile", "", "profile: local, hook, or ci (default local, ci when CI=true)")
@@ -173,13 +196,23 @@ func parseCheckFlags(args []string, stderr io.Writer) (checkConfig, bool) {
 	flags.DurationVar(&config.budget, "budget", 0, "time budget for the whole run; 0 selects the profile default")
 	flags.BoolVar(&config.noCache, "no-cache", false, "ignore cached results")
 	if err := flags.Parse(args); err != nil {
-		return checkConfig{}, false
+		if errors.Is(err, flag.ErrHelp) {
+			return checkConfig{}, 0, false
+		}
+		return checkConfig{}, checkUsageExit(args), false
 	}
 	if err := validateCheckConfig(config, flags.Args()); err != nil {
 		_, _ = fmt.Fprintf(stderr, "agentic-go check: %v\n", err)
-		return checkConfig{}, false
+		return checkConfig{}, checkUsageExit(args), false
 	}
-	return config, true
+	return config, 0, true
+}
+
+func checkUsageExit(args []string) int {
+	if checkWantsHook(args) {
+		return 0
+	}
+	return 2
 }
 
 func validateCheckConfig(config checkConfig, extra []string) error {
@@ -312,7 +345,7 @@ func runCheckHook(ctx context.Context, config checkConfig, stdout, stderr io.Wri
 	}
 	switch event.Name {
 	case checkEventSessionStart:
-		if err := recordSessionStart(ctx, config, root, event, stderr, deps); err != nil {
+		if err := recordSessionStart(ctx, root, event, deps); err != nil {
 			_, _ = fmt.Fprintf(stderr, "agentic-go check: recording session start: %v\n", err)
 		}
 	case checkEventStop, checkEventSubagentStop:
@@ -349,32 +382,25 @@ func findGoRoot(start string) (string, bool) {
 }
 
 // recordSessionStart remembers the commit an agent session started from so
-// earlier human commits are not blamed on the agent.
-func recordSessionStart(ctx context.Context, config checkConfig, root string, event gate.HookEvent, stderr io.Writer, deps checkDependencies) error {
-	env, err := deps.open(ctx, root, config.timeout(gate.ProfileHook), stderr)
+// earlier human commits are not blamed on the agent. It runs the VCS command
+// directly in root and never builds the workspace, so it stays fast.
+func recordSessionStart(ctx context.Context, root string, event gate.HookEvent, deps checkDependencies) error {
+	store, err := deps.openStore(root)
 	if err != nil {
 		return err
 	}
-	if env.close != nil {
-		defer env.close()
-	}
-	if env.store == nil {
-		return errors.New("no state directory")
-	}
-	session, err := env.store.LoadSession(event.SessionID)
+	session, err := store.LoadSession(event.SessionID)
 	if err != nil {
 		return err
 	}
 	if session.StartHead != "" {
 		return nil
 	}
-	if env.head != nil {
-		session.StartHead = env.head(ctx)
-	}
+	session.StartHead = deps.startHead(ctx, root)
 	if session.StartHead == "" {
 		return nil
 	}
-	return env.store.SaveSession(session)
+	return store.SaveSession(session)
 }
 
 // decideHookStop runs the gate for a Stop event and applies the stop policy.

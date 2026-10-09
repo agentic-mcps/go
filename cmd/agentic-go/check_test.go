@@ -68,11 +68,15 @@ func (h *checkHarness) deps() checkDependencies {
 			if h.openErr != nil {
 				return checkEnvironment{}, h.openErr
 			}
-			return checkEnvironment{
-				gate: h.gate, store: h.store, close: func() {},
-				head: func(context.Context) string { return h.head },
-			}, nil
+			return checkEnvironment{gate: h.gate, store: h.store, close: func() {}}, nil
 		},
+		openStore: func(string) (*gate.Store, error) {
+			if h.store == nil {
+				return nil, errors.New("no state directory")
+			}
+			return h.store, nil
+		},
+		startHead: func(context.Context, string) string { return h.head },
 	}
 }
 
@@ -235,6 +239,16 @@ func TestCheckOutputFormats(t *testing.T) {
 	})
 }
 
+func TestCheckHelpExitsZero(t *testing.T) {
+	for _, flagName := range []string{"-h", "--help"} {
+		h := newCheckHarness(t)
+		exit, stdout, stderr := h.run(flagName)
+		if exit != 0 || stdout != "" || !strings.Contains(stderr, "Usage of agentic-go check") {
+			t.Fatalf("%s: exit=%d stdout=%q stderr=%q", flagName, exit, stdout, stderr)
+		}
+	}
+}
+
 func TestCheckUsageAndSetupErrors(t *testing.T) {
 	tests := []struct {
 		name string
@@ -358,8 +372,8 @@ func TestHookSessionStartRecordsHead(t *testing.T) {
 	if session.StartHead != "abc123" {
 		t.Fatalf("StartHead = %q, want abc123", session.StartHead)
 	}
-	if len(h.gate.options) != 0 {
-		t.Fatal("SessionStart must not run the gate")
+	if len(h.gate.options) != 0 || h.openedRoot != "" {
+		t.Fatal("SessionStart must neither run nor build the gate")
 	}
 
 	// A later start event (resume) keeps the original head.
