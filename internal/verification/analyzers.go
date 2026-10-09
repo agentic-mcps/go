@@ -130,7 +130,7 @@ func (e *Engine) runAnalyzerChecks(ctx context.Context, change ChangeAnalysis, d
 			}
 			outcome.Evidence = append(outcome.Evidence, Evidence{
 				CheckID: spec.checkID, Kind: spec.kind, Status: EvidenceError,
-				Summary: spec.label + " analyzer baseline could not be compared",
+				Summary: analyzerErrorSummary(spec.label, currentErr),
 				Error:   portableCheckError(combined, roots...), Analysis: &summary,
 			})
 			outcome.Uncertainties = append(outcome.Uncertainties, unavailableAnalyzerUncertainties(spec, current.Findings, currentErr, baseErr, roots...)...)
@@ -148,6 +148,15 @@ func (e *Engine) runAnalyzerChecks(ctx context.Context, change ChangeAnalysis, d
 	}
 	sort.Slice(outcome.Evidence, func(i, j int) bool { return outcome.Evidence[i].CheckID < outcome.Evidence[j].CheckID })
 	return outcome, nil
+}
+
+// analyzerErrorSummary tells an analyzer that could not inspect the current
+// snapshot apart from one whose baseline could not be compared.
+func analyzerErrorSummary(label string, currentErr error) string {
+	if currentErr != nil {
+		return label + " analyzer could not analyze the current snapshot"
+	}
+	return label + " analyzer baseline could not be compared"
 }
 
 func unavailableAnalyzerUncertainties(spec analyzerSpec, current []finding.Finding, currentErr, baseErr error, roots ...string) []Uncertainty {
