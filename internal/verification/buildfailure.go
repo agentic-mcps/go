@@ -17,7 +17,9 @@ const (
 	maxCompilerErrorBytes = 4096
 )
 
-var compilerPositionPattern = regexp.MustCompile(`^(\S+\.go):([0-9]+):([0-9]+): `)
+// compilerPositionPattern matches "file.go:line:col: " and the "file.go:line: "
+// form go test prints for some errors under -coverpkg.
+var compilerPositionPattern = regexp.MustCompile(`^(\S+\.go):([0-9]+):(?:([0-9]+):)? `)
 
 func (e *Engine) buildFailureFinding(build buildFailure) Finding {
 	excerpt := compilerErrorExcerpt(build.output)
@@ -31,7 +33,7 @@ func (e *Engine) buildFailureFinding(build buildFailure) Finding {
 	}
 }
 
-// compilerErrorExcerpt keeps the positioned "file:line:col: message" lines of
+// compilerErrorExcerpt keeps the positioned "file:line[:col]: message" lines of
 // compiler output, bounded by line count and bytes. Output without positions
 // (for example a go command setup error) keeps its non-header lines instead.
 func compilerErrorExcerpt(output string) string {
@@ -80,10 +82,15 @@ func (e *Engine) compilerLocation(excerpt string) *Location {
 		if err != nil {
 			continue
 		}
-		row, rowErr := strconv.Atoi(match[2])
-		col, colErr := strconv.Atoi(match[3])
-		if rowErr != nil || colErr != nil {
+		row, err := strconv.Atoi(match[2])
+		if err != nil {
 			continue
+		}
+		col := 0
+		if match[3] != "" {
+			if col, err = strconv.Atoi(match[3]); err != nil {
+				continue
+			}
 		}
 		return &Location{File: file, Line: row, Col: col}
 	}

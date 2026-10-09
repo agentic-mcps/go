@@ -1,9 +1,15 @@
 package verification
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/agentic-mcps/go/internal/workspace"
 )
 
 func TestCompilerErrorExcerpt(t *testing.T) {
@@ -37,8 +43,13 @@ func TestCompilerErrorExcerpt(t *testing.T) {
 			want:   "setup failed: no Go files", wantLines: 1,
 		},
 		{
-			name:   "line positions without a column are not compiler positions",
-			output: "a/a.go:5: not a compiler error\na/a.go:6:1: real error\n",
+			name:   "line positions without a column are kept",
+			output: "# example.test/a\na/a.go:5: error printed under -coverpkg\na/a.go:6:1: real error\n",
+			want:   "a/a.go:5: error printed under -coverpkg\na/a.go:6:1: real error", wantLines: 2,
+		},
+		{
+			name:   "near miss: a file name without a line is not a position",
+			output: "a/a.go: cannot read\na/a.go:6:1: real error\n",
 			want:   "a/a.go:6:1: real error", wantLines: 1,
 		},
 		{name: "bounds line count", output: strings.Join(many, "\n"), wantLines: maxCompilerErrorLines},
@@ -75,5 +86,40 @@ func TestBuildImportPath(t *testing.T) {
 		if got := buildImportPath(input); got != want {
 			t.Fatalf("buildImportPath(%q) = %q, want %q", input, got, want)
 		}
+	}
+}
+
+func TestCompilerLocation(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string]string{"go.mod": "module example.test/a\n\ngo 1.25\n", "a/a.go": "package a\n"} {
+		path := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ws, err := workspace.Open(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine := &Engine{workspace: ws}
+	tests := []struct {
+		want    *Location
+		name    string
+		excerpt string
+	}{
+		{name: "line and column", excerpt: "a/a.go:5:3: undefined: x", want: &Location{File: "a/a.go", Line: 5, Col: 3}},
+		{name: "line only, as printed under -coverpkg", excerpt: "a/a.go:7: undefined: y", want: &Location{File: "a/a.go", Line: 7}},
+		{name: "near miss: no line", excerpt: "a/a.go: cannot read", want: nil},
+		{name: "near miss: not a Go file", excerpt: "notes.txt:3: text", want: nil},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := engine.compilerLocation(test.excerpt); !reflect.DeepEqual(got, test.want) {
+				t.Fatalf("compilerLocation(%q) = %#v, want %#v", test.excerpt, got, test.want)
+			}
+		})
 	}
 }
