@@ -1007,6 +1007,26 @@ func TestCheckIntegrityBuildConstraintVariants(t *testing.T) {
 			Want:  []integrityWant{},
 		},
 		{
+			Name:  "removing a redundant plus build line beside go build",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", "//go:build linux\n// +build linux\n\n"+body, "//go:build linux\n\n"+body)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "adding a redundant plus build line beside go build",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", "//go:build linux\n\n"+body, "//go:build linux\n// +build linux\n\n"+body)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "lone plus build replaced by an equivalent go build",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", "// +build linux\n\n"+body, "//go:build linux\n\n"+body)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "plus build ignore beside no go build",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", body, "// +build ignore\n\n"+body)},
+			Want:  []integrityWant{{SeverityBlock, CodeTestHidden, "p/a_test.go", "build constraint", 1}},
+		},
+		{
 			Name:  "new test file with an OS suffix",
 			Files: []verification.SourceFile{integrityAdd("p/b_windows_test.go", onlyFoo)},
 			Want:  []integrityWant{},

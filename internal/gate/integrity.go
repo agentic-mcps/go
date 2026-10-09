@@ -348,30 +348,45 @@ func integrityVersionSuffix(element string) bool {
 // before the package clause and a GOOS or GOARCH file name suffix. The line is
 // the first constraint comment, or zero when there is none.
 func integrityConstraint(file *ast.File, fset *token.FileSet, filePath string) (string, int) {
-	var parts []string
-	line := 0
+	var goBuild, plusBuild []string
+	goLine, plusLine := 0, 0
 	for _, group := range file.Comments {
 		if group.End() > file.Package {
 			break
 		}
 		for _, comment := range group.List {
-			if !constraint.IsGoBuild(comment.Text) && !constraint.IsPlusBuild(comment.Text) {
+			isGo, isPlus := constraint.IsGoBuild(comment.Text), constraint.IsPlusBuild(comment.Text)
+			if !isGo && !isPlus {
 				continue
-			}
-			if line == 0 {
-				line = fset.Position(comment.Pos()).Line
 			}
 			text := strings.TrimSpace(comment.Text)
 			if expr, err := constraint.Parse(comment.Text); err == nil {
 				text = expr.String()
 			}
-			parts = append(parts, text)
+			commentLine := fset.Position(comment.Pos()).Line
+			if isGo {
+				goBuild, goLine = append(goBuild, text), integrityFirstLine(goLine, commentLine)
+			} else {
+				plusBuild, plusLine = append(plusBuild, text), integrityFirstLine(plusLine, commentLine)
+			}
 		}
+	}
+	// Like the go tool, ignore // +build lines when a //go:build line exists.
+	parts, line := plusBuild, plusLine
+	if len(goBuild) > 0 {
+		parts, line = goBuild, goLine
 	}
 	if suffix := integrityNameConstraint(filePath); suffix != "" {
 		parts = append(parts, "file:"+suffix)
 	}
 	return strings.Join(parts, "; "), line
+}
+
+func integrityFirstLine(current, candidate int) int {
+	if current == 0 {
+		return candidate
+	}
+	return current
 }
 
 var (
