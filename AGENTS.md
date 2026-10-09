@@ -23,9 +23,10 @@ For an analyzer rule change, read the matching archived specification:
 - The gate reports problems the change introduced. A failure it can attribute
   to the base (fails there too) or to flakiness (passes on rerun) is a warning,
   never a block.
-- When evidence is incomplete (time budget, closure too large, tooling failure)
-  the verdict is `unknown`, never `pass`. Blocking items found before the
-  evidence ran out still block.
+- When test evidence is incomplete (time budget, closure too large, tooling
+  failure) the verdict is `unknown`, never `pass`. Analyzer failures are
+  reported as a note and do not change the verdict. Blocking items found
+  before the evidence ran out still block.
 - In hook mode the process always exits 0 and speaks only through the hook's
   JSON. A gate failure never blocks an agent. A repeated stop with an unchanged
   fingerprint is allowed and disclosed to the human, never blocked again.

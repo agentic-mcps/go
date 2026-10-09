@@ -12,7 +12,8 @@ All notable changes to this project are documented here. The format follows
   working tree with an auto-detected base and reports only problems the change
   introduced, in at most 2 KB of text or `agentic.check/v1` JSON. Profiles are
   `local`, `hook`, and `ci`; `--hook claude|codex` runs it from an agent Stop
-  hook, which blocks a stop once per distinct change.
+  hook, which blocks a stop once per distinct change. Codex support is
+  experimental.
 - `agentic-go init --claude`, `--codex`, and `--git-pre-push` print hook
   configuration; `--write` merges it.
 - Test and gate integrity checks on the diff: deleted tests, tests hidden from

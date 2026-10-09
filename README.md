@@ -77,12 +77,14 @@ agentic-go init --codex --write
 
 Codex asks you to review and trust new hooks: run `/hooks` in Codex.
 
+Experimental. The Stop contract (`{"decision":"block","reason":…}` on stdout; extra fields are rejected) was checked on 2026-10-09 against the Codex hooks documentation as quoted by search results and against openai/codex issue #18887; the documentation page itself could not be fetched from the build environment.
+
 ### How hook mode behaves
 
 - The process always exits 0. A gate failure never blocks an agent.
 - It blocks the agent's stop once per distinct change. A repeated stop with an
   identical change is let through, and unresolved items are reported to you.
-- It blocks at most 3 times per session.
+- It blocks at most 3 times in a row; the count resets when a check passes.
 - It caches verdicts by a content fingerprint. In one smoke test a repeat check
   of an unchanged tree took 48 ms and a full check of a small package took about
   3 s. These are single observations, not benchmarks.
