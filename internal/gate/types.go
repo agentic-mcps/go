@@ -106,6 +106,9 @@ type Result struct {
 	Items         []Item   `json:"items"`
 	Notes         []string `json:"notes"`
 	Stats         Stats    `json:"stats"`
+	// Fingerprint identifies the exact inputs the result was computed from;
+	// the stop hook uses it to tell an unchanged retry from new work.
+	Fingerprint string `json:"fingerprint,omitempty"`
 }
 
 // Profile selects defaults for where the gate runs.
