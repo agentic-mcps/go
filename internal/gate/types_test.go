@@ -1,7 +1,13 @@
 package gate
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -45,5 +51,48 @@ func TestSortItemsOrdersBySeverityThenLocation(t *testing.T) {
 	want := []string{"y", "a", "z", "b", "c"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("SortItems order = %v, want %v", got, want)
+	}
+}
+
+// TestItemCodesAreDocumented keeps the item code table in the design
+// document in step with the Code constants.
+func TestItemCodesAreDocumented(t *testing.T) {
+	file, err := parser.ParseFile(token.NewFileSet(), "types.go", nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc, err := os.ReadFile("../../docs/design/check-gate.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, table, found := strings.Cut(string(doc), "### Item codes")
+	if !found {
+		t.Fatal("docs/design/check-gate.md has no Item codes section")
+	}
+	codes := 0
+	for _, decl := range file.Decls {
+		gen, ok := decl.(*ast.GenDecl)
+		if !ok || gen.Tok != token.CONST {
+			continue
+		}
+		for _, spec := range gen.Specs {
+			value := spec.(*ast.ValueSpec)
+			for i, name := range value.Names {
+				if !strings.HasPrefix(name.Name, "Code") {
+					continue
+				}
+				code, err := strconv.Unquote(value.Values[i].(*ast.BasicLit).Value)
+				if err != nil {
+					t.Fatal(err)
+				}
+				codes++
+				if !strings.Contains(table, "| `"+code+"` |") {
+					t.Errorf("item code %s (%s) is missing from the Item codes table", code, name.Name)
+				}
+			}
+		}
+	}
+	if codes == 0 {
+		t.Fatal("found no Code constants in types.go")
 	}
 }

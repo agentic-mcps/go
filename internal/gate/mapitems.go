@@ -248,9 +248,9 @@ func mapBuildFailed(output string) bool {
 	return strings.Contains(output, "[build failed]") || strings.Contains(output, "[setup failed]")
 }
 
-// mapCoverage reports uncovered changed lines per file. Unavailable or partial
-// coverage is a note, never a 0% result; it makes the run incomplete only when
-// coverage is required.
+// mapCoverage reports uncovered changed lines per file. Unavailable coverage
+// is an info item, never a 0% result; it makes the run incomplete, with a
+// note, only when coverage is required. Partial coverage is a note.
 func mapCoverage(out *mapped, evidence verification.Evidence, files []verification.SourceFile, requireCoverage bool) {
 	if evidence.Status == verification.EvidenceSkipped {
 		return
@@ -260,8 +260,9 @@ func mapCoverage(out *mapped, evidence verification.Evidence, files []verificati
 		if !strings.HasPrefix(summary, "coverage unavailable") {
 			summary = "coverage unavailable: " + summary
 		}
-		out.notes = append(out.notes, summary)
+		out.items = append(out.items, Item{Severity: SeverityInfo, Code: CodeCoverageUnavailable, Message: summary})
 		if requireCoverage {
+			out.notes = append(out.notes, summary)
 			out.complete = false
 		}
 		return

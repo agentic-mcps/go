@@ -90,6 +90,34 @@ Push, not pull: hooks invoke it deterministically, so the adoption problem disap
 - **Text output:** ≤2KB, blocking items first, each as `file:line — what — fix`, then "+N more". No hashes, no review checklists, no disclaimers.
 - **JSON:** `--format json` emits `agentic.check/v1`.
 
+### Item codes
+
+Every `agentic.check/v1` item carries one of these codes (the `Code*`
+constants in `internal/gate/types.go`).
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `go.syntax` | block | A changed Go file does not parse. |
+| `go.build` | block | A package or its tests do not compile or load. |
+| `test.failed` | block; warn when it could not be compared with base | A test fails after the change. |
+| `test.consumer_failed` | block | A test in a package that imports the changed code fails after the change. |
+| `test.preexisting` | warn | A failing test also fails at the base. |
+| `test.flaky` | warn | A failing test passed when rerun. |
+| `test.race` | block | The race detector reported a data race. |
+| `test.deleted` | block; warn when another test in the change exercises the same code; info when removed with the code it tested | A test function was deleted. |
+| `test.hidden` | block; warn when moved to a file with a different build constraint | A test no longer runs under `go test`. |
+| `test.skip_added` | block when unconditional; warn when guarded; info in a new test | A skip or early return was added to a test. |
+| `test.assertions_removed` | block | An existing test lost all failure-capable calls, or `Error`/`Fatal` became `Log`. |
+| `test.assertions_reduced` | warn | An existing test lost some assertions. |
+| `test.empty` | warn | A test asserts nothing. |
+| `test.golden_modified` | warn | Golden or testdata files changed together with code. |
+| `code.stub` | block | A stub panic such as `panic("not implemented")` was added. |
+| `code.gutted` | warn | A function body was reduced to a zero-value return. |
+| `config.modified` | block in agent hooks; warn elsewhere | Gate or CI configuration changed. |
+| `analysis.introduced` | block for error findings; warn otherwise | A bundled analyzer finding the change introduced. |
+| `coverage.uncovered` | warn; block with `--require-coverage` | Changed lines that no test executes. |
+| `coverage.unavailable` | info | Coverage could not be measured for this run. |
+
 | Mode | Verdict | Behavior |
 |---|---|---|
 | CLI / CI | pass | exit 0 |
@@ -106,9 +134,9 @@ Push, not pull: hooks invoke it deterministically, so the adoption problem disap
   - the fingerprint differs from the last blocked one;
   - fewer than 3 blocks this session (Claude Code's cap is ~8).
 - **Repeat stop:** if the agent stops again with the same fingerprint, allow it and list the unresolved items to the human via `systemMessage`. Gaming becomes disclosure.
-- **Session base:** a SessionStart hook records HEAD per `session_id`, so earlier human commits aren't blamed on the agent.
+- **Session base:** a SessionStart hook records HEAD and digests of the gate-configuration files per `session_id`, so earlier human commits and configuration edits aren't blamed on the agent.
 - **`init`:** `agentic-go init --claude|--codex|--git-pre-push` prints config by default; `--write` merges idempotently and sets `timeout: 180`.
-- **Codex:** `--hook codex` ships only if its Stop schema is verified against developers.openai.com/codex/hooks; otherwise it stays hidden.
+- **Codex:** `--hook codex` is experimental. The Stop contract (`{"decision":"block","reason":…}` on stdout; extra fields are rejected) was checked on 2026-10-09 against the Codex hooks documentation as quoted by search results and against openai/codex issue #18887; the documentation page itself could not be fetched from the build environment.
 - **Overrides:** CI and pre-push accept an `Agentic-Go-Allow: <code> <name>: <reason>` commit trailer, always printed in the output.
 
 ## Reuse map and required engine seams

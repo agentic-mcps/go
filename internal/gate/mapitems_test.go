@@ -179,19 +179,25 @@ func TestMapCoverage(t *testing.T) {
 			wantNotes: []string{},
 		},
 		{
-			name: "unavailable coverage is a note, never 0%",
+			name: "unavailable coverage is an info item, never 0%",
 			evidence: verification.Evidence{
 				Kind: verification.CheckCoverage, Status: verification.EvidenceError,
 				Summary: "coverage unavailable: tests in m/lib failed",
 			},
-			wantItems: []Item{}, wantNotes: []string{"coverage unavailable: tests in m/lib failed"}, wantComplete: true,
+			wantItems: []Item{
+				{Severity: SeverityInfo, Code: CodeCoverageUnavailable, Message: "coverage unavailable: tests in m/lib failed"},
+			},
+			wantNotes: []string{}, wantComplete: true,
 		},
 		{
 			name: "unavailable required coverage is incomplete", require: true,
 			evidence: verification.Evidence{
 				Kind: verification.CheckCoverage, Status: verification.EvidenceError, Summary: "changed coverage could not be calculated",
 			},
-			wantItems: []Item{}, wantNotes: []string{"coverage unavailable: changed coverage could not be calculated"},
+			wantItems: []Item{
+				{Severity: SeverityInfo, Code: CodeCoverageUnavailable, Message: "coverage unavailable: changed coverage could not be calculated"},
+			},
+			wantNotes: []string{"coverage unavailable: changed coverage could not be calculated"},
 		},
 		{
 			name:     "partial coverage adds a note",
