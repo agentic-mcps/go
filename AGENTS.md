@@ -2,76 +2,61 @@
 
 ## Start here
 
-Read [`docs/v0.2.0-release-scope.md`](docs/v0.2.0-release-scope.md) before
-changing v0.2 behavior. It is the target release authority and overrides
-broader roadmap documents. The tagged
-[`v0.1.0 release scope`](docs/v0.1.0-release-scope.md) remains the compatibility
-baseline. Read [`docs/contracts.md`](docs/contracts.md) when changing protocol
-types, execution boundaries, findings, tracing, or analyzer wiring.
-Read [`docs/v1.0.0-roadmap.md`](docs/v1.0.0-roadmap.md) before changing the
-v0.3+ sidecar, intelligence, snapshot, contract, refactor, or distribution
-work. The roadmap adds staged scope without weakening v0.2 compatibility.
-Read [`docs/v0.8.0-evaluation-scope.md`](docs/v0.8.0-evaluation-scope.md)
-before changing the historical task corpus, scorer, replay format, or model
-evaluation claims.
-Read [`docs/v0.9.0-release-scope.md`](docs/v0.9.0-release-scope.md) before
-changing frozen schemas, MCP interfaces, cached-state upgrades, or v1 release
-evidence.
+`agentic-go check` is the product: a done-gate that runs when a coding agent
+tries to stop (or on pre-push and in CI) and blocks only on problems the change
+introduced. Read [`docs/design/check-gate.md`](docs/design/check-gate.md) before
+changing gate behavior, and [`validation/gate/README.md`](validation/gate/README.md)
+before changing the evaluation, its baselines, or any claim about the gate.
 
-For a rule change, also read the matching domain specification:
+The MCP server (`go_context`, Change Contracts, guarded refactor, retrieval,
+source views) is maintenance-only. Its frozen v1 surface stays as documented in
+[`docs/contracts.md`](docs/contracts.md) and
+[`docs/v0.9.0-release-scope.md`](docs/v0.9.0-release-scope.md): fix defects,
+add no tools, resources, prompts, or schema fields.
+
+For an analyzer rule change, read the matching archived specification:
 [`docs/archive/phase-4a-concurrency.md`](docs/archive/phase-4a-concurrency.md) or
-[`docs/archive/phase-4a-errors.md`](docs/archive/phase-4a-errors.md). For release work, read
-[`docs/archive/phase-6-release-polish.md`](docs/archive/phase-6-release-polish.md).
+[`docs/archive/phase-4a-errors.md`](docs/archive/phase-4a-errors.md).
 
 ## Invariants
 
-- Tagged v0.1.0 is seven tools, four resources, four prompts, and the
-  `agentic-go-vet` binary. v0.2 adds `go_verify_change`. The frozen v1
-  development surface is 14 tools, seven fixed resources, one artifact resource
-  template, and six prompts. `internal/tools.RegisterAll` is the live inventory.
-  Change Contracts are private same-machine user-cache state with exact
-  snapshot lineage and stale rejection. Goal and decision prose is never
-  semantically enforced.
-- Guarded refactor preview is non-mutating and content-addressed. Apply requires
-  the exact snapshot and every exact preimage, changes only existing contained
-  non-generated files, and journals before writing. Recovery fails closed when
-  a target diverges. Refactoring never mutates Git state or history.
-- The v0.2 verification report is the durable product boundary shared by the
-  CLI, GitHub Action, and MCP adapter. It reports conservative impact,
-  executed evidence, findings, risk facts, and explicit uncertainty; it never
-  claims to prove that omitted code is safe.
-- v0.3 release bundles pair `agentic-go` with the exact
-  `agentic-go-gopls` companion. Managed sessions negotiate capabilities,
-  disable telemetry, use bounded stdio LSP, and replay only an explicitly
-  idempotent read after terminal failure.
-- v0.4 intelligence is bound to immutable Snapshot Refs. Public locations use
-  one-based UTF-8 byte columns; LSP UTF-16 positions stay inside the gopls
-  adapter and opaque Symbol Refs. Stale refs fail instead of being re-resolved.
-- `agentic.context/v1` Context Packs are compact, deterministic, and
-  source-grounded. Complete overflow detail stays in private content-addressed
-  artifacts addressed by opaque cursors. MCP and LSP types do not enter
-  `internal/intelligence` domain contracts.
-- The server is stdio-only and helps an external coding agent make decisions.
-  It does not embed an LLM or become an agent framework.
+- The gate reports problems the change introduced. A failure it can attribute
+  to the base (fails there too) or to flakiness (passes on rerun) is a warning,
+  never a block.
+- When evidence is incomplete (time budget, closure too large, tooling failure)
+  the verdict is `unknown`, never `pass`. Blocking items found before the
+  evidence ran out still block.
+- In hook mode the process always exits 0 and speaks only through the hook's
+  JSON. A gate failure never blocks an agent. A repeated stop with an unchanged
+  fingerprint is allowed and disclosed to the human, never blocked again.
+- Text output and hook reasons stay within 2048 bytes, keep whole lines and
+  valid UTF-8, and rank blocking entries and their fixes above detail and notes.
+- Integrity rules (deleted, skipped, hidden, or weakened tests; stubs; gate
+  configuration edits) favor precision. A rule ships with a positive fixture,
+  a meaningful near miss, and a stated limitation. A block on a common
+  legitimate refactor is a defect.
+- Claims about the gate come only from recorded runs of the pre-registered
+  evaluation. Do not claim model parity, speedups, or real-world prevalence the
+  evidence does not show. Held-out evaluation variants must not inform detector
+  changes before a run is recorded; if they do, disclose it in the results.
+- The `agentic.verify/v1` report schema stays frozen. Engine changes made for
+  the gate keep `agentic-go verify` output compatible.
 - All filesystem access stays within the configured, symlink-resolved
-  workspace. Subprocess and analyzer work share cancellation, deadlines,
-  concurrency limits, and bounded output. Describe these controls as
-  containment, never as sandboxing.
-- Execution and verification tools may compile and run trusted
-  target-repository code. Audit tools remain read-only and closed-world.
-- A rule ships only with a positive fixture, a meaningful near miss, a stated
-  limitation, and integration coverage through the production audit path.
-  External validation is a release gate, not a claim to infer from fixtures.
+  workspace. Subprocess work shares cancellation, deadlines, concurrency limits,
+  and bounded output. Describe these controls as containment, never as
+  sandboxing. The gate compiles and runs trusted target-repository code.
 - Protocol errors fail loudly. Clean results use non-nil empty collections.
 
 ## Work loop
 
 1. Locate the smallest relevant implementation and its governing contract.
 2. State the behavior and failure modes the change must preserve.
-3. Make one coherent change without widening the public surface.
+3. Make one coherent change; widen a public surface only when the design
+   document calls for it.
 4. Inspect the diff and run the smallest relevant verification first.
-5. Before handoff, run `go test ./...`, `go test -race ./...`, `go vet ./...`,
-   `go build ./...`, and `git diff --check` when the environment supports them.
+5. Before handoff, run `go build ./...`, `go test -race ./...`, `go vet ./...`,
+   `golangci-lint run` (the version pinned in `.github/workflows/verify.yml`),
+   and `git diff --check` when the environment supports them.
 
 Use short Conventional Commit subjects. Preserve the configured Git author.
 Create no tag, release, or remote push without explicit maintainer approval.
