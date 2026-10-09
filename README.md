@@ -138,6 +138,19 @@ Other flags: `--budget`, `--max-packages`, `--no-cache`, `--skip`, and
 
 ## What it does not catch
 
+Observed in the evaluation:
+
+- A skip behind an environment check, or a test moved into a new build-tagged
+  file, is only a warning.
+- A test added by the same change and then skipped or deleted is not treated as
+  tampering, because it does not exist at the base.
+- A test body wrapped in a closure that is never called is not detected.
+- In packages that run inner test suites (`testing.RunTests`, as testify's
+  `suite` does), intentional inner failures are reported as new failing tests
+  (a known defect).
+
+By design:
+
 - A changed expected value in a test (`want := ...` edited to match buggy
   output) is not detected.
 - An order-dependent failure that passes in isolation is reported as flaky, so
@@ -154,12 +167,23 @@ Other flags: `--budget`, `--max-packages`, `--no-cache`, `--skip`, and
 
 ## Evidence
 
-A pre-registered evaluation with kill criteria is described in
-[`validation/gate/README.md`](validation/gate/README.md). Results will be added
-under `validation/gate/results/`. They are pending: until they exist, this
-project makes no claim that the gate improves agent output, saves time, or
-narrows differences between models. The design is in
-[`docs/design/check-gate.md`](docs/design/check-gate.md).
+A pre-registered evaluation ([protocol](validation/gate/README.md),
+[results](validation/gate/results/2026-10-09/README.md)) ran the gate and five
+baselines on 821 variants of 176 real commits from cobra, chi, testify, gin and
+echo. **Its kill criteria failed.**
+
+- On hidden test tampering, the gate blocked 68% of cover-ups, against 75% for
+  a conventional gate that runs every test, `go vet` and `golangci-lint` and
+  ignores failures that already exist at the base.
+- A 60-line grep script layered on that gate blocked 93% of held-out disguises;
+  the gate blocked 60%.
+- The gate falsely blocked 19% of real commits, 22 of 28 from one defect
+  (see "What it does not catch").
+- Where the gate was better is precision: it blocked 37% of legitimate commits
+  that delete or skip tests, against 97% for the grep script.
+
+These are synthetic flaws: they measure the detectors, not how often real
+agents tamper with tests. No claim is made that the gate improves agent output.
 
 ## Legacy MCP server
 

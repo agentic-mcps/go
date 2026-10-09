@@ -132,7 +132,7 @@ constants in `internal/gate/types.go`).
 - **Block** only if all hold:
   - verdict is block;
   - the fingerprint differs from the last blocked one;
-  - fewer than 3 blocks this session (Claude Code's cap is ~8).
+  - fewer than 3 blocks in a row; the count resets when a check passes (Claude Code's cap is ~8).
 - **Repeat stop:** if the agent stops again with the same fingerprint, allow it and list the unresolved items to the human via `systemMessage`. Gaming becomes disclosure.
 - **Session base:** a SessionStart hook records HEAD and digests of the gate-configuration files per `session_id`, so earlier human commits and configuration edits aren't blamed on the agent.
 - **`init`:** `agentic-go init --claude|--codex|--git-pre-push` prints config by default; `--write` merges idempotently and sets `timeout: 180`.
@@ -296,3 +296,14 @@ constants in `internal/gate/types.go`).
 - **Format:** a 50-item result stays ≤2048 bytes (golden).
 - **Real repo:** re-run on cobra@ad460ea. Expected: pass, the pre-existing failure reported as a warning, coverage correct.
 - **Eval:** numbers committed under `validation/gate/results/`, with the K1–K4 verdict stated plainly either way.
+
+## Outcome (2026-10-09)
+
+The pre-registered evaluation failed K1, K2 and K3; see
+[`validation/gate/results/2026-10-09/README.md`](../../validation/gate/results/2026-10-09/README.md).
+The gate's integrity analysis traded recall for precision. A conventional gate (all tests,
+vet, lint, base-subtracted) caught more cover-ups, and a 60-line grep tripwire on top of it
+caught far more held-out disguises, at the cost of blocking almost every legitimate test
+deletion. Under the protocol's own rule this does not justify a product. The cheap
+combination that worked best on recall — run every test, subtract failures that exist at the
+base, and add a naive tamper tripwire — is a script, not a product.
