@@ -671,3 +671,123 @@ func TestOpenStore(t *testing.T) {
 		t.Fatalf("dir perm = %o, want 700", perm)
 	}
 }
+
+func TestFingerprintIsScopedToSubdirectoryWorkspace(t *testing.T) {
+	t.Parallel()
+	f := newBaseFixture(t)
+	f.write("svc/main.go", "package main\n")
+	f.write("other/lib.go", "package other\n")
+	f.write("top.go", "package top\n")
+	base := f.commit("base")
+	sub := filepath.Join(f.root, "svc")
+	runGit := f.gitFunc(sub)
+	fingerprint := func() string {
+		t.Helper()
+		// The trailing separator also covers an unclean workspace root.
+		fp, err := Fingerprint(context.Background(), runGit, sub+string(filepath.Separator), base, "v1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return fp
+	}
+
+	clean := fingerprint()
+	f.write("other/lib.go", "package other // sibling edit\n")
+	f.write("other/new.go", "package other\n")
+	f.write("top.go", "package top // root edit\n")
+	if got := fingerprint(); got != clean {
+		t.Fatal("edits outside the workspace changed the fingerprint")
+	}
+
+	f.write("svc/main.go", "package main // inside edit\n")
+	inside := fingerprint()
+	if inside == clean {
+		t.Fatal("edit inside the workspace did not change the fingerprint")
+	}
+	f.write("svc/main.go", "package main // inside edit two\n")
+	if got := fingerprint(); got == inside {
+		t.Fatal("second content edit inside the workspace did not change the fingerprint")
+	}
+}
+
+func TestFingerprintRejectsStatusPathsOutsideWorkspacePrefix(t *testing.T) {
+	t.Parallel()
+	runGit := GitFunc(func(_ context.Context, args ...string) ([]byte, error) {
+		switch {
+		case args[0] == "status":
+			return []byte(" M svc/ok.go\x00 M other/leak.go\x00"), nil
+		case args[1] == "--show-prefix":
+			return []byte("svc/\n"), nil
+		}
+		return []byte("abc\n"), nil
+	})
+	_, err := Fingerprint(context.Background(), runGit, t.TempDir(), "base", "v1")
+	if err == nil || !strings.Contains(err.Error(), "escapes") {
+		t.Fatalf("err = %v, want escape error", err)
+	}
+}
+
+func TestStoreLoadSessionNeverErrors(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	store, err := NewStore(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A directory where the session file should be makes ReadFile fail with an
+	// error that is not "does not exist".
+	if err = os.MkdirAll(filepath.Join(dir, "sessions", "blocked.json"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	got, err := store.LoadSession("blocked")
+	if err != nil {
+		t.Fatalf("LoadSession returned error: %v", err)
+	}
+	if want := (Session{ID: "blocked"}); !reflect.DeepEqual(got, want) {
+		t.Fatalf("session = %+v, want %+v", got, want)
+	}
+}
+
+func TestStoreRemovesStaleTempFiles(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	store, err := NewStore(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, sub := range []string{"results", "sessions"} {
+		if err = os.MkdirAll(filepath.Join(dir, sub), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		for name, age := range map[string]time.Duration{
+			".tmp-stale": 2 * time.Hour,
+			".tmp-fresh": 5 * time.Minute,
+			"keep.txt":   48 * time.Hour, // near miss: not a temp file
+		} {
+			path := filepath.Join(dir, sub, name)
+			if err = os.WriteFile(path, []byte("x"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			when := time.Now().Add(-age)
+			if err = os.Chtimes(path, when, when); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	if err = store.SaveResult("abc", sampleResult(VerdictPass, "x")); err != nil {
+		t.Fatal(err)
+	}
+	if err = store.SaveSession(Session{ID: "s"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, sub := range []string{"results", "sessions"} {
+		if _, err = os.Stat(filepath.Join(dir, sub, ".tmp-stale")); !os.IsNotExist(err) {
+			t.Errorf("%s/.tmp-stale should be removed, stat err = %v", sub, err)
+		}
+		for _, keep := range []string{".tmp-fresh", "keep.txt"} {
+			if _, err = os.Stat(filepath.Join(dir, sub, keep)); err != nil {
+				t.Errorf("%s/%s should be kept: %v", sub, keep, err)
+			}
+		}
+	}
+}

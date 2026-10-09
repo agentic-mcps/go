@@ -520,3 +520,38 @@ func TestChangedFilesPropagatesGitErrors(t *testing.T) {
 		t.Fatal("expected error for bad base commit")
 	}
 }
+
+func TestDetectBaseRejectsOptionLikeRefs(t *testing.T) {
+	t.Parallel()
+	r := newBaseRepo(t)
+	runGit := r.f.gitFunc(r.f.root)
+	originHead := Base{Ref: "origin/HEAD", Commit: r.first, Source: "origin/HEAD"}
+
+	for _, ref := range []string{"--all", "-x", "--end-of-options"} {
+		_, err := DetectBase(context.Background(), runGit, ref, "", noEnv)
+		if err == nil || !strings.Contains(err.Error(), "must not start with '-'") {
+			t.Errorf("explicit %q: err = %v, want option-like ref error", ref, err)
+		}
+
+		got, err := DetectBase(context.Background(), runGit, "", ref, noEnv)
+		if err != nil || got != originHead {
+			t.Errorf("session %q: got %+v, %v; want fall through to %+v", ref, got, err, originHead)
+		}
+
+		got, err = DetectBase(context.Background(), runGit, "", "", envOf(map[string]string{"GITHUB_BASE_REF": ref}))
+		if err != nil || got != originHead {
+			t.Errorf("GITHUB_BASE_REF %q: got %+v, %v; want fall through to %+v", ref, got, err, originHead)
+		}
+
+		if _, err = ChangedFiles(context.Background(), runGit, ref, false); err == nil {
+			t.Errorf("ChangedFiles base %q: want error", ref)
+		}
+	}
+
+	// Near miss: a dash inside the ref is fine.
+	r.f.git("branch", "feature-x", r.first)
+	got, err := DetectBase(context.Background(), runGit, "feature-x", "", noEnv)
+	if err != nil || got.Commit != r.first {
+		t.Fatalf("feature-x: got %+v, %v", got, err)
+	}
+}

@@ -111,6 +111,9 @@ func baseResolveRef(ctx context.Context, git GitFunc, ref, source string) (Base,
 }
 
 func baseResolveCommit(ctx context.Context, git GitFunc, ref string) (string, error) {
+	if err := baseCheckRef(ref); err != nil {
+		return "", err
+	}
 	commit, err := baseGitText(ctx, git, "rev-parse", "--verify", "--quiet", ref+"^{commit}")
 	if err != nil {
 		return "", fmt.Errorf("%s does not resolve to a commit: %w", ref, err)
@@ -139,6 +142,9 @@ func baseHead(ctx context.Context, git GitFunc) (Base, error) {
 // working tree, including staged, unstaged and untracked (non-ignored) files.
 // Deleted files are listed only when includeDeleted is set.
 func ChangedFiles(ctx context.Context, git GitFunc, baseCommit string, includeDeleted bool) ([]string, error) {
+	if err := baseCheckRef(baseCommit); err != nil {
+		return nil, fmt.Errorf("listing changed files: %w", err)
+	}
 	// --no-renames reports a rename as delete plus add so the old path stays
 	// visible when deleted files are requested.
 	args := []string{"diff", "--relative", "--no-renames", "--name-only", "-z"}
@@ -194,6 +200,14 @@ func baseSplitNUL(data []byte) []string {
 		}
 	}
 	return names
+}
+
+// baseCheckRef rejects refs git would parse as command-line options.
+func baseCheckRef(ref string) error {
+	if strings.HasPrefix(ref, "-") {
+		return fmt.Errorf("ref %q must not start with '-'", ref)
+	}
+	return nil
 }
 
 func baseGitText(ctx context.Context, git GitFunc, args ...string) (string, error) {

@@ -24,6 +24,8 @@ import (
 const (
 	stateKeepResults    = 20
 	stateSessionMaxAge  = 7 * 24 * time.Hour
+	stateTempMaxAge     = time.Hour
+	stateTempPrefix     = ".tmp-"
 	stateLockPoll       = 50 * time.Millisecond
 	stateStoreDirPerm   = 0o700
 	stateStoreFilePerm  = 0o600
@@ -44,15 +46,22 @@ func Fingerprint(ctx context.Context, git GitFunc, root, baseCommit, salt string
 	if err != nil {
 		return "", fmt.Errorf("resolving HEAD: %w", err)
 	}
-	status, err := git(ctx, "status", "--porcelain=v1", "-z", "--untracked-files=all")
-	if err != nil {
-		return "", fmt.Errorf("reading working tree status: %w", err)
-	}
 	prefix, err := git(ctx, "rev-parse", "--show-prefix")
 	if err != nil {
 		return "", fmt.Errorf("locating workspace in repository: %w", err)
 	}
-	repoRoot := stateRepoRoot(root, strings.TrimSpace(string(prefix)))
+	// Scope status to the workspace: sibling directories of a monorepo must
+	// neither be hashed nor invalidate the cache.
+	status, err := git(ctx, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ".")
+	if err != nil {
+		return "", fmt.Errorf("reading working tree status: %w", err)
+	}
+	// git status prints paths relative to the repository root, so every path
+	// must start with the workspace's prefix below that root.
+	workspacePrefix := strings.Trim(strings.TrimSpace(string(prefix)), "/")
+	if workspacePrefix != "" {
+		workspacePrefix += "/"
+	}
 
 	sum := sha256.New()
 	stateWriteField(sum, []byte(salt))
@@ -61,9 +70,13 @@ func Fingerprint(ctx context.Context, git GitFunc, root, baseCommit, salt string
 	stateWriteField(sum, status)
 
 	for _, name := range stateStatusPaths(status) {
-		abs, err := stateJoinWithin(repoRoot, name)
+		rel, inside := strings.CutPrefix(name, workspacePrefix)
+		if !inside {
+			return "", fmt.Errorf("status path %q escapes the workspace", name)
+		}
+		abs, err := stateJoinWithin(root, rel)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("status path %q escapes the workspace", name)
 		}
 		digest, ok, err := stateFileDigest(abs)
 		if err != nil {
@@ -78,27 +91,12 @@ func Fingerprint(ctx context.Context, git GitFunc, root, baseCommit, salt string
 	return hex.EncodeToString(sum.Sum(nil)), nil
 }
 
-// stateRepoRoot maps the workspace root to the repository top-level directory.
-// git status prints paths relative to the repository root even when run from a
-// subdirectory, and prefix is the workspace's slash path below that root.
-func stateRepoRoot(root, prefix string) string {
-	prefix = strings.Trim(prefix, "/")
-	if prefix == "" {
-		return root
-	}
-	top := root
-	for range strings.Split(prefix, "/") {
-		top = filepath.Dir(top)
-	}
-	return top
-}
-
 func stateJoinWithin(dir, name string) (string, error) {
 	local := filepath.FromSlash(name)
 	if filepath.IsAbs(local) || !filepath.IsLocal(local) {
-		return "", fmt.Errorf("status path %q escapes the workspace", name)
+		return "", fmt.Errorf("path %q escapes the workspace", name)
 	}
-	return filepath.Join(dir, local), nil
+	return filepath.Join(filepath.Clean(dir), local), nil
 }
 
 // stateFileDigest hashes a regular file. ok is false for missing files and
@@ -242,19 +240,18 @@ type Session struct {
 	Blocks                 int       `json:"blocks"`
 }
 
-// LoadSession returns the stored session for id. A missing or corrupt file
-// yields a fresh Session{ID: id}.
+// LoadSession returns the stored session for id. A missing, unreadable, or
+// corrupt file yields a fresh Session{ID: id}; the error is always nil so
+// session state can never stop the gate.
 func (s *Store) LoadSession(id string) (Session, error) {
 	fresh := Session{ID: id}
 	data, err := os.ReadFile(s.sessionPath(id))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return fresh, nil
-		}
-		return fresh, fmt.Errorf("reading session: %w", err)
+		// Session state must never stop the gate, whatever the read error.
+		return fresh, nil
 	}
 	var session Session
-	if err := json.Unmarshal(data, &session); err != nil {
+	if json.Unmarshal(data, &session) != nil {
 		return fresh, nil
 	}
 	session.ID = id
@@ -328,7 +325,7 @@ func stateWriteFileAtomic(dir, name string, data []byte) error {
 	if err := os.MkdirAll(dir, stateStoreDirPerm); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(dir, ".tmp-*")
+	tmp, err := os.CreateTemp(dir, stateTempPrefix+"*")
 	if err != nil {
 		return err
 	}
@@ -352,7 +349,26 @@ func stateWriteFileAtomic(dir, name string, data []byte) error {
 		cleanup()
 		return err
 	}
+	stateRemoveStaleTemps(dir, time.Now().Add(-stateTempMaxAge))
 	return nil
+}
+
+// stateRemoveStaleTemps deletes temp files left behind by interrupted writes.
+func stateRemoveStaleTemps(dir string, cutoff time.Time) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasPrefix(entry.Name(), stateTempPrefix) {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil || !info.ModTime().Before(cutoff) {
+			continue
+		}
+		_ = os.Remove(filepath.Join(dir, entry.Name()))
+	}
 }
 
 // stateKeepNewest removes all but the newest keep JSON files in dir. Pruning
