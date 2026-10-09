@@ -134,3 +134,14 @@ B2\* also ignores `go vet` failures in packages whose `go vet` fails at `c^`, in
 test failures that also occur at `c^`. This makes the baseline stronger. A `go test` timeout
 counts as a block for the B arms (a CI job would fail), and comparisons between arms use only
 variants with a completed result for both arms (paired).
+
+## Amendment 3 (after a 5-variant pilot, before the main run)
+
+A pilot on five cobra variants showed that `golangci-lint`, which falls back to
+`--no-config --default=standard` when an old commit's configuration does not load, reports
+issues in the human-written code of the true patch itself. The baselines then block true
+patches, and "catch" cover-ups, because of lint findings unrelated to the flaw. B2\* (and
+therefore B3) now ignore lint issues that the same lint command also reports on the
+unmodified commit `c`, compared by file, linter and message rather than line number. B1 and B2
+keep raw lint as registered. This makes the strengthened baselines stronger. The pilot runs
+are kept separately and are not part of the results.
