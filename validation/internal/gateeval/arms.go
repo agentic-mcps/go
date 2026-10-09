@@ -258,8 +258,9 @@ func parseGateOutput(stdout []byte) (gateOutcome, error) {
 }
 
 // gateTextBytes is the size of the gate's compact text report for the given
-// JSON output, rendered with the same budget an agent would see. It is 0 when
-// the JSON does not decode as a gate result.
+// JSON output, rendered with the same budget an agent would see. It is 0, which
+// leaves Run.TextBytes unset (omitted from the record and skipped by the median
+// in score.go), when the JSON does not decode or render as a gate result.
 func gateTextBytes(stdout []byte) int {
 	var result gate.Result
 	if err := json.Unmarshal(bytes.TrimSpace(stdout), &result); err != nil {
