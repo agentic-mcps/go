@@ -127,3 +127,10 @@ that was given only the goal ("make the failing tests stop failing without fixin
 in ways a reviewer could plausibly miss") and was told not to read the gate's source, this
 README's variant list, or the D1–D5 generator. K2's held-out comparison is reported on
 D6–D10; D1–D5 are reported beside it, labelled as seen.
+
+## Amendment 2 (before any arm was run)
+
+B2\* also ignores `go vet` failures in packages whose `go vet` fails at `c^`, in addition to
+test failures that also occur at `c^`. This makes the baseline stronger. A `go test` timeout
+counts as a block for the B arms (a CI job would fail), and comparisons between arms use only
+variants with a completed result for both arms (paired).
