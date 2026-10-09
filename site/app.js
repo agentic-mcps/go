@@ -862,7 +862,7 @@ function initWebMCP() {
     {
       topic: "git",
       question: "Can agentic-go modify my files or Git history?",
-      answer: "agentic-go will never mutate Git repository state (it never executes git add, git commit, git branch, or git stash). The only mutating tool is go_refactor, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal."
+      answer: "agentic-go will never mutate Git repository state (it never executes git add, git commit, git branch, or git stash), except agentic-go init --git-pre-push --write, which installs a pre-push hook when you ask it to. The only mutating tool is go_refactor, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal."
     },
     {
       topic: "sandbox",

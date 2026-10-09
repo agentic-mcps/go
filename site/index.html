@@ -520,7 +520,7 @@ agentic-go --version</code></pre>
                 <span class="faq-accordion-icon">+</span>
               </summary>
               <div class="faq-accordion-body">
-                <code>agentic-go</code> will never mutate Git repository state (it never runs <code>git commit</code>, <code>git add</code>, or branch commands). The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after rechecking all file preimages against a recovery journal.
+                <code>agentic-go</code> will never mutate Git repository state (it never runs <code>git commit</code>, <code>git add</code>, or branch commands), except <code>agentic-go init --git-pre-push --write</code>, which installs a pre-push hook when you ask it to. The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after rechecking all file preimages against a recovery journal.
               </div>
             </details>
 

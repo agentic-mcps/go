@@ -148,7 +148,7 @@
               <h2 class="faq-item-question" style="margin: 0;">Can agentic-go modify my files or Git history?</h2>
             </div>
             <div class="faq-item-answer">
-              <code>agentic-go</code> will <strong>never</strong> mutate Git repository state (it never executes <code>git add</code>, <code>git commit</code>, <code>git branch</code>, or <code>git stash</code>). The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal.
+              <code>agentic-go</code> will <strong>never</strong> mutate Git repository state (it never executes <code>git add</code>, <code>git commit</code>, <code>git branch</code>, or <code>git stash</code>), except <code>agentic-go init --git-pre-push --write</code>, which installs a pre-push hook when you ask it to. The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal.
             </div>
           </div>
 
