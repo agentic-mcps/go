@@ -371,14 +371,16 @@ type armContext struct {
 	baseFailures func(ctx context.Context) (testFailures, error)
 	reset        func(ctx context.Context) error
 	status       func(ctx context.Context) (string, error)
-	memo         map[string]stepResult
-	infra        error
-	variant      Variant
-	dir          string
-	gateBin      string
-	b3Script     string
-	direct       []string
-	timeout      time.Duration
+	// lintReference returns the lint issues on the unmodified commit.
+	lintReference func(ctx context.Context) ([]lintIssue, error)
+	memo          map[string]stepResult
+	infra         error
+	variant       Variant
+	dir           string
+	gateBin       string
+	b3Script      string
+	direct        []string
+	timeout       time.Duration
 }
 
 // run executes one command, adds it to the tally, and reuses an identical
@@ -569,21 +571,32 @@ func (ac *armContext) runB(ctx context.Context, t *tally, withLint bool) outcome
 }
 
 // lintResult is the outcome of golangci-lint for one tree.
+//
+//nolint:govet // Keep fields in reporting order.
 type lintResult struct {
 	reason  string
 	note    string
 	fatal   string
+	output  []byte
 	exit    int
 	blocked bool
+	notRun  bool
 }
 
-// lint runs golangci-lint on lines changed since base. Exit 1 means issues.
-// Any other non-zero exit is a lint error, retried once with the default
-// linters and no config; if that also errors, lint is recorded as not run and
-// does not block.
+// lint runs golangci-lint on lines changed since base, through the step cache.
 func (ac *armContext) lint(ctx context.Context, t *tally) lintResult {
-	base := "--new-from-rev=" + ac.variant.Base
-	first := ac.run(ctx, t, "golangci-lint", "run", base, "./...")
+	return lintWith(func(args ...string) stepResult {
+		return ac.run(ctx, t, "golangci-lint", args...)
+	}, ac.variant.Base)
+}
+
+// lintWith runs golangci-lint on lines changed since base using run to execute
+// each command. Exit 1 means issues. Any other non-zero exit is a lint error,
+// retried once with the default linters and no config; if that also errors,
+// lint is recorded as not run and does not block.
+func lintWith(run func(args ...string) stepResult, base string) lintResult {
+	rev := "--new-from-rev=" + base
+	first := run("run", rev, "./...")
 	if first.err != nil {
 		return lintResult{fatal: first.err.Error()}
 	}
@@ -591,9 +604,9 @@ func (ac *armContext) lint(ctx context.Context, t *tally) lintResult {
 	case 0:
 		return lintResult{}
 	case 1:
-		return lintResult{blocked: true, exit: 1, reason: snippet("golangci-lint", first)}
+		return lintResult{blocked: true, exit: 1, reason: snippet("golangci-lint", first), output: stepOutput(first)}
 	}
-	retry := ac.run(ctx, t, "golangci-lint", "run", base, "--no-config", "--default=standard", "./...")
+	retry := run("run", rev, "--no-config", "--default=standard", "./...")
 	if retry.err != nil {
 		return lintResult{fatal: retry.err.Error()}
 	}
@@ -602,9 +615,114 @@ func (ac *armContext) lint(ctx context.Context, t *tally) lintResult {
 	case 0:
 		return lintResult{note: fallback}
 	case 1:
-		return lintResult{blocked: true, exit: 1, reason: snippet("golangci-lint", retry), note: fallback}
+		return lintResult{blocked: true, exit: 1, reason: snippet("golangci-lint", retry), output: stepOutput(retry), note: fallback}
 	}
-	return lintResult{note: fmt.Sprintf("note: lint not run: exit %d, then exit %d with --no-config --default=standard", first.exit, retry.exit)}
+	return lintResult{notRun: true, note: fmt.Sprintf("note: lint not run: exit %d, then exit %d with --no-config --default=standard", first.exit, retry.exit)}
+}
+
+// stepOutput is a command's stdout followed by its stderr.
+func stepOutput(result stepResult) []byte {
+	return append(append([]byte{}, result.stdout...), result.stderr...)
+}
+
+// lintIssue is one lint finding, identified without its line number because
+// edits shift lines.
+type lintIssue struct {
+	File    string `json:"file"`
+	Linter  string `json:"linter"`
+	Message string `json:"message"`
+}
+
+// lintText matches a golangci-lint text issue: "file:line:col: message (linter)".
+var lintText = regexp.MustCompile(`^(\S+?\.go):\d+(?::\d+)?: (.+) \(([A-Za-z0-9_.-]+)\)$`)
+
+// lintJSON is the subset of golangci-lint's JSON report the evaluation reads.
+type lintJSON struct {
+	Issues []struct {
+		FromLinter string `json:"FromLinter"`
+		Text       string `json:"Text"`
+		Pos        struct {
+			Filename string `json:"Filename"`
+		} `json:"Pos"`
+	} `json:"Issues"`
+}
+
+// parseLintIssues reads golangci-lint output in its JSON report form or its
+// default text form.
+func parseLintIssues(output []byte) []lintIssue {
+	trimmed := bytes.TrimSpace(output)
+	if len(trimmed) > 0 && trimmed[0] == '{' {
+		var report lintJSON
+		if err := json.Unmarshal(trimmed, &report); err == nil {
+			issues := make([]lintIssue, 0, len(report.Issues))
+			for _, issue := range report.Issues {
+				issues = append(issues, lintIssue{File: lintFile(issue.Pos.Filename), Linter: issue.FromLinter, Message: issue.Text})
+			}
+			return issues
+		}
+	}
+	var issues []lintIssue
+	for _, line := range strings.Split(string(output), "\n") {
+		if match := lintText.FindStringSubmatch(strings.TrimRight(line, "\r")); match != nil {
+			issues = append(issues, lintIssue{File: lintFile(match[1]), Linter: match[3], Message: match[2]})
+		}
+	}
+	return issues
+}
+
+func lintFile(name string) string {
+	return strings.TrimPrefix(filepath.ToSlash(name), "./")
+}
+
+// newLintIssues returns the issues in current beyond those in reference,
+// comparing as multisets of (file, linter, message).
+func newLintIssues(current, reference []lintIssue) []lintIssue {
+	remaining := map[lintIssue]int{}
+	for _, issue := range reference {
+		remaining[issue]++
+	}
+	var added []lintIssue
+	for _, issue := range current {
+		if remaining[issue] > 0 {
+			remaining[issue]--
+			continue
+		}
+		added = append(added, issue)
+	}
+	return added
+}
+
+func describeLintIssue(issue lintIssue) string {
+	return fmt.Sprintf("%s: %s (%s)", issue.File, issue.Message, issue.Linter)
+}
+
+// filterLint applies Amendment 3 to B2*: lint blocks only for issues the same
+// lint command does not also report on the unmodified commit. When the
+// reference is unavailable, raw lint stands and a note says so.
+func (ac *armContext) filterLint(ctx context.Context, lint lintResult) (lintResult, string) {
+	if !lint.blocked || ac.lintReference == nil {
+		return lint, ""
+	}
+	current := parseLintIssues(lint.output)
+	if len(current) == 0 {
+		return lint, "note: lint issues could not be parsed; raw lint used"
+	}
+	reference, err := ac.lintReference(ctx)
+	if err != nil {
+		var infra *infraError
+		if errors.As(err, &infra) {
+			ac.infra = err
+			return lint, ""
+		}
+		return lint, fmt.Sprintf("note: reference lint unavailable (%v); raw lint used", err)
+	}
+	added := newLintIssues(current, reference)
+	if len(added) == 0 {
+		lint.blocked, lint.reason, lint.exit = false, "", 0
+		return lint, fmt.Sprintf("note: %d lint issue(s) also reported on the unmodified commit ignored", len(current))
+	}
+	lint.reason = fmt.Sprintf("%d new lint issue(s), first: %s", len(added), describeLintIssue(added[0]))
+	return lint, ""
 }
 
 // conventional holds the results of the B2 commands for one tree. errs lists
@@ -711,6 +829,11 @@ func (ac *armContext) decideStar(ctx context.Context, conv conventional) outcome
 	case conv.tests.timedOut:
 		return outcome{blocked: true, exit: -1, reason: conv.timeoutReason, note: conv.notes()}
 	}
+	lint, lintNote := ac.filterLint(ctx, conv.lint)
+	if ac.infra != nil {
+		return outcome{}
+	}
+	conv.lint.note = strings.Join(nonEmpty(conv.lint.note, lintNote), "; ")
 	base, err := ac.baseFailures(ctx)
 	if err != nil {
 		var infra *infraError
@@ -718,15 +841,15 @@ func (ac *armContext) decideStar(ctx context.Context, conv conventional) outcome
 			ac.infra = err
 			return outcome{}
 		}
-		if conv.lint.blocked {
+		if lint.blocked {
 			return outcome{
-				blocked: true, exit: conv.lint.exit, reason: "lint reported issues: " + conv.lint.reason,
+				blocked: true, exit: lint.exit, reason: "lint reported issues: " + lint.reason,
 				note: strings.Join(nonEmpty(conv.notes(), fmt.Sprintf("note: base failures unavailable: %v", err)), "; "),
 			}
 		}
 		return outcome{fatal: fmt.Sprintf("computing base failures: %v", err), note: conv.notes()}
 	}
-	blocked, cause, reason := starBlock(failedExit(conv.build), failedExit(conv.vet), conv.lint.blocked, conv.failed, base)
+	blocked, cause, reason := starBlock(failedExit(conv.build), failedExit(conv.vet), lint.blocked, conv.failed, base)
 	if !blocked {
 		if len(conv.errs) > 0 {
 			return outcome{fatal: conv.errs[0], note: conv.lint.note}
@@ -739,8 +862,8 @@ func (ac *armContext) decideStar(ctx context.Context, conv conventional) outcome
 		decided.exit = conv.vet.exit
 		decided.reason += ": " + snippet("go vet", conv.vet)
 	case causeLint:
-		decided.exit = conv.lint.exit
-		decided.reason += ": " + conv.lint.reason
+		decided.exit = lint.exit
+		decided.reason += ": " + lint.reason
 	default:
 		decided.exit = conv.tests.exit
 	}

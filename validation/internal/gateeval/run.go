@@ -257,6 +257,9 @@ func (w *worker) runVariant(ctx context.Context, variant Variant, pending []runK
 			return w.runner.baseFailures(ctx, variant.Project, variant.Base)
 		},
 		reset: func(ctx context.Context) error { return checkout(ctx, dir, variant.Branch) },
+		lintReference: func(ctx context.Context) ([]lintIssue, error) {
+			return w.runner.lintReference(ctx, variant)
+		},
 		status: func(ctx context.Context) (string, error) {
 			out, err := git(ctx, dir, "status", "--porcelain")
 			return string(out), err
@@ -518,4 +521,77 @@ func writeFileAtomic(path string, data []byte) error {
 		return fmt.Errorf("renaming %s: %w", path, err)
 	}
 	return nil
+}
+
+// lintRefVersion changes when the cached form of reference lint changes.
+const lintRefVersion = 1
+
+// lintRefFile is the cached form of a reference lint run.
+type lintRefFile struct {
+	Issues  []lintIssue `json:"issues"`
+	Version int         `json:"version"`
+}
+
+// lintReference returns the lint issues the arms' lint command reports on the
+// unmodified commit of a variant against the same base, computed once per
+// (project, commit) in a dedicated worktree and cached under WorkDir/lintref.
+// A reference that cannot be computed is an error; git and worktree problems
+// are harness errors.
+func (r *runner) lintReference(ctx context.Context, variant Variant) ([]lintIssue, error) {
+	if variant.Commit == "" {
+		return nil, errors.New("variant has no commit")
+	}
+	key := variant.Project + "-" + strings.NewReplacer("/", "_", "\\", "_").Replace(variant.Commit)
+	mutex := r.lock("lintref:" + key)
+	mutex.Lock()
+	defer mutex.Unlock()
+	path := filepath.Join(r.options.WorkDir, "lintref", key+".json")
+	if data, err := os.ReadFile(path); err == nil {
+		var cached lintRefFile
+		if err := json.Unmarshal(data, &cached); err == nil && cached.Version == lintRefVersion {
+			return cached.Issues, nil
+		}
+	}
+	issues, err := r.computeLintReference(ctx, variant)
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(lintRefFile{Issues: issues, Version: lintRefVersion})
+	if err != nil {
+		return nil, fmt.Errorf("encoding reference lint: %w", err)
+	}
+	if err := writeFileAtomic(path, data); err != nil {
+		return nil, &infraError{err}
+	}
+	return issues, nil
+}
+
+// computeLintReference checks the unmodified commit out and lints it.
+func (r *runner) computeLintReference(ctx context.Context, variant Variant) ([]lintIssue, error) {
+	dir, err := r.ensureWorktree(ctx, variant.Project, variant.Project+"-ref")
+	if err != nil {
+		return nil, &infraError{err}
+	}
+	treeLock := r.lock("reftree:" + variant.Project)
+	treeLock.Lock()
+	defer treeLock.Unlock()
+	if err := checkout(ctx, dir, variant.Commit); err != nil {
+		return nil, &infraError{err}
+	}
+	result := lintWith(func(args ...string) stepResult {
+		return runCommand(ctx, dir, r.options.CommandTimeout, "golangci-lint", args...)
+	}, variant.Base)
+	switch {
+	case result.fatal != "":
+		return nil, errors.New(result.fatal)
+	case result.notRun:
+		return nil, errors.New("reference lint did not run")
+	case !result.blocked:
+		return []lintIssue{}, nil
+	}
+	issues := parseLintIssues(result.output)
+	if len(issues) == 0 {
+		return nil, errors.New("reference lint output could not be parsed")
+	}
+	return issues, nil
 }
