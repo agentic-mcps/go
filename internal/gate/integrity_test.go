@@ -170,6 +170,9 @@ func TestCheckIntegrityDeletedTest(t *testing.T) {
 	unrelated := integrityHeader +
 		"func TestOther(t *testing.T) {\n\tfor i := 0; i < 3; i++ {\n\t\tt.Logf(\"%d\", i)\n\t\tt.Fatal(\"x\")\n\t}\n}\n\n" +
 		"func TestBar(t *testing.T) {\n\tif Bar() != 2 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n"
+	twoServer := integrityHeader +
+		"func TestFoo(t *testing.T) {\n\ts := Server{}\n\tif s.Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n\n" +
+		"func TestBar(t *testing.T) {\n\tif Bar() != 2 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n"
 	external := "package p_test\n\nimport \"testing\"\n\nfunc TestFoo(t *testing.T) { t.Fatal(\"x\") }\n"
 
 	integrityRun(t, []integrityCase{
@@ -239,10 +242,16 @@ func TestCheckIntegrityDeletedTest(t *testing.T) {
 			Want:    []integrityWant{{SeverityInfo, CodeTestDeleted, "p/a_test.go", "removed together with the code it tested", 5}},
 		},
 		{
-			Name:    "deleted method matches by last segment",
-			Files:   []verification.SourceFile{integrityMod("p/a_test.go", two, onlyBar)},
+			Name:    "deleted method needs the method name and its type in the test",
+			Files:   []verification.SourceFile{integrityMod("p/a_test.go", twoServer, onlyBar)},
 			Deleted: []verification.ChangedDeclaration{integrityDecl("Server.Foo", "p/a.go")},
 			Want:    []integrityWant{{SeverityInfo, CodeTestDeleted, "p/a_test.go", "TestFoo", 5}},
+		},
+		{
+			Name:    "deleted method name alone does not explain the deletion",
+			Files:   []verification.SourceFile{integrityMod("p/a_test.go", two, onlyBar)},
+			Deleted: []verification.ChangedDeclaration{integrityDecl("Server.Foo", "p/a.go")},
+			Want:    []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestFoo", 5}},
 		},
 		{
 			Name:    "unrelated deleted code does not explain the deletion",
@@ -482,9 +491,9 @@ func TestCheckIntegrityAssertions(t *testing.T) {
 			Want:  []integrityWant{{SeverityWarn, CodeAssertionsReduced, "p/a_test.go", "TestFoo", 0}},
 		},
 		{
-			Name:  "refactor that adds a log line but keeps assertion helpers is fine",
+			Name:  "refactor that adds a log line but keeps assertion helpers only warns",
 			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk(three), mk("\tassert.Equal(t, 1, Foo(1))\n\tassert.Equal(t, 2, Foo(2))\n\tassert.Equal(t, 3, Foo(3))\n\tt.Log(\"done\")\n"))},
-			Want:  []integrityWant{},
+			Want:  []integrityWant{{SeverityWarn, CodeAssertionsReduced, "p/a_test.go", "TestFoo", 0}},
 		},
 		{
 			Name:  "testify assertions replace direct failures",
@@ -784,5 +793,444 @@ func TestCheckIntegrityConfig(t *testing.T) {
 			{SeverityBlock, CodeConfigModified, ".golangci.yml", "", 0},
 			{SeverityBlock, CodeConfigModified, ".github/workflows/ci.yml", "", 0},
 		})
+	})
+}
+
+func TestCheckIntegrityRenameCoverUp(t *testing.T) {
+	body := "{\n\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n"
+	base := integrityHeader + "func TestFoo(t *testing.T) " + body
+	renamed := func(inner string) string {
+		return integrityHeader + "func TestFooDisabled(t *testing.T) {\n" + inner + "\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n"
+	}
+	guardedHead := "package p\n\nimport (\n\t\"runtime\"\n\t\"testing\"\n)\n\nvar _ = runtime.GOOS\n\n"
+
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "rename plus unguarded skip",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, renamed("\tt.Skip(\"x\")\n"))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFooDisabled", 0}},
+		},
+		{
+			Name: "rename plus guarded skip",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base,
+				guardedHead+"func TestFooDisabled(t *testing.T) {\n\tif runtime.GOOS == \"windows\" {\n\t\tt.Skip(\"x\")\n\t}\n\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n")},
+			Want: []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "TestFooDisabled", 0}},
+		},
+		{
+			Name: "rename plus Errorf turned into Logf",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base,
+				integrityHeader+"func TestFooDisabled(t *testing.T) {\n\tif Foo() != 1 {\n\t\tt.Logf(\"bad\")\n\t}\n}\n")},
+			Want: []integrityWant{{SeverityBlock, CodeAssertionsRemoved, "p/a_test.go", "TestFooDisabled", 0}},
+		},
+		{
+			Name: "rename plus early return",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base,
+				integrityHeader+"func TestFooDisabled(t *testing.T) {\n\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n\treturn\n\t_ = 1\n}\n")},
+			Want: []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "returns early", 0}},
+		},
+		{
+			Name:  "rename that also removes the assertion is a deletion",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, integrityHeader+"func TestFooDisabled(t *testing.T) {\n\t_ = Foo()\n}\n")},
+			Want: []integrityWant{
+				{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestFoo", 5},
+				{SeverityWarn, CodeTestEmpty, "p/a_test.go", "TestFooDisabled", 0},
+			},
+		},
+		{
+			Name:  "rename that adds an assertion is fine",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, renamed("\tif Foo() == 0 {\n\t\tt.Errorf(\"zero\")\n\t}\n"))},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegritySkipViaHelper(t *testing.T) {
+	body := "\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n"
+	test := func(call string) string {
+		return integrityHeader + "func TestFoo(t *testing.T) {\n" + call + body + "}\n"
+	}
+	helper := "\nfunc skipFlaky(t *testing.T) {\n\tt.Skip(\"flaky\")\n}\n"
+	guardedHelper := "\nfunc skipFlaky(t *testing.T) {\n\tif testing.Short() {\n\t\tt.Skip(\"slow\")\n\t}\n}\n"
+	plainHelper := "\nfunc skipFlaky(t *testing.T) {\n\tt.Helper()\n}\n"
+
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "test newly calls a new skipping helper",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", test(""), test("\tskipFlaky(t)\n")+helper)},
+			Want: []integrityWant{
+				{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo now calls skipFlaky", 0},
+				{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "helper skipFlaky", 0},
+			},
+		},
+		{
+			Name: "helper lives in another changed file",
+			Files: []verification.SourceFile{
+				integrityMod("p/a_test.go", test(""), test("\tskipFlaky(t)\n")),
+				integrityAdd("p/h.go", "package p\n\nimport \"testing\"\n\nfunc skipFlaky(t *testing.T) {\n\tt.Skip(\"flaky\")\n}\n"),
+			},
+			Want: []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo now calls skipFlaky", 0}},
+		},
+		{
+			Name:  "helper that gained a skip is not newly called",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", test("\tskipFlaky(t)\n")+plainHelper, test("\tskipFlaky(t)\n")+helper)},
+			Want:  []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "helper skipFlaky", 0}},
+		},
+		{
+			Name:  "test newly calls a helper that gained a skip",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", test("")+plainHelper, test("\tskipFlaky(t)\n")+helper)},
+			Want: []integrityWant{
+				{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo now calls skipFlaky", 0},
+				{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "helper skipFlaky", 0},
+			},
+		},
+		{
+			Name:  "helper that already skipped at base",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", test("")+helper, test("\tskipFlaky(t)\n")+helper)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "new helper with a guarded skip only warns",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", test(""), test("\tskipFlaky(t)\n")+guardedHelper)},
+			Want:  []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "helper skipFlaky", 0}},
+		},
+		{
+			Name:  "new helper that does not skip",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", test(""), test("\tskipFlaky(t)\n")+plainHelper)},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegrityIgnoredDirectories(t *testing.T) {
+	src := integrityHeader + "func TestFoo(t *testing.T) {\n\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n}\n"
+	for _, moved := range []string{"p/testdata/a_test.go", "p/_old/a_test.go", "p/.hidden/a_test.go", "_x/a_test.go"} {
+		t.Run("moved to "+moved, func(t *testing.T) {
+			got := CheckIntegrity([]verification.SourceFile{integrityRename("p/a_test.go", moved, src, src)}, nil)
+			integrityAssert(t, got, []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestFoo", 5}})
+		})
+	}
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "added copy in an ignored directory does not replace the test",
+			Files: []verification.SourceFile{integrityDel("p/a_test.go", src), integrityAdd("p/testdata/a_test.go", src)},
+			Want:  []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestFoo", 5}},
+		},
+		{
+			Name:  "directory names that only look hidden are fine",
+			Files: []verification.SourceFile{integrityRename("p/a_test.go", "p/my_dir/a_test.go", src, src)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "fixture tests under testdata are not real tests",
+			Files: []verification.SourceFile{integrityDel("p/testdata/x_test.go", src)},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegrityBuildConstraintVariants(t *testing.T) {
+	body := integrityHeader + "func TestFoo(t *testing.T) { t.Fatal(1) }\nfunc TestBar(t *testing.T) { t.Fatal(2) }\n"
+	onlyBar := integrityHeader + "func TestBar(t *testing.T) { t.Fatal(2) }\n"
+	onlyFoo := integrityHeader + "func TestFoo(t *testing.T) { t.Fatal(1) }\n"
+
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "plus build ignore added",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", body, "// +build ignore\n\n"+body)},
+			Want:  []integrityWant{{SeverityBlock, CodeTestHidden, "p/a_test.go", "build constraint", 1}},
+		},
+		{
+			Name:  "plus build line unchanged",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", "// +build linux\n\n"+body, "// +build linux\n\n"+body+"\n")},
+			Want:  []integrityWant{},
+		},
+		{
+			Name: "test moved into a new file with a different constraint",
+			Files: []verification.SourceFile{
+				integrityMod("p/a_test.go", body, onlyBar),
+				integrityAdd("p/b_test.go", "//go:build integration\n\n"+onlyFoo),
+			},
+			Want: []integrityWant{{SeverityWarn, CodeTestHidden, "p/b_test.go", "TestFoo", 0}},
+		},
+		{
+			Name: "test moved into a new file that is not constrained",
+			Files: []verification.SourceFile{
+				integrityMod("p/a_test.go", body, onlyBar),
+				integrityAdd("p/b_test.go", onlyFoo),
+			},
+			Want: []integrityWant{},
+		},
+		{
+			Name: "test moved between files with the same constraint",
+			Files: []verification.SourceFile{
+				integrityMod("p/a_test.go", "//go:build integration\n\n"+body, "//go:build integration\n\n"+onlyBar),
+				integrityAdd("p/b_test.go", "//go:build integration\n\n"+onlyFoo),
+			},
+			Want: []integrityWant{},
+		},
+		{
+			Name: "test moved into a new file with an OS suffix",
+			Files: []verification.SourceFile{
+				integrityMod("p/a_test.go", body, onlyBar),
+				integrityAdd("p/b_windows_test.go", onlyFoo),
+			},
+			Want: []integrityWant{{SeverityWarn, CodeTestHidden, "p/b_windows_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "renamed to an OS suffix",
+			Files: []verification.SourceFile{integrityRename("p/a_test.go", "p/a_windows_test.go", body, body)},
+			Want:  []integrityWant{{SeverityBlock, CodeTestHidden, "p/a_windows_test.go", "build constraint", 0}},
+		},
+		{
+			Name:  "renamed to an arch suffix",
+			Files: []verification.SourceFile{integrityRename("p/a_test.go", "p/a_arm64_test.go", body, body)},
+			Want:  []integrityWant{{SeverityBlock, CodeTestHidden, "p/a_arm64_test.go", "build constraint", 0}},
+		},
+		{
+			Name:  "renamed to an OS and arch suffix",
+			Files: []verification.SourceFile{integrityRename("p/a_test.go", "p/a_linux_amd64_test.go", body, body)},
+			Want:  []integrityWant{{SeverityBlock, CodeTestHidden, "p/a_linux_amd64_test.go", "build constraint", 0}},
+		},
+		{
+			Name:  "renamed to an unknown suffix",
+			Files: []verification.SourceFile{integrityRename("p/a_test.go", "p/a_plan9x_test.go", body, body)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "renamed to a bare OS name is not a suffix",
+			Files: []verification.SourceFile{integrityRename("p/a_test.go", "p/windows_test.go", body, body)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "renamed keeping the same OS suffix",
+			Files: []verification.SourceFile{integrityRename("p/a_windows_test.go", "p/b_windows_test.go", body, body)},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "new test file with an OS suffix",
+			Files: []verification.SourceFile{integrityAdd("p/b_windows_test.go", onlyFoo)},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegrityAssertionRefinements(t *testing.T) {
+	head := "package p\n\nimport (\n\t\"encoding/xml\"\n\t\"os/exec\"\n\t\"testing\"\n)\n\nvar _ = xml.NewDecoder\nvar _ = exec.Command\n\n"
+	mk := func(body string) string { return head + "func TestFoo(t *testing.T) {\n" + body + "}\n" }
+	two := "\tif Foo(1) != 1 {\n\t\tt.Errorf(\"1\")\n\t}\n\tif Foo(2) != 2 {\n\t\tt.Errorf(\"2\")\n\t}\n"
+
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "Skip on a decoder is not a test skip",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk(two), mk(two+"\td := xml.NewDecoder(nil)\n\t_ = d.Skip()\n"))},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "cmd.Run is not a subtest",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk(two), mk("\tcmd := exec.Command(\"x\")\n\t_ = cmd.Run()\n"))},
+			Want:  []integrityWant{{SeverityBlock, CodeAssertionsRemoved, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "Error and Log on a non testing receiver",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk(two), mk("\tvar l interface{ Errorf(string); Log(string) }\n\tl.Errorf(\"x\")\n\tl.Log(\"y\")\n"))},
+			Want:  []integrityWant{{SeverityBlock, CodeAssertionsRemoved, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "testing.TB parameter of a closure is a testing receiver",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk(two), mk("\tcheck := func(tb testing.TB) {\n\t\ttb.Errorf(\"1\")\n\t\ttb.Errorf(\"2\")\n\t}\n\tcheck(t)\n"))},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "method value subtests only warn",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk(two), mk("\tfor _, tc := range cases {\n\t\tt.Run(tc.name, tc.check)\n\t}\n"))},
+			Want:  []integrityWant{{SeverityWarn, CodeAssertionsReduced, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "Errorf swapped for Logf while an equal helper count remains only warns",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk("\tif Foo(1) != 1 {\n\t\tt.Errorf(\"1\")\n\t}\n"), mk("\tcheck(t, Foo(1))\n\tt.Log(\"x\")\n"))},
+			Want:  []integrityWant{{SeverityWarn, CodeAssertionsReduced, "p/a_test.go", "TestFoo", 0}},
+		},
+	})
+}
+
+func TestCheckIntegrityDisguisedEarlyReturn(t *testing.T) {
+	mk := func(body string) string {
+		return "package p\n\nimport (\n\t\"os\"\n\t\"runtime\"\n\t\"testing\"\n)\n\nvar _ = os.Args\nvar _ = runtime.GOOS\n\nfunc TestFoo(t *testing.T) {\n" + body + "}\n"
+	}
+	asserting := "\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n"
+	base := mk(asserting)
+
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "if true return",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif true {\n\t\treturn\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 13}},
+		},
+		{
+			Name:  "if one equals one return",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif 1 == 1 {\n\t\treturn\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 13}},
+		},
+		{
+			Name:  "if not false return",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif !(2 < 1) {\n\t\treturn\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 13}},
+		},
+		{
+			Name:  "other condition only warns",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif len(os.Args) > 5 {\n\t\treturn\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 13}},
+		},
+		{
+			Name:  "guard condition is fine",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif runtime.GOOS == \"windows\" {\n\t\treturn\n\t}\n"+asserting))},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "body that also fails is a normal guard clause",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif Foo() == 0 {\n\t\tt.Fatal(1)\n\t\treturn\n\t}\n"+asserting))},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "if with else is not matched",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", base, mk("\tif Foo() == 0 {\n\t\treturn\n\t} else {\n\t\tt.Log(1)\n\t}\n"+asserting))},
+			Want:  []integrityWant{},
+		},
+		{
+			Name:  "pre-existing disguised return",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", mk("\tif true {\n\t\treturn\n\t}\n"+asserting), mk("\tif true {\n\t\treturn\n\t}\n"+asserting+"\tt.Log(1)\n"))},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegrityGuardAliases(t *testing.T) {
+	src := func(body string) string {
+		return "package p\n\nimport (\n\tgoruntime \"runtime\"\n\tgoos \"os\"\n\ttt \"testing\"\n)\n\nvar _ = goruntime.GOOS\nvar _ = goos.Args\n\nfunc TestFoo(t *tt.T) {\n" + body + "}\n"
+	}
+	asserting := "\tif Foo() != 1 {\n\t\tt.Errorf(\"bad\")\n\t}\n"
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "aliased runtime guard",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", src(asserting), src("\tif goruntime.GOOS == \"windows\" {\n\t\tt.Skip(\"x\")\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "aliased os guard",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", src(asserting), src("\tif goos.Getenv(\"CI\") == \"\" {\n\t\tt.Skip(\"x\")\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "aliased testing guard",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", src(asserting), src("\tif tt.Short() {\n\t\tt.Skip(\"x\")\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityWarn, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:  "a local variable named runtime is not the package",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", src(asserting), src("\truntime := struct{ GOOS string }{}\n\tif runtime.GOOS == \"windows\" {\n\t\tt.Skip(\"x\")\n\t}\n"+asserting))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestSkipAdded, "p/a_test.go", "TestFoo", 0}},
+		},
+	})
+}
+
+func TestCheckIntegrityDeletedTestMerging(t *testing.T) {
+	deleted := integrityHeader + "func TestA(t *testing.T) {\n\tgot := Parse(\"a\")\n\tif got != Render(1) {\n\t\tt.Errorf(\"bad %v\", got)\n\t}\n}\n"
+	table := func(inner string) string {
+		return integrityHeader + "func TestTable(t *testing.T) {\n\tfor _, c := range cases {\n\t\t" + inner + "\n\t}\n}\n"
+	}
+	superset := integrityHeader + "func TestBoth(t *testing.T) {\n\tgot := Parse(\"a\")\n\tif got != Render(1) {\n\t\tt.Errorf(\"bad %v\", got)\n\t}\n\tif Parse(\"b\") != Render(2) {\n\t\tt.Errorf(\"bad b\")\n\t}\n}\n"
+
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "merged into a table test that calls the same code",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", deleted, table("if Parse(c.in) != Render(c.n) {\n\t\t\tt.Errorf(\"%v\", c)\n\t\t}"))},
+			Want:  []integrityWant{{SeverityWarn, CodeTestDeleted, "p/a_test.go", "TestTable in this change exercises the same code", 5}},
+		},
+		{
+			Name:  "new test calls half of the code",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", deleted, table("if Parse(c.in) != c.n {\n\t\t\tt.Errorf(\"%v\", c)\n\t\t}"))},
+			Want:  []integrityWant{{SeverityWarn, CodeTestDeleted, "p/a_test.go", "TestTable", 5}},
+		},
+		{
+			Name:  "new test calls only standard library and testing helpers",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", deleted, table("if strings.TrimSpace(c.in) != c.n {\n\t\t\tt.Errorf(\"%v\", c)\n\t\t\tfmt.Println(c)\n\t\t}"))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestA", 5}},
+		},
+		{
+			Name:  "new test calls unrelated code",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", deleted, table("if Other(c.in) != c.n {\n\t\t\tt.Errorf(\"%v\", c)\n\t\t}"))},
+			Want:  []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestA", 5}},
+		},
+		{
+			Name:  "deleted test body contained in a larger new test",
+			Files: []verification.SourceFile{integrityMod("p/a_test.go", deleted, superset)},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegrityStubScope(t *testing.T) {
+	stub := func(pkg string) string { return "package " + pkg + "\n\nfunc F() { panic(\"not implemented\") }\n" }
+	for _, tc := range []struct{ path, pkg string }{
+		{"p/m.go", "mocks"},
+		{"p/m.go", "mock"},
+		{"p/m.go", "fakes"},
+		{"p/m.go", "fake"},
+		{"p/m.go", "fooMock"},
+		{"p/m.go", "enginetest"},
+		{"p/m.go", "testing"},
+		{"p/testutil/a.go", "p"},
+		{"p/mocks/a.go", "p"},
+		{"p/fakes/a.go", "p"},
+	} {
+		t.Run("exempt "+tc.path+" "+tc.pkg, func(t *testing.T) {
+			got := CheckIntegrity([]verification.SourceFile{integrityAdd(tc.path, stub(tc.pkg))}, nil)
+			integrityAssert(t, got, []integrityWant{})
+		})
+	}
+	integrityRun(t, []integrityCase{
+		{
+			Name:  "ordinary package still blocks",
+			Files: []verification.SourceFile{integrityAdd("p/mocksmith/a.go", stub("p"))},
+			Want:  []integrityWant{{SeverityBlock, CodeStub, "p/mocksmith/a.go", "F", 3}},
+		},
+		{
+			Name:  "gutted function in a mock package is exempt",
+			Files: []verification.SourceFile{integrityMod("p/a.go", "package mocks\n\nfunc F() error {\n\ta()\n\tb()\n\tc()\n\treturn nil\n}\n", "package mocks\n\nfunc F() error {\n\treturn nil\n}\n")},
+			Want:  []integrityWant{},
+		},
+	})
+}
+
+func TestCheckIntegrityDeletedDeclarationMatching(t *testing.T) {
+	test := func(inner string) string {
+		return integrityHeader + "func TestFoo(t *testing.T) {\n" + inner + "\tt.Fatal(1)\n}\n\nfunc TestKeep(t *testing.T) { t.Fatal(1) }\n"
+	}
+	keep := integrityHeader + "func TestKeep(t *testing.T) { t.Fatal(1) }\n"
+	integrityRun(t, []integrityCase{
+		{
+			Name:    "method with its receiver type",
+			Files:   []verification.SourceFile{integrityMod("p/a_test.go", test("\tvar s Server\n\ts.Handle()\n"), keep)},
+			Deleted: []verification.ChangedDeclaration{integrityDecl("Server.Handle", "p/a.go")},
+			Want:    []integrityWant{{SeverityInfo, CodeTestDeleted, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:    "method name only",
+			Files:   []verification.SourceFile{integrityMod("p/a_test.go", test("\tvar s Other\n\ts.Handle()\n"), keep)},
+			Deleted: []verification.ChangedDeclaration{integrityDecl("Server.Handle", "p/a.go")},
+			Want:    []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:    "receiver type only",
+			Files:   []verification.SourceFile{integrityMod("p/a_test.go", test("\tvar s Server\n\t_ = s\n"), keep)},
+			Deleted: []verification.ChangedDeclaration{integrityDecl("Server.Handle", "p/a.go")},
+			Want:    []integrityWant{{SeverityBlock, CodeTestDeleted, "p/a_test.go", "TestFoo", 0}},
+		},
+		{
+			Name:    "top level function by name",
+			Files:   []verification.SourceFile{integrityMod("p/a_test.go", test("\tHandle()\n"), keep)},
+			Deleted: []verification.ChangedDeclaration{integrityDecl("Handle", "p/a.go")},
+			Want:    []integrityWant{{SeverityInfo, CodeTestDeleted, "p/a_test.go", "TestFoo", 0}},
+		},
 	})
 }
