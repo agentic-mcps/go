@@ -85,10 +85,10 @@ func New(ws *workspace.Workspace, runner *execution.Runner, version string, stor
 
 // gateRun is the state of one Run.
 type gateRun struct {
+	options     Options
+	start       time.Time
 	result      Result
 	fingerprint string
-	start       time.Time
-	options     Options
 	settings    profileSettings
 	cacheable   bool
 	complete    bool
@@ -345,6 +345,7 @@ func (g *Gate) cached(run *gateRun) (Result, bool) {
 // finish computes the verdict and stats and stores a definite result.
 func (g *Gate) finish(run *gateRun) Result {
 	result := run.result
+	result.Items = gateConfigPolicy(g.ws.Root(), run.options, result.Items)
 	SortItems(result.Items)
 	result.Verdict = ComputeVerdict(result.Items, run.complete)
 	result.Fingerprint = run.fingerprint
@@ -369,7 +370,52 @@ func (g *Gate) salt(options Options) string {
 	for _, name := range gateSaltEnv {
 		fmt.Fprintf(&b, " %s=%q", name, g.getenv(name))
 	}
+	if options.SessionConfigDigests != nil {
+		names := make([]string, 0, len(options.SessionConfigDigests))
+		for name := range options.SessionConfigDigests {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		b.WriteString(" config=")
+		for _, name := range names {
+			fmt.Fprintf(&b, "%q:%q,", name, options.SessionConfigDigests[name])
+		}
+	}
 	return b.String()
+}
+
+// gateConfigPolicy applies where the gate runs to configuration edits. In an
+// agent hook they block, except files whose content is the same as when the
+// session started, which the agent did not change. Everywhere else they are
+// warnings, because a person runs the gate on their own change.
+func gateConfigPolicy(root string, options Options, items []Item) []Item {
+	kept := make([]Item, 0, len(items))
+	for _, item := range items {
+		if item.Code == CodeConfigModified {
+			if options.Profile != ProfileHook {
+				item.Severity = SeverityWarn
+			} else if gateConfigUnchanged(root, item.File, options.SessionConfigDigests) {
+				continue
+			}
+		}
+		kept = append(kept, item)
+	}
+	return kept
+}
+
+// gateConfigUnchanged reports whether name has the content recorded at
+// session start, counting "absent then and now" as unchanged. Without a
+// record nothing is unchanged.
+func gateConfigUnchanged(root, name string, recorded map[string]string) bool {
+	if recorded == nil {
+		return false
+	}
+	before, existed := recorded[name]
+	now, exists, err := stateConfigDigest(root, name)
+	if err != nil {
+		return false
+	}
+	return existed == exists && before == now
 }
 
 func (run *gateRun) add(items ...Item) {

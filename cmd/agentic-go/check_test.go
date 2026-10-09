@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -44,6 +45,7 @@ type checkHarness struct {
 	store      *gate.Store
 	openErr    error
 	env        map[string]string
+	digests    map[string]string
 	stdin      string
 	head       string
 	openedRoot string
@@ -76,7 +78,8 @@ func (h *checkHarness) deps() checkDependencies {
 			}
 			return h.store, nil
 		},
-		startHead: func(context.Context, string) string { return h.head },
+		startHead:     func(context.Context, string) string { return h.head },
+		configDigests: func(context.Context, string) map[string]string { return h.digests },
 	}
 }
 
@@ -177,7 +180,7 @@ func TestCheckProfileAndOptionsReachTheGate(t *testing.T) {
 		Base: "origin/main", Profile: gate.ProfileCI, Budget: 90 * time.Second, Race: true,
 		RequireCoverage: true, Skip: "TestSlow", MaxPackages: 40, NoCache: true,
 	}
-	if got := h.gate.options[0]; got != want {
+	if got := h.gate.options[0]; !reflect.DeepEqual(got, want) {
 		t.Fatalf("options = %+v, want %+v", got, want)
 	}
 	if h.openedRoot != "/repo" {
@@ -389,6 +392,79 @@ func TestHookSessionStartRecordsHead(t *testing.T) {
 	h.run("--hook", "claude")
 	if got := h.gate.options[0].SessionBase; got != "abc123" {
 		t.Fatalf("SessionBase = %q, want abc123", got)
+	}
+}
+
+func TestHookSessionStartRecordsConfigDigests(t *testing.T) {
+	dir := goModuleDir(t)
+	h := newCheckHarness(t, checkResult(gate.VerdictPass, "fp"))
+	h.head = "abc123"
+	h.digests = map[string]string{".claude/settings.json": "d1"}
+	h.stdin = hookPayload("SessionStart", dir, `"source":"startup"`)
+	h.run("--hook", "claude")
+
+	// A resume keeps the digests from the start of the session.
+	h.digests = map[string]string{".claude/settings.json": "d2"}
+	h.stdin = hookPayload("SessionStart", dir, `"source":"resume"`)
+	h.run("--hook", "claude")
+
+	h.stdin = hookPayload("Stop", dir, "")
+	h.run("--hook", "claude")
+	want := map[string]string{".claude/settings.json": "d1"}
+	if got := h.gate.options[0].SessionConfigDigests; !reflect.DeepEqual(got, want) {
+		t.Fatalf("SessionConfigDigests = %v, want %v", got, want)
+	}
+
+	// A Stop without a recorded session passes no digests.
+	h.stdin = strings.Replace(hookPayload("Stop", dir, ""), `"s1"`, `"s2"`, 1)
+	h.run("--hook", "claude")
+	if got := h.gate.options[1].SessionConfigDigests; got != nil {
+		t.Fatalf("SessionConfigDigests = %v, want nil without a session record", got)
+	}
+}
+
+func TestHookEndToEndBlocksOnlyConfigTheAgentChanged(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test runs git and go")
+	}
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	repository := t.TempDir()
+	cliGit(t, repository, "init", "-b", "main")
+	cliGit(t, repository, "config", "user.email", "test@example.test")
+	cliGit(t, repository, "config", "user.name", "Test")
+	cliWrite(t, repository, "go.mod", "module example.test/e2e\n\ngo 1.25.0\n")
+	cliWrite(t, repository, "lib.go", "package e2e\n\nfunc Add(a, b int) int { return a + b }\n")
+	cliWrite(t, repository, "lib_test.go", "package e2e\n\nimport \"testing\"\n\nfunc TestAdd(t *testing.T) {\n\tif Add(1, 2) != 3 {\n\t\tt.Fatal(\"Add\")\n\t}\n}\n")
+	cliGit(t, repository, "add", ".")
+	cliGit(t, repository, "commit", "-m", "base")
+
+	// The human installs the hook before the session starts.
+	if exit, _, stderr := runInitTest(t, defaultInitDependencies(), "--claude", "--write", "--workspace", repository); exit != 0 {
+		t.Fatalf("init exit = %d, stderr %q", exit, stderr)
+	}
+	hook := func(event string) string {
+		t.Helper()
+		deps := defaultCheckDependencies()
+		deps.stdin = strings.NewReader(hookPayload(event, repository, ""))
+		var stdout, stderr bytes.Buffer
+		if exit := runCheckWithDependencies([]string{"--hook", "claude"}, &stdout, &stderr, deps); exit != 0 {
+			t.Fatalf("%s exit = %d, stderr %q", event, exit, stderr.String())
+		}
+		return stdout.String()
+	}
+	hook("SessionStart")
+
+	// The agent makes an unrelated change: no configuration block.
+	cliWrite(t, repository, "lib.go", "package e2e\n\n// Add returns a plus b.\nfunc Add(a, b int) int { return a + b }\n")
+	if out := hook("Stop"); strings.Contains(out, `"decision":"block"`) {
+		t.Fatalf("unrelated edit blocked on configuration the human wrote:\n%s", out)
+	}
+
+	// The agent edits the hook settings: block.
+	cliWrite(t, repository, ".claude/settings.json", "{}\n")
+	out := hook("Stop")
+	if !strings.Contains(out, `"decision":"block"`) || !strings.Contains(out, ".claude/settings.json") {
+		t.Fatalf("agent's settings edit did not block:\n%s", out)
 	}
 }
 

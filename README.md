@@ -125,7 +125,7 @@ Checks run in this order.
 | Syntax | Go syntax errors in changed files. |
 | Test integrity | Deleted tests; tests hidden from `go test` by a rename, a build constraint, or an ignored directory; skips added to existing tests; assertions removed or turned into log calls; stub panics such as `panic("not implemented")`. |
 | Golden files | Edits to golden or testdata files next to code (warning). |
-| Gate configuration | Edits to gate or CI configuration. Blocks once and is always reported. |
+| Gate configuration | Edits to gate or CI configuration; in agent hooks, only files changed since the session started. Blocks once in agent hooks; a warning elsewhere. Always reported. |
 | Tests | `go test` on changed packages and their in-module consumers. Failures are rerun and compared with the base, so pre-existing and flaky failures are warnings, not blocks. The test cache is used locally. |
 | Analyzers | Findings introduced by the bundled concurrency and error-handling analyzers. |
 | Coverage | Changed lines that no test executes (warning). `--require-coverage` makes them block. |

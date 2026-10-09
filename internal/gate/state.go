@@ -127,6 +127,48 @@ func stateFileDigest(path string) (digest []byte, ok bool, err error) {
 	return sum.Sum(nil), true, nil
 }
 
+// ConfigDigests returns the hex SHA-256 digest of every gate-configuration
+// file in the workspace at root (the files the config.modified rule watches),
+// keyed by workspace-relative path. Recorded when an agent session starts, it
+// lets the hook tell configuration the agent edited from configuration that
+// already differed from the base.
+func ConfigDigests(ctx context.Context, git GitFunc, root string) (map[string]string, error) {
+	listed, err := git(ctx, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ".")
+	if err != nil {
+		return nil, fmt.Errorf("listing workspace files: %w", err)
+	}
+	// Local agent settings are often ignored by git but still configure hooks.
+	names := append(strings.Split(string(listed), "\x00"), ".claude/settings.json", ".claude/settings.local.json")
+	digests := make(map[string]string)
+	for _, name := range names {
+		if name == "" || !integrityIsConfig(name) {
+			continue
+		}
+		digest, ok, err := stateConfigDigest(root, name)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			digests[name] = digest
+		}
+	}
+	return digests, nil
+}
+
+// stateConfigDigest hashes one workspace-relative file; ok is false when it
+// does not exist.
+func stateConfigDigest(root, name string) (digest string, ok bool, err error) {
+	abs, err := stateJoinWithin(root, name)
+	if err != nil {
+		return "", false, err
+	}
+	sum, ok, err := stateFileDigest(abs)
+	if err != nil {
+		return "", false, fmt.Errorf("hashing %s: %w", name, err)
+	}
+	return hex.EncodeToString(sum), ok, nil
+}
+
 // stateWriteField writes data preceded by its 8-byte big-endian length so
 // adjacent fields cannot run into each other.
 func stateWriteField(h hash.Hash, data []byte) {
@@ -238,6 +280,9 @@ type Session struct {
 	LastBlockedFingerprint string    `json:"last_blocked_fingerprint"`
 	UpdatedAt              time.Time `json:"updated_at"`
 	Blocks                 int       `json:"blocks"`
+	// ConfigDigests are the gate-configuration files at session start, from
+	// ConfigDigests; nil when they were not recorded.
+	ConfigDigests map[string]string `json:"config_digests"`
 }
 
 // LoadSession returns the stored session for id. A missing, unreadable, or

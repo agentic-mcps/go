@@ -2,8 +2,12 @@ package gate
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -194,6 +198,7 @@ func TestGateRunScenarios(t *testing.T) {
 	if testing.Short() {
 		t.Skip("integration test runs git and go")
 	}
+	//nolint:govet // Keep each case readable in input, then expectation order.
 	cases := []struct {
 		name     string
 		base     map[string]string
@@ -554,10 +559,18 @@ func TestFlaky(t *testing.T) {
 			},
 		},
 		{
-			name: "config change without Go changes still blocks", parallel: true,
-			change: map[string]string{".github/workflows/ci.yml": "on: push\n"},
+			name: "config change without Go changes blocks in an agent hook", parallel: true,
+			change:  map[string]string{".github/workflows/ci.yml": "on: push\n"},
+			options: Options{Profile: ProfileHook},
 			check: func(t *testing.T, result Result) {
 				gateWant(t, result, VerdictBlock, CodeConfigModified, SeverityBlock)
+			},
+		},
+		{
+			name: "near miss: config change outside agent hooks is a warning", parallel: true,
+			change: map[string]string{".github/workflows/ci.yml": "on: push\n"},
+			check: func(t *testing.T, result Result) {
+				gateWant(t, result, VerdictPass, CodeConfigModified, SeverityWarn)
 			},
 		},
 	}
@@ -570,6 +583,150 @@ func TestFlaky(t *testing.T) {
 			tc.check(t, gateRunFixture(t, f.root, tc.options))
 		})
 	}
+}
+
+func TestGateConfigPolicy(t *testing.T) {
+	root := t.TempDir()
+	files := map[string]string{".claude/settings.json": "{}\n", ".golangci.yml": "version: \"2\"\n"}
+	current := make(map[string]string, len(files))
+	for name, content := range files {
+		path := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		sum := sha256.Sum256([]byte(content))
+		current[name] = hex.EncodeToString(sum[:])
+	}
+	config := func(severity Severity, file string) Item {
+		return Item{Severity: severity, Code: CodeConfigModified, File: file}
+	}
+	deleted := Item{Severity: SeverityBlock, Code: CodeTestDeleted, File: "a_test.go"}
+	// .codex/hooks.json and .github/workflows/x.yml do not exist now.
+	items := func() []Item {
+		return []Item{
+			config(SeverityBlock, ".claude/settings.json"),
+			config(SeverityBlock, ".golangci.yml"),
+			config(SeverityBlock, ".codex/hooks.json"),
+			config(SeverityBlock, ".github/workflows/x.yml"),
+			deleted,
+		}
+	}
+	cases := []struct {
+		options Options
+		name    string
+		want    []Item
+	}{
+		{
+			name:    "hook without a session record blocks on every config edit",
+			options: Options{Profile: ProfileHook},
+			want:    items(),
+		},
+		{
+			name: "hook drops config unchanged since session start",
+			options: Options{Profile: ProfileHook, SessionConfigDigests: map[string]string{
+				".claude/settings.json": current[".claude/settings.json"], ".golangci.yml": current[".golangci.yml"],
+			}},
+			want: []Item{deleted},
+		},
+		{
+			name: "near miss: hook keeps config edited, created, or deleted since session start",
+			options: Options{Profile: ProfileHook, SessionConfigDigests: map[string]string{
+				".claude/settings.json": "00", ".codex/hooks.json": current[".golangci.yml"],
+			}},
+			want: []Item{config(SeverityBlock, ".claude/settings.json"), config(SeverityBlock, ".golangci.yml"), config(SeverityBlock, ".codex/hooks.json"), deleted},
+		},
+		{
+			name:    "local run warns and ignores the session record",
+			options: Options{Profile: ProfileLocal, SessionConfigDigests: current},
+			want: []Item{
+				config(SeverityWarn, ".claude/settings.json"), config(SeverityWarn, ".golangci.yml"),
+				config(SeverityWarn, ".codex/hooks.json"), config(SeverityWarn, ".github/workflows/x.yml"), deleted,
+			},
+		},
+		{
+			name:    "ci run warns",
+			options: Options{Profile: ProfileCI},
+			want: []Item{
+				config(SeverityWarn, ".claude/settings.json"), config(SeverityWarn, ".golangci.yml"),
+				config(SeverityWarn, ".codex/hooks.json"), config(SeverityWarn, ".github/workflows/x.yml"), deleted,
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := gateConfigPolicy(root, tc.options, items())
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("gateConfigPolicy = %+v\nwant %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestConfigDigests(t *testing.T) {
+	f := newBaseFixture(t)
+	f.write("go.mod", "module example.com/fixture\n\ngo 1.25\n")
+	f.write(".gitignore", ".claude/settings.local.json\n")
+	f.write(".claude/settings.json", "{}\n")
+	f.write(".claude/settings.local.json", "{\"local\":true}\n")
+	f.write(".golangci.yml", "version: \"2\"\n")
+	f.write("lib/lib.go", "package lib\n")
+	f.commit("base")
+	f.write(".github/workflows/ci.yml", "on: push\n")
+	f.write("sub/.agentic-go.yaml", "x: 1\n")
+	f.write("notes.yml", "not config\n")
+
+	got, err := ConfigDigests(context.Background(), f.gitFunc(f.root), f.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{".claude/settings.json", ".claude/settings.local.json", ".github/workflows/ci.yml", ".golangci.yml", "sub/.agentic-go.yaml"}
+	keys := make([]string, 0, len(got))
+	for name, digest := range got {
+		keys = append(keys, name)
+		if len(digest) != 64 {
+			t.Errorf("digest of %s = %q, want 64 hex characters", name, digest)
+		}
+	}
+	sort.Strings(keys)
+	if !reflect.DeepEqual(keys, want) {
+		t.Fatalf("ConfigDigests paths = %v, want %v", keys, want)
+	}
+	if got[".claude/settings.json"] != "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356" {
+		t.Fatalf("settings digest = %s, want sha256 of the file", got[".claude/settings.json"])
+	}
+}
+
+func TestGateRunHookBlocksOnlyConfigChangedSinceSessionStart(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test runs git and go")
+	}
+	t.Parallel()
+	// A human edited the workflow before the agent session started.
+	f := gateRepo(t, map[string]string{".github/workflows/ci.yml": "on: push\n"}, map[string]string{".github/workflows/ci.yml": "on: pull_request\n"})
+	g := gateNew(t, f.root, nil)
+	digests, err := ConfigDigests(context.Background(), g.git, f.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.write("lib/max.go", gateTruePatch["lib/max.go"])
+	result, err := g.Run(context.Background(), Options{Profile: ProfileHook, SessionConfigDigests: digests})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, found := gateFind(result, CodeConfigModified); found || result.Verdict != VerdictPass {
+		t.Fatalf("verdict = %s, items = %+v, want pass without config items", result.Verdict, result.Items)
+	}
+
+	// The agent then edits the workflow itself.
+	f.write(".github/workflows/ci.yml", "on: [push, pull_request]\n")
+	result, err = g.Run(context.Background(), Options{Profile: ProfileHook, SessionConfigDigests: digests})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gateWant(t, result, VerdictBlock, CodeConfigModified, SeverityBlock)
 }
 
 func TestGateRunCachesDefiniteResults(t *testing.T) {
@@ -732,6 +889,10 @@ func TestGateSaltIncludesBuildEnvironment(t *testing.T) {
 	env = map[string]string{"HOME": "/elsewhere"}
 	if g.salt(Options{}) != base {
 		t.Error("salt depends on an unrelated variable")
+	}
+	one := g.salt(Options{SessionConfigDigests: map[string]string{".golangci.yml": "a"}})
+	if one == base || one == g.salt(Options{SessionConfigDigests: map[string]string{".golangci.yml": "b"}}) {
+		t.Error("salt ignores the session's configuration digests")
 	}
 }
 

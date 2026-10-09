@@ -65,7 +65,7 @@ Push, not pull: hooks invoke it deterministically, so the adoption problem disap
 | Stub | `panic("…not implemented / TODO / unimplemented…")` in non-generated code | Warning: body gutted to a zero-value return |
 | Empty test | — | Test that asserts nothing: warning |
 | Golden/testdata | — | Modified alongside code: warning |
-| Gate config changed | `.claude/settings*`, `.codex/**`, `.agentic-go*`, `.golangci*` or workflows touched: block once, always disclosed | — |
+| Gate config changed | `.claude/settings*`, `.codex/**`, `.agentic-go*`, `.golangci*` or workflows touched in an agent hook, counting only files changed since the session started: block once, always disclosed | The same edits outside agent hooks (local, pre-push, CI): warning |
 
 **Stated blind spot:** an edited `want` literal (the most common real-world tampering) is not detectable.
 

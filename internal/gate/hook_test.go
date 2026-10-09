@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -142,7 +143,7 @@ func TestDecideStop(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			out, session := DecideStop(tc.result, tc.session, tc.maxBlocks)
-			if session != tc.wantSession {
+			if !reflect.DeepEqual(session, tc.wantSession) {
 				t.Fatalf("session = %+v, want %+v", session, tc.wantSession)
 			}
 			if tc.wantBlock {

@@ -70,17 +70,18 @@ type checkEnvironment struct {
 // checkDependencies are the seams of runCheck: tests replace them to avoid the
 // real workspace, Go toolchain, and state directory.
 type checkDependencies struct {
-	open      func(ctx context.Context, root string, timeout time.Duration, stderr io.Writer) (checkEnvironment, error)
-	openStore func(root string) (*gate.Store, error)
-	startHead func(ctx context.Context, root string) string
-	getenv    func(string) string
-	stdin     io.Reader
+	open          func(ctx context.Context, root string, timeout time.Duration, stderr io.Writer) (checkEnvironment, error)
+	openStore     func(root string) (*gate.Store, error)
+	startHead     func(ctx context.Context, root string) string
+	configDigests func(ctx context.Context, root string) map[string]string
+	getenv        func(string) string
+	stdin         io.Reader
 }
 
 func defaultCheckDependencies() checkDependencies {
 	return checkDependencies{
 		open: openCheckEnvironment, openStore: openSessionStore, startHead: gitStartHead,
-		getenv: os.Getenv, stdin: os.Stdin,
+		configDigests: gitConfigDigests, getenv: os.Getenv, stdin: os.Stdin,
 	}
 }
 
@@ -107,6 +108,24 @@ func gitStartHead(ctx context.Context, root string) string {
 		return ""
 	}
 	return strings.TrimSpace(string(output))
+}
+
+// gitConfigDigests records the gate-configuration files of the workspace at
+// root, or nil when they cannot be listed (then every configuration edit is
+// reported, as without a session record).
+func gitConfigDigests(ctx context.Context, root string) map[string]string {
+	ctx, cancel := context.WithTimeout(ctx, checkSessionStartTimeout)
+	defer cancel()
+	git := func(ctx context.Context, args ...string) ([]byte, error) {
+		command := exec.CommandContext(ctx, "git", args...)
+		command.Dir = root
+		return command.Output()
+	}
+	digests, err := gate.ConfigDigests(ctx, git, root)
+	if err != nil {
+		return nil
+	}
+	return digests
 }
 
 // openCheckEnvironment builds the real workspace, runner, store, and gate. A
@@ -381,8 +400,9 @@ func findGoRoot(start string) (string, bool) {
 	}
 }
 
-// recordSessionStart remembers the commit an agent session started from so
-// earlier human commits are not blamed on the agent. It runs the VCS command
+// recordSessionStart remembers the commit an agent session started from and
+// the gate-configuration files at that moment, so earlier human commits and
+// configuration edits are not blamed on the agent. It runs the VCS commands
 // directly in root and never builds the workspace, so it stays fast.
 func recordSessionStart(ctx context.Context, root string, event gate.HookEvent, deps checkDependencies) error {
 	store, err := deps.openStore(root)
@@ -397,7 +417,10 @@ func recordSessionStart(ctx context.Context, root string, event gate.HookEvent, 
 		return nil
 	}
 	session.StartHead = deps.startHead(ctx, root)
-	if session.StartHead == "" {
+	if session.ConfigDigests == nil {
+		session.ConfigDigests = deps.configDigests(ctx, root)
+	}
+	if session.StartHead == "" && session.ConfigDigests == nil {
 		return nil
 	}
 	return store.SaveSession(session)
@@ -420,6 +443,7 @@ func decideHookStop(ctx context.Context, config checkConfig, root string, event 
 	}
 	options := config.options(gate.ProfileHook)
 	options.SessionBase = session.StartHead
+	options.SessionConfigDigests = session.ConfigDigests
 	result, err := env.gate.Run(ctx, options)
 	if err != nil {
 		return gate.HookOutput{}, err

@@ -144,6 +144,11 @@ type Options struct {
 	MaxPackages int
 	// NoCache disables the fingerprint result cache.
 	NoCache bool
+	// SessionConfigDigests are the gate-configuration digests recorded when an
+	// agent session started (see ConfigDigests). In the hook profile a
+	// configuration edit is reported only for files that changed since then;
+	// nil means no record and reports every edit.
+	SessionConfigDigests map[string]string
 }
 
 // GitFunc runs git with the given arguments in the workspace root and returns
