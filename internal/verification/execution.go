@@ -29,10 +29,14 @@ type executionOutcome struct {
 
 type affectedRun struct {
 	coverageErr error
+	facts       testRunFacts
 	profile     []parser.CoverageBlock
 	race        parser.RaceReportOutput
 	tests       TestSummary
 	result      execution.Result
+	// coverageEmpty reports that go test wrote a profile with no blocks, which
+	// happens when every test binary exited before writing coverage.
+	coverageEmpty bool
 }
 
 func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis, request Request, direct []string) (executionOutcome, error) {
@@ -47,7 +51,7 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 		return executionOutcome{Evidence: evidence, Findings: []Finding{}, Uncertainties: []Uncertainty{}}, nil
 	}
 	coverageApplicable := e.hasChangedExecutableStatements(analysis)
-	run, err := e.executeGoTest(ctx, analysis.Packages, direct, request.Race, coverageApplicable)
+	run, err := e.executeGoTest(ctx, analysis.Packages, direct, request, coverageApplicable)
 	if err != nil {
 		return executionOutcome{}, err
 	}
@@ -63,7 +67,7 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 		Summary: fmt.Sprintf("%d passed, %d failed, %d skipped", run.tests.Passed, run.tests.Failed, run.tests.Skipped),
 		Tests:   &run.tests,
 	})
-	outcome.Findings = append(outcome.Findings, testFailureFindings(run.tests, run.result.ExitCode)...)
+	outcome.Findings = append(outcome.Findings, e.testFailureFindings(run.tests, run.facts, run.result.ExitCode)...)
 
 	if !coverageApplicable {
 		outcome.Evidence = append(outcome.Evidence, Evidence{
@@ -72,20 +76,7 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 			Summary:    "no added or modified executable Go statements",
 		})
 	} else {
-		coverage, coverageUncertainty, coverageErr := e.changedCoverage(analysis, run.profile)
-		if run.coverageErr != nil {
-			coverageErr = run.coverageErr
-		}
-		coverageEvidence := Evidence{
-			CheckID: "coverage", Kind: CheckCoverage, DurationMS: run.result.Duration.Milliseconds(),
-			Status: EvidencePassed, Summary: fmt.Sprintf("%.1f%% of changed statements covered", coverage.Percent), Coverage: &coverage,
-		}
-		if coverageErr != nil {
-			coverageEvidence.Status = EvidenceError
-			coverageEvidence.Summary = "changed coverage could not be calculated"
-			coverageEvidence.Error = portableCheckError(coverageErr, e.workspace.Root())
-			coverageEvidence.Coverage = nil
-		}
+		coverageEvidence, coverageUncertainty := e.coverageEvidence(analysis, run)
 		outcome.Evidence = append(outcome.Evidence, coverageEvidence)
 		outcome.Uncertainties = append(outcome.Uncertainties, coverageUncertainty...)
 	}
@@ -105,26 +96,14 @@ func (e *Engine) runAffectedChecks(ctx context.Context, analysis ChangeAnalysis,
 	return outcome, nil
 }
 
-func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, direct []string, race, coverage bool) (affectedRun, error) {
+func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, direct []string, request Request, coverage bool) (affectedRun, error) {
 	runDir, err := createVerificationRunDir("verify")
 	if err != nil {
 		return affectedRun{}, err
 	}
 	defer func() { _ = os.RemoveAll(runDir) }()
 	profilePath := filepath.Join(runDir, "coverage.out")
-	args := []string{"test", "-json", "-count=1", fmt.Sprintf("-timeout=%ds", int(verificationTestTimeout.Seconds()))}
-	if coverage {
-		args = append(args, "-covermode=atomic", "-coverprofile="+profilePath)
-		if len(direct) > 0 {
-			args = append(args, "-coverpkg="+strings.Join(direct, ","))
-		}
-	}
-	if race {
-		args = append(args, "-race")
-	}
-	for _, target := range targets {
-		args = append(args, target.ID)
-	}
+	args := goTestArgs(request, targets, direct, profilePath, coverage)
 
 	collector := newVerificationTestCollector()
 	reader, writer := io.Pipe()
@@ -153,12 +132,16 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 	if coverage {
 		profile, profileErr = readCoverageProfile(profilePath)
 	}
-	tests, packageText := collector.result()
+	tests, packageText, facts := collector.result()
 	portableRoots := []string{runDir, e.workspace.Root()}
 	if cache, cacheErr := os.UserCacheDir(); cacheErr == nil {
 		portableRoots = append(portableRoots, cache)
 	}
 	sanitizeTestSummary(&tests, portableRoots...)
+	for index := range facts.builds {
+		facts.builds[index].output = portableReportText(facts.builds[index].output, portableRoots...)
+	}
+	coverageEmpty := errors.Is(profileErr, parser.ErrNoCoverageBlocks)
 	if profileErr != nil {
 		profileErr = errors.New(portableCheckError(profileErr, portableRoots...))
 	}
@@ -172,9 +155,37 @@ func (e *Engine) executeGoTest(ctx context.Context, targets []ExecutionTarget, d
 		raceText = append(raceText, packageText[pkg])
 	}
 	return affectedRun{
-		result: result, tests: tests, profile: profile, coverageErr: profileErr,
+		result: result, tests: tests, facts: facts, profile: profile, coverageErr: profileErr, coverageEmpty: coverageEmpty,
 		race: parser.Parse(strings.Join(raceText, "\n")),
 	}, nil
+}
+
+// goTestArgs builds the go test argv for one affected-package run.
+func goTestArgs(request Request, targets []ExecutionTarget, direct []string, profilePath string, coverage bool) []string {
+	args := []string{"test", "-json"}
+	if !request.TestCache {
+		args = append(args, "-count=1")
+	}
+	args = append(args, fmt.Sprintf("-timeout=%ds", int(verificationTestTimeout.Seconds())))
+	if request.Short {
+		args = append(args, "-short")
+	}
+	if request.Skip != "" {
+		args = append(args, "-skip="+request.Skip)
+	}
+	if coverage {
+		args = append(args, "-covermode=atomic", "-coverprofile="+profilePath)
+		if len(direct) > 0 {
+			args = append(args, "-coverpkg="+strings.Join(direct, ","))
+		}
+	}
+	if request.Race {
+		args = append(args, "-race")
+	}
+	for _, target := range targets {
+		args = append(args, target.ID)
+	}
+	return args
 }
 
 func readCoverageProfile(path string) ([]parser.CoverageBlock, error) {
@@ -216,14 +227,30 @@ func createVerificationRunDir(prefix string) (string, error) {
 	return directory, nil
 }
 
-func testFailureFindings(summary TestSummary, exitCode int) []Finding {
-	findings := make([]Finding, 0, summary.Failed)
+// testFailureFindings reports each failed named test, each failed build once,
+// and each package that failed outside any named test (TestMain, init panic,
+// timeout), falling back to the process status only when nothing is attributed.
+func (e *Engine) testFailureFindings(summary TestSummary, facts testRunFacts, exitCode int) []Finding {
+	findings := make([]Finding, 0, summary.Failed+len(facts.builds))
 	for _, test := range summary.Nonpassing {
 		if test.Status != "fail" {
 			continue
 		}
 		message := fmt.Sprintf("%s failed in %s", test.Name, test.Package)
 		if output := strings.TrimSpace(test.Output); output != "" {
+			message += ": " + boundedText(output, 512)
+		}
+		findings = append(findings, Finding{Kind: "test.failure", Severity: SeverityError, Message: message, CheckID: "tests"})
+	}
+	for _, build := range facts.builds {
+		findings = append(findings, e.buildFailureFinding(build))
+	}
+	for _, pkg := range summary.Packages {
+		if _, built := facts.buildFailed[pkg.Package]; built || pkg.Status != "FAIL" || (pkg.Failed > 0 && !abortedOutsideTests(pkg.Output)) {
+			continue
+		}
+		message := fmt.Sprintf("tests in %s failed outside a named test", pkg.Package)
+		if output := strings.TrimSpace(pkg.Output); output != "" {
 			message += ": " + boundedText(output, 512)
 		}
 		findings = append(findings, Finding{Kind: "test.failure", Severity: SeverityError, Message: message, CheckID: "tests"})
@@ -235,6 +262,18 @@ func testFailureFindings(summary TestSummary, exitCode int) []Finding {
 		})
 	}
 	return findings
+}
+
+// abortedOutsideTests reports whether package-level output (output not
+// attributed to a named test) shows the test binary crashing, as when TestMain
+// panics after m.Run. A panic inside a named test is attributed to that test.
+func abortedOutsideTests(output string) bool {
+	for _, line := range strings.Split(output, "\n") {
+		if strings.HasPrefix(line, "panic: ") || strings.HasPrefix(line, "fatal error: ") {
+			return true
+		}
+	}
+	return false
 }
 
 func sanitizeTestSummary(summary *TestSummary, roots ...string) {

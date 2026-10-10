@@ -53,6 +53,9 @@ func TestOpenRejectsUnsupportedGoToolchain(t *testing.T) {
 	if !strings.Contains(err.Error(), "go1.24.2") || !strings.Contains(err.Error(), "Go 1.25 or newer") {
 		t.Fatalf("Open() error = %q, want version and minimum", err)
 	}
+	if !strings.Contains(err.Error(), "first on PATH for the process running agentic-go") || strings.Contains(err.Error(), "MCP") {
+		t.Fatalf("Open() error = %q, want context-neutral PATH advice", err)
+	}
 }
 
 func TestOpenRejectsPrereleaseGoToolchain(t *testing.T) {
@@ -135,7 +138,7 @@ func TestOpenRejectsMissingGoToolchain(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 
 	_, err := Open(context.Background(), root)
-	if err == nil || !strings.Contains(err.Error(), "MCP process PATH") {
+	if err == nil || !strings.Contains(err.Error(), "locating go on PATH") {
 		t.Fatalf("Open() error = %q, want missing Go toolchain error", err)
 	}
 }

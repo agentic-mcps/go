@@ -135,10 +135,10 @@
           <div class="faq-item">
             <div class="faq-num-title">
               <span class="faq-number">02</span>
-              <h2 class="faq-item-question" style="margin: 0;">How does it help open-weight models?</h2>
+              <h2 class="faq-item-question" style="margin: 0;">Does agentic-go make a weaker model as good as a frontier model?</h2>
             </div>
             <div class="faq-item-answer">
-              Open models (DeepSeek, Llama, Qwen, Mistral) excel at code generation, but often lack closed-lab tool harnesses. <code>agentic-go</code> gives them deterministic AST lookups, change contracts to prevent drift, and whole-package test verification - producing results on par with proprietary frontier setups.
+              No. agentic-go does not make one model behave like another. It checks the change an agent produced and reports what that change broke or hid.
             </div>
           </div>
 
@@ -148,7 +148,7 @@
               <h2 class="faq-item-question" style="margin: 0;">Can agentic-go modify my files or Git history?</h2>
             </div>
             <div class="faq-item-answer">
-              <code>agentic-go</code> will <strong>never</strong> mutate Git repository state (it never executes <code>git add</code>, <code>git commit</code>, <code>git branch</code>, or <code>git stash</code>). The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal.
+              <code>agentic-go</code> will <strong>never</strong> mutate Git repository state (it never executes <code>git add</code>, <code>git commit</code>, <code>git branch</code>, or <code>git stash</code>), except <code>agentic-go init --git-pre-push --write</code>, which installs a pre-push hook when you ask it to. The only mutating tool is <code>go_refactor</code>, which applies deterministic AST edits only to existing contained non-generated files after checking file preimages and writing a recovery journal.
             </div>
           </div>
 

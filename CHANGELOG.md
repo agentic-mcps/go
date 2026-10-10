@@ -6,6 +6,36 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `agentic-go check`, a done-gate for agent-written Go changes. It compares the
+  working tree with an auto-detected base and reports only problems the change
+  introduced, in at most 2 KB of text or `agentic.check/v1` JSON. Profiles are
+  `local`, `hook`, and `ci`; `--hook claude|codex` runs it from an agent Stop
+  hook, which blocks a stop once per distinct change. Codex support is
+  experimental.
+- `agentic-go init --claude`, `--codex`, and `--git-pre-push` print hook
+  configuration; `--write` merges it.
+- Test and gate integrity checks on the diff: deleted tests, tests hidden from
+  `go test`, skips added to existing tests, removed or logged assertions, stub
+  panics, golden and testdata edits, and edits to gate or CI configuration.
+- Gate evaluation harness and pre-registered protocol under `validation/`.
+  Results are pending.
+
+### Fixed
+
+- `verify` keeps compiler errors for packages that fail to build, reported as
+  `build.failure` findings with locations.
+- `verify` no longer reports coverage as a 0% pass when package tests fail or
+  abort; it records `coverage_incomplete` uncertainty instead.
+
+### Changed
+
+- README and AGENTS.md now focus on `agentic-go check`. The MCP server is
+  maintenance-only.
+- Phase planning documents moved to `docs/archive/`.
+- Removed unproven model-parity claims from the website.
+
 ## [1.2.1] - 2026-09-23
 
 ### Added

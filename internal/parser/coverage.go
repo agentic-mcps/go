@@ -102,6 +102,10 @@ func ParseCoverage(r io.Reader) (CoverageReport, error) {
 	return CoverageReport{Files: files, OverallPercent: overallPercent}, nil
 }
 
+// ErrNoCoverageBlocks reports a well-formed profile with a mode header and no
+// blocks, which go test writes when no test binary produced coverage.
+var ErrNoCoverageBlocks = errors.New("coverage: profile has no blocks")
+
 // ParseCoverageBlocks parses and validates a Go coverage profile, returning
 // every block, including blocks with zero execution count. The input mode is
 // validated even though it does not alter block parsing.
@@ -146,7 +150,7 @@ func parseCoverageBlocks(r io.Reader) ([]CoverageBlock, error) {
 		return nil, fmt.Errorf("coverage: scan: %w", err)
 	}
 	if len(blocks) == 0 {
-		return nil, errors.New("coverage: profile has no blocks")
+		return nil, ErrNoCoverageBlocks
 	}
 	return blocks, nil
 }

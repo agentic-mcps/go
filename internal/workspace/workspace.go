@@ -62,7 +62,7 @@ func Open(ctx context.Context, root string) (*Workspace, error) {
 		return nil, fmt.Errorf("validating Go workspace requirements: %w", err)
 	}
 	if requiredGo != "" && goversion.Compare(selectedGo.Version, requiredGo) < 0 {
-		return nil, fmt.Errorf("validating Go workspace: workspace requires Go %s but %s provides %s; configure the MCP client to launch with a supported Go toolchain", strings.TrimPrefix(requiredGo, "go"), selectedGo.Path, selectedGo.Version)
+		return nil, fmt.Errorf("validating Go workspace: workspace requires Go %s but %s provides %s; put a supported Go toolchain first on PATH for the process running agentic-go", strings.TrimPrefix(requiredGo, "go"), selectedGo.Path, selectedGo.Version)
 	}
 
 	cmd := exec.CommandContext(ctx, selectedGo.Path, "list", "-m", "-json")
@@ -95,7 +95,7 @@ type goToolchain struct {
 func checkGoToolchain(ctx context.Context, root string) (goToolchain, error) {
 	goPath, err := exec.LookPath("go")
 	if err != nil {
-		return goToolchain{}, fmt.Errorf("locating go on the MCP process PATH: %w; agentic-go requires Go 1.25 or newer", err)
+		return goToolchain{}, fmt.Errorf("locating go on PATH: %w; agentic-go requires Go 1.25 or newer", err)
 	}
 	cmd := exec.CommandContext(ctx, goPath, "version")
 	cmd.Dir = root
@@ -117,7 +117,7 @@ func checkGoToolchain(ctx context.Context, root string) (goToolchain, error) {
 		return goToolchain{}, fmt.Errorf("checking Go toolchain %s: %w; agentic-go requires Go 1.25 or newer", goPath, err)
 	}
 	if goversion.Compare(selected, minimumGoVersion) < 0 {
-		return goToolchain{}, fmt.Errorf("go toolchain %s at %s is unsupported; agentic-go requires Go 1.25 or newer; check the MCP client's PATH", selected, goPath)
+		return goToolchain{}, fmt.Errorf("go toolchain %s at %s is unsupported; agentic-go requires Go 1.25 or newer; check that a Go 1.25+ toolchain is first on PATH for the process running agentic-go", selected, goPath)
 	}
 	return goToolchain{Path: goPath, Version: selected}, nil
 }

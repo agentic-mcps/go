@@ -1,0 +1,6 @@
+project,url,pinned
+cobra,https://github.com/spf13/cobra,adbc8813901bba65827259daa8e22ff94ec1f30e
+chi,https://github.com/go-chi/chi,735ae2b87f8c733d616e809ae86e0985c1bc3350
+testify,https://github.com/stretchr/testify,c627960a7323bfc7a58835e9ef5540f306fc7fac
+gin,https://github.com/gin-gonic/gin,dcaa4296d111981ffb31ac3eba90bb63e1eb5ab9
+echo,https://github.com/labstack/echo,4ec116dc9b5bff1da7513c0dc86095d0e8ce9654
