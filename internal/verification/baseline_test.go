@@ -1,6 +1,7 @@
 package verification
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/agentic-mcps/go/internal/finding"
@@ -53,5 +54,14 @@ func TestCompareAnalyzerFindingsMapsRenameAndRejectsChangedLocations(t *testing.
 	}
 	if len(comparison.Uncertainties) != 1 || comparison.Uncertainties[0].Code != "baseline_unknown" {
 		t.Fatalf("uncertainties = %#v", comparison.Uncertainties)
+	}
+}
+
+func TestAnalyzerErrorSummary(t *testing.T) {
+	if got, want := analyzerErrorSummary("error", errors.New("load failed")), "error analyzer could not analyze the current snapshot"; got != want {
+		t.Fatalf("current failure summary = %q, want %q", got, want)
+	}
+	if got, want := analyzerErrorSummary("error", nil), "error analyzer baseline could not be compared"; got != want {
+		t.Fatalf("baseline failure summary = %q, want %q", got, want)
 	}
 }

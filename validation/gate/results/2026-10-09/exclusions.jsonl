@@ -1,0 +1,464 @@
+{"project":"cobra","commit":"","reason":"static main: 836 scanned, 153 kept"}
+{"project":"cobra","commit":"","class":"DT","reason":"static destructive: 836 scanned, 27 kept"}
+{"project":"cobra","commit":"b1e90a7943957b51bb96a13b44b844475bcf95c0","reason":"module download failed"}
+{"project":"cobra","commit":"303a3e5160b0d2d72ca96ed9eff9e016fe54b2f9","reason":"tests fail at base"}
+{"project":"cobra","commit":"88584623317201fdac8add4f4f800d98fc740b0b","reason":"module download failed"}
+{"project":"cobra","commit":"746ef07158728502482cea9f880a6f4b21ef29a9","reason":"tests fail at base"}
+{"project":"cobra","commit":"57fc2cb5344149992d240304d8a1bd3ad79c6c1b","reason":"module download failed"}
+{"project":"cobra","commit":"22b617914c8890ba20db7ceafcdc2ef4ca4817d3","reason":"tests fail at base"}
+{"project":"cobra","commit":"bbdea35c49a5ca0c63b2c659099e5fbbd2b82691","reason":"module download failed"}
+{"project":"cobra","commit":"6bcf163261fd846a12dc1faee86543d5bc6d3ec9","reason":"module download failed"}
+{"project":"cobra","commit":"0ab5b6bcfcde193577634059f6f211c850a456ec","reason":"module download failed"}
+{"project":"cobra","commit":"5bef9d8d87ad1a1c73e74361bad9e38b3469a58e","reason":"tests fail at base"}
+{"project":"cobra","commit":"de484eefb451d14b113829e9a36a2ccf9a0fb14a","reason":"module download failed"}
+{"project":"cobra","commit":"99b5d838ca16c25cc4944e323684f8415e8b10ba","reason":"module download failed"}
+{"project":"cobra","commit":"41fd44e1df83ad6acd8e14b304d5f2a2ae1d62f5","reason":"tests fail at base"}
+{"project":"cobra","commit":"7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9","reason":"module download failed"}
+{"project":"cobra","commit":"667c348dbdf8cab38b985fc9effbe4a66c0f199f","reason":"module download failed"}
+{"project":"cobra","commit":"7d22e77cce369986db33eb3f03dbde82d4d6f62a","reason":"module download failed"}
+{"project":"cobra","commit":"ad460ea8f249db69c943a365fb84f3a59042d54e","reason":"tests fail at base"}
+{"project":"cobra","commit":"dcf42b25f7f1980135e744f099ecbbc6ec85eadc","reason":"tests fail at base"}
+{"project":"cobra","commit":"4d6af280c76ff7d266434f2dba207c4b75dfc076","reason":"module download failed"}
+{"project":"cobra","commit":"212ea4078323771dc49b6f25a41d84efbaac3a4c","reason":"tests fail at base"}
+{"project":"cobra","commit":"458d79748e944cc033fd025058f824a88cba6a45","reason":"module download failed"}
+{"project":"cobra","commit":"99838a52fe172a69fcd6d6ed6e54f9b1b36962c8","reason":"module download failed"}
+{"project":"cobra","commit":"d910a04b50558720351969b37a39a931b37b99c7","reason":"module download failed"}
+{"project":"cobra","commit":"5f2ec3c897155c3346e77430932e3966e5cfa648","reason":"tests fail at base"}
+{"project":"cobra","commit":"fd32f09af19efc9b1279c54e0d8ed23f66232a15","reason":"module download failed"}
+{"project":"cobra","commit":"fe69f2e3a341cc3f84b5416441d1e6a25bc8fb8f","reason":"module download failed"}
+{"project":"cobra","commit":"c2c23ac0bdd41359a2a0a0f055d8eea7f2320f8d","reason":"module download failed"}
+{"project":"cobra","commit":"a73b9c391a9489d20f5ee1480e75d3b99fc8c7e2","reason":"tests fail at base"}
+{"project":"cobra","commit":"b1ec2ce1ad4e6e09b859c2420ecf3230275e58b7","reason":"module download failed"}
+{"project":"cobra","commit":"e0f326dabc9692d4eb4fad80d8ceab8bb1a029cc","reason":"module download failed"}
+{"project":"cobra","commit":"a2845e7f7a251714c387677b64cc73c8fd687833","reason":"module download failed"}
+{"project":"cobra","commit":"eb589833591a36b5720108a621baab8dee9b2ac5","reason":"module download failed"}
+{"project":"cobra","commit":"07be8145cc894ca8a4063b4445ded2fab319d15d","reason":"module download failed"}
+{"project":"cobra","commit":"6dd90846ba124894ee1206c89021e90e8179f1a4","reason":"module download failed"}
+{"project":"cobra","commit":"d689184a421607457a18131e0a2b602fec22e3b4","reason":"tests fail at base"}
+{"project":"cobra","commit":"3e7fb991e1d389b69ee00fef9861b59b937233de","reason":"module download failed"}
+{"project":"cobra","commit":"10cf7be9972ee5b5994cf760ecba642309ac8685","reason":"tests fail at base"}
+{"project":"cobra","commit":"0c72800b8dba637092b57a955ecee75949e79a73","reason":"tests fail at base"}
+{"project":"cobra","commit":"6202b5942b8f31501d14d8cb192790d8a10302f4","reason":"module download failed"}
+{"project":"cobra","commit":"19e54c4a2b8a78c9d54b2bed61b1a6c5e1bfcf6f","reason":"module download failed"}
+{"project":"cobra","commit":"3d89ed490897e712ee31d77a26be3db03f656e5d","reason":"module download failed"}
+{"project":"cobra","commit":"7bb5276f5fdb799f19d44c04f74b2f39f20f2ce2","reason":"module download failed"}
+{"project":"cobra","commit":"b711e8760b73c6aa1b4aa1bef3a26da5926f175d","reason":"tests fail at base"}
+{"project":"cobra","commit":"19cf35ea77e5981f8e8b90a897af621f2be864f6","reason":"tests fail at base"}
+{"project":"cobra","commit":"ab5cadcc1bbe224b329726fc5f8b99d6f93e9805","reason":"tests fail at base"}
+{"project":"cobra","commit":"8c6fa02d2225de0f9bdcb7ca912556f68d172d8c","reason":"module download failed"}
+{"project":"cobra","commit":"6b5f577ebce858ee70fcdd1f062ea3af4b1c03ab","reason":"tests fail at base"}
+{"project":"cobra","commit":"c568b575aa03d43dbae392a4019c0ca2fa617061","reason":"module download failed"}
+{"project":"cobra","commit":"f20b4e9c32bb3e9d44773ca208db814f24dcd21b","reason":"module download failed"}
+{"project":"cobra","commit":"1995054b003053cc1e404bccfbf6d168e8731509","reason":"tests fail at base"}
+{"project":"cobra","commit":"e63925d3216142ba2c8d7641d729c6c15f4433e7","reason":"tests fail at base"}
+{"project":"cobra","commit":"35136c09d8da66b901337c6e86fd8e88a1a255bd","reason":"module download failed"}
+{"project":"cobra","commit":"2169adb5749372c64cdd303864ae8a444da6350f","reason":"tests fail at base"}
+{"project":"cobra","commit":"4cdb38c072b86bf795d2c81de50784d9fdd6eb77","reason":"module download failed"}
+{"project":"cobra","commit":"b5366273a6b41e93decceeaeef005516cab56c24","reason":"module download failed"}
+{"project":"cobra","commit":"9388e79fb48d6af993c8d4fb90a7de9c7533725b","reason":"tests fail at base"}
+{"project":"cobra","commit":"71bb1dfdcd030b2518e5b6a10c531f6fcba65e9f","reason":"module download failed"}
+{"project":"cobra","commit":"890302a35f578311404a462b3cdd404f34db3720","reason":"tests fail at base"}
+{"project":"cobra","commit":"70e53f62be77e03f376be845efacbd99c00024ca","reason":"tests fail at base"}
+{"project":"cobra","commit":"68f3c66d07afcdbb1b57ba7189ca0ec050d452e5","reason":"module download failed"}
+{"project":"cobra","commit":"ee6224d01f6a83f543ae90f881b703cf195782ba","reason":"module download failed"}
+{"project":"cobra","commit":"4dab30cb33e6633c33c787106bafbfbfdde7842d","reason":"module download failed"}
+{"project":"cobra","commit":"2cb625eda330696bf943d764a7d4b94b293005f5","reason":"module download failed"}
+{"project":"cobra","commit":"7290a944e4fe564fead7dbb3935f3ce495eb5685","reason":"module download failed"}
+{"project":"cobra","commit":"a97f9fd47b290016526c8af2dac0531fea5cd773","reason":"tests fail at base"}
+{"project":"cobra","commit":"ccaecb155a2177302cb56cae929251a256d0f646","reason":"module download failed"}
+{"project":"cobra","commit":"fb2146e9e527b9ebcc19fa30e26aa294ab786578","reason":"module download failed"}
+{"project":"cobra","commit":"c3b51f3a2e0ea821c0cb8ed8e5850e98394641c5","reason":"tests fail at base"}
+{"project":"cobra","commit":"51b7cf57e102be20a09835264c9d92155d602532","reason":"module download failed"}
+{"project":"cobra","commit":"d6a430541c6c23f73174898ada59d3b756f85daa","reason":"module download failed"}
+{"project":"cobra","commit":"40b5bc1437a564fc795d388b23835e84f54cd1d1","reason":"tests fail at base"}
+{"project":"cobra","commit":"11aa612384e0e18662f319528bde7b68ffca43ee","reason":"tests fail at base"}
+{"project":"cobra","commit":"881657297e605dc96dc0369758a843f043d12d17","reason":"module download failed"}
+{"project":"cobra","commit":"1be1d2841c773c01bee8289f55f7463b6e2c2539","class":"DT","reason":"module download failed"}
+{"project":"cobra","commit":"b4dbd37a01839e0653eec12aa4bbb2a2ce7b2a37","class":"DT","reason":"module download failed"}
+{"project":"cobra","commit":"31694f19adeeaeb0a0e5fe95441b390d757753d2","class":"DT","reason":"module download failed"}
+{"project":"cobra","commit":"a28055bed2dff1bff270a5f5c1a5a7dd97311a77","class":"DT","reason":"module download failed"}
+{"project":"cobra","commit":"9a432671fd847f0faa5a5e4d9f9350ae289db2ac","class":"DT","reason":"tests fail at base"}
+{"project":"cobra","commit":"b95ab734e27d33e0d8fbabf71ca990568d4e2020","class":"DT","reason":"module download failed"}
+{"project":"cobra","commit":"a1b7d3cc4d935b14f3f9803997341d65c3738870","class":"DT","reason":"module download failed"}
+{"project":"cobra","commit":"","reason":"complete: cobra"}
+{"project":"chi","commit":"","reason":"static main: 538 scanned, 119 kept"}
+{"project":"chi","commit":"","class":"DT","reason":"static destructive: 538 scanned, 12 kept"}
+{"project":"chi","commit":"26633cbf625f028511f00515c8176657f6b2bf9f","reason":"module download failed"}
+{"project":"chi","commit":"9a57b103c65f0c527fe23383a84d24fd352ff27d","reason":"module download failed"}
+{"project":"chi","commit":"bb7ee27ff4734d4bf046551a9a0b6ac36516d805","reason":"module download failed"}
+{"project":"chi","commit":"baf4ef5b139e284b297573d89daf587457153aa3","reason":"module download failed"}
+{"project":"chi","commit":"df0b91fada352490a0b4be1aad4ba53875ad4a43","reason":"module download failed"}
+{"project":"chi","commit":"575dd3a13719315a5ff5ca7906edc7062673293a","reason":"module download failed"}
+{"project":"chi","commit":"cd12532e9858f735c2cac6cc8a398dfd987676dd","reason":"module download failed"}
+{"project":"chi","commit":"ed5fa44b33ee42c717033fa861f01085f605d5ae","reason":"module download failed"}
+{"project":"chi","commit":"1b51a16ac893c99cc5978fca77249701129eedaf","reason":"module download failed"}
+{"project":"chi","commit":"9e829149a5835e6d8472c437cb8530c0fd9e3d06","reason":"module download failed"}
+{"project":"chi","commit":"25354a53cca531cb2efd3f1d3c565d90ff04d802","reason":"module download failed"}
+{"project":"chi","commit":"4b14b832d53cef6c77fdcf852876a34f46bc84a2","reason":"flaky at commit"}
+{"project":"chi","commit":"08a4f980e3f489687965541f6f6bd8436df13784","reason":"module download failed"}
+{"project":"chi","commit":"96dad7e79079d9cff7a8e30a31b79879d32c52b5","reason":"module download failed"}
+{"project":"chi","commit":"aa3b3b503794cbf75151a3272d39e531d7f26c6b","reason":"module download failed"}
+{"project":"chi","commit":"87e5387928b553b5de3a75d5105a34871bc9b8b3","reason":"module download failed"}
+{"project":"chi","commit":"badf07aee0a9a24f6cffe7acb5c76b2a3bcbdf35","reason":"module download failed"}
+{"project":"chi","commit":"c9a4b9a2c03fb46280153ec75f4d8a0e2f675efa","reason":"module download failed"}
+{"project":"chi","commit":"5b7406a71dbb35d4f59b0b48e68cd9f9256f5262","reason":"module download failed"}
+{"project":"chi","commit":"fcedaa8177756dc79d0a0ec71e78735de9cc89f8","reason":"module download failed"}
+{"project":"chi","commit":"7e6b856011d49775bb45d829339287a416a85f66","reason":"module download failed"}
+{"project":"chi","commit":"e7728c6d4bc0581289698a8303260253093e520f","reason":"module download failed"}
+{"project":"chi","commit":"a40fe4fc128f73010741ba30286cec082ccf8397","reason":"module download failed"}
+{"project":"chi","commit":"6cbda14c15db8cd017866c6d8ac1545bb501e535","reason":"module download failed"}
+{"project":"chi","commit":"7936e7b3e934693f927c9bffa049178c82b7ba0e","reason":"module download failed"}
+{"project":"chi","commit":"6f98a44e7c65714ec00fa402a991d19da34cee86","reason":"module download failed"}
+{"project":"chi","commit":"38aa4a9079a17ad96ab0d2cc52fbd55ebbda71d1","reason":"module download failed"}
+{"project":"chi","commit":"40c607ea5d9f34240e783bcdbb701e049fb666d6","reason":"module download failed"}
+{"project":"chi","commit":"1123f01030bebd4b81f82c2ea96c9cf4233ad9be","reason":"module download failed"}
+{"project":"chi","commit":"5704d7ee98edd3fe55169b506531bdd061667c70","reason":"module download failed"}
+{"project":"chi","commit":"73938b5d1ab159050b9822e620e5e64109d229cf","reason":"module download failed"}
+{"project":"chi","commit":"3031602cdf5cb22ee995ce9905966125f5c6865d","reason":"module download failed"}
+{"project":"chi","commit":"dcbb8f81eea01aaaa5b6f9bffc229e9e9e0256bb","reason":"module download failed"}
+{"project":"chi","commit":"02e6bbdfd14640d8c1beb15ec3a38140400fb5c2","reason":"module download failed"}
+{"project":"chi","commit":"d132b31857e5922a2cc7963f4fcfd8f46b3f2e97","reason":"module download failed"}
+{"project":"chi","commit":"c88f06fe6419037c86b3b26a4a67470621f458ad","reason":"module download failed"}
+{"project":"chi","commit":"d1043cc45897baeb788b48ba8dc5966a3605c8c5","reason":"module download failed"}
+{"project":"chi","commit":"","reason":"complete: chi"}
+{"project":"testify","commit":"","reason":"static main: 503 scanned, 134 kept"}
+{"project":"testify","commit":"","class":"DT","reason":"static destructive: 503 scanned, 12 kept"}
+{"project":"testify","commit":"2f1cd6b77898212c99764c4e05162f50745dc0f4","reason":"module download failed"}
+{"project":"testify","commit":"4f9c9aeeaa5f3c1c02f262443bc9ed24b269e914","reason":"module download failed"}
+{"project":"testify","commit":"42baa3e5a4a06b295a874277af094991bdffd6af","reason":"module download failed"}
+{"project":"testify","commit":"1bb3d5a6193db929e5eea51034832f8aaafb6ca9","reason":"timed out at commit"}
+{"project":"testify","commit":"e964b172ca7f4c322ee4c39ea605ff53fab44f79","reason":"module download failed"}
+{"project":"testify","commit":"3104bf5483d3fba84f24933949f0533f4467880b","reason":"module download failed"}
+{"project":"testify","commit":"b57b6d191ceeb38fba01a02097493303e7fa5d2c","reason":"module download failed"}
+{"project":"testify","commit":"5cc789b89e1b0289394556166a1fccd55c93d868","reason":"module download failed"}
+{"project":"testify","commit":"855b03c8993e8d34adadcf99d17cda24b556d811","reason":"module download failed"}
+{"project":"testify","commit":"ae878dc5c4523d395ef64224b0abbc978ab7f91b","reason":"module download failed"}
+{"project":"testify","commit":"7088056203b41173c64734bdf435fc846e13ae70","reason":"tests fail at base"}
+{"project":"testify","commit":"c5d7a69bf8a2c9c374798160849c071093e41dd1","reason":"module download failed"}
+{"project":"testify","commit":"a58329b4c5857efa00296b98d9a63b160ba070b7","reason":"module download failed"}
+{"project":"testify","commit":"b3596e92796169eee4a0050bceaa767a48cb0075","reason":"module download failed"}
+{"project":"testify","commit":"33951ec7246942ea178d33608628cee33b26ddeb","reason":"module download failed"}
+{"project":"testify","commit":"0a813b5898c0ee8d00b4f13fae21ea5df8b35e74","reason":"build fails at commit"}
+{"project":"testify","commit":"d84e815d441de9c64a3a2f9336c32acf1e7349d1","reason":"tests fail at base"}
+{"project":"testify","commit":"249123e03a11b4d444956cd829aa79ff3d5ffe90","reason":"module download failed"}
+{"project":"testify","commit":"9b28fe8965cd21633adaf91ee714e93532b0ec6e","reason":"module download failed"}
+{"project":"testify","commit":"3184a9e1413e54d51704da0710cbeb33bf3288f6","reason":"build fails at base"}
+{"project":"testify","commit":"85f2b59c4459e5bf57488796be8c3667cb8246d6","reason":"tests fail at base"}
+{"project":"testify","commit":"17a0bd50e9ddb9f2dbff569e5c01a27e9171be96","reason":"module download failed"}
+{"project":"testify","commit":"6efb0c49fbc210f1de59e9347ade82705c43580a","reason":"module download failed"}
+{"project":"testify","commit":"d77da356e56a7428ad25149ca77381849a6a5232","reason":"module download failed"}
+{"project":"testify","commit":"34763e0df3d560ca247996a0e9291fa919a3abc6","reason":"tests fail at commit"}
+{"project":"testify","commit":"f6abca593680b2315d2075e0f5e2a9751e3f431a","reason":"module download failed"}
+{"project":"testify","commit":"4b71b28738d06619331ce4471d0d652985e7d134","reason":"tests fail at commit"}
+{"project":"testify","commit":"f2347ac6c9c98ca14694f64f92c4b917954a6dc9","reason":"module download failed"}
+{"project":"testify","commit":"21cb1c2932a2d04c6792d5ad106243c6e36a3a7d","reason":"tests fail at base"}
+{"project":"testify","commit":"921da254efb678f0b3d856ac4bbcf0c779749d6f","reason":"module download failed"}
+{"project":"testify","commit":"a88bf7aab8f390daf0a71952568272f6638b319e","reason":"tests fail at base"}
+{"project":"testify","commit":"841b040dd786e653db7dcad7051e8d9a26c780bd","reason":"module download failed"}
+{"project":"testify","commit":"","reason":"complete: testify"}
+{"project":"gin","commit":"","reason":"static main: 1233 scanned, 284 kept"}
+{"project":"gin","commit":"","class":"DT","reason":"static destructive: 1233 scanned, 25 kept"}
+{"project":"gin","commit":"7e64d32269d817b645d5d4694100a8a8ad6960cb","reason":"module download failed"}
+{"project":"gin","commit":"71f70870976cf304cdb3942a871c15a20f5d35c5","reason":"tests fail at base"}
+{"project":"gin","commit":"f76ccb25f1eee8684e545ec00f8f2934fec98f09","reason":"tests fail at base"}
+{"project":"gin","commit":"53410d2e07054369e0960fbe2eed97e1b9966f12","reason":"tests fail at base"}
+{"project":"gin","commit":"f98b339b773105aad77f321d0baaa30475bf875d","reason":"tests fail at base"}
+{"project":"gin","commit":"7ec82ee8944579c533425bb6826bcb12b5860ecd","reason":"tests fail at base"}
+{"project":"gin","commit":"72db8acd99feab85e81ac6e2ebd16c76e0f986be","reason":"module download failed"}
+{"project":"gin","commit":"3fe928994b7ba7ed16b0c5114ca82a9dafa7a974","reason":"tests fail at base"}
+{"project":"gin","commit":"0a9030f9d7a42372f8fae1381e3af62db9b9b289","reason":"module download failed"}
+{"project":"gin","commit":"92475baba6753c6f41e44794bcfa89fcbd055b05","reason":"module download failed"}
+{"project":"gin","commit":"6d913fc343cfac80d656db5be67a0ffb1323ba0d","reason":"module download failed"}
+{"project":"gin","commit":"4867ff9634d1889156587d5add70d2b29c447542","reason":"tests fail at base"}
+{"project":"gin","commit":"03e5e05ae089bc989f1ca41841f05504d29e3fd9","reason":"tests fail at base"}
+{"project":"gin","commit":"6de2245e6265a077326d13cb249378b2d27ad781","reason":"tests fail at base"}
+{"project":"gin","commit":"26c3f42095b8a1378617eb4756fbf8282cb1ae89","reason":"module download failed"}
+{"project":"gin","commit":"35e33d3638f9b5a1246dd9c72a99740f5ad4b43b","reason":"tests fail at base"}
+{"project":"gin","commit":"0a55865c3fc4c2b30dce86dfa9cff7654ba9bc74","reason":"tests fail at base"}
+{"project":"gin","commit":"cbdd47a7e108217d4672f0e24d423b632a8cd900","reason":"tests fail at base"}
+{"project":"gin","commit":"07f1bf0e63512fbf9c7d7984d235a399eb916244","reason":"tests fail at base"}
+{"project":"gin","commit":"51aea73ba0f125f6cacc3b4b695efdf21d9c634f","reason":"tests fail at base"}
+{"project":"gin","commit":"1f59bad84b577735b27a1ee855f01ed2f50cd88b","reason":"module download failed"}
+{"project":"gin","commit":"6e320c97e83a61df3daa0f28695a736bece3104b","reason":"tests fail at base"}
+{"project":"gin","commit":"8e07d37c63e5536eb25f4af4c91eabeee4011fba","reason":"tests fail at base"}
+{"project":"gin","commit":"e5bb4f62a284426de199d68d71900fcbd1285691","reason":"module download failed"}
+{"project":"gin","commit":"0552c3bc3a6de6b802684b024ae49c3195cc70dd","reason":"module download failed"}
+{"project":"gin","commit":"deb83b6365cf1b95f50929492f6058c94a6ff274","reason":"tests fail at base"}
+{"project":"gin","commit":"c19aa0598b6bab47f498e68ebc60ceafded8631f","reason":"module download failed"}
+{"project":"gin","commit":"417b142703594c1a7dff030e67c38e1dfec9f1fc","reason":"tests fail at base"}
+{"project":"gin","commit":"1d055af1bc15ab3c5965ce0bf99c6f3f44465b56","reason":"tests fail at base"}
+{"project":"gin","commit":"fa58bff301a823ce25af800614d3f016b10ae586","reason":"tests fail at base"}
+{"project":"gin","commit":"efdd3c8b81a42e1769fe70483d4828d5bba7e87e","reason":"module download failed"}
+{"project":"gin","commit":"d9307dbcbbe796a64d9e0ef23452da888dd7f904","reason":"tests fail at base"}
+{"project":"gin","commit":"220e8d34538f5dfdcc299dda79bf83cf52e633f6","reason":"module download failed"}
+{"project":"gin","commit":"834a2ec64ca1ce077e4bdeb5edec019df1c01e71","reason":"tests fail at base"}
+{"project":"gin","commit":"2bde107686759098e2d64273bc79d1a0216a4500","reason":"tests fail at base"}
+{"project":"gin","commit":"5612cadb73b7f2415047e18f15824ed3855feac9","reason":"tests fail at base"}
+{"project":"gin","commit":"835f66fdc9ce24a3074055b3b801a7f8e101993f","reason":"module download failed"}
+{"project":"gin","commit":"29a145c85dc0fafc3dd0ada62d856c4d95240010","reason":"tests fail at base"}
+{"project":"gin","commit":"7d147928ee232fce156ea7ce8ae6329e148aeb41","reason":"tests fail at base"}
+{"project":"gin","commit":"ffb5c0412a1426cef364d8c512901133dce6f857","reason":"module download failed"}
+{"project":"gin","commit":"865ea804c98ff56161a698e748c90708a0e811b4","reason":"module download failed"}
+{"project":"gin","commit":"fcfe65685a7936dec782617b7319304f589dd732","reason":"module download failed"}
+{"project":"gin","commit":"8fb3136664254d7c592127f00d52849caba18a67","reason":"tests fail at base"}
+{"project":"gin","commit":"45b805f6d59ba0b4f315adffe81ed4a82a51a591","reason":"tests fail at base"}
+{"project":"gin","commit":"ee4de846a894e9049321e809d69f4343f62d2862","reason":"tests fail at base"}
+{"project":"gin","commit":"bf85b32c1d11dcfa2202daa6d1ad2addae2d1619","class":"DT","reason":"module download failed"}
+{"project":"gin","commit":"d4e413648824333726ef65de5defc457e9dbf095","class":"DT","reason":"tests fail at base"}
+{"project":"gin","commit":"0c1f3c4e81f6e969a3e465d933faefb5578c54d2","class":"DT","reason":"tests fail at base"}
+{"project":"gin","commit":"61592134625e0fca1b2de7c22107a01684e8b130","class":"DT","reason":"module download failed"}
+{"project":"gin","commit":"","reason":"complete: gin"}
+{"project":"echo","commit":"","reason":"static main: 1478 scanned, 428 kept"}
+{"project":"echo","commit":"","class":"DT","reason":"static destructive: 1478 scanned, 70 kept"}
+{"project":"echo","commit":"85e01ed1f82d4c6affcf1c34f28e4928c0ad1cc2","reason":"tests fail at base"}
+{"project":"echo","commit":"fe269b3e1cae69e884b39f0ce87e1a7d6e2168c2","reason":"module download failed"}
+{"project":"echo","commit":"4c8797f09eea6744eaf1332894b35405baad9fe5","reason":"module download failed"}
+{"project":"echo","commit":"88f307beddb599d6c72c8d9c5540853016e7ec60","reason":"module download failed"}
+{"project":"echo","commit":"08f714750872c45b6f3893a9803dc52822971ae3","reason":"module download failed"}
+{"project":"echo","commit":"08093a4a1dbdcc90c2f6659ef02300d6eccef7f1","reason":"tests fail at base"}
+{"project":"echo","commit":"011acb4732fe4bdca1cb6d8ea9c29735e0b941f7","reason":"tests fail at base"}
+{"project":"echo","commit":"ce0b12ae531b8c6523797af2425c9c0b6d772c4e","reason":"tests fail at base"}
+{"project":"echo","commit":"eca5d872210f5ee827334e16e91743b5ce33039d","reason":"module download failed"}
+{"project":"echo","commit":"190cf80d02c84834290f34992360a23a13900acb","reason":"module download failed"}
+{"project":"echo","commit":"5706940bc8c4c824586194caf42eb0f46658e8ee","reason":"module download failed"}
+{"project":"echo","commit":"23176c639e6838cd5413cb9415fa8fdb93f546ba","reason":"module download failed"}
+{"project":"echo","commit":"20954afd66197fecb91083726385a99a674ab11c","reason":"module download failed"}
+{"project":"echo","commit":"e0364caf3635d3df1fcbd445b4e212e1ae1729ca","reason":"module download failed"}
+{"project":"echo","commit":"858270f6f5e4fd02d9e147e8a6b0d97df023f14b","reason":"tests fail at commit"}
+{"project":"echo","commit":"1247552c9bc0334a9da8df9bb2d6070c2ccbce0a","reason":"module download failed"}
+{"project":"echo","commit":"2342df3e619e15f46b0db3dfc3d4e4abac3f7913","reason":"module download failed"}
+{"project":"echo","commit":"2f70d3e1c782cda48a69a01491753c6cce7c718e","reason":"module download failed"}
+{"project":"echo","commit":"da083ffd0a35ca933c6b315e51dc3c827dba5720","reason":"module download failed"}
+{"project":"echo","commit":"690e3392d984dcbdb9f41a7915ddc0d383311974","reason":"tests fail at base"}
+{"project":"echo","commit":"754479694694f6d0bd280d453c10d63348e4e3b7","reason":"tests fail at base"}
+{"project":"echo","commit":"467cf05b4178a5f1d138edd999aed2247b85a42d","reason":"module download failed"}
+{"project":"echo","commit":"7f92fbf3ce6d076182f9d76056aad90fd0f709c3","reason":"module download failed"}
+{"project":"echo","commit":"088429076663dc9b690a103c97fb7896cfb3e617","reason":"module download failed"}
+{"project":"echo","commit":"19d51dad4cbc7ac553f397b366a3eb46884bbaec","reason":"module download failed"}
+{"project":"echo","commit":"a66162a3d2bbd58f3e3b4c8d10c0d85962760f21","reason":"module download failed"}
+{"project":"echo","commit":"70c18060bde41901b2675da5629611f6afc580bc","reason":"module download failed"}
+{"project":"echo","commit":"9b6c392829cff830d1f7d260af8c9288ad577c1d","reason":"module download failed"}
+{"project":"echo","commit":"447c92d842e2f91c07eb032f619bea212beeee60","reason":"tests fail at base"}
+{"project":"echo","commit":"76e9b44190af2e2efebc018639aecfd762e8ed97","reason":"module download failed"}
+{"project":"echo","commit":"3946a1839c7c7003936cb36f1abcb85042047d6f","reason":"module download failed"}
+{"project":"echo","commit":"98d744b8fb4bc78b19a0317b5521d736b7dbc25d","reason":"module download failed"}
+{"project":"echo","commit":"a9c88cad63f1a5483f1388a013bc08bb2d5e1e12","reason":"module download failed"}
+{"project":"echo","commit":"6cbabac296938199459e552cc43c670f8c14ef99","reason":"module download failed"}
+{"project":"echo","commit":"2557d33c4b6608f574be47c500db27d8c021f5f1","reason":"module download failed"}
+{"project":"echo","commit":"a66875f17d9e4cc6a049b0e682f6e377a6d7c89b","reason":"module download failed"}
+{"project":"echo","commit":"f96f40b5e6d7e01edf1118d75275235458678e60","reason":"module download failed"}
+{"project":"echo","commit":"830b4eff3fabb61d846045ba40f28be91fe9bf14","reason":"module download failed"}
+{"project":"echo","commit":"f3f3e99ba36d57d32cde61dda1ca62635c8bbfd3","reason":"module download failed"}
+{"project":"echo","commit":"9650c39055a0c031791a61efdd2b19957f382f8c","reason":"module download failed"}
+{"project":"echo","commit":"ef82f3e034844005bfdb4139d0bcce44dc594657","reason":"module download failed"}
+{"project":"echo","commit":"ae721bd2b2e55a105f3fb9974d4785fb5a897c98","reason":"module download failed"}
+{"project":"echo","commit":"9bf1e3c8ce6de029186945e4ee82f89f2e2cc661","reason":"tests fail at base"}
+{"project":"echo","commit":"8b800e12a2b42691b3ce89cf83e59492ce189e34","reason":"module download failed"}
+{"project":"echo","commit":"579cb79a41a2e931699bad83111728d78aa11d48","reason":"module download failed"}
+{"project":"echo","commit":"2bdbf6918eac7e2e6222fb074f77d29f5946bbfa","reason":"module download failed"}
+{"project":"echo","commit":"60fc2fb1b76f5613fc41aa9315cad6e8c96c6859","reason":"tests fail at base"}
+{"project":"echo","commit":"a95d6668f3b029f93ea4e932a0a61caf1bd1eb79","reason":"module download failed"}
+{"project":"echo","commit":"069e80b9e0c2233d9c7f4609e32bb40f34d07a1a","reason":"module download failed"}
+{"project":"echo","commit":"ee2ac3b9a212eb0e94868bad882a69e00b51c23f","reason":"module download failed"}
+{"project":"echo","commit":"2eb5d97b192713bdb3a60d23a4bdf43150406715","reason":"module download failed"}
+{"project":"echo","commit":"954efac63af5af268215b8386923601c0a699252","reason":"module download failed"}
+{"project":"echo","commit":"cba2724de3d7540d745252b2bd4e17169f7b7abd","reason":"module download failed"}
+{"project":"echo","commit":"4226a3ab2e1fd8177471e6bb681e1e4ad7acc622","reason":"module download failed"}
+{"project":"echo","commit":"a268e01746596652f225605349b4e029a6b585d3","reason":"module download failed"}
+{"project":"echo","commit":"60072188355b8972c738a041666bd4b05957c135","reason":"module download failed"}
+{"project":"echo","commit":"8ace8e2143ed733bfd5e23be0ffc6f8ed468e8f5","reason":"module download failed"}
+{"project":"echo","commit":"093e5c9ed61a3e3ede94d7ecdb485b316e73f2ab","reason":"module download failed"}
+{"project":"echo","commit":"4dcb57d42aff8f320f04e9bac038e265a7719fa8","reason":"module download failed"}
+{"project":"echo","commit":"4fd9f14769be3488bb358253250bd357fa830e7e","reason":"module download failed"}
+{"project":"echo","commit":"1f8ecfd6102d1c7c55b8e33e62225d3233726813","reason":"module download failed"}
+{"project":"echo","commit":"c2d29f38955fad857900f17f1be49adb8e537719","reason":"module download failed"}
+{"project":"echo","commit":"1ac5425ec48d1301d35a5b9a520326d8fca7e036","reason":"module download failed"}
+{"project":"echo","commit":"0edb17e978a2da617b2ac62d8aab27d13e83e493","reason":"module download failed"}
+{"project":"echo","commit":"2eb87f803600885f67e14b4196da4bd2301690e8","reason":"module download failed"}
+{"project":"echo","commit":"f4a5abc8b229da84ea32b8570a5a5d819ba76fc4","reason":"module download failed"}
+{"project":"echo","commit":"b47abdb9ec9b6d38475ed385ebe052affbc14172","reason":"module download failed"}
+{"project":"echo","commit":"d832efd403fc88330805b7858f4ae53d91b616dd","reason":"module download failed"}
+{"project":"echo","commit":"0e7a9c1d497b84d79fca0d201638f393942e44a4","reason":"module download failed"}
+{"project":"echo","commit":"11eafe9b901c7598ddbac94294120e5c695941f1","reason":"module download failed"}
+{"project":"echo","commit":"4e98fa9664ac3d865c6eb523f764bf7c97699467","reason":"module download failed"}
+{"project":"echo","commit":"0dab439ea4b552f0c401076421d9923bf62cb69d","reason":"module download failed"}
+{"project":"echo","commit":"16d1c799d6a20608fcc78bb0f937e5417440b02d","reason":"module download failed"}
+{"project":"echo","commit":"65fcca2ce370125572880a6109ed0b9bde1a66e0","reason":"module download failed"}
+{"project":"echo","commit":"c9a62e20b4754a46fa1ef850e34fbed91230e998","reason":"module download failed"}
+{"project":"echo","commit":"7c3df7703f2f573138f10eeb2d03ab8136411a32","reason":"module download failed"}
+{"project":"echo","commit":"abea41de11dec039ae6215f3f7d8a415fd1a76ed","reason":"module download failed"}
+{"project":"echo","commit":"c57fcb3746c4bfdab1b65363aa9e9edc7b6cab28","reason":"tests fail at base"}
+{"project":"echo","commit":"644ee473996c1a92656ba1906c4bc5b9fe2ffe88","reason":"module download failed"}
+{"project":"echo","commit":"143f563734f7892110fd67c3ebb38c411f74d3bf","reason":"module download failed"}
+{"project":"echo","commit":"ce6b1e20db905165131bf2b84093cacf1a302f99","reason":"module download failed"}
+{"project":"echo","commit":"4b4a09fd317c9a1e38cdfd4ecb9a2389cffb6035","reason":"module download failed"}
+{"project":"echo","commit":"af1bfd5397ec0eac5e4ce07393cdb89a3f087ab2","reason":"module download failed"}
+{"project":"echo","commit":"f1cf1ec930e388333798c133629afa18dad00241","reason":"tests fail at base"}
+{"project":"echo","commit":"ec048ea5231ff36137b9efd41fec86759e21e553","reason":"module download failed"}
+{"project":"echo","commit":"b4da73313fe56f8a5ce7017c96ff4418d490592f","reason":"module download failed"}
+{"project":"echo","commit":"e7c1d5d9fbc4352118f463fc59c1c17fe58d21b0","reason":"module download failed"}
+{"project":"echo","commit":"d0ed5830c4b60a83271593baa3d520699882592b","reason":"module download failed"}
+{"project":"echo","commit":"15eb5b0aad47d50d9a9ca7b0a39b3b019ce1ff27","reason":"module download failed"}
+{"project":"echo","commit":"fefbfeb28c8f45d55c1bd791ee7c09e9ff34b98c","reason":"module download failed"}
+{"project":"echo","commit":"f27de9a80412242434d6b6c8c526a59e679b887b","reason":"module download failed"}
+{"project":"echo","commit":"6bb871fe3a34734eae761b8777bebe2d72f6279e","reason":"module download failed"}
+{"project":"echo","commit":"d077efe91a40bee31c44762dee7b6dced48e4eae","reason":"module download failed"}
+{"project":"echo","commit":"f56450d8cecf162d101ee5794b290d9bb619a807","reason":"module download failed"}
+{"project":"echo","commit":"47fb44deb59583a8e36be4dfcbc68a1f20183974","reason":"module download failed"}
+{"project":"echo","commit":"9d44f49ccccc77605f8539a491c0b58bfff0d6e4","reason":"module download failed"}
+{"project":"echo","commit":"a739d9a0d93734930cd5feb91655e740ad605a98","reason":"module download failed"}
+{"project":"echo","commit":"35d018c671c30559348332400c63344394488976","reason":"module download failed"}
+{"project":"echo","commit":"181d94877302899eef00892a6898d174eeebb96c","reason":"module download failed"}
+{"project":"echo","commit":"d549290448fc65ae075f0b960b25489f6a38cb78","reason":"tests fail at base"}
+{"project":"echo","commit":"fbfe2167f1d20a2febe59770ca0500652df6c27e","reason":"tests fail at base"}
+{"project":"echo","commit":"c654c422c48aa416e4fb30f1a99155ecbd1b24ca","reason":"module download failed"}
+{"project":"echo","commit":"7d54690cdc4be1effb746ee60d950f937aa9e897","reason":"tests fail at base"}
+{"project":"echo","commit":"f9e97332f3bebd2c26753f7dc679588a22cb387d","reason":"module download failed"}
+{"project":"echo","commit":"d069d9b3a966e29425b64d9ed79eb6080dd5d614","reason":"module download failed"}
+{"project":"echo","commit":"b65641350ea44f3e0c22bf4a7950c25babe5e448","reason":"module download failed"}
+{"project":"echo","commit":"703174e58f3f730ca139df65f83ad1c4210b3739","reason":"module download failed"}
+{"project":"echo","commit":"8623669cbc9309b3e6aa1534c357e726a6300744","reason":"module download failed"}
+{"project":"echo","commit":"34e964851f4442dae0a5b3b3db5167087cfa8c79","class":"DT","reason":"module download failed"}
+{"project":"echo","commit":"e8d7d88c4e3df40de6ac078a213f367aac8fa278","class":"DT","reason":"module download failed"}
+{"project":"echo","commit":"","reason":"complete: echo"}
+{"project":"cobra","commit":"a15d0990180cf0d99905ad41201211f8ac3cab53","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"a15d0990180cf0d99905ad41201211f8ac3cab53","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"c3573e220c93941b06812483ee96ceaf5fa5e5cc","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"c3573e220c93941b06812483ee96ceaf5fa5e5cc","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"cobra","commit":"c3573e220c93941b06812483ee96ceaf5fa5e5cc","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"e2c45ac9eb0cdb823b89c1e868d698dc74822797","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"e2c45ac9eb0cdb823b89c1e868d698dc74822797","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"6607e6b8603f56adb027298ee6695e06ffb3a819","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"6607e6b8603f56adb027298ee6695e06ffb3a819","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"50f385938e098a69ec93b3490ff68442ec3d6524","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"50f385938e098a69ec93b3490ff68442ec3d6524","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=2, op4=2, op5=0)"}
+{"project":"cobra","commit":"50f385938e098a69ec93b3490ff68442ec3d6524","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"e392f3204db0445f1f4ad47448b04d8c8ad04c2a","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"e392f3204db0445f1f4ad47448b04d8c8ad04c2a","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"95f2f73ed97e57387762620175ccdc277a8597a0","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"95f2f73ed97e57387762620175ccdc277a8597a0","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"f848943afd7212766aadc19256cf9e7384980281","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"f848943afd7212766aadc19256cf9e7384980281","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"8a63648dd905e5c96bee06e6851a894fc75aa058","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"8a63648dd905e5c96bee06e6851a894fc75aa058","class":"S2","reason":"no consumer break"}
+{"project":"cobra","commit":"5d46ac904df31583e1c824a3f5d7198cfa1911c0","class":"S3","reason":"no compiling candidate"}
+{"project":"cobra","commit":"5d46ac904df31583e1c824a3f5d7198cfa1911c0","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"15767233591fd4267ae99d05299fa3807c375cdd","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"15767233591fd4267ae99d05299fa3807c375cdd","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"7446950424da5c8a04d26f294da95f6c98a4174a","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"7446950424da5c8a04d26f294da95f6c98a4174a","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"29164f023bf9319e74d5961a21a712653bb98c83","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"29164f023bf9319e74d5961a21a712653bb98c83","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"f71cd7d61909bbe19452b6104e76a4c4bf343e8e","class":"S1","reason":"no compiling candidate"}
+{"project":"chi","commit":"f71cd7d61909bbe19452b6104e76a4c4bf343e8e","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"f71cd7d61909bbe19452b6104e76a4c4bf343e8e","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"chi","commit":"f71cd7d61909bbe19452b6104e76a4c4bf343e8e","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"f10dc4a9cab53a47f600f518fcccaa044666e95f","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"f10dc4a9cab53a47f600f518fcccaa044666e95f","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"6ceb498b221efa11f559602beb2463b8b52c2161","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"6ceb498b221efa11f559602beb2463b8b52c2161","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"67be7d9cafdaeb4e04e887ff78d09e030ee43b00","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"67be7d9cafdaeb4e04e887ff78d09e030ee43b00","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"67be7d9cafdaeb4e04e887ff78d09e030ee43b00","class":"C3","reason":"not applicable: test TestBasicWriterDiscardsWritesToOriginalResponseWriter has no assertion to turn into a log"}
+{"project":"chi","commit":"d04703412f631922c8dd1527c6500627174828c1","class":"S1","reason":"no compiling candidate"}
+{"project":"chi","commit":"d04703412f631922c8dd1527c6500627174828c1","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"d04703412f631922c8dd1527c6500627174828c1","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"chi","commit":"d04703412f631922c8dd1527c6500627174828c1","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"878fe71fc9e506a63ea6957ed09c9ce84f789e97","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"878fe71fc9e506a63ea6957ed09c9ce84f789e97","class":"S2","reason":"no consumer break"}
+{"project":"chi","commit":"7dbe9a0bd10f03c7841d0374af79d7fa32769a9f","class":"S3","reason":"no compiling candidate"}
+{"project":"chi","commit":"7dbe9a0bd10f03c7841d0374af79d7fa32769a9f","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"66eef0ef3adb4691cdc275620c9a129f2f98935a","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"66eef0ef3adb4691cdc275620c9a129f2f98935a","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"66eef0ef3adb4691cdc275620c9a129f2f98935a","class":"C3","reason":"not applicable: test TestComparisonAssertionFunc has no assertion to turn into a log"}
+{"project":"testify","commit":"66eef0ef3adb4691cdc275620c9a129f2f98935a","class":"D7","reason":"not applicable: heldout D7: assert/assertions_test.go: TestComparisonAssertionFunc has no t.Error/t.Fatal-style calls to demote"}
+{"project":"testify","commit":"310548cda69b834eb40920ed9571b6d828427612","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"310548cda69b834eb40920ed9571b6d828427612","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"f6cbfc0d0341bd4f04831a275adbef45a2221690","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"f6cbfc0d0341bd4f04831a275adbef45a2221690","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"1ebd9c5791a7b34abb2f0bece9dcdec96b9f5584","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"1ebd9c5791a7b34abb2f0bece9dcdec96b9f5584","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"1ebd9c5791a7b34abb2f0bece9dcdec96b9f5584","class":"C3","reason":"not applicable: test Test_containsValue has no assertion to turn into a log"}
+{"project":"testify","commit":"1ebd9c5791a7b34abb2f0bece9dcdec96b9f5584","class":"D7","reason":"not applicable: heldout D7: assert/assertions_test.go: TestBytesEqual has no t.Error/t.Fatal-style calls to demote"}
+{"project":"testify","commit":"2b00d33aec28e4fded71d57517ed4ec9d54cb4e2","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"2b00d33aec28e4fded71d57517ed4ec9d54cb4e2","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"2b00d33aec28e4fded71d57517ed4ec9d54cb4e2","class":"D7","reason":"not applicable: heldout D7: mock/mock_test.go: Test_Mock_UnsetByOnMethodSpecAmongOthers has no t.Error/t.Fatal-style calls to demote"}
+{"project":"testify","commit":"9acc22213e5fbec050904b9886c6df042188cad5","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"9acc22213e5fbec050904b9886c6df042188cad5","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"testify","commit":"9acc22213e5fbec050904b9886c6df042188cad5","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"c5fc9d6b6b21ea89be8480c0dc35e2977ab988f6","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"c5fc9d6b6b21ea89be8480c0dc35e2977ab988f6","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"c31ea0312f8a96ca55801db5ebdf62119800fb70","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"c31ea0312f8a96ca55801db5ebdf62119800fb70","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"c31ea0312f8a96ca55801db5ebdf62119800fb70","class":"C3","reason":"not applicable: test Test_compareTwoValuesNotComparableValues has no assertion to turn into a log"}
+{"project":"testify","commit":"c31ea0312f8a96ca55801db5ebdf62119800fb70","class":"D7","reason":"not applicable: heldout D7: assert/assertion_compare_test.go: Test_compareTwoValuesNotComparableValues has no t.Error/t.Fatal-style calls to demote"}
+{"project":"testify","commit":"9fc264e324c587f876d486ce8339f45784a6c3a1","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"9fc264e324c587f876d486ce8339f45784a6c3a1","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"9fc264e324c587f876d486ce8339f45784a6c3a1","class":"C3","reason":"not applicable: test TestComparisonAssertionFunc has no assertion to turn into a log"}
+{"project":"testify","commit":"9fc264e324c587f876d486ce8339f45784a6c3a1","class":"D7","reason":"not applicable: heldout D7: assert/assertions_test.go: TestComparisonAssertionFunc has no t.Error/t.Fatal-style calls to demote"}
+{"project":"testify","commit":"087b655c75372ea14309c2df573a2280c54afac6","class":"S3","reason":"no compiling candidate"}
+{"project":"testify","commit":"087b655c75372ea14309c2df573a2280c54afac6","class":"S2","reason":"no consumer break"}
+{"project":"testify","commit":"087b655c75372ea14309c2df573a2280c54afac6","class":"C3","reason":"not applicable: test Test_compareTwoValuesNotComparableValues has no assertion to turn into a log"}
+{"project":"testify","commit":"087b655c75372ea14309c2df573a2280c54afac6","class":"D7","reason":"not applicable: heldout D7: assert/assertion_compare_test.go: Test_compareTwoValuesNotComparableValues has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"55e27f12465e058058180280d5f0bdc473eb3302","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"55e27f12465e058058180280d5f0bdc473eb3302","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"55e27f12465e058058180280d5f0bdc473eb3302","class":"D7","reason":"not applicable: heldout D7: auth_test.go: TestBasicAuthSucceed has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"3dc1cd6572b4e3a0cd170a15debe546c2c72294f","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"3dc1cd6572b4e3a0cd170a15debe546c2c72294f","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"gin","commit":"3dc1cd6572b4e3a0cd170a15debe546c2c72294f","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"5f458dd1a6d631f324e4af9a4f5429ffdf199342","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"5f458dd1a6d631f324e4af9a4f5429ffdf199342","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"5f458dd1a6d631f324e4af9a4f5429ffdf199342","class":"D7","reason":"not applicable: heldout D7: auth_test.go: TestBasicAuthForProxy407 has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"9a575a4c05601954e0848ff8271238dd73485536","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"9a575a4c05601954e0848ff8271238dd73485536","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"9a575a4c05601954e0848ff8271238dd73485536","class":"D7","reason":"not applicable: heldout D7: context_test.go: TestContextWithFallbackDeadlineFromRequestContext has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"3cb30679b5e3021db16c776ed7e70d380586e9ce","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"3cb30679b5e3021db16c776ed7e70d380586e9ce","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"3cb30679b5e3021db16c776ed7e70d380586e9ce","class":"C3","reason":"not applicable: test TestBindingFormForType has no assertion to turn into a log"}
+{"project":"gin","commit":"3cb30679b5e3021db16c776ed7e70d380586e9ce","class":"D7","reason":"not applicable: heldout D7: binding/binding_test.go: TestBindingFormForType has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"d4ca9a0fb1211108f0a893634ee01b0006890c16","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"d4ca9a0fb1211108f0a893634ee01b0006890c16","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"d4ca9a0fb1211108f0a893634ee01b0006890c16","class":"C3","reason":"not applicable: test TestTreeRunDynamicRouting has no assertion to turn into a log"}
+{"project":"gin","commit":"01ca625b98910363175cd24b0093c6f14e9d6dd3","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"01ca625b98910363175cd24b0093c6f14e9d6dd3","class":"D7","reason":"not applicable: heldout D7: render/render_test.go: TestRenderJsonpJSON has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"dd8a27c0b6fbbfd192c5586ba3165700f535ac7f","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"dd8a27c0b6fbbfd192c5586ba3165700f535ac7f","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"dd8a27c0b6fbbfd192c5586ba3165700f535ac7f","class":"D7","reason":"not applicable: heldout D7: context_test.go: TestContextClientIP has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"2921582d11d517dff4cf0226bfbcd8bc7c63d536","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"2921582d11d517dff4cf0226bfbcd8bc7c63d536","class":"S2","reason":"no consumer break"}
+{"project":"gin","commit":"2921582d11d517dff4cf0226bfbcd8bc7c63d536","class":"C3","reason":"not applicable: test TestTreeWildcard has no assertion to turn into a log"}
+{"project":"gin","commit":"2921582d11d517dff4cf0226bfbcd8bc7c63d536","class":"D7","reason":"not applicable: heldout D7: gin_test.go: TestEngineHandleContext has no t.Error/t.Fatal-style calls to demote"}
+{"project":"gin","commit":"9914178584e42458ff7d23891463a880f58c9d86","class":"S3","reason":"no compiling candidate"}
+{"project":"gin","commit":"9914178584e42458ff7d23891463a880f58c9d86","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"gin","commit":"9914178584e42458ff7d23891463a880f58c9d86","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"d0137c3e80871259ab976c268eac98886c07fea5","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"d0137c3e80871259ab976c268eac98886c07fea5","class":"C3","reason":"not applicable: test TestBindMultipartForm has no assertion to turn into a log"}
+{"project":"echo","commit":"d0137c3e80871259ab976c268eac98886c07fea5","class":"D7","reason":"not applicable: heldout D7: bind_test.go: TestBindForm has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"c7c792d3bde296e0e4b15a72639d2968ed6b1d57","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"c7c792d3bde296e0e4b15a72639d2968ed6b1d57","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"c7c792d3bde296e0e4b15a72639d2968ed6b1d57","class":"C1","reason":"formatting noise"}
+{"project":"echo","commit":"c7c792d3bde296e0e4b15a72639d2968ed6b1d57","class":"D3","reason":"not applicable: disguise: middleware/csrf_samesite_test.go uses a legacy // +build line"}
+{"project":"echo","commit":"c7c792d3bde296e0e4b15a72639d2968ed6b1d57","class":"D7","reason":"not applicable: heldout D7: middleware/csrf_samesite_test.go: TestCSRFWithSameSiteModeNone has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"1ee8e22faa4ee7ada2dd6927665113ac8a35e62f","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"1ee8e22faa4ee7ada2dd6927665113ac8a35e62f","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"1ee8e22faa4ee7ada2dd6927665113ac8a35e62f","class":"D7","reason":"not applicable: heldout D7: middleware/rate_limiter_test.go: TestRateLimiterMemoryStore_cleanupStaleVisitors has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"c7d6d4373fdfbef5d6f44df0a8ef410c198420ee","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"c7d6d4373fdfbef5d6f44df0a8ef410c198420ee","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"c7d6d4373fdfbef5d6f44df0a8ef410c198420ee","class":"D7","reason":"not applicable: heldout D7: middleware/proxy_test.go: TestModifyResponseUseContext has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"26ec148ea731c2ddf55c03b1f9b776da23e27217","class":"D7","reason":"not applicable: heldout D7: middleware/static_test.go: TestStatic has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"d77e8c09b21bb23fa8d2dc0250c998d0da0815fa","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"d77e8c09b21bb23fa8d2dc0250c998d0da0815fa","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"d77e8c09b21bb23fa8d2dc0250c998d0da0815fa","class":"D7","reason":"not applicable: heldout D7: middleware/csrf_test.go: TestCSRF has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"42f07ed880400b8bb80906dfec8138c572748ae8","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"42f07ed880400b8bb80906dfec8138c572748ae8","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"42f07ed880400b8bb80906dfec8138c572748ae8","class":"D7","reason":"not applicable: heldout D7: middleware/compress_test.go: TestGzipWithMinLengthTooShort has no t.Error/t.Fatal-style calls to demote"}
+{"project":"echo","commit":"6a666acd5ce75bfa79b029bab9b6e13ae0e5573b","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"6a666acd5ce75bfa79b029bab9b6e13ae0e5573b","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=0, op5=0)"}
+{"project":"echo","commit":"6a666acd5ce75bfa79b029bab9b6e13ae0e5573b","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"09ccfbaace93a36bef8f494348d13d86dc327ea4","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"09ccfbaace93a36bef8f494348d13d86dc327ea4","class":"M","reason":"no killing mutant (op1=0, op2=0, op3=0, op4=2, op5=0)"}
+{"project":"echo","commit":"09ccfbaace93a36bef8f494348d13d86dc327ea4","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"5c7c87d09e23a8943f71f3057030919fb28f1349","class":"S3","reason":"no compiling candidate"}
+{"project":"echo","commit":"5c7c87d09e23a8943f71f3057030919fb28f1349","class":"S2","reason":"no consumer break"}
+{"project":"echo","commit":"5c7c87d09e23a8943f71f3057030919fb28f1349","class":"C3","reason":"not applicable: test TestContext_Logger has no assertion to turn into a log"}
+{"project":"echo","commit":"5c7c87d09e23a8943f71f3057030919fb28f1349","class":"D7","reason":"not applicable: heldout D7: context_test.go: TestContext_Logger has no t.Error/t.Fatal-style calls to demote"}

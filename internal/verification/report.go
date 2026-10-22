@@ -619,7 +619,7 @@ func (p Policy) blocks(item Finding) bool {
 }
 
 func alwaysBlocks(kind string) bool {
-	return kind == "test.failure" || kind == "go.race" || kind == "coverage.policy"
+	return kind == "test.failure" || kind == BuildFailureKind || kind == "go.race" || kind == "coverage.policy"
 }
 
 func severityRank(value Severity) int {

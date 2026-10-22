@@ -48,6 +48,10 @@ func run(args []string) int {
 			return runMCPConfig(args[1:], os.Stdout, os.Stderr, defaultMCPConfigDependencies())
 		case "contract":
 			return runContract(args[1:], os.Stdout, os.Stderr)
+		case "check":
+			return runCheck(args[1:], os.Stdout, os.Stderr)
+		case "init":
+			return runInit(args[1:], os.Stdout, os.Stderr)
 		}
 	}
 	return runMCP(args)

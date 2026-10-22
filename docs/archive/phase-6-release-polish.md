@@ -1,7 +1,7 @@
 # Phase 6 — Release polish
 
-Read [`contracts.md`](contracts.md) first. The canonical v0.1.0 release
-authority is [`v0.1.0-release-scope.md`](v0.1.0-release-scope.md); this file
+Read [`contracts.md`](../contracts.md) first. The canonical v0.1.0 release
+authority is [`v0.1.0-release-scope.md`](../v0.1.0-release-scope.md); this file
 defines release-polish implementation details only.
 
 ## Deliverables

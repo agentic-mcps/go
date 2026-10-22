@@ -4,188 +4,200 @@
 
 <h1 align="center">agentic-go</h1>
 
-<p align="center">Source-grounded Go intelligence for coding agents.</p>
+<p align="center">A done-gate for agent-written Go.</p>
 
 <p align="center">
   <a href="#install"><img src="assets/brand/pills/install.svg" alt="Install agentic-go"></a>
-  <a href="#connect"><img src="assets/brand/pills/mcp-setup.svg" alt="Connect MCP"></a>
   <a href="https://agentic-mcps.github.io/go/docs/"><img src="assets/brand/pills/docs.svg" alt="Read docs"></a>
-  <a href="https://github.com/agentic-mcps/go/releases/tag/v1.2.1"><img src="assets/brand/pills/release.svg" alt="v1.2.1 release"></a>
 </p>
 
-<p align="center"><a href="https://agentic-mcps.github.io/go/">Website</a> · <a href="https://agentic-mcps.github.io/go/docs/">Docs</a> · <a href="#install">Install</a> · <a href="#connect">Connect</a> · <a href="#workflow">Workflow</a> · <a href="#capabilities">Capabilities</a> · <a href="#faq">FAQ</a></p>
+<p align="center"><a href="https://agentic-mcps.github.io/go/">Website</a> · <a href="https://agentic-mcps.github.io/go/docs/">Docs</a> · <a href="#install">Install</a> · <a href="#what-it-checks">What it checks</a> · <a href="#what-it-does-not-catch">Limits</a> · <a href="#evidence">Evidence</a></p>
 
-`agentic-go` is a local Go MCP server and CLI. It gives an external coding agent semantic context, change continuity, guarded refactoring, and executed verification without embedding an LLM or becoming an agent framework.
-
-The [product north star](docs/go-intelligence-north-star.md) targets Go engineers
-using agents throughout understanding, editing, debugging, verification, and
-review. It distinguishes current capabilities from planned workflow work and
-unproven benefits across models. See the
-[continuation handoff](docs/continuation/go-intelligence.md) for current status.
-
-The v1.2.1 server exposes 15 MCP tools: the frozen v1 surface of 14 tools plus the additive `go_context` tool under `agentic.focus/v1`. This patch release makes the edit, refresh, verify, and inspect handoff explicit while preserving snapshot lineage and fail-closed evidence. The seven resources, resource template, six prompts, and frozen v1 schemas remain unchanged.
+`agentic-go check` runs when a coding agent tries to stop, before a push, or in
+CI. It compares your working tree with a base and reports only the problems that
+change introduced: a failing test, a deleted or skipped test, a stub left behind,
+a concurrency or error-handling mistake, changed lines no test runs. The report
+is short (at most 2 KB) and lists blocking items first, each with a location, a
+message, and a fix. In an agent hook it blocks the stop once so the agent can fix
+the problems; otherwise it reports them to you.
 
 ## Install
 
-On macOS or Linux:
+No released binary contains `check` yet. Install from source with Go 1.25 or
+later, using a branch name or commit as the version:
 
 ```sh
-brew install agentic-mcps/tap/agentic-go
-agentic-go --version
+go install github.com/agentic-mcps/go/cmd/agentic-go@<branch-or-commit>
+agentic-go check --help
 ```
 
-That installs `agentic-go`, the pinned `agentic-go-gopls` companion, and `agentic-go-vet`. The Homebrew tap is maintained separately; the signed v1.2.1 release archive and checksum installer below are the canonical versioned distribution path.
-
-For an agent workflow, install the binary first, then print the client-native
-MCP entry for the current workspace:
+Or build from a clone:
 
 ```sh
-agentic-go mcp-config --client codex --workspace "$PWD"
+go build -o agentic-go ./cmd/agentic-go
 ```
 
-The command prints configuration for manual review and copying. It does not
-edit your client configuration.
-
-<details>
-<summary>Install from the release archive instead</summary>
+Run it from inside a Go module:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/agentic-mcps/go/v1.2.1/scripts/install.sh \
-  | bash -s -- 1.2.1
+agentic-go check
 ```
 
-The installer places the binaries in `~/.local/bin` and verifies the release checksum before replacing them.
-</details>
+The base is detected in this order: the `--base` flag, the HEAD recorded at
+session start, `GITHUB_BASE_REF`, `origin/HEAD`, `origin/main`, `origin/master`,
+`main`, `master`, then `HEAD`. The comparison covers committed, staged,
+unstaged, and untracked changes.
 
-## Connect
+| Profile | Default when | Unknown verdict |
+| --- | --- | --- |
+| `local` | no other profile applies | exits 0 with a note |
+| `hook` | used by `--hook` | the hook allows the stop with a note |
+| `ci` | `CI=true` | exits 2 |
 
-Start `agentic-go` as a stdio MCP server with your Go workspace as its working directory. The process is local; there is no daemon, port, or hosted account to configure.
+Exit codes: `0` pass, `1` block, `2` unknown in the `ci` profile. Use
+`--format json` for machine-readable output (schema id `agentic.check/v1`).
 
-<details>
-<summary>Generic MCP entry</summary>
-
-```json
-{
-  "mcpServers": {
-    "agentic-go": {
-      "command": "agentic-go",
-      "args": ["--workspace", "/absolute/path/to/your/go/module"]
-    }
-  }
-}
-```
-
-`--workspace` defaults to the current directory. The client controls approvals for operations that execute repository code.
-</details>
-
-Codex users can optionally use the model-invoked project skill at
-`.agents/skills/agentic-go-context`. Keep it in the repository's project skill
-path, or install it manually in a user skill directory when needed:
+## Use with Claude Code
 
 ```sh
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R .agents/skills/agentic-go-context "${CODEX_HOME:-$HOME/.codex}/skills/"
+agentic-go init --claude            # print the hook configuration
+agentic-go init --claude --write    # merge it into the settings file
 ```
 
-This copy is optional and does not edit MCP configuration. The skill only
-guides when to call `go_context`; it does not install the binary.
+`--scope project|local|user` chooses the settings file (default `project`). The
+configuration adds a `SessionStart` hook that records the base and a `Stop` hook
+that runs `agentic-go check --hook claude`.
 
-## Workflow
-
-The useful loop is deliberately small: orient, set intent, edit, catch drift, then verify.
-
-<p align="center">
-  <img src="assets/diagrams/agentic-go-loop.svg" alt="Brief, begin, edit, checkpoint, and verify loop" width="100%">
-</p>
-
-For a direct change report:
+## Use with Codex
 
 ```sh
-agentic-go verify --base origin/main --package ./... --format text
+agentic-go init --codex
+agentic-go init --codex --write
 ```
 
-The report is conservative, package-aware, and explicit about evidence and uncertainty. It never selects individual tests. JSON output follows `agentic.verify/v1`; exit `0` means pass, `1` means policy findings, and `2` means incomplete or execution failure.
+Codex asks you to review and trust new hooks: run `/hooks` in Codex.
 
-For focused context before an edit, an MCP client can call `go_context` with the required local base (for example `HEAD` or `origin/main`) and one selector, then refresh after editing with the base and returned `pack_id` as `previous_pack_id` only. Stale selectors and refs are rejected. The equivalent CLI command is:
+Experimental. The Stop contract (`{"decision":"block","reason":…}` on stdout; extra fields are rejected) was checked on 2026-10-09 against the Codex hooks documentation as quoted by search results and against openai/codex issue #18887; the documentation page itself could not be fetched from the build environment.
+
+### How hook mode behaves
+
+- The process always exits 0. A gate failure never blocks an agent.
+- It blocks the agent's stop once per distinct change. A repeated stop with an
+  identical change is let through, and unresolved items are reported to you.
+- It blocks at most 3 times in a row; the count resets when a check passes.
+- It caches verdicts by a content fingerprint. In one smoke test a repeat check
+  of an unchanged tree took 48 ms and a full check of a small package took about
+  3 s. These are single observations, not benchmarks.
+- The hook budget is 120 s. If the check cannot finish, the verdict is
+  `unknown` and the stop is allowed with a note.
+
+## Pre-push and CI
 
 ```sh
-agentic-go context --base origin/main --query Worker --format text
+agentic-go init --git-pre-push           # print a pre-push hook
+agentic-go init --git-pre-push --write   # install it
 ```
 
-### Branch source-view preview
+A GitHub Actions job that builds from source. `fetch-depth: 0` is required so
+the base commit is present:
 
-The development branch also includes an explicit source-view command for
-checking a branch in its own exact Git worktree:
-
-```sh
-agentic-go source-view --workspace "$PWD" --branch feature/example \
-  --output ../agentic-go-feature-example --format json
-agentic-go mcp-config --client codex --workspace ../agentic-go-feature-example
+```yaml
+jobs:
+  agentic-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go install github.com/agentic-mcps/go/cmd/agentic-go@<branch-or-commit>
+      - run: agentic-go check --profile ci --base origin/${{ github.base_ref }}
 ```
 
-Without `--branch`, it selects local `main`, or the configured
-`origin/HEAD` when `main` is absent. Add `--include-dirty` only when the
-source checkout's `HEAD` is exactly the selected commit; it carries staged,
-unstaged, and regular untracked changes into the view. The output names the
-branch ref, commit, tree, and any checkout limitations. Configure the agent
-with the exact view root so snapshot checks can reject a branch that moved.
-The source view is a visible detached worktree. This preview does not create a
-persistent index or automatically switch a running MCP server, and it reports
-uninitialized submodules as incomplete. External `go.work` or local
-`replace` inputs are not captured.
+Replace `<branch-or-commit>` with a ref that contains `check`.
 
-## Capabilities
+## What it checks
 
-| Area | What the agent gets |
+Checks run in this order.
+
+| Check | What it reports |
 | --- | --- |
-| Workspace context | Package APIs, diagnostics, definitions, references, implementations, related tests, and bounded call relationships. |
-| Change continuity | A private contract containing the goal, scope, decisions, questions, drift, and snapshot lineage. |
-| Guarded refactoring | Preview or apply deterministic rename, formatting, import organization, and approved `source.fixAll` edits. |
-| Verification | Impact, whole-package tests, coverage, optional race evidence, calibrated findings, contract compliance, and uncertainty. |
+| Syntax | Go syntax errors in changed files. |
+| Test integrity | Deleted tests; tests hidden from `go test` by a rename, a build constraint, or an ignored directory; skips added to existing tests; assertions removed or turned into log calls; stub panics such as `panic("not implemented")`. |
+| Golden files | Edits to golden or testdata files next to code (warning). |
+| Gate configuration | Edits to gate or CI configuration; in agent hooks, only files changed since the session started. Blocks once in agent hooks; a warning elsewhere. Always reported. |
+| Tests | `go test` on changed packages and their in-module consumers. Failures are rerun and compared with the base, so pre-existing and flaky failures are warnings, not blocks. The test cache is used locally. |
+| Analyzers | Findings introduced by the bundled concurrency and error-handling analyzers. |
+| Coverage | Changed lines that no test executes (warning). `--require-coverage` makes them block. |
+| Race detector | With `--race`. The `ci` profile also runs it when the diff touches synchronization. |
 
-Every result is tied to an immutable snapshot. Stale references fail instead of silently moving the goalposts.
+Other flags: `--budget`, `--max-packages`, `--no-cache`, `--skip`, and
+`--workspace`. Run `agentic-go check --help` for details.
 
-<p align="center">
-  <img src="assets/diagrams/trust-boundary.svg" alt="MCP client, agentic-go, and Go workspace trust boundary" width="100%">
-</p>
+## What it does not catch
 
-## FAQ
+Observed in the evaluation:
 
-<details>
-<summary>Does this replace gopls?</summary>
+- A skip behind an environment check, or a test moved into a new build-tagged
+  file, is only a warning.
+- A test added by the same change and then skipped or deleted is not treated as
+  tampering, because it does not exist at the base.
+- A test body wrapped in a closure that is never called is not detected.
+- In packages that run inner test suites (`testing.RunTests`, as testify's
+  `suite` does), intentional inner failures are reported as new failing tests
+  (a known defect).
 
-No. A pinned gopls sidecar provides semantic capabilities; agentic-go adds snapshots, continuity, guarded mutation, and verification around it.
-</details>
+By design:
 
-<details>
-<summary>Can it change my files?</summary>
+- A changed expected value in a test (`want := ...` edited to match buggy
+  output) is not detected.
+- An order-dependent failure that passes in isolation is reported as flaky, so
+  it does not block.
+- Only the module containing the workspace is analyzed. External consumers are
+  not.
+- Larger repositories may not finish within the 120 s hook budget. The verdict
+  is then `unknown`, and the hook allows the stop with a note.
+- It compares only against the local base, so the base commit must be present.
+  In a shallow clone it falls back to uncommitted changes only.
+- It runs the repository's own tests with your privileges. Workspace
+  containment, deadlines, and output limits bound the scope, but this is not a
+  sandbox. Do not run it on code you do not trust.
 
-Only an explicitly approved, snapshot-bound deterministic refactor can mutate existing contained non-generated files. Git state never changes.
-</details>
+## Evidence
 
-<details>
-<summary>What does it run?</summary>
+A pre-registered evaluation ([protocol](validation/gate/README.md),
+[results](validation/gate/results/2026-10-09/README.md)) ran the gate and five
+baselines on 821 variants of 176 real commits from cobra, chi, testify, gin and
+echo. **Its kill criteria failed.**
 
-Execution tools may compile and run trusted repository tests, benchmarks, or fuzz functions with the server process's privileges. Audit tools are read-only. Containment is not a sandbox.
-</details>
+- On hidden test tampering, the gate blocked 68% of cover-ups, against 75% for
+  a conventional gate that runs every test, `go vet` and `golangci-lint` and
+  ignores failures that already exist at the base.
+- A 60-line grep script layered on that gate blocked 93% of held-out disguises;
+  the gate blocked 60%.
+- The gate falsely blocked 19% of real commits, 22 of 28 from one defect
+  (see "What it does not catch").
+- Where the gate was better is precision: it blocked 37% of legitimate commits
+  that delete or skip tests, against 97% for the grep script.
 
-<details>
-<summary>What is supported?</summary>
+These are synthetic flaws: they measure the detectors, not how often real
+agents tamper with tests. No claim is made that the gate improves agent output.
 
-Go 1.25, 1.26, and 1.27 on Darwin and Linux for amd64 and arm64. The release bundles gopls v0.21.0. Newer stable Go versions may pass preflight but are not claimed. The organization module and the former personal module are separate identities with no alias or automatic mirroring.
-</details>
+## Legacy MCP server
 
-<details>
-<summary>Maintainer notes: Action and evidence</summary>
-
-The optional composite [GitHub Action](action.yml) downloads the exact release, verifies its checksum, and writes a job summary plus JSON report. It is advisory by default and requests no pull-request write permission.
-
-The [v0.2 evidence](validation/v0.2.0/summary.md) records contract goldens, CLI dogfood, release checks, and reviewed historical changes. The [v0.1 calibration](validation/v0.1.0/summary.md) covered 10 pinned repositories and 467 reviewed findings with 0% observed false positives in that corpus. This is corpus-specific evidence, not a universal guarantee. A private GPT-5.6 Luna focus pilot found no treatment use; its later 27-run adoption follow-up recorded use in 6/6 runs with generic guidance and 6/6 runs with the shipped skill, after 0/6 with description-only discoverability. These records establish observed workflow use and safety, not causal engineering improvement, speedup, token savings, reliability, or general adoption. The bounded paid Codex and Claude comparison has not run; see the [adoption evidence](validation/v1.0.0/adoption-results.md).
-</details>
+The same binary still runs as a local stdio MCP server (`go_context`, Change
+Contracts, guarded refactoring, retrieval) and provides `agentic-go verify`. It
+is maintenance-only: defects are fixed and nothing is added. Its own
+evaluations did not show a benefit. Agents did not call it unprompted, and when
+instructed to they were slower with no gain in correctness; see the
+[adoption results](validation/v1.0.0/adoption-results.md). Its tool, schema, and
+resource reference is in [docs/contracts.md](docs/contracts.md).
 
 ## More
 
-[Website](https://agentic-mcps.github.io/go/) · [Docs](https://agentic-mcps.github.io/go/docs/) · [Contracts](docs/contracts.md) · [Migration](docs/module-migration.md) · [Roadmap](docs/v1.0.0-roadmap.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Issues](https://github.com/agentic-mcps/go/issues)
+[Website](https://agentic-mcps.github.io/go/) · [Docs](https://agentic-mcps.github.io/go/docs/) · [Design](docs/design/check-gate.md) · [Contracts](docs/contracts.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Issues](https://github.com/agentic-mcps/go/issues)
 
 <details>
 <summary>Artwork and license</summary>

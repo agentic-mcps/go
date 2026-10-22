@@ -1,9 +1,29 @@
 package parser
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
+
+func TestParseCoverageBlocksReportsEmptyProfile(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		{name: "header only", input: "mode: atomic\n", wantErr: true},
+		{name: "one block", input: "mode: atomic\na/a.go:1.1,1.4 1 0\n"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := ParseCoverageBlocks(strings.NewReader(test.input))
+			if got := errors.Is(err, ErrNoCoverageBlocks); got != test.wantErr {
+				t.Fatalf("errors.Is(%v, ErrNoCoverageBlocks) = %t, want %t", err, got, test.wantErr)
+			}
+		})
+	}
+}
 
 func TestParseCoverage(t *testing.T) {
 	r, err := ParseCoverage(strings.NewReader("mode: atomic\nz:path.go:3.1,3.4 1 0\nz:path.go:2.1,2.4 1 0\na:path.go:1.1,1.4 3 1\n"))

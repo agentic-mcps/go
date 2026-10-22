@@ -20,11 +20,11 @@ guidance. The selected v0.1 resources and prompts remain governed by their
 release scope.
 
 For current semantic behavior, use the
-[sidecar foundation](contracts.md#v03-semantic-sidecar-foundation),
-[Context Pack boundary](contracts.md#v04-context-pack-boundary), and
-[freshness contract](contracts.md#current-semantic-freshness-boundary).
+[sidecar foundation](../contracts.md#v03-semantic-sidecar-foundation),
+[Context Pack boundary](../contracts.md#v04-context-pack-boundary), and
+[freshness contract](../contracts.md#current-semantic-freshness-boundary).
 For future focused context and refresh, start with the
-[Go intelligence handoff](continuation/go-intelligence.md).
+[Go intelligence handoff](../continuation/go-intelligence.md).
 
 ## Grounded fact (verified 2026-08-22, https://github.com/golang/tools/blob/master/gopls/doc/command-line.md)
 The gopls CLI is experimental, not a stable compatibility contract. It exposes

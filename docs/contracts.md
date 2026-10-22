@@ -241,6 +241,12 @@ contract lineage. A `forbid` violation blocks regardless of analyzer severity
 policy. A `warn` observation remains advisory. Goal, decision, and unresolved
 question prose is neither interpreted nor copied into report provenance.
 
+The finding kind `build.failure` reports the compiler errors, with locations, for a package that
+failed to build. The uncertainty code `coverage_incomplete` records that a
+package lost coverage because its tests failed or aborted; coverage is then
+computed from the remaining packages, or reported unavailable. A failing
+package is never reported as 0% coverage with a passing result.
+
 Successful reports are written atomically as private 0600 files under
 `os.UserCacheDir()/agentic-go/verifications/<repository-id>/`. A separate
 atomic latest pointer backs `agentic-go://verification/latest`. The current

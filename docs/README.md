@@ -91,27 +91,27 @@ delta delivery stays deferred.
 
 ## v0.1.0 implementation specifications
 
-- [`phase-1-test-intelligence.md`](phase-1-test-intelligence.md)
-- [`phase-2-coverage-benchmark-flake.md`](phase-2-coverage-benchmark-flake.md)
-- [`phase-3-gopls-navigation-resources-prompts.md`](phase-3-gopls-navigation-resources-prompts.md)
+- [`phase-1-test-intelligence.md`](archive/phase-1-test-intelligence.md)
+- [`phase-2-coverage-benchmark-flake.md`](archive/phase-2-coverage-benchmark-flake.md)
+- [`phase-3-gopls-navigation-resources-prompts.md`](archive/phase-3-gopls-navigation-resources-prompts.md)
   — only the resources and prompts selected by the release scope
-- [`phase-4a-concurrency.md`](phase-4a-concurrency.md)
-- [`phase-4a-errors.md`](phase-4a-errors.md)
-- [`phase-6-release-polish.md`](phase-6-release-polish.md)
+- [`phase-4a-concurrency.md`](archive/phase-4a-concurrency.md)
+- [`phase-4a-errors.md`](archive/phase-4a-errors.md)
+- [`phase-6-release-polish.md`](archive/phase-6-release-polish.md)
 
 ## Deferred roadmap specifications
 
 The v1 roadmap is implemented locally. The following broader phase documents
 remain retained research and do not silently expand the frozen surface.
 
-- [`phase-4a-index.md`](phase-4a-index.md)
-- [`phase-4a-security.md`](phase-4a-security.md)
-- [`phase-4a-observability.md`](phase-4a-observability.md)
-- [`phase-4a-naming.md`](phase-4a-naming.md)
-- [`phase-4a-type-design.md`](phase-4a-type-design.md)
-- [`phase-4a-performance.md`](phase-4a-performance.md)
-- [`phase-4b-tier-2-tools.md`](phase-4b-tier-2-tools.md)
-- [`phase-5-creative-tools.md`](phase-5-creative-tools.md)
+- [`phase-4a-index.md`](archive/phase-4a-index.md)
+- [`phase-4a-security.md`](archive/phase-4a-security.md)
+- [`phase-4a-observability.md`](archive/phase-4a-observability.md)
+- [`phase-4a-naming.md`](archive/phase-4a-naming.md)
+- [`phase-4a-type-design.md`](archive/phase-4a-type-design.md)
+- [`phase-4a-performance.md`](archive/phase-4a-performance.md)
+- [`phase-4b-tier-2-tools.md`](archive/phase-4b-tier-2-tools.md)
+- [`phase-5-creative-tools.md`](archive/phase-5-creative-tools.md)
 
 [`continuation/v0.2-planning.md`](continuation/v0.2-planning.md) is retained as
 a superseded planning record and is not implementation authority. All
