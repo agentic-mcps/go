@@ -1,0 +1,3267 @@
+{
+  "schema": "agentic-go.native-context-outcome-study/v1",
+  "evaluation_date": "2026-09-28",
+  "purpose": "Directional end-to-end Q&A screen of native Go tools versus optional Agentic Go MCP availability; it does not evaluate accepted code changes or a persistent index.",
+  "model_policy": {
+    "all_agent_and_reviewer_calls": "gpt-6-luna",
+    "reasoning_effort": "max",
+    "other_models_used_for_this_study": false,
+    "codex_model_cli_arg": "--model gpt-6-luna",
+    "codex_model_reasoning_effort": "max"
+  },
+  "environment": {
+    "codex_version": "codex-cli 0.155.0-alpha.16.4",
+    "codex_sha256": "93169e745735930598e867ad837abf3fdc50774a3ad7e7aa89c0d0c51b0189a5",
+    "agentic_go_binary_sha256": "6efe4c0b67f95ecf528299dc8be8c769ac388e6f303f564366f0f4b3cc9495c3",
+    "gopls_version": "golang.org/x/tools/gopls v0.21.0",
+    "gopls_binary_sha256": "e876cb69375580336806092f837dbd6d8577a0d7e11d48393b056c43522486a8"
+  },
+  "primary_protocol": {
+    "task_count": 8,
+    "repositories": 3,
+    "strata_counts": {
+      "small": 2,
+      "medium": 3,
+      "large": 3
+    },
+    "repetitions_per_arm": 2,
+    "runs_per_arm": 16,
+    "total_runs": 32,
+    "conditions": [
+      "native",
+      "agentic_mcp_available"
+    ],
+    "source_policy": "Each workspace was read-only and verified against the exact pinned Git tree before and after the run.",
+    "prompt_policy": "The same task prompt was used in both arms. Native allowed rg, Go tools, and gopls; the Agentic arm added the Agentic Go MCP server. Run order was randomized in the frozen schedule.",
+    "question_set_limit": "The eight questions were reused from the model-free retrieval screen; this is not an independent query holdout.",
+    "taskset_sha256": "03bb1eabca045c9f643ae8abc4f7c3961a848fbeaaf4cff82c63cc9b140084fb",
+    "schedule_sha256": "c8f636693b275b64dff927e31f08b6a1eadaf11d29401a970ae1d3266c5da0b9",
+    "tasks": [
+      {
+        "id": "small-3",
+        "stratum": "small",
+        "repository_id": "local/go-1.27-interactive-tour",
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "manifest_path": "validation/retrieval/heldout-v1/small-tour.json",
+        "manifest_sha256": "d7bacb3d7299f9b0da853fc25e74c400828eeebe1ef5f42b389691a118caf818",
+        "query": "What happens in the goroutine leak example if the named profiler is unavailable, and what capability does the README say it demonstrates?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "examples/05_goroutine_leak/main.go",
+            "start_line": 8,
+            "end_line": 15,
+            "label": "goroutine example main declaration"
+          },
+          {
+            "type": "documentation",
+            "path": "README.md",
+            "start_line": 19,
+            "end_line": 20,
+            "label": "profiler capability"
+          }
+        ],
+        "gopls_query": "main",
+        "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3"
+      },
+      {
+        "id": "small-4",
+        "stratum": "small",
+        "repository_id": "local/go-1.27-interactive-tour",
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "manifest_path": "validation/retrieval/heldout-v1/small-tour.json",
+        "manifest_sha256": "d7bacb3d7299f9b0da853fc25e74c400828eeebe1ef5f42b389691a118caf818",
+        "query": "How does the database row and column example convert a string value and handle a conversion failure?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "examples/17_db_row_column_scanner/main.go",
+            "start_line": 11,
+            "end_line": 21,
+            "label": "database example main declaration"
+          },
+          {
+            "type": "documentation",
+            "path": "README.md",
+            "start_line": 37,
+            "end_line": 38,
+            "label": "database scanning topic"
+          }
+        ],
+        "gopls_query": "main",
+        "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0"
+      },
+      {
+        "id": "medium-2",
+        "stratum": "medium",
+        "repository_id": "github.com/agentic-mcps/go",
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "manifest_path": "validation/retrieval/heldout-v1/medium-agentic-go.json",
+        "manifest_sha256": "ef352f80ddf9a31c5db7e68465e0c208290313ebd315245ca3ec85d6d1ecba4b",
+        "query": "If a workspace symbol query matches several declarations or the provider omits locations, what does go_context return before expanding relationships?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/focus.go",
+            "start_line": 86,
+            "end_line": 103,
+            "label": "FocusContext declaration"
+          },
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/focus.go",
+            "start_line": 377,
+            "end_line": 552,
+            "label": "query selection and candidate bounds"
+          },
+          {
+            "type": "test",
+            "path": "internal/intelligence/focus_test.go",
+            "start_line": 280,
+            "end_line": 326,
+            "label": "ambiguous and omitted symbol tests"
+          },
+          {
+            "type": "documentation",
+            "path": "docs/contracts.md",
+            "start_line": 1142,
+            "end_line": 1152,
+            "label": "selector and candidate contract"
+          },
+          {
+            "type": "caller",
+            "path": "internal/tools/intelligence_tools.go",
+            "start_line": 155,
+            "end_line": 195,
+            "label": "MCP Runtime.context mapping"
+          }
+        ],
+        "gopls_query": "focusContext",
+        "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde"
+      },
+      {
+        "id": "medium-3",
+        "stratum": "medium",
+        "repository_id": "github.com/agentic-mcps/go",
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "manifest_path": "validation/retrieval/heldout-v1/medium-agentic-go.json",
+        "manifest_sha256": "ef352f80ddf9a31c5db7e68465e0c208290313ebd315245ca3ec85d6d1ecba4b",
+        "query": "After selecting a function, how does focused context gather direct callers and referenced test declarations, and what should an agent infer from those links?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/focus.go",
+            "start_line": 377,
+            "end_line": 552,
+            "label": "focused context and incoming call evidence"
+          },
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/focus.go",
+            "start_line": 554,
+            "end_line": 656,
+            "label": "symbol relationship gathering"
+          },
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/focus.go",
+            "start_line": 658,
+            "end_line": 693,
+            "label": "test declaration resolution"
+          },
+          {
+            "type": "test",
+            "path": "internal/intelligence/focus_test.go",
+            "start_line": 337,
+            "end_line": 359,
+            "label": "direct call site context test"
+          },
+          {
+            "type": "documentation",
+            "path": "docs/go-intelligence-north-star.md",
+            "start_line": 213,
+            "end_line": 240,
+            "label": "relationship evidence limits"
+          }
+        ],
+        "gopls_query": "focusTestDeclarations",
+        "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3"
+      },
+      {
+        "id": "medium-4",
+        "stratum": "medium",
+        "repository_id": "github.com/agentic-mcps/go",
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "manifest_path": "validation/retrieval/heldout-v1/medium-agentic-go.json",
+        "manifest_sha256": "ef352f80ddf9a31c5db7e68465e0c208290313ebd315245ca3ec85d6d1ecba4b",
+        "query": "How does a context request keep source bytes tied to one observation and reject a worktree change that occurs before it returns?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/snapshot.go",
+            "start_line": 122,
+            "end_line": 144,
+            "label": "captured source digest check"
+          },
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/snapshot.go",
+            "start_line": 202,
+            "end_line": 228,
+            "label": "double capture observation"
+          },
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/snapshot.go",
+            "start_line": 231,
+            "end_line": 246,
+            "label": "snapshot validation"
+          },
+          {
+            "type": "test",
+            "path": "internal/intelligence/snapshot_test.go",
+            "start_line": 95,
+            "end_line": 137,
+            "label": "stale reference and source digest tests"
+          },
+          {
+            "type": "declaration",
+            "path": "internal/intelligence/focus.go",
+            "start_line": 193,
+            "end_line": 280,
+            "label": "final focus validation"
+          }
+        ],
+        "gopls_query": "observe",
+        "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402"
+      },
+      {
+        "id": "large-1",
+        "stratum": "large",
+        "repository_id": "github.com/kubernetes/kubernetes",
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "manifest_path": "validation/retrieval/heldout-v1/large-kubernetes.json",
+        "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389",
+        "query": "How does a Deployment define rollout progress, report a timed out rollout, and schedule a later progress check?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "staging/src/k8s.io/api/apps/v1/types.go",
+            "start_line": 419,
+            "end_line": 464,
+            "label": "DeploymentSpec and progress deadline field"
+          },
+          {
+            "type": "declaration",
+            "path": "pkg/controller/deployment/progress.go",
+            "start_line": 36,
+            "end_line": 95,
+            "label": "rollout status and timeout handling"
+          },
+          {
+            "type": "declaration",
+            "path": "pkg/controller/deployment/util/deployment_util.go",
+            "start_line": 770,
+            "end_line": 809,
+            "label": "DeploymentTimedOut"
+          },
+          {
+            "type": "declaration",
+            "path": "pkg/controller/deployment/progress.go",
+            "start_line": 160,
+            "end_line": 199,
+            "label": "stuck deployment requeue"
+          },
+          {
+            "type": "test",
+            "path": "pkg/controller/deployment/progress_test.go",
+            "start_line": 196,
+            "end_line": 363,
+            "label": "rollout status tests"
+          }
+        ],
+        "gopls_query": "syncRolloutStatus",
+        "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032"
+      },
+      {
+        "id": "large-2",
+        "stratum": "large",
+        "repository_id": "github.com/kubernetes/kubernetes",
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "manifest_path": "validation/retrieval/heldout-v1/large-kubernetes.json",
+        "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389",
+        "query": "After a Pod fails scheduling, how can a cluster event move it to the active queue, backoff queue, or leave it unschedulable?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "staging/src/k8s.io/kube-scheduler/framework/types.go",
+            "start_line": 197,
+            "end_line": 249,
+            "label": "queueing hint API"
+          },
+          {
+            "type": "declaration",
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "start_line": 583,
+            "end_line": 679,
+            "label": "event hint requeue decision"
+          },
+          {
+            "type": "declaration",
+            "path": "pkg/scheduler/backend/queue/scheduling_queue.go",
+            "start_line": 1811,
+            "end_line": 1852,
+            "label": "move to active or backoff queue"
+          },
+          {
+            "type": "test",
+            "path": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+            "start_line": 2480,
+            "end_line": 2658,
+            "label": "queueing hint outcomes"
+          }
+        ],
+        "gopls_query": "QueueingHint",
+        "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba"
+      },
+      {
+        "id": "large-3",
+        "stratum": "large",
+        "repository_id": "github.com/kubernetes/kubernetes",
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "manifest_path": "validation/retrieval/heldout-v1/large-kubernetes.json",
+        "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389",
+        "query": "When context is canceled while a client go controller is watching, which loops stop and is the underlying watch closed?",
+        "gold_spans": [
+          {
+            "type": "declaration",
+            "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+            "start_line": 126,
+            "end_line": 142,
+            "label": "Controller cancellation contract"
+          },
+          {
+            "type": "caller",
+            "path": "staging/src/k8s.io/client-go/tools/cache/controller.go",
+            "start_line": 172,
+            "end_line": 209,
+            "label": "controller context propagation"
+          },
+          {
+            "type": "declaration",
+            "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go",
+            "start_line": 423,
+            "end_line": 434,
+            "label": "Reflector.RunWithContext"
+          },
+          {
+            "type": "declaration",
+            "path": "staging/src/k8s.io/client-go/tools/cache/reflector.go",
+            "start_line": 561,
+            "end_line": 620,
+            "label": "watch cancellation and stop"
+          },
+          {
+            "type": "test",
+            "path": "staging/src/k8s.io/client-go/tools/cache/reflector_test.go",
+            "start_line": 88,
+            "end_line": 202,
+            "label": "watch cancellation tests"
+          }
+        ],
+        "gopls_query": "RunWithContext",
+        "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee"
+      }
+    ],
+    "native_command_counts": {
+      "native": {
+        "rg": 92,
+        "sed": 101,
+        "gopls": 25,
+        "go_doc": 1,
+        "cat": 1
+      },
+      "agentic": {
+        "rg": 90,
+        "sed": 100,
+        "gopls": 19,
+        "go_doc": 0,
+        "cat": 2
+      }
+    },
+    "sanitized_randomized_schedule": [
+      {
+        "task_id": "medium-2",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "medium-2-r1-native"
+      },
+      {
+        "task_id": "medium-2",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "medium-2-r1-agentic"
+      },
+      {
+        "task_id": "large-1",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "large-1-r1-native"
+      },
+      {
+        "task_id": "large-1",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "large-1-r1-agentic"
+      },
+      {
+        "task_id": "small-4",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "small-4-r2-agentic"
+      },
+      {
+        "task_id": "small-4",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "small-4-r2-native"
+      },
+      {
+        "task_id": "medium-4",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "medium-4-r1-agentic"
+      },
+      {
+        "task_id": "medium-4",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "medium-4-r1-native"
+      },
+      {
+        "task_id": "small-4",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "small-4-r1-native"
+      },
+      {
+        "task_id": "small-4",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "small-4-r1-agentic"
+      },
+      {
+        "task_id": "small-3",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "small-3-r1-agentic"
+      },
+      {
+        "task_id": "small-3",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "small-3-r1-native"
+      },
+      {
+        "task_id": "medium-4",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "medium-4-r2-agentic"
+      },
+      {
+        "task_id": "medium-4",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "medium-4-r2-native"
+      },
+      {
+        "task_id": "large-2",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "large-2-r2-agentic"
+      },
+      {
+        "task_id": "large-2",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "large-2-r2-native"
+      },
+      {
+        "task_id": "medium-3",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "medium-3-r1-agentic"
+      },
+      {
+        "task_id": "medium-3",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "medium-3-r1-native"
+      },
+      {
+        "task_id": "large-3",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "large-3-r1-native"
+      },
+      {
+        "task_id": "large-3",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "large-3-r1-agentic"
+      },
+      {
+        "task_id": "large-1",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "large-1-r2-agentic"
+      },
+      {
+        "task_id": "large-1",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "large-1-r2-native"
+      },
+      {
+        "task_id": "large-2",
+        "repetition": 1,
+        "condition": "native",
+        "run_id": "large-2-r1-native"
+      },
+      {
+        "task_id": "large-2",
+        "repetition": 1,
+        "condition": "agentic",
+        "run_id": "large-2-r1-agentic"
+      },
+      {
+        "task_id": "small-3",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "small-3-r2-agentic"
+      },
+      {
+        "task_id": "small-3",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "small-3-r2-native"
+      },
+      {
+        "task_id": "medium-2",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "medium-2-r2-native"
+      },
+      {
+        "task_id": "medium-2",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "medium-2-r2-agentic"
+      },
+      {
+        "task_id": "large-3",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "large-3-r2-agentic"
+      },
+      {
+        "task_id": "large-3",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "large-3-r2-native"
+      },
+      {
+        "task_id": "medium-3",
+        "repetition": 2,
+        "condition": "agentic",
+        "run_id": "medium-3-r2-agentic"
+      },
+      {
+        "task_id": "medium-3",
+        "repetition": 2,
+        "condition": "native",
+        "run_id": "medium-3-r2-native"
+      }
+    ],
+    "sanitized_task_manifest_sha256": "2d2247fa3e7fb0ccdf4b3ee0f1749ff18e82b986ec76d9d63f0efc3ab1634dae",
+    "prompt_template": "You have a clean, read-only checkout of {repository} at pinned commit {commit}. Answer the repository question from the source. Trace the relevant implementation and inspect related callers, tests, or documentation when they help establish behavior. You may use read-only repository search, Go tools, gopls, or any repository-context tools available. Do not edit files, access the network, or infer behavior that the pinned source does not establish. Give a concise answer with supporting citations as repository-relative path and one-based line range. Separate confirmed behavior from any uncertainty.\n\nQuestion: {question}\n",
+    "token_usage_note": "input_tokens is the reported per-session input total; cached_input_tokens is a subset of that total, not additional tokens. Duplicate identical usage events were deduplicated."
+  },
+  "primary_results": {
+    "native": {
+      "correctness": {
+        "mean": 3.6875,
+        "median": 4.0,
+        "n": 16
+      },
+      "completeness": {
+        "mean": 4,
+        "median": 4.0,
+        "n": 16
+      },
+      "citation_support": {
+        "mean": 1.1875,
+        "median": 1.0,
+        "n": 16
+      },
+      "total": {
+        "mean": 8.875,
+        "median": 9.0,
+        "n": 16
+      },
+      "major_errors": 1,
+      "mean_gold_span_coverage": 0.553125,
+      "median_latency_ms": 125172.0,
+      "median_input_tokens": 325798.0,
+      "median_output_tokens": 5531.5,
+      "mcp_calls": 0,
+      "median_cached_input_tokens": 279808.0,
+      "median_reasoning_output_tokens": 3773.5
+    },
+    "agentic": {
+      "correctness": {
+        "mean": 3.75,
+        "median": 4.0,
+        "n": 16
+      },
+      "completeness": {
+        "mean": 3.875,
+        "median": 4.0,
+        "n": 16
+      },
+      "citation_support": {
+        "mean": 1.1875,
+        "median": 1.0,
+        "n": 16
+      },
+      "total": {
+        "mean": 8.8125,
+        "median": 9.0,
+        "n": 16
+      },
+      "major_errors": 0,
+      "mean_gold_span_coverage": 0.565625,
+      "median_latency_ms": 128056.0,
+      "median_input_tokens": 345212.0,
+      "median_output_tokens": 5509.0,
+      "mcp_calls": 0,
+      "median_cached_input_tokens": 295552.0,
+      "median_reasoning_output_tokens": 3513.0
+    },
+    "paired_by_task": {
+      "n_tasks": 8,
+      "agentic_win_tasks": 1,
+      "tie_tasks": 6,
+      "agentic_loss_tasks": 1,
+      "mean_delta_total_per_task": -0.0625,
+      "tasks": [
+        {
+          "task_id": "large-1",
+          "native_mean": 8,
+          "agentic_mean": 8,
+          "delta_agentic_minus_native": 0,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "large-2",
+          "native_mean": 8.5,
+          "agentic_mean": 9,
+          "delta_agentic_minus_native": 0.5,
+          "native_major_errors": 1,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "large-3",
+          "native_mean": 9,
+          "agentic_mean": 9,
+          "delta_agentic_minus_native": 0,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "medium-2",
+          "native_mean": 9,
+          "agentic_mean": 8,
+          "delta_agentic_minus_native": -1,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "medium-3",
+          "native_mean": 8,
+          "agentic_mean": 8,
+          "delta_agentic_minus_native": 0,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "medium-4",
+          "native_mean": 9,
+          "agentic_mean": 9,
+          "delta_agentic_minus_native": 0,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "small-3",
+          "native_mean": 10,
+          "agentic_mean": 10,
+          "delta_agentic_minus_native": 0,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        },
+        {
+          "task_id": "small-4",
+          "native_mean": 9.5,
+          "agentic_mean": 9.5,
+          "delta_agentic_minus_native": 0.0,
+          "native_major_errors": 0,
+          "agentic_major_errors": 0
+        }
+      ]
+    }
+  },
+  "paired_task_results": {
+    "n_tasks": 8,
+    "agentic_win_tasks": 1,
+    "tie_tasks": 6,
+    "agentic_loss_tasks": 1,
+    "mean_delta_total_per_task": -0.0625,
+    "tasks": [
+      {
+        "task_id": "large-1",
+        "native_mean": 8,
+        "agentic_mean": 8,
+        "delta_agentic_minus_native": 0,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "large-2",
+        "native_mean": 8.5,
+        "agentic_mean": 9,
+        "delta_agentic_minus_native": 0.5,
+        "native_major_errors": 1,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "large-3",
+        "native_mean": 9,
+        "agentic_mean": 9,
+        "delta_agentic_minus_native": 0,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "medium-2",
+        "native_mean": 9,
+        "agentic_mean": 8,
+        "delta_agentic_minus_native": -1,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "medium-3",
+        "native_mean": 8,
+        "agentic_mean": 8,
+        "delta_agentic_minus_native": 0,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "medium-4",
+        "native_mean": 9,
+        "agentic_mean": 9,
+        "delta_agentic_minus_native": 0,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "small-3",
+        "native_mean": 10,
+        "agentic_mean": 10,
+        "delta_agentic_minus_native": 0,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      },
+      {
+        "task_id": "small-4",
+        "native_mean": 9.5,
+        "agentic_mean": 9.5,
+        "delta_agentic_minus_native": 0.0,
+        "native_major_errors": 0,
+        "agentic_major_errors": 0
+      }
+    ]
+  },
+  "primary_runs": [
+    {
+      "run_id": "large-1-r1-agentic",
+      "task_id": "large-1",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+      "answer_sha256": "ba20d478646be46823e183b153ae02484a0bc805aaa2db5cfdb29ed9ae1fc640",
+      "duration_ms": 125816,
+      "input_tokens": 260521,
+      "output_tokens": 4580,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 230144,
+      "reasoning_output_tokens": 3043
+    },
+    {
+      "run_id": "large-1-r1-native",
+      "task_id": "large-1",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+      "answer_sha256": "cd98fa0e0ec127fa70e8576755edb0ecd0d59dc71a7833af2f52a8b4b9961fcf",
+      "duration_ms": 127554,
+      "input_tokens": 252903,
+      "output_tokens": 4800,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 218112,
+      "reasoning_output_tokens": 3514
+    },
+    {
+      "run_id": "large-1-r2-agentic",
+      "task_id": "large-1",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+      "answer_sha256": "2d430b9501f8e4e8164bae72fa1a41750775c278e236137d3acd76f73306ec8a",
+      "duration_ms": 119317,
+      "input_tokens": 345132,
+      "output_tokens": 5626,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 306432,
+      "reasoning_output_tokens": 3796
+    },
+    {
+      "run_id": "large-1-r2-native",
+      "task_id": "large-1",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+      "answer_sha256": "a5915dceb66a5b97a793122bfc1f41046310533a295572549ea7c65f73f1a4e3",
+      "duration_ms": 118863,
+      "input_tokens": 284717,
+      "output_tokens": 4536,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 245248,
+      "reasoning_output_tokens": 2743
+    },
+    {
+      "run_id": "large-2-r1-agentic",
+      "task_id": "large-2",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+      "answer_sha256": "0ad8e7803409ffe1b9b96c87c58c7c84423f20c44bc989b6e3092dfaf3cc3d9f",
+      "duration_ms": 213938,
+      "input_tokens": 706635,
+      "output_tokens": 9718,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 634112,
+      "reasoning_output_tokens": 6387
+    },
+    {
+      "run_id": "large-2-r1-native",
+      "task_id": "large-2",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+      "answer_sha256": "760111179fcc22c2a76544010a0534cf85f00f7263d74acdda188730b336ef6f",
+      "duration_ms": 225296,
+      "input_tokens": 461255,
+      "output_tokens": 7874,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 407552,
+      "reasoning_output_tokens": 6292
+    },
+    {
+      "run_id": "large-2-r2-agentic",
+      "task_id": "large-2",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+      "answer_sha256": "9d3645ce487007699c9c2dbb737b1649708a41faebc23bbb0efae2a497067bc1",
+      "duration_ms": 205317,
+      "input_tokens": 709044,
+      "output_tokens": 7801,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 636928,
+      "reasoning_output_tokens": 4840
+    },
+    {
+      "run_id": "large-2-r2-native",
+      "task_id": "large-2",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+      "answer_sha256": "999988314a58a99cdb8558667eb6afe7ee342a76a2f2dd373c6ff07a81308c4b",
+      "duration_ms": 260323,
+      "input_tokens": 1145017,
+      "output_tokens": 9595,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 1050880,
+      "reasoning_output_tokens": 6502
+    },
+    {
+      "run_id": "large-3-r1-agentic",
+      "task_id": "large-3",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+      "answer_sha256": "b6643367efb2159447bb4c8a460fcaa88be346d3cd3e7ba3d8ac06b11239fa8d",
+      "duration_ms": 204057,
+      "input_tokens": 734981,
+      "output_tokens": 7607,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 684288,
+      "reasoning_output_tokens": 4436
+    },
+    {
+      "run_id": "large-3-r1-native",
+      "task_id": "large-3",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+      "answer_sha256": "87bb25600d4fc1c222bf41040158f341237113e0a4af150a5d9db807a4b12402",
+      "duration_ms": 190218,
+      "input_tokens": 658588,
+      "output_tokens": 8092,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 612096,
+      "reasoning_output_tokens": 5473
+    },
+    {
+      "run_id": "large-3-r2-agentic",
+      "task_id": "large-3",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+      "answer_sha256": "cdb4e64a5002b422a6497b93fadec17162805c2a1d3ed8b48adc9eedde3452c4",
+      "duration_ms": 242234,
+      "input_tokens": 550891,
+      "output_tokens": 9209,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 505088,
+      "reasoning_output_tokens": 6603
+    },
+    {
+      "run_id": "large-3-r2-native",
+      "task_id": "large-3",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+      "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_before": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_tree_after": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+      "answer_sha256": "4eeaf881dbdbc1c3cfe052b92ad95d3cb1550acb2df4e30d166746a404a34eb2",
+      "duration_ms": 117350,
+      "input_tokens": 305871,
+      "output_tokens": 5655,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 267008,
+      "reasoning_output_tokens": 3850
+    },
+    {
+      "run_id": "medium-2-r1-agentic",
+      "task_id": "medium-2",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+      "answer_sha256": "2c71019e7d8f9225bfa2c30cedbd922a6f24ad92a24b9396594f58be145274f5",
+      "duration_ms": 108360,
+      "input_tokens": 210455,
+      "output_tokens": 4817,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 174336,
+      "reasoning_output_tokens": 2919
+    },
+    {
+      "run_id": "medium-2-r1-native",
+      "task_id": "medium-2",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+      "answer_sha256": "a4de03339b802a2642ff39847ce84080bceb48caebb9250b8bd35acba6f3cf9b",
+      "duration_ms": 102130,
+      "input_tokens": 367561,
+      "output_tokens": 4286,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 304384,
+      "reasoning_output_tokens": 3013
+    },
+    {
+      "run_id": "medium-2-r2-agentic",
+      "task_id": "medium-2",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+      "answer_sha256": "c222300aa45c50094c679e5d6d81e01f3b06546c447d062f58ea94e9c00acff2",
+      "duration_ms": 67719,
+      "input_tokens": 177032,
+      "output_tokens": 3119,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 142848,
+      "reasoning_output_tokens": 1956
+    },
+    {
+      "run_id": "medium-2-r2-native",
+      "task_id": "medium-2",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+      "answer_sha256": "4aa61d4142157161a120f1cd482c904c7d3781c3ad417d6d7ab814887737b5ed",
+      "duration_ms": 145347,
+      "input_tokens": 320632,
+      "output_tokens": 5600,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 277248,
+      "reasoning_output_tokens": 4093
+    },
+    {
+      "run_id": "medium-3-r1-agentic",
+      "task_id": "medium-3",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+      "answer_sha256": "2d273837026f1c4103fa2e42b0fc83f9c160f41cc73e557a61434f5ac663bb88",
+      "duration_ms": 161580,
+      "input_tokens": 426832,
+      "output_tokens": 7779,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 372224,
+      "reasoning_output_tokens": 6306
+    },
+    {
+      "run_id": "medium-3-r1-native",
+      "task_id": "medium-3",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+      "answer_sha256": "7ec0edb5ead1f7dadd48a3b2269d34286b93d5a165cc749583a8de408e7144f5",
+      "duration_ms": 197398,
+      "input_tokens": 380325,
+      "output_tokens": 9288,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 329472,
+      "reasoning_output_tokens": 6666
+    },
+    {
+      "run_id": "medium-3-r2-agentic",
+      "task_id": "medium-3",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+      "answer_sha256": "0d052398efef560a191a22458ea1a60c6509e7a3150c8f4174abbd0664a1bd00",
+      "duration_ms": 168564,
+      "input_tokens": 345292,
+      "output_tokens": 8293,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 284672,
+      "reasoning_output_tokens": 6737
+    },
+    {
+      "run_id": "medium-3-r2-native",
+      "task_id": "medium-3",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+      "answer_sha256": "0c826a2c2321f92c709b33558736eb8f36cc3e57ed4ac381fbe1025b4fe0d9a5",
+      "duration_ms": 122790,
+      "input_tokens": 330964,
+      "output_tokens": 5616,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 282368,
+      "reasoning_output_tokens": 3860
+    },
+    {
+      "run_id": "medium-4-r1-agentic",
+      "task_id": "medium-4",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+      "answer_sha256": "43771aea923fdee891ab5b2df83aaa3230d1d578deed35dce8d04f3bfc8730f0",
+      "duration_ms": 246805,
+      "input_tokens": 525099,
+      "output_tokens": 9333,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 456960,
+      "reasoning_output_tokens": 6879
+    },
+    {
+      "run_id": "medium-4-r1-native",
+      "task_id": "medium-4",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+      "answer_sha256": "ebb964b9b53db1a6e2fc90a1e5c9937305bec32c1b722e6d403e3602bb8de10e",
+      "duration_ms": 201357,
+      "input_tokens": 682516,
+      "output_tokens": 8780,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 609792,
+      "reasoning_output_tokens": 6484
+    },
+    {
+      "run_id": "medium-4-r2-agentic",
+      "task_id": "medium-4",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+      "answer_sha256": "079105aab871c73d40100f79641e0594a535df79576028037ad6f1e14b3967af",
+      "duration_ms": 130296,
+      "input_tokens": 571949,
+      "output_tokens": 5392,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 507648,
+      "reasoning_output_tokens": 3230
+    },
+    {
+      "run_id": "medium-4-r2-native",
+      "task_id": "medium-4",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+      "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_before": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_tree_after": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+      "answer_sha256": "56143dff75f5e143a62c72f68e25e79c28e5be06954f1e25e7f128d1afa752c5",
+      "duration_ms": 140704,
+      "input_tokens": 481672,
+      "output_tokens": 5463,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 422656,
+      "reasoning_output_tokens": 3697
+    },
+    {
+      "run_id": "small-3-r1-agentic",
+      "task_id": "small-3",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+      "answer_sha256": "b523fc0c447cb9daee4c12ca7bd903301c66810ae69f3f5754a9b28f3e2a8641",
+      "duration_ms": 47186,
+      "input_tokens": 101277,
+      "output_tokens": 2090,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 84736,
+      "reasoning_output_tokens": 1469
+    },
+    {
+      "run_id": "small-3-r1-native",
+      "task_id": "small-3",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+      "answer_sha256": "f7a0453785e3df9d281b7f5215a4ba1509d29db7c4ae658497b018c7501d188b",
+      "duration_ms": 25405,
+      "input_tokens": 58955,
+      "output_tokens": 905,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 45312,
+      "reasoning_output_tokens": 503
+    },
+    {
+      "run_id": "small-3-r2-agentic",
+      "task_id": "small-3",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+      "answer_sha256": "dce8e4d8cb0e8d12da4db3a042bdbe8c1c8e67e3a6aacdec09c985b5b9870e2b",
+      "duration_ms": 79037,
+      "input_tokens": 105856,
+      "output_tokens": 2731,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 90880,
+      "reasoning_output_tokens": 2040
+    },
+    {
+      "run_id": "small-3-r2-native",
+      "task_id": "small-3",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+      "answer_sha256": "1a5676eccd98ccabca013a8063421986a8e3c5432834ecf6a9c626abada93724",
+      "duration_ms": 98702,
+      "input_tokens": 109119,
+      "output_tokens": 3568,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 91904,
+      "reasoning_output_tokens": 2953
+    },
+    {
+      "run_id": "small-4-r1-agentic",
+      "task_id": "small-4",
+      "condition": "agentic",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+      "answer_sha256": "eb1b65841a7cab676ab1c10f7e7becc0c34a1d3d8523ceabdb56b09b624ca7ae",
+      "duration_ms": 38413,
+      "input_tokens": 86593,
+      "output_tokens": 1470,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 69632,
+      "reasoning_output_tokens": 1004
+    },
+    {
+      "run_id": "small-4-r1-native",
+      "task_id": "small-4",
+      "condition": "native",
+      "repetition": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+      "answer_sha256": "9d60b2d125c9b601da27ec3bce72fcaf8afa73d518cc4a120dcee0783447018d",
+      "duration_ms": 46118,
+      "input_tokens": 110842,
+      "output_tokens": 1418,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 92928,
+      "reasoning_output_tokens": 976
+    },
+    {
+      "run_id": "small-4-r2-agentic",
+      "task_id": "small-4",
+      "condition": "agentic",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+      "answer_sha256": "6d379a0597ccb23fc2e41f3c848181855e307894220f8878beb4647b3de74936",
+      "duration_ms": 34936,
+      "input_tokens": 86870,
+      "output_tokens": 984,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 70656,
+      "reasoning_output_tokens": 562
+    },
+    {
+      "run_id": "small-4-r2-native",
+      "task_id": "small-4",
+      "condition": "native",
+      "repetition": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "max",
+      "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+      "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_before": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_tree_after": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+      "workspace_clean_before": true,
+      "workspace_clean_after": true,
+      "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+      "answer_sha256": "f4d2eb27fbc75a9883cd125c721671b116d05db4f78bf06dea8b28d11d553835",
+      "duration_ms": 23392,
+      "input_tokens": 63171,
+      "output_tokens": 938,
+      "usage_events_unique": 1,
+      "mcp_tool_calls": [],
+      "exit_code": 0,
+      "cached_input_tokens": 47360,
+      "reasoning_output_tokens": 627
+    }
+  ],
+  "blind_review": {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "max",
+    "review_prompt_hashes": {
+      "small-3": {
+        "prompt_sha256": "47ac40582e2f86e34a6de88941149025584238d93d204a95d68df50d7482d1a4",
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "manifest_sha256": "d7bacb3d7299f9b0da853fc25e74c400828eeebe1ef5f42b389691a118caf818"
+      },
+      "small-4": {
+        "prompt_sha256": "9cb82f55d54df673200c763a2fd5b1daa696df2e13845c262de34794e973833b",
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "manifest_sha256": "d7bacb3d7299f9b0da853fc25e74c400828eeebe1ef5f42b389691a118caf818"
+      },
+      "medium-2": {
+        "prompt_sha256": "158c5c5d2cd9963d9cd40aeba762c83548d5f011937a15431b80658d7842f1eb",
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "manifest_sha256": "ef352f80ddf9a31c5db7e68465e0c208290313ebd315245ca3ec85d6d1ecba4b"
+      },
+      "medium-3": {
+        "prompt_sha256": "670bd4087e35a14a6f928df40805716889782e1d0385c57745eec4b003a02df2",
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "manifest_sha256": "ef352f80ddf9a31c5db7e68465e0c208290313ebd315245ca3ec85d6d1ecba4b"
+      },
+      "medium-4": {
+        "prompt_sha256": "0a40fb17c6174548b48cd241aef6849c29c9468db293ce82865745b404ebc6f6",
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "manifest_sha256": "ef352f80ddf9a31c5db7e68465e0c208290313ebd315245ca3ec85d6d1ecba4b"
+      },
+      "large-1": {
+        "prompt_sha256": "fd4ca832e3cc2da1dfdf96bc5d38dce9ad2622ffff6dd252c1adca054bcf1612",
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389"
+      },
+      "large-2": {
+        "prompt_sha256": "05ab75614ac49e193f0457e91971fbe9662c85b875d2bacfbc6237e649050272",
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389"
+      },
+      "large-3": {
+        "prompt_sha256": "368ceb0eaa6f077de0df18943a18d24990544bdf0a40bd21366763a66c27274f",
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "manifest_sha256": "128d748d200af12cc9a8153738f48bc8ff1bae391f6d82076d5ce8e513453389"
+      }
+    },
+    "blind_key_sha256": "c71b0289da70666e8dcd66c676c10bd84c845226fe1cf5293e3a12f20a270818",
+    "same_model_family_limitation": true,
+    "score_scale": "correctness 0-4 + completeness 0-4 + citation support 0-2; max 10",
+    "per_answer": {
+      "small-3-r2-agentic": {
+        "task_id": "small-3",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 2,
+          "total": 10
+        },
+        "major_error": false,
+        "review_reason": "The standalone example behavior and README capability are supported; the extra claims about the snippet and runtime/pprof implementation are outside the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "The claim about the embedded tour snippet calling WriteTo without a nil check is not verifiable from the supplied excerpts.",
+          "The claim about what the checkout includes from runtime/pprof is not verifiable from the supplied excerpts."
+        ],
+        "citation_count": 0,
+        "gold_spans": 2,
+        "gold_spans_cited": 0,
+        "cited_ranges_overlapping_gold": 0,
+        "duration_ms": 79037,
+        "usage": {
+          "input_tokens": 105856,
+          "cached_input_tokens": 90880,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2731,
+          "reasoning_output_tokens": 2040
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+        "answer_sha256": "dce8e4d8cb0e8d12da4db3a042bdbe8c1c8e67e3a6aacdec09c985b5b9870e2b"
+      },
+      "small-3-r1-native": {
+        "task_id": "small-3",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 2,
+          "total": 10
+        },
+        "major_error": false,
+        "review_reason": "It accurately describes the nil branch, unconditional status line, and README capability with citations to the supplied excerpts.",
+        "unsupported_or_wrong_claims": [],
+        "citation_count": 2,
+        "gold_spans": 2,
+        "gold_spans_cited": 2,
+        "cited_ranges_overlapping_gold": 2,
+        "duration_ms": 25405,
+        "usage": {
+          "input_tokens": 58955,
+          "cached_input_tokens": 45312,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 905,
+          "reasoning_output_tokens": 503
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+        "answer_sha256": "f7a0453785e3df9d281b7f5215a4ba1509d29db7c4ae658497b018c7501d188b"
+      },
+      "small-3-r1-agentic": {
+        "task_id": "small-3",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 2,
+          "total": 10
+        },
+        "major_error": false,
+        "review_reason": "It answers both parts from the cited excerpts and correctly notes that they do not explain why the profiler might be unavailable.",
+        "unsupported_or_wrong_claims": [],
+        "citation_count": 2,
+        "gold_spans": 2,
+        "gold_spans_cited": 2,
+        "cited_ranges_overlapping_gold": 2,
+        "duration_ms": 47186,
+        "usage": {
+          "input_tokens": 101277,
+          "cached_input_tokens": 84736,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2090,
+          "reasoning_output_tokens": 1469
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+        "answer_sha256": "b523fc0c447cb9daee4c12ca7bd903301c66810ae69f3f5754a9b28f3e2a8641"
+      },
+      "small-3-r2-native": {
+        "task_id": "small-3",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 2,
+          "total": 10
+        },
+        "major_error": false,
+        "review_reason": "The standalone example behavior and README capability are supported; the additional claims about the tour snippet and runtime/pprof implementation are outside the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "The claims about the embedded tour snippet and the checkout’s runtime/pprof implementation are not verifiable from the supplied excerpts."
+        ],
+        "citation_count": 2,
+        "gold_spans": 2,
+        "gold_spans_cited": 2,
+        "cited_ranges_overlapping_gold": 2,
+        "duration_ms": 98702,
+        "usage": {
+          "input_tokens": 109119,
+          "cached_input_tokens": 91904,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3568,
+          "reasoning_output_tokens": 2953
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "b42e57bbcf5eda9e02a3677e96003986d8a58ef333a162cf63beeb79630962b3",
+        "answer_sha256": "1a5676eccd98ccabca013a8063421986a8e3c5432834ecf6a9c626abada93724"
+      },
+      "small-4-r1-agentic": {
+        "task_id": "small-4",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The conversion and error handling are supported by the cited source, but the browser-snippet claim cannot be verified from the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "The claim that the browser snippet shows the same conversion and panic handling is unverifiable from the supplied excerpts."
+        ],
+        "citation_count": 1,
+        "gold_spans": 2,
+        "gold_spans_cited": 1,
+        "cited_ranges_overlapping_gold": 1,
+        "duration_ms": 38413,
+        "usage": {
+          "input_tokens": 86593,
+          "cached_input_tokens": 69632,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1470,
+          "reasoning_output_tokens": 1004
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+        "answer_sha256": "eb1b65841a7cab676ab1c10f7e7becc0c34a1d3d8523ceabdb56b09b624ca7ae"
+      },
+      "small-4-r2-native": {
+        "task_id": "small-4",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 2,
+          "total": 10
+        },
+        "major_error": false,
+        "review_reason": "The cited excerpt supports the source value, destination, conversion call, error handling, and output; the uncertainty is appropriately limited.",
+        "unsupported_or_wrong_claims": [],
+        "citation_count": 2,
+        "gold_spans": 2,
+        "gold_spans_cited": 1,
+        "cited_ranges_overlapping_gold": 2,
+        "duration_ms": 23392,
+        "usage": {
+          "input_tokens": 63171,
+          "cached_input_tokens": 47360,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 938,
+          "reasoning_output_tokens": 627
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+        "answer_sha256": "f4d2eb27fbc75a9883cd125c721671b116d05db4f78bf06dea8b28d11d553835"
+      },
+      "small-4-r2-agentic": {
+        "task_id": "small-4",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 2,
+          "total": 10
+        },
+        "major_error": false,
+        "review_reason": "The cited excerpt supports the conversion call, success output, and panic on a returned error.",
+        "unsupported_or_wrong_claims": [],
+        "citation_count": 1,
+        "gold_spans": 2,
+        "gold_spans_cited": 1,
+        "cited_ranges_overlapping_gold": 1,
+        "duration_ms": 34936,
+        "usage": {
+          "input_tokens": 86870,
+          "cached_input_tokens": 70656,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 984,
+          "reasoning_output_tokens": 562
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+        "answer_sha256": "6d379a0597ccb23fc2e41f3c848181855e307894220f8878beb4647b3de74936"
+      },
+      "small-4-r1-native": {
+        "task_id": "small-4",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The cited source supports the conversion and error handling, but the expected-output claim is not verifiable from the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "The claim that the tour snippet shows the expected output is unverifiable from the supplied excerpts."
+        ],
+        "citation_count": 1,
+        "gold_spans": 2,
+        "gold_spans_cited": 1,
+        "cited_ranges_overlapping_gold": 1,
+        "duration_ms": 46118,
+        "usage": {
+          "input_tokens": 110842,
+          "cached_input_tokens": 92928,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1418,
+          "reasoning_output_tokens": 976
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "61ca6068c067756caf8d98b0a933163b39894416",
+        "source_tree": "4ad27ca4c31c77e082a0b66063499e62a51dea2b",
+        "prompt_sha256": "e5bc63f9b7ee336f02fce9986a8f443fdbfbfafac4fe28cba0f791c5a37fd2e0",
+        "answer_sha256": "9d60b2d125c9b601da27ec3bce72fcaf8afa73d518cc4a120dcee0783447018d"
+      },
+      "medium-2-r1-agentic": {
+        "task_id": "medium-2",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 4,
+          "completeness": 3,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "The ambiguity and early-return behavior are supported, but the answer omits the declarations evidence state for omitted locations and adds details the supplied excerpts cannot verify.",
+        "unsupported_or_wrong_claims": [
+          "The structuredContent mapping, 20-candidate limit, max_bytes trimming, and gopls omission details are not verifiable from the supplied excerpts.",
+          "It does not specify that omitted locations mark declarations as gathered_but_omitted."
+        ],
+        "citation_count": 7,
+        "gold_spans": 5,
+        "gold_spans_cited": 4,
+        "cited_ranges_overlapping_gold": 5,
+        "duration_ms": 108360,
+        "usage": {
+          "input_tokens": 210455,
+          "cached_input_tokens": 174336,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4817,
+          "reasoning_output_tokens": 2919
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+        "answer_sha256": "2c71019e7d8f9225bfa2c30cedbd922a6f24ad92a24b9396594f58be145274f5"
+      },
+      "medium-2-r2-native": {
+        "task_id": "medium-2",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "It accurately covers ambiguity, omission, and the pre-expansion return; its additional result-shape and provider details are not established by the supplied excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The overall result shape, exact 20-candidate limit, and gopls-specific omission details are not verifiable from the supplied excerpts."
+        ],
+        "citation_count": 4,
+        "gold_spans": 5,
+        "gold_spans_cited": 0,
+        "cited_ranges_overlapping_gold": 0,
+        "duration_ms": 145347,
+        "usage": {
+          "input_tokens": 320632,
+          "cached_input_tokens": 277248,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5600,
+          "reasoning_output_tokens": 4093
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+        "answer_sha256": "4aa61d4142157161a120f1cd482c904c7d3781c3ad417d6d7ab814887737b5ed"
+      },
+      "medium-2-r1-native": {
+        "task_id": "medium-2",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "It covers the supported behavior for both cases, while the cited result-shape and provider-specific details fall outside the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "The FocusResult.Context shape, exact 20-candidate limit, gopls omission accounting, and incomplete-location normalization error are not verifiable from the supplied excerpts."
+        ],
+        "citation_count": 8,
+        "gold_spans": 5,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 5,
+        "duration_ms": 102130,
+        "usage": {
+          "input_tokens": 367561,
+          "cached_input_tokens": 304384,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4286,
+          "reasoning_output_tokens": 3013
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+        "answer_sha256": "a4de03339b802a2642ff39847ce84080bceb48caebb9250b8bd35acba6f3cf9b"
+      },
+      "medium-2-r2-agentic": {
+        "task_id": "medium-2",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 4,
+          "completeness": 3,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "The core selection and omission behavior is supported, but the answer leaves out the incomplete-candidate guidance and adds details the excerpts cannot verify.",
+        "unsupported_or_wrong_claims": [
+          "The top-level change, impact, risk, and verification fields and the gopls-specific omission details are not verifiable from the supplied excerpts.",
+          "It omits the reason given for incomplete candidates: select a retained candidate or use a narrower selector."
+        ],
+        "citation_count": 5,
+        "gold_spans": 5,
+        "gold_spans_cited": 1,
+        "cited_ranges_overlapping_gold": 3,
+        "duration_ms": 67719,
+        "usage": {
+          "input_tokens": 177032,
+          "cached_input_tokens": 142848,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3119,
+          "reasoning_output_tokens": 1956
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "6ce1bf80f22f8bc8477eeee50488db64e61b20bfc8ffdd9738cf11ee9b906bde",
+        "answer_sha256": "c222300aa45c50094c679e5d6d81e01f3b06546c447d062f58ea94e9c00acff2"
+      },
+      "medium-3-r2-agentic": {
+        "task_id": "medium-3",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "It accurately describes incoming caller links, test-reference resolution, and their navigation value, but several implementation details and some cited guidance cannot be verified from the supplied excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The excerpt does not show that the gopls reader requests both incoming and outgoing calls or includes declarations in reference searches.",
+          "The exact test-name prefixes and numeric cap of 20 are not shown in the excerpt.",
+          "The cited example guidance and contracts lines were not supplied."
+        ],
+        "citation_count": 9,
+        "gold_spans": 5,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 5,
+        "duration_ms": 168564,
+        "usage": {
+          "input_tokens": 345292,
+          "cached_input_tokens": 284672,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 8293,
+          "reasoning_output_tokens": 6737
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+        "answer_sha256": "0d052398efef560a191a22458ea1a60c6509e7a3150c8f4174abbd0664a1bd00"
+      },
+      "medium-3-r2-native": {
+        "task_id": "medium-3",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "It covers caller and test-link gathering and what those links establish, while some specific implementation details and citations fall outside the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "The excerpt does not show the gopls hierarchy request directions or a cap of 20 prepared hierarchy roots.",
+          "The exact test-name prefixes, numeric declaration cap, and claim that runner signatures are not validated are not shown in the excerpt.",
+          "The core.go citation was not supplied."
+        ],
+        "citation_count": 16,
+        "gold_spans": 5,
+        "gold_spans_cited": 4,
+        "cited_ranges_overlapping_gold": 4,
+        "duration_ms": 122790,
+        "usage": {
+          "input_tokens": 330964,
+          "cached_input_tokens": 282368,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5616,
+          "reasoning_output_tokens": 3860
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+        "answer_sha256": "0c826a2c2321f92c709b33558736eb8f36cc3e57ed4ac381fbe1025b4fe0d9a5"
+      },
+      "medium-3-r1-agentic": {
+        "task_id": "medium-3",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "It accurately explains the core gathering flow and missing-link caveat, but some specifics and citations cannot be verified from the supplied excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The excerpt does not show that the gopls reader gathers both incoming and outgoing edges.",
+          "The exact test-name prefixes and numeric cap of 20 are not shown in the excerpt.",
+          "The core.go and semantic_gopls.go citations were not supplied."
+        ],
+        "citation_count": 7,
+        "gold_spans": 5,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 4,
+        "duration_ms": 161580,
+        "usage": {
+          "input_tokens": 426832,
+          "cached_input_tokens": 372224,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 7779,
+          "reasoning_output_tokens": 6306
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+        "answer_sha256": "2d273837026f1c4103fa2e42b0fc83f9c160f41cc73e557a61434f5ac663bb88"
+      },
+      "medium-3-r1-native": {
+        "task_id": "medium-3",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "It accurately describes the links and their limits, though the excerpt does not verify the precise test-name prefixes or numeric cap, and some cited guidance was not provided.",
+        "unsupported_or_wrong_claims": [
+          "The exact test-name prefixes and numeric cap of 20 are not shown in the excerpt.",
+          "The cited example guidance and continuation document were not supplied."
+        ],
+        "citation_count": 11,
+        "gold_spans": 5,
+        "gold_spans_cited": 4,
+        "cited_ranges_overlapping_gold": 8,
+        "duration_ms": 197398,
+        "usage": {
+          "input_tokens": 380325,
+          "cached_input_tokens": 329472,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 9288,
+          "reasoning_output_tokens": 6666
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "605a1b37fc1c2bed0ba77cf302b52f5ec6fd662a7196398dfff02c42dd855be3",
+        "answer_sha256": "7ec0edb5ead1f7dadd48a3b2269d34286b93d5a165cc749583a8de408e7144f5"
+      },
+      "medium-4-r2-native": {
+        "task_id": "medium-4",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The observation, manifest-checked source reads, and final validation are supported; several cited handler and call-path details are outside the supplied excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The go_context handler mapping, snapshot-ID digest composition, and Focus/gopls source call paths are outside the supplied excerpts.",
+          "The excerpts show an A→B→A source read succeeds after restoration, but do not establish that a recapture then has the same snapshot identity."
+        ],
+        "citation_count": 10,
+        "gold_spans": 5,
+        "gold_spans_cited": 5,
+        "cited_ranges_overlapping_gold": 6,
+        "duration_ms": 140704,
+        "usage": {
+          "input_tokens": 481672,
+          "cached_input_tokens": 422656,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5463,
+          "reasoning_output_tokens": 3697
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+        "answer_sha256": "56143dff75f5e143a62c72f68e25e79c28e5be06954f1e25e7f128d1afa752c5"
+      },
+      "medium-4-r1-agentic": {
+        "task_id": "medium-4",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The core capture, source-read, and validation behavior is supported; the handler, identity details, and additional call paths are not verifiable from these excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The handler mapping, snapshot-ID components, gopls adapter path, and Brief path are outside the supplied excerpts."
+        ],
+        "citation_count": 26,
+        "gold_spans": 5,
+        "gold_spans_cited": 5,
+        "cited_ranges_overlapping_gold": 8,
+        "duration_ms": 246805,
+        "usage": {
+          "input_tokens": 525099,
+          "cached_input_tokens": 456960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 9333,
+          "reasoning_output_tokens": 6879
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+        "answer_sha256": "43771aea923fdee891ab5b2df83aaa3230d1d578deed35dce8d04f3bfc8730f0"
+      },
+      "medium-4-r2-agentic": {
+        "task_id": "medium-4",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The core observation, source check, and final validation are supported; the additional call-path, documentation, and recapture details are not verifiable here.",
+        "unsupported_or_wrong_claims": [
+          "The handler mapping, snapshot-ID digest composition, Focus source-use call paths, and live-workspace documentation are outside the supplied excerpts.",
+          "The excerpts do not establish that Validate’s recapture itself uses the two-pass observe behavior."
+        ],
+        "citation_count": 10,
+        "gold_spans": 5,
+        "gold_spans_cited": 4,
+        "cited_ranges_overlapping_gold": 6,
+        "duration_ms": 130296,
+        "usage": {
+          "input_tokens": 571949,
+          "cached_input_tokens": 507648,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5392,
+          "reasoning_output_tokens": 3230
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+        "answer_sha256": "079105aab871c73d40100f79641e0594a535df79576028037ad6f1e14b3967af"
+      },
+      "medium-4-r1-native": {
+        "task_id": "medium-4",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The observation, digest-checked source fallback, and final validation are supported; several added implementation and documentation details are outside the supplied excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The handler conversion, supplied-expected-ID check, snapshot-ID components, source-cache size, semantic-read path, and live-workspace documentation are outside the supplied excerpts."
+        ],
+        "citation_count": 24,
+        "gold_spans": 5,
+        "gold_spans_cited": 0,
+        "cited_ranges_overlapping_gold": 0,
+        "duration_ms": 201357,
+        "usage": {
+          "input_tokens": 682516,
+          "cached_input_tokens": 609792,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 8780,
+          "reasoning_output_tokens": 6484
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "7b5111c6365a2a12806a561d86745d5bc50d7c9e",
+        "source_tree": "17a298ebadc7ca635b91248e03cff18d2ea4b4e9",
+        "prompt_sha256": "7bdb2f149669c74e3059fcde74316c6ca1ee81fe9a413d517635f92f81b41402",
+        "answer_sha256": "ebb964b9b53db1a6e2fc90a1e5c9937305bec32c1b722e6d403e3602bb8de10e"
+      },
+      "large-1-r2-agentic": {
+        "task_id": "large-1",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "The excerpts support the deadline semantics, timeout report, and requeue timing, but cannot verify the claimed progress criteria or several cited helper and caller paths.",
+        "unsupported_or_wrong_claims": [
+          "ReplicaSet creation/adoption, replica-count progress signals, and complete-rollout criteria are not shown in the supplied excerpts.",
+          "The MaxInt32 sentinel behavior and API defaulting implementation are not shown.",
+          "The unchanged-status path that triggers the later check is not shown."
+        ],
+        "citation_count": 12,
+        "gold_spans": 5,
+        "gold_spans_cited": 0,
+        "cited_ranges_overlapping_gold": 0,
+        "duration_ms": 119317,
+        "usage": {
+          "input_tokens": 345132,
+          "cached_input_tokens": 306432,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5626,
+          "reasoning_output_tokens": 3796
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+        "answer_sha256": "2d430b9501f8e4e8164bae72fa1a41750775c278e236137d3acd76f73306ec8a"
+      },
+      "large-1-r1-native": {
+        "task_id": "large-1",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "The excerpts support the timeout condition and requeue timing, but cannot verify the progress signals or several cited sentinel and enqueue paths.",
+        "unsupported_or_wrong_claims": [
+          "ReplicaSet creation/adoption and replica-count progress signals are not shown in the supplied excerpts.",
+          "The MaxInt32 sentinel behavior is not shown.",
+          "The unchanged-status scheduling trigger and status-update enqueue path are not shown."
+        ],
+        "citation_count": 8,
+        "gold_spans": 5,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 4,
+        "duration_ms": 127554,
+        "usage": {
+          "input_tokens": 252903,
+          "cached_input_tokens": 218112,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4800,
+          "reasoning_output_tokens": 3514
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+        "answer_sha256": "cd98fa0e0ec127fa70e8576755edb0ecd0d59dc71a7833af2f52a8b4b9961fcf"
+      },
+      "large-1-r2-native": {
+        "task_id": "large-1",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "The excerpts support the timeout check and requeue timing, but cannot verify the progress criteria or the cited defaulting and scheduling-trigger details.",
+        "unsupported_or_wrong_claims": [
+          "ReplicaSet creation/adoption and replica-count progress signals are not shown in the supplied excerpts.",
+          "The cited lines do not directly support the default, paused-deployment behavior, or the literal timeout reason.",
+          "The unchanged-status scheduling trigger is not shown."
+        ],
+        "citation_count": 7,
+        "gold_spans": 5,
+        "gold_spans_cited": 0,
+        "cited_ranges_overlapping_gold": 0,
+        "duration_ms": 118863,
+        "usage": {
+          "input_tokens": 284717,
+          "cached_input_tokens": 245248,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4536,
+          "reasoning_output_tokens": 2743
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+        "answer_sha256": "a5915dceb66a5b97a793122bfc1f41046310533a295572549ea7c65f73f1a4e3"
+      },
+      "large-1-r1-agentic": {
+        "task_id": "large-1",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": false,
+        "review_reason": "The excerpts support condition updates, timeout reporting, and requeue timing, but cannot verify the claimed progress signals or several cited caller paths.",
+        "unsupported_or_wrong_claims": [
+          "Replica-count progress signals are not shown in the supplied excerpts.",
+          "The cited defaulting implementation is not included.",
+          "The unchanged-status path that calls requeueStuckDeployment is not shown."
+        ],
+        "citation_count": 10,
+        "gold_spans": 5,
+        "gold_spans_cited": 4,
+        "cited_ranges_overlapping_gold": 6,
+        "duration_ms": 125816,
+        "usage": {
+          "input_tokens": 260521,
+          "cached_input_tokens": 230144,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4580,
+          "reasoning_output_tokens": 3043
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "0990c83f15a5a964dcc42522fce490f3443f4bde85ac2d314232eb910500b032",
+        "answer_sha256": "ba20d478646be46823e183b153ae02484a0bc805aaa2db5cfdb29ed9ae1fc640"
+      },
+      "large-2-r1-native": {
+        "task_id": "large-2",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The cited excerpts support the main queue outcomes, but cannot verify the added failure bookkeeping, event-handler, in-flight, or timeout details.",
+        "unsupported_or_wrong_claims": [
+          "Failure bookkeeping, node-update event handling, in-flight event preservation, and timeout requeue details are not verified by the supplied excerpts."
+        ],
+        "citation_count": 11,
+        "gold_spans": 4,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 5,
+        "duration_ms": 225296,
+        "usage": {
+          "input_tokens": 461255,
+          "cached_input_tokens": 407552,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 7874,
+          "reasoning_output_tokens": 6292
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+        "answer_sha256": "760111179fcc22c2a76544010a0534cf85f00f7263d74acdda188730b336ef6f"
+      },
+      "large-2-r2-agentic": {
+        "task_id": "large-2",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The excerpts support the core hint and queue behavior, but cannot verify several added setup and timeout details.",
+        "unsupported_or_wrong_claims": [
+          "Failure bookkeeping, node-add delivery, backoff-completion processing, and periodic timeout reconsideration are not verified by the supplied excerpts."
+        ],
+        "citation_count": 12,
+        "gold_spans": 4,
+        "gold_spans_cited": 2,
+        "cited_ranges_overlapping_gold": 3,
+        "duration_ms": 205317,
+        "usage": {
+          "input_tokens": 709044,
+          "cached_input_tokens": 636928,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 7801,
+          "reasoning_output_tokens": 4840
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+        "answer_sha256": "9d3645ce487007699c9c2dbb737b1649708a41faebc23bbb0efae2a497067bc1"
+      },
+      "large-2-r1-agentic": {
+        "task_id": "large-2",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The cited queue excerpts support the active, backoff, and unschedulable outcomes, but cannot verify the added setup and timeout claims.",
+        "unsupported_or_wrong_claims": [
+          "Failure bookkeeping, event registration and delivery details, and periodic timeout mechanics are not verified by the supplied excerpts."
+        ],
+        "citation_count": 28,
+        "gold_spans": 4,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 12,
+        "duration_ms": 213938,
+        "usage": {
+          "input_tokens": 706635,
+          "cached_input_tokens": 634112,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 9718,
+          "reasoning_output_tokens": 6387
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+        "answer_sha256": "0ad8e7803409ffe1b9b96c87c58c7c84423f20c44bc989b6e3092dfaf3cc3d9f"
+      },
+      "large-2-r2-native": {
+        "task_id": "large-2",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 3,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 8
+        },
+        "major_error": true,
+        "review_reason": "The main queue rules are supported, but the timeout summary overstates requeueing despite the supplied gated-Pod case, and other added details are unverifiable from these excerpts.",
+        "unsupported_or_wrong_claims": [
+          "The timeout claim says wildcard timeout requeues entries, but the supplied test shows a gated Pod can remain unschedulable on that event.",
+          "Failure bookkeeping, event-handler details, in-flight event preservation, and the five-minute timeout are not verified by the supplied excerpts."
+        ],
+        "citation_count": 13,
+        "gold_spans": 4,
+        "gold_spans_cited": 2,
+        "cited_ranges_overlapping_gold": 6,
+        "duration_ms": 260323,
+        "usage": {
+          "input_tokens": 1145017,
+          "cached_input_tokens": 1050880,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 9595,
+          "reasoning_output_tokens": 6502
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "017281f8bab6c37450a14e7bbec28f1b7317a812a126125e8333425ab8d0ebba",
+        "answer_sha256": "999988314a58a99cdb8558667eb6afe7ee342a76a2f2dd373c6ff07a81308c4b"
+      },
+      "large-3-r2-native": {
+        "task_id": "large-3",
+        "repetition": 2,
+        "condition": "native",
+        "blind_label": "A",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The cited controller contract and reflector cleanup support the main shutdown behavior, but several additional details and the claim that Stop closes the watch rely on evidence outside the supplied excerpts.",
+        "unsupported_or_wrong_claims": [
+          "Queue and processing-loop exit behavior is not shown in the supplied excerpts.",
+          "Reflector resync-loop shutdown and joining are not shown.",
+          "The watch interface contract and callback boundary are not shown."
+        ],
+        "citation_count": 24,
+        "gold_spans": 5,
+        "gold_spans_cited": 4,
+        "cited_ranges_overlapping_gold": 4,
+        "duration_ms": 117350,
+        "usage": {
+          "input_tokens": 305871,
+          "cached_input_tokens": 267008,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5655,
+          "reasoning_output_tokens": 3850
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+        "answer_sha256": "4eeaf881dbdbc1c3cfe052b92ad95d3cb1550acb2df4e30d166746a404a34eb2"
+      },
+      "large-3-r1-native": {
+        "task_id": "large-3",
+        "repetition": 1,
+        "condition": "native",
+        "blind_label": "B",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The supplied excerpts support cancellation of the controller activities and calling Stop on the active watch, while several cleanup details and the claim about result-channel closure are not verifiable from the cited excerpts.",
+        "unsupported_or_wrong_claims": [
+          "Waiting for the reflector, queue-pop behavior, and resync-goroutine shutdown are not shown.",
+          "The watch interface contract and standard StreamWatcher cleanup are not shown.",
+          "The Process callback boundary is not shown."
+        ],
+        "citation_count": 10,
+        "gold_spans": 5,
+        "gold_spans_cited": 0,
+        "cited_ranges_overlapping_gold": 0,
+        "duration_ms": 190218,
+        "usage": {
+          "input_tokens": 658588,
+          "cached_input_tokens": 612096,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 8092,
+          "reasoning_output_tokens": 5473
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+        "answer_sha256": "87bb25600d4fc1c222bf41040158f341237113e0a4af150a5d9db807a4b12402"
+      },
+      "large-3-r1-agentic": {
+        "task_id": "large-3",
+        "repetition": 1,
+        "condition": "agentic",
+        "blind_label": "C",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The controller contract, context-bound reflector, and cancellation test support the main answer; the extra queue, resync, watcher-contract, and callback details are outside the supplied evidence.",
+        "unsupported_or_wrong_claims": [
+          "Queue wakeup behavior and resync-goroutine shutdown are not shown.",
+          "The watch interface contract, standard StreamWatcher behavior, and ProcessFunc boundary are not shown."
+        ],
+        "citation_count": 9,
+        "gold_spans": 5,
+        "gold_spans_cited": 3,
+        "cited_ranges_overlapping_gold": 3,
+        "duration_ms": 204057,
+        "usage": {
+          "input_tokens": 734981,
+          "cached_input_tokens": 684288,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 7607,
+          "reasoning_output_tokens": 4436
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+        "answer_sha256": "b6643367efb2159447bb4c8a460fcaa88be346d3cd3e7ba3d8ac06b11239fa8d"
+      },
+      "large-3-r2-agentic": {
+        "task_id": "large-3",
+        "repetition": 2,
+        "condition": "agentic",
+        "blind_label": "D",
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "citation_support": 1,
+          "total": 9
+        },
+        "major_error": false,
+        "review_reason": "The cited controller excerpt supports the controller shutdown paths, but the supplied excerpts do not verify the watch cleanup details or several added implementation claims.",
+        "unsupported_or_wrong_claims": [
+          "Queue-pop and Process callback behavior are not shown.",
+          "Resync-goroutine joining, REST stream cleanup, and legacy adapter behavior are not shown."
+        ],
+        "citation_count": 9,
+        "gold_spans": 5,
+        "gold_spans_cited": 2,
+        "cited_ranges_overlapping_gold": 2,
+        "duration_ms": 242234,
+        "usage": {
+          "input_tokens": 550891,
+          "cached_input_tokens": 505088,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 9209,
+          "reasoning_output_tokens": 6603
+        },
+        "mcp_tool_calls": [],
+        "source_commit": "dfd7b93a1783878be367e1fc4a780318330cb3bf",
+        "source_tree": "dcd107007aacbebccbccd6b3ec0ffc4a3adce2c1",
+        "prompt_sha256": "4f87e2ab0e368795a80bf6280069c711cb0d3de056729e578bc1bbbc5bcec3ee",
+        "answer_sha256": "cdb4e64a5002b422a6497b93fadec17162805c2a1d3ed8b48adc9eedde3452c4"
+      }
+    }
+  },
+  "mcp_availability": {
+    "agentic_sessions": 16,
+    "server_initialized_without_logged_error": 12,
+    "startup_failed": 4,
+    "startup_failure_distribution": "All four failed sessions were the two small tasks repeated twice; both repositories had no go.mod or active go.work module.",
+    "go_context_calls_in_primary_agentic_arm": 0,
+    "startup_probe": {
+      "small-3-r1": [
+        "2026-09-27T18:05:58.659146Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response",
+        "2026-09-27T18:05:59.189747Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response"
+      ],
+      "small-3-r2": [
+        "2026-09-27T18:43:24.993855Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response",
+        "2026-09-27T18:43:25.491785Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response"
+      ],
+      "small-4-r1": [
+        "2026-09-27T18:05:19.983960Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response",
+        "2026-09-27T18:05:20.422222Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response"
+      ],
+      "small-4-r2": [
+        "2026-09-27T17:56:05.081734Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response",
+        "2026-09-27T17:56:05.562908Z  WARN codex_mcp::rmcp_client: MCP server startup failed server_name=\"agentic-go\" error=handshaking with MCP server failed: connection closed: initialize response: connection closed: initialize response"
+      ],
+      "manual_preflight_probe": "validating Go workspace: no go.mod or active go.work module found"
+    },
+    "interpretation": "The primary screen estimates what adding the optional MCP surface changes under identical natural Q&A prompts. It does not estimate the value of a successful go_context call because none was made."
+  },
+  "forced_use_diagnostic": {
+    "runs": 8,
+    "prompt_guidance": "Call go_context exactly once with base=HEAD and a concise query; native fallback allowed only when context incomplete. Separate, exploratory, not part of the 32-run primary arm.",
+    "runs_by_task": [
+      {
+        "task_id": "large-1",
+        "stratum": "large",
+        "prompt_sha256": "33e718050b5cb1adfc35f8b4566657c2427ad0a1f3edb21b22a4d007c111f3d6",
+        "duration_ms": 91799,
+        "exit_code": 0,
+        "agentic_go_calls": [
+          {
+            "tool": "go_context",
+            "status": "failed",
+            "selector_fields": [
+              "base",
+              "query"
+            ],
+            "symbol_ref_supplied": false,
+            "candidate_count": 0,
+            "selected_symbol": false,
+            "excerpt_count": 0,
+            "result_excerpt": "building change context: subprocess output limit exceeded: stdout exceeded 8388608 bytes"
+          }
+        ],
+        "input_tokens": 223409,
+        "output_tokens": 3438,
+        "answer_sha256": "9640b8d289133c6df5a43dcbe17a1f573dfa5d101e79ffbfc9258533b5e7ddac"
+      },
+      {
+        "task_id": "large-2",
+        "stratum": "large",
+        "prompt_sha256": "c0fdcf3984443b73cdb877dc9b289494706387e25e1a754707a465a2614a334f",
+        "duration_ms": 94931,
+        "exit_code": 0,
+        "agentic_go_calls": [
+          {
+            "tool": "go_context",
+            "status": "failed",
+            "selector_fields": [
+              "base",
+              "query"
+            ],
+            "symbol_ref_supplied": false,
+            "candidate_count": 0,
+            "selected_symbol": false,
+            "excerpt_count": 0,
+            "result_excerpt": "building change context: subprocess output limit exceeded: stdout exceeded 8388608 bytes"
+          }
+        ],
+        "input_tokens": 312044,
+        "output_tokens": 4064,
+        "answer_sha256": "e54d418e3ba17784cee9c9c68ad8578eea4afb1e0d28c678e3ba6521364e8662"
+      },
+      {
+        "task_id": "large-3",
+        "stratum": "large",
+        "prompt_sha256": "6c0698986dcbd342b452805b5d1cc67aafb1227de8657365f1e8e833e6a787b5",
+        "duration_ms": 146137,
+        "exit_code": 0,
+        "agentic_go_calls": [
+          {
+            "tool": "go_context",
+            "status": "failed",
+            "selector_fields": [
+              "base",
+              "query"
+            ],
+            "symbol_ref_supplied": false,
+            "candidate_count": 0,
+            "selected_symbol": false,
+            "excerpt_count": 0,
+            "result_excerpt": "building change context: subprocess output limit exceeded: stdout exceeded 8388608 bytes"
+          }
+        ],
+        "input_tokens": 421737,
+        "output_tokens": 5762,
+        "answer_sha256": "b80269dc75a03cf278a17682bc814130b259a185976896c434902040b470c0de"
+      },
+      {
+        "task_id": "medium-2",
+        "stratum": "medium",
+        "prompt_sha256": "7d2cedd4a54c7a07e55451f1b493980c97dab32c0e1dda43d008d86faa954819",
+        "duration_ms": 123224,
+        "exit_code": 0,
+        "agentic_go_calls": [
+          {
+            "tool": "go_context",
+            "status": "completed",
+            "selector_fields": [
+              "base",
+              "query"
+            ],
+            "symbol_ref_supplied": false,
+            "candidate_count": 9,
+            "selected_symbol": false,
+            "excerpt_count": 0,
+            "result_excerpt": "change context at snapshot sha256:9680b74fa1f5eb59ac8d34784adab625f1fe7ac845dad101286cc568a44d2a77: 0 changed files, 0 affected packages, 9 ambiguous candidates; verification applicable: false; focus pack: 3e7f89303b986e862207562160a13cf58b4ac7d681430415582ed132df4b7f75; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replacement refresh inherits the prior budget and cannot fix the omission; treat affected evidence as unavailable; retry recov"
+          }
+        ],
+        "input_tokens": 408809,
+        "output_tokens": 5822,
+        "answer_sha256": "7eafddc8861dbed407b78baf063f1dbdcbba68d318534a535595c929cbbc9e08"
+      },
+      {
+        "task_id": "medium-3",
+        "stratum": "medium",
+        "prompt_sha256": "c8da3cf839d41e8e522d2ea502b987519c21fcf8f967378e9635c9f24d5fe2ed",
+        "duration_ms": 144083,
+        "exit_code": 0,
+        "agentic_go_calls": [
+          {
+            "tool": "go_context",
+            "status": "completed",
+            "selector_fields": [
+              "base",
+              "query"
+            ],
+            "symbol_ref_supplied": false,
+            "candidate_count": 9,
+            "selected_symbol": false,
+            "excerpt_count": 0,
+            "result_excerpt": "change context at snapshot sha256:8485144e4521154a636f7aa4ffb217190ecbe31e0d1e6a6043226e17466bbf9a: 0 changed files, 0 affected packages, 9 ambiguous candidates; verification applicable: false; focus pack: efcee4afce5c6498fad3904968747d661645278609ee2b108a2b8ee10b806fb0; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replacement refresh inherits the prior budget and cannot fix the omission; treat affected evidence as unavailable; retry recov"
+          }
+        ],
+        "input_tokens": 497039,
+        "output_tokens": 6563,
+        "answer_sha256": "519463ba0a48e44ea397d323c7a311abeca1e136a78f23d1ebed7763b7cf7566"
+      },
+      {
+        "task_id": "medium-4",
+        "stratum": "medium",
+        "prompt_sha256": "3a285a48e73288cee346dbb3bbdcb0a1c228bc68e53b0e7dab5abc1c66b72c4b",
+        "duration_ms": 101031,
+        "exit_code": 0,
+        "agentic_go_calls": [
+          {
+            "tool": "go_context",
+            "status": "completed",
+            "selector_fields": [
+              "base",
+              "query",
+              "max_bytes"
+            ],
+            "symbol_ref_supplied": false,
+            "candidate_count": 15,
+            "selected_symbol": false,
+            "excerpt_count": 0,
+            "result_excerpt": "change context at snapshot sha256:868e9d7cf5354a509db33e1c5bbfda766114b8cf39b6595f658c6c3536cfcdb9: 0 changed files, 0 affected packages, 15 ambiguous candidates; verification applicable: false; focus pack: f0dcb2972633d84f71db4762be15bef121a8cb8c2f68f1a7e3b853081b3db7b6; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replacement refresh inherits the prior budget and cannot fix the omission; treat affected evidence as unavailable; retry reco"
+          }
+        ],
+        "input_tokens": 290560,
+        "output_tokens": 4644,
+        "answer_sha256": "f85164bd8d865c4523c3fe1849151618a85457751e4a3e223a7b7435902a09b9"
+      },
+      {
+        "task_id": "small-3",
+        "stratum": "small",
+        "prompt_sha256": "deeb3a33077072d2c1111d776a6ab255d8a3c1ef8f4fe78ded2d07b554edeb9b",
+        "duration_ms": 74921,
+        "exit_code": 0,
+        "agentic_go_calls": [],
+        "input_tokens": 212404,
+        "output_tokens": 2112,
+        "answer_sha256": "6a6e75402474e5f1b21e03089ed94d1f99cd0cf55ca0a067b16bcc1b45d626be"
+      },
+      {
+        "task_id": "small-4",
+        "stratum": "small",
+        "prompt_sha256": "1f7cf7a1d619cf3a97e4a77d8d3b0059e5af0e1babfe1056cb8ccb68c85c0b55",
+        "duration_ms": 57841,
+        "exit_code": 0,
+        "agentic_go_calls": [],
+        "input_tokens": 201510,
+        "output_tokens": 2288,
+        "answer_sha256": "6fe9eea56ba7ca9a227dfca48ef9acb9a097c59fe2958ed086a6c9712db058d8"
+      }
+    ],
+    "counts": {
+      "go_context_success": 3,
+      "go_context_failed": 3,
+      "go_context_not_called": 2
+    },
+    "observed_failures": {
+      "large_repositories": "Three calls returned building change context: subprocess output limit exceeded: stdout exceeded 8388608 bytes.",
+      "small_repositories": "Agentic Go server did not start; workspace preflight requires a go.mod or active go.work module.",
+      "medium_repository": "Calls completed but broad queries returned 9-15 ambiguous candidates; one-call prompt prohibited candidate resolution."
+    }
+  },
+  "guided_use_diagnostic": {
+    "runs": [
+      {
+        "task_id": "medium-2",
+        "native": {
+          "duration_ms": 152544,
+          "prompt_sha256": "48331d82990633f9d213fb1f8c40d870cf388393eef2ff2aa45d6ab6facf4b27",
+          "answer_sha256": "ad11e634ffceb5d84ef7c238964797e61d65d0300be870b939a81a016235eed2",
+          "usage_events": [
+            {
+              "input_tokens": 351892,
+              "cached_input_tokens": 302336,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6996,
+              "reasoning_output_tokens": 4951
+            }
+          ]
+        },
+        "agentic": {
+          "duration_ms": 107189,
+          "prompt_sha256": "f63177fdd961161c24fb61bc7bb4f7ce667fe9f619a0329fa56fa85ed30fba5d",
+          "answer_sha256": "874eb92102ce5e549b7f56b021b6a45478f282ee940a5842d8de6c819fb51caf",
+          "usage_events": [
+            {
+              "input_tokens": 328132,
+              "cached_input_tokens": 286464,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 4673,
+              "reasoning_output_tokens": 3371
+            }
+          ],
+          "mcp_calls": [
+            {
+              "tool": "go_context",
+              "status": "completed",
+              "selector_fields": [
+                "base",
+                "query"
+              ],
+              "symbol_ref_supplied": false,
+              "symbol_ref_sha256": null,
+              "max_bytes": null,
+              "candidate_count": 10,
+              "selected_symbol": false,
+              "source_count": 0,
+              "response_excerpt": "change context at snapshot sha256:9680b74fa1f5eb59ac8d34784adab625f1fe7ac845dad101286cc568a44d2a77: 0 changed files, 0 affected packages, 10 ambiguous candidates; verification applicable: false; focus pack: d9627f0630152107319728d9f16ce0c0c8bf6525782eb5e03e4543a83b5e3fe5; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replacement refresh inher"
+            },
+            {
+              "tool": "go_context",
+              "status": "completed",
+              "selector_fields": [
+                "base"
+              ],
+              "symbol_ref_supplied": true,
+              "symbol_ref_sha256": "c170eb9e025baaa615752f7849e7051fd71b5710e23c869ee2858290a7bb0976",
+              "max_bytes": null,
+              "candidate_count": 0,
+              "selected_symbol": true,
+              "source_count": 0,
+              "response_excerpt": "change context at snapshot sha256:9680b74fa1f5eb59ac8d34784adab625f1fe7ac845dad101286cc568a44d2a77: 0 changed files, 0 affected packages, selected intelligence.TestFocusContextReturnsAmbiguousCandidatesBeforeExpansion; verification applicable: false; focus pack: 042ca60ce7d8fa78c6b3aebfc3ce15bcbaa6e73c410609e077b3b06f926b3daf; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger"
+            }
+          ],
+          "answer_used_native_fallback": true
+        }
+      },
+      {
+        "task_id": "medium-3",
+        "native": {
+          "duration_ms": 119033,
+          "prompt_sha256": "31f8e9eb784ed26245d260976806143e0fda2304476f00e7d364469258b36cda",
+          "answer_sha256": "55759189f343d78274a7d846c7a6d2b9dfd5fb3e146618c0643fdea3bbf521d9",
+          "usage_events": [
+            {
+              "input_tokens": 520765,
+              "cached_input_tokens": 467712,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 5147,
+              "reasoning_output_tokens": 3017
+            }
+          ]
+        },
+        "agentic": {
+          "duration_ms": 157928,
+          "prompt_sha256": "e053fcf124f4e3117384a8a1dd178b971c8258e5b5f90bc2a30cb76ec556c41d",
+          "answer_sha256": "89eb528874f2c86089eda0199d2589b4b506aeb21a43c54d88f01df044a13496",
+          "usage_events": [
+            {
+              "input_tokens": 577706,
+              "cached_input_tokens": 514816,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 7427,
+              "reasoning_output_tokens": 5381
+            }
+          ],
+          "mcp_calls": [
+            {
+              "tool": "go_context",
+              "status": "completed",
+              "selector_fields": [
+                "base",
+                "query"
+              ],
+              "symbol_ref_supplied": false,
+              "symbol_ref_sha256": null,
+              "max_bytes": null,
+              "candidate_count": 9,
+              "selected_symbol": false,
+              "source_count": 0,
+              "response_excerpt": "change context at snapshot sha256:8485144e4521154a636f7aa4ffb217190ecbe31e0d1e6a6043226e17466bbf9a: 0 changed files, 0 affected packages, 9 ambiguous candidates; verification applicable: false; focus pack: 0ae592832165c479f5e062061b01083273f90ec0cc1b8e41c38ec59940c96378; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replacement refresh inheri"
+            },
+            {
+              "tool": "go_context",
+              "status": "completed",
+              "selector_fields": [
+                "base"
+              ],
+              "symbol_ref_supplied": true,
+              "symbol_ref_sha256": "b827d9562bd268aa10ab5f5cfaddbf9286692fde5fd8387d69d52aab16bb6d11",
+              "max_bytes": null,
+              "candidate_count": 0,
+              "selected_symbol": true,
+              "source_count": 0,
+              "response_excerpt": "change context at snapshot sha256:8485144e4521154a636f7aa4ffb217190ecbe31e0d1e6a6043226e17466bbf9a: 0 changed files, 0 affected packages, selected intelligence.(*Core).focusContext; verification applicable: false; focus pack: 4fd6c307d9eff01ff855f244b044dbaac4ed01eb575d55e6b2f2c4426a1ad245; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replac"
+            }
+          ],
+          "answer_used_native_fallback": true
+        }
+      },
+      {
+        "task_id": "medium-4",
+        "native": {
+          "duration_ms": 159856,
+          "prompt_sha256": "3b275255eca2b3ca699599ce93c5f4c1b1e29b3caa30848e8bdf7ac4cc0474b5",
+          "answer_sha256": "4f67718ed11b872d47586851b801b37bf708e443dd692c54d61a5189b6aeb23d",
+          "usage_events": [
+            {
+              "input_tokens": 414598,
+              "cached_input_tokens": 366592,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 5721,
+              "reasoning_output_tokens": 4248
+            }
+          ]
+        },
+        "agentic": {
+          "duration_ms": 168300,
+          "prompt_sha256": "315d606f29af35c488b4f8aa9e64c7a26a86a9df158bb961d708ccc8f6870a14",
+          "answer_sha256": "4c6130407f57ce689a6a7d4dd5da35d6de0a173363fde972f1295c94b8adc6bf",
+          "usage_events": [
+            {
+              "input_tokens": 574943,
+              "cached_input_tokens": 505856,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6399,
+              "reasoning_output_tokens": 4767
+            }
+          ],
+          "mcp_calls": [
+            {
+              "tool": "go_context",
+              "status": "completed",
+              "selector_fields": [
+                "base",
+                "query"
+              ],
+              "symbol_ref_supplied": false,
+              "symbol_ref_sha256": null,
+              "max_bytes": null,
+              "candidate_count": 10,
+              "selected_symbol": false,
+              "source_count": 0,
+              "response_excerpt": "change context at snapshot sha256:868e9d7cf5354a509db33e1c5bbfda766114b8cf39b6595f658c6c3536cfcdb9: 0 changed files, 0 affected packages, 10 ambiguous candidates; verification applicable: false; focus pack: 4f11137bb049e1ac442dc1d4fbef596b9acda1d2eb3f73d03e141cae2f6b1fe5; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selection; replacement refresh inher"
+            },
+            {
+              "tool": "go_context",
+              "status": "completed",
+              "selector_fields": [
+                "base"
+              ],
+              "symbol_ref_supplied": true,
+              "symbol_ref_sha256": "d3a6d80165b8b8fdd13410947b0d54ab1fba2674d1061540a7a2e28494ac0851",
+              "max_bytes": null,
+              "candidate_count": 0,
+              "selected_symbol": true,
+              "source_count": 0,
+              "response_excerpt": "change context at snapshot sha256:868e9d7cf5354a509db33e1c5bbfda766114b8cf39b6595f658c6c3536cfcdb9: 0 changed files, 0 affected packages, selected intelligence.(*snapshotObservation).source; verification applicable: false; focus pack: adb470c7d81ad913d15b512259b6777267ac0f9a34091fd30ce93ab57a2e823a; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; make a fresh narrower selection or use a larger max_bytes on a new selectio"
+            }
+          ],
+          "answer_used_native_fallback": true
+        }
+      }
+    ],
+    "position_budget_recovery": {
+      "prompt_sha256": "c6db7e593e57afe20ac001e2bcc857285e403fbee427541ac1be0220ba78af09",
+      "duration_ms": 143996,
+      "input_tokens": 304805,
+      "output_tokens": 6962,
+      "answer_sha256": "5f19aa74f7df55269abd77edb0b96e38bf0bd8995bf1396b350251e8a14ba022",
+      "calls": [
+        {
+          "status": "completed",
+          "selector_fields": [
+            "base",
+            "query",
+            "max_bytes"
+          ],
+          "symbol_ref_supplied": false,
+          "max_bytes": 32768,
+          "candidate_count": 20,
+          "selected_symbol": false,
+          "excerpt_count": 0,
+          "call_site_count": null,
+          "evidence_states": [
+            {
+              "facet": "declaration_candidates",
+              "reason": "hybrid discovery candidate bound exceeded",
+              "state": "gathered_but_omitted"
+            },
+            {
+              "facet": "relationships",
+              "reason": "query is ambiguous",
+              "state": "unexamined"
+            }
+          ],
+          "response_excerpt": "change context at snapshot sha256:9680b74fa1f5eb59ac8d34784adab625f1fe7ac845dad101286cc568a44d2a77: 0 changed files, 0 affected packages, 20 ambiguous candidates; verification applicable: false; focus pack: 8af21418e05a9aa73f3af9b632368defbe7b04330049bfaec676ca3c189ecaa4; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; treat affected evidence as unavailable; retry recovery is not established"
+        },
+        {
+          "status": "completed",
+          "selector_fields": [
+            "base",
+            "file",
+            "line",
+            "column",
+            "max_bytes"
+          ],
+          "symbol_ref_supplied": false,
+          "max_bytes": 65536,
+          "candidate_count": null,
+          "selected_symbol": true,
+          "excerpt_count": 20,
+          "call_site_count": 30,
+          "evidence_states": [
+            {
+              "facet": "type_definition",
+              "reason": "type definitions are not applicable to function and method declarations",
+              "state": "unexamined"
+            }
+          ],
+          "response_excerpt": "change context at snapshot sha256:9680b74fa1f5eb59ac8d34784adab625f1fe7ac845dad101286cc568a44d2a77: 0 changed files, 0 affected packages, selected intelligence.(*Core).focusContext; verification applicable: false; focus pack: a2846be2dbd61d64fc6f22ec13e7184a3cc0198570b7102ebdfc0be62f8b7203; canonical evidence is in structuredContent; next_action: request verification for the current snapshot and matching policy; treat affected evidence as unavailable; retry recovery is not established",
+          "call_sites_truncated": true,
+          "related_test_count": 9,
+          "typed_evidence_complete": false,
+          "excerpt_line_count": 20,
+          "context_truncated": false
+        }
+      ],
+      "paired_native_run_id": "guided-medium-2-native",
+      "paired_native_duration_ms": 152544,
+      "paired_native_input_tokens": 351892,
+      "descriptive_delta": {
+        "duration_ms_agentic_minus_native": -8548,
+        "duration_change_percent": -5.603629116844975,
+        "input_tokens_agentic_minus_native": -47087,
+        "input_token_change_percent": -13.381094199356621,
+        "caveat": "one prompt-guided pair only; not blind-scored and not part of the primary 32 runs"
+      },
+      "interpretation": "With an explicit query, a position selector copied from the current candidate, and a 64 KiB evidence budget, the tool returned relationship/test navigation and line anchors but no function bodies. The agent issued three shell reads/searches afterward. This single guided pair is not blind-scored and is not evidence for a general speed or token advantage.",
+      "answer_used_native_fallback": true,
+      "fallback_shell_commands": 3
+    },
+    "opaque_symbol_ref_retry": {
+      "duration_ms": 212053,
+      "calls": [
+        {
+          "status": "completed",
+          "selector_fields": [
+            "base",
+            "query"
+          ],
+          "symbol_ref_supplied": false,
+          "result_excerpt": "change context at snapshot sha256:9680b74fa1f5eb59ac8d34784adab625f1fe7ac845dad101286cc568a44d2a77: 0 changed files, 0 affected packages, 10 ambiguous candidates; verification applicable: false; focus"
+        },
+        {
+          "status": "failed",
+          "selector_fields": [
+            "base",
+            "max_bytes"
+          ],
+          "symbol_ref_supplied": true,
+          "result_excerpt": "building change context: invalid symbol reference"
+        },
+        {
+          "status": "failed",
+          "selector_fields": [
+            "base",
+            "max_bytes"
+          ],
+          "symbol_ref_supplied": true,
+          "result_excerpt": "building change context: invalid symbol reference"
+        }
+      ],
+      "interpretation": "The model altered the opaque Symbol Ref when copying it, and the server rejected both follow-ups as invalid. This is a tool-use reliability observation, not a scored natural-run result."
+    }
+  },
+  "decision": {
+    "current_q_and_a_usefulness": "Not demonstrated against native Go tools. The optional MCP surface was not used in any primary Agentic run, answer scores were effectively tied, and median latency/input usage did not improve. Successful guided context retrieval can provide useful source navigation on a supported medium module, but the required selection and budget guidance add workflow steps.",
+    "persistent_index": "Do not add persistence on this evidence. Retrieval usefulness for the intended natural Q&A path is unproven, and repeated parsing/ranking has not been isolated as the dominant cost.",
+    "next_evaluation": "If pursuing the Q&A product goal, define a bounded source-answering retrieval path that returns enough source-grounded excerpts on the exact selected ref and handles large output safely; test it on fresh held-out questions with explicit native and Agentic workflows before proposing a persistent index."
+  },
+  "limits": [
+    "No accepted-patch tasks or deterministic patch checks were run.",
+    "No branch movement, default-main selection, dirty overlay, interrupted generation, freshness, or persistent-index behavior was evaluated.",
+    "The large repo failures prevent arbitrary-scale support claims; source coverage from the separate model-free study remains partial.",
+    "All blind answers were scored by the same GPT-6 Luna family that generated them.",
+    "Task reuse means questions are not independent of prior model-free retrieval evaluation.",
+    "The guided success is one supplementary run, not statistically powered evidence."
+  ]
+}

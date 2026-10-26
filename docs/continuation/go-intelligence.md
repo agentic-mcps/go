@@ -333,6 +333,20 @@ The fixed `rg` scorer is not a competent native-agent baseline, and gopls
 completeness is unknown. These results do not support a product-value or
 arbitrary-scale claim.
 
+The separate 32-run GPT-6 Luna Max Q&A screen is complete; its detailed result
+is in the [native comparison report](../research/agentic-go-native-context-outcome-2026-09-28.md).
+The MCP-enabled agent called no Agentic Go tool in any of its 16 sessions.
+Blind same-family Luna review scored the native arm 8.88/10 and the Agentic
+availability arm 8.81/10; median answer time was 125.2 s vs 128.1 s, and
+median input usage was 325,798 vs 345,212 tokens. The tool-use diagnostics
+found ambiguous medium-repository candidates, default-budget evidence
+omissions, 8 MiB subprocess output failures on large repositories, and
+workspace preflight failures for small Go directories without a module. This
+screen measures ordinary Q&A with the current MCP surface available; it does
+not establish retrieval value, accepted-patch quality, or branch correctness.
+Do not add a persistent index or treat this Q&A screen as the planned
+accepted-change screen.
+
 The exact branch source-view preview is implemented as
 `agentic-go source-view`. It creates a visible detached worktree, selects
 local `main` by default (then configured `origin/HEAD` if absent), binds a
@@ -356,16 +370,16 @@ freshness or relevance loss, against the 5 s warm p95 and 512 MiB process
 screening targets. The separate 32-run Luna Max engineering screen remains
 gated because useful retrieval has not been demonstrated.
 
-Only after useful retrieval is demonstrated should the separate engineering
-screen run: eight held-out tasks across three repositories, randomized paired
-order, and two fresh repetitions per arm (32 GPT-6 Luna Max runs). Freeze the
-source, binary, task, prompt, and evaluator hashes first; use GPT-6 Luna Max
-only and keep the study separate from the model-free results and historical
-GPT-6 Sol/high work. Require zero accepted stale or wrong-branch evidence, no
-accepted-patch quality loss, and a practical gain such as 15% lower median time
-to an accepted patch. Track review effort and actual token usage, and report
-the same-model reviewer limitation. The screen is directional, not a
-statistically powered or general claim.
+The separate accepted-change screen remains gated on demonstrated retrieval
+value. If it becomes justified, use eight held-out tasks across three
+repositories, randomized paired order, and two fresh repetitions per arm (32
+GPT-6 Luna Max runs). Freeze the source, binary, task, prompt, and evaluator
+hashes first; use GPT-6 Luna Max only and keep the study separate from the
+model-free results and historical GPT-6 Sol/high work. Require zero accepted
+stale or wrong-branch evidence, no accepted-patch quality loss, and a practical
+gain such as 15% lower median time to an accepted patch. Track review effort
+and actual token usage, and report the same-model reviewer limitation. The
+screen is directional, not a statistically powered or general claim.
 
 The proposed R1-R4 workflow work remains a separate product cycle. Follow
 [R1 and R2](../go-intelligence-north-star.md#next-delivery-cycle) when that
